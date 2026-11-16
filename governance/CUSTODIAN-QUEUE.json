@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-16T01:29:59.618Z",
-  "plan_hash": "c08465d87a1bdc9af4a21f12ac81be4073d1230930962a227803d27ac2690c85",
+  "generated_at": "2026-11-16T02:31:17.542Z",
+  "plan_hash": "51dbc4ae6e9b419353a4e048d0cf9bec9edbc4fd92e46331f87f855b636039b9",
   "priorities_approved": true,
   "next": {
     "id": "lod-tier-test-sweep-keeps-lock-until-folder-removed",
@@ -156,6 +156,25 @@
       "summary": "PLACED S3 2026-11-15 as filler entry 18, after the current entries, by the advisor's ruling ADV-2026-11-15-13 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-13-shell-e2e-publish-audit-log-follows-app-dirs-filler-18-s3-budget-30-the-whole-boundary-table-the-windows-row-included.md), budget 30, its lane kept, no dependency. It changes resolveAuditLogPath and its doc comment in frontends/shell/e2e/publish.mjs, nothing else: the function follows the boundary table in engine/src/app_dirs.rs, every row, LOCALAPPDATA on Windows, HOME under Library/Application Support on macOS, XDG_DATA_HOME then HOME under .local/share on other Unix, a value counting only when non-empty and absolute; that takes in the Windows row, which the first title left out (item 3 (b)). The override SPATIAL_IDE_AUDIT_LOG stays first and unchanged, and no row resolving stays an error naming no fallback path. Ordinary form and gating; the form says how the change is proved on Windows, an OPEN item on that to the advisor; it may not claim that the publish suite runs or passes off Windows. The first piece to run the publish suite off Windows gains this node in its depends_on. Skipped while PR B changes publish.mjs (rule (00)). From the reviewer gate of port-2, its O1."
     },
     {
+      "id": "shell-tiled-arm-stream-refusal-shown-to-the-user",
+      "title": "In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 240,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      },
+      "summary": "PLACED S2 2026-11-16 in slot 2, now, by the advisor's ruling ADV-2026-11-16-05, item 4 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-05-known-limitations-item-56-tile-refusal-record-corrected-now-the-stream-refusal-node-s2-slot-2.md); added by ADV-2026-11-16-04, item 1 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-04-two-nodes-from-the-architects-read-the-stream-refusal-node-after-a-read-the-dictionary-node-s3-after-b1-shell-half.md), after the architect's read (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-read-architect.md). Full form and both gates. S2, because in the arm that ships the user is told at most that part of the view was not loaded and not why, and the record said otherwise (item 4 (a)). Its first step is a test that drives the shipped arm with the real session and reads what the status bar shows after a tile refused twice, after a tile stream that fails, and after a first look that fails at open; no test does that today (item 4 (c)). If a case leaves part of the view missing with no status, the node is S1, told to the advisor before the code's scope is fixed; the read names two candidates, a tile dropped after its second refusal when it was the last one tracked, and a first look that fails at open with no batch (item 4 (b)). The aim: a refused request and a failed stream shown by name, for a tile and for the first look, and no failure leaving the view without a status; the form's OPEN items to the advisor in one packet (item 4 (d)). Its records restore KNOWN-LIMITATIONS item 56's sentence to what the code then does (item 4 (e)). The budget is the custodian's estimate; the form declares its own."
+    },
+    {
       "id": "advisor-session-merges-under-the-humans-rule",
       "title": "The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian)",
       "lane": "governance",
@@ -173,6 +192,25 @@
         "done": null
       },
       "summary": "OWED 2026-11-15 (ADV-2026-11-15-10 item 3 (b), state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-10-the-1-mib-read-forms-four-open-items-each-a-full-form-both-gates-snake-case-names-e0-to-e3-as-amendment-1.md): this form's next amendment, the one for the advisor's ruling of Part B's fence, gains one sentence in the custodian's words: the statement in Amendment 1 item 1 about the limit of verify-quotes is of the tool as at 7c59d99d04b292d25e49df0c7d17b34e5d6b413c. Before: FORM COMMITTED 2026-11-15 (governance/forms/root/ADVISOR-SESSION-MERGES-UNDER-THE-HUMANS-RULE-PREREGISTRATION.md; the architect's revision, read only, at 7c59d99d, filed at state/consults/2026-11-15-advisor-session-merges-under-the-humans-rule-form-architect-revision.md; 58 pins filled by the custodian's script, at 7c59d99d but the 2 into PLAN.yaml at a0bff480; the custodian's Amendment 1 at the commit): the reserved rows wait for the human's answer on ADV-2026-11-15-07; no worker until that answer and the advisor's ruling of Part B's fence are both on main (ADV-2026-11-15-06 item 13); the architect's other open points to the advisor. Before: OPEN ITEMS RULED 2026-11-15 by the advisor's ruling ADV-2026-11-15-06 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-06-the-merges-forms-nine-open-items-ruled-open-2-and-3-reserved-for-the-human-a-merge-request-unanswered-two-hours-told-budget-120.md): OPEN-1 (a), section 39 appended after section 38 and one pointer line at the end of AI_DEVELOPMENT.md; OPEN-4 (a), at each turn the custodian checks its open merge requests and one unanswered two hours or more is told to the human in that turn's closing message and to the advisor in the same turn; OPEN-5 (a), the red-main sequence of ADV-2026-11-14-22 standing; OPEN-6 (c), a waiting PR takes main in only when main changed one of its paths, then both gates at the merge head; OPEN-7 (a), the verdict filed under state/consults; OPEN-8 (a); OPEN-9 (a), text only, with the proposed node docsonly-wording-licenses-no-merge; OPEN-10 (a), no edit to PRECEDENTS.md; OPEN-11 (a), the full form under governance/forms/root/, both gates to an affirmative PASS, the budget 120 in place of 60. OPEN-2 and OPEN-3 reserved, in the advisor's draft ADV-2026-11-15-07 for the human (state/consults/2026-11-15-advisor-draft-adv-2026-11-15-07-for-the-humans-approval-the-limits-of-the-advisors-merges-not-the-humans-words.md), not the human's words; until the human answers, the advisor merges no PR the custodian did not open and none of which the human was told (items 3 (b) and 4 (c)). NEXT: the architect's revision, read only, for items 1 and 4 to 12; the form committed after PR 323 merges, with the reserved rows marked as waiting and its pins read again at that merge commit; no worker until the human's answer on ADV-2026-11-15-07 and the advisor's ruling of Part B's fence are both on main (item 13). Before: DRAFTED 2026-11-15: the architect's draft, read only, at main 2431ee50 (state/consults/2026-11-15-advisor-session-merges-under-the-humans-rule-form-architect-draft.md): the form at governance/forms/root/ADVISOR-SESSION-MERGES-UNDER-THE-HUMANS-RULE-PREREGISTRATION.md, a section appended to AUTONOMY.md after section 38 and one pointer line at the end of AI_DEVELOPMENT.md, eleven OPEN items, OPEN-2 and OPEN-3 proposed as reserved for the human under the grant's item 4. NEXT: the OPEN items to the advisor in one packet; its answers; the form committed only after PR 323 merges, its pins read again there. Before: ORDER 2026-11-15: ahead of advisor-silence-two-hour-alarm, by the advisor's ruling ADV-2026-11-15-03 item 13 (d) (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-03-the-alarm-forms-ten-open-items-every-ask-starts-the-clock-the-trigger-and-live-check-reserved-for-the-human-budget-300.md); its form drafted now by the architect, read only, from main and the notifications form's declared changes, its OPEN items to the advisor in one packet, the form committed only after PR 323 merges with every pin into that piece's files read again there (item 13 (a) to (c)); it builds no clock and names advisor-silence-two-hour-alarm as what sends the alarm (item 12 (b)). Before: ORDER 2026-11-14: after advisor-questions-and-telegram-three-alarms, by the advisor's ruling ADV-2026-11-14-23 item 1 (b) (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-23-the-notifications-piece-starts-now-in-the-docs-lane-ahead-of-advisor-session-merges-full-form-both-gates-open-items-to-the-advisor.md); rule (00) holds between the two, both editing governance/AUTONOMY.md. Before: GRANT 2026-11-13: the human approved at 07:45Z the grant file as their message (state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md): the advisor's rulings stand as the human's except its item 4, each acted on only from its file under PASTES/ in the advisory folder and filed as the advisor's under the delegation (items 2 and 3); the advisor merges on the custodian's merge check, its verdict filed with the PR's records, the custodian never merging, reading main's CI after each merge and opening a revert PR on a red main (item 5). ADVISOR LIVE 2026-11-13, the human's message at 07:54Z (state/directives/2026-11-13-advisor-live.md). This piece records item 5 of the grant with items 1 to 5 of the message of 06:43Z. Before: PLACED 2026-11-13 by the human's message of 2026-11-13 (06:43Z) (state/directives/2026-11-13-advisor-session-from-advisor-live-human-clicks-until-then-publish-approval-answers-rust-ci-fix-filler-now-toolchain-consult.md), item 6 (line 29): a governance-lane piece recording items 1 to 5 of that message, AUTONOMY section 9 and ruling 25's poll changing with it; the hourly read of the advisory folder stops at advisor live, and the custodian reads MERGE-CHECKS/ and any report there when the advisor says it is there. Item 5 (line 27): until the human types advisor live, everything stays as today and the human clicks. Graded S3 by the custodian; the human may regrade it. Rule (00): it and advisor-questions-and-telegram-three-alarms both edit governance/AUTONOMY.md, so one runs at a time, this one first by the custodian's order (the earlier message). NEXT: its form, drafted read only by the architect, in the docs lane after the items the human ordered there on 2026-11-12."
+    },
+    {
+      "id": "known-limitations-item-56-tile-refusal-record",
+      "title": "KNOWN-LIMITATIONS item 56: the clause that a refused request is shown by name corrected for a tile of the map, which shows no code (one span and the item comment)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      },
+      "summary": "PLACED S2 2026-11-16 in the docs lane, now, ahead of everything queued there, by the advisor's ruling ADV-2026-11-16-05, item 2 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-05-known-limitations-item-56-tile-refusal-record-corrected-now-the-stream-refusal-node-s2-slot-2.md). A five-line form, the reviewer and the architect both gating from dispatch. It changes one span of item 56, from Together they can leave a request refused to the end of the sentence The map asks again once for a tile it was refused, and the item's source comment; nothing else in the item or the file (item 2 (b)). The ruling's fence is the starting text, the advisor's wording in draft (item 2 (c)); the drafter checks each clause against the code with the filed read (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-read-architect.md), cuts or rewords what the code does not establish and says which; a clause for the Table and the export only if the drafter establishes how each shows the code; both gates check every clause; then the words go to the advisor before the merge request (item 2 (d)). The comment says the item is the human's wording but for this span, which is the advisor's wording under the delegation, why it replaces the human's clause, and where the code does each thing, by symbol (item 2 (e)). The drafter also searches the released records, the v0.1.0 list in KNOWN-LIMITATIONS, the release notes and the walkthrough, for the same claim; one found goes to the advisor at once (item 2 (f)). Item 56 is in turns with PR B: this piece first; PR B takes main in before its second gate attempts and re-applies its own clause on main's line by script; both reaching their points within the same hour goes to the advisor (item 3)."
     },
     {
       "id": "site-waiting-on-you-lists-open-questions",
@@ -470,6 +508,28 @@
       "blocked_by": [
         "b1-shell-half",
         "open-first-look-fills-fit-view"
+      ]
+    },
+    {
+      "id": "dictionary-column-described-as-its-value-type-for-the-chooser",
+      "title": "A column stored as a dictionary over text is described by its value type for the Colour by chooser, so that the chooser offers it (the architect read on the text types, note b)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      },
+      "summary": "PLACED S3 2026-11-16, after b1-shell-half merges, not in the filler queue, by the advisor's ruling ADV-2026-11-16-04, item 4 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-04-two-nodes-from-the-architects-read-the-stream-refusal-node-after-a-read-the-dictionary-node-s3-after-b1-shell-half.md). A column the file's schema types as a dictionary is described by its dictionary type while its batches carry the value type, so the chooser does not offer it; nothing draws wrongly, and main has no chooser until PR B merges (item 4 (b)). Not the filler, because one way to settle it changes what the kernel's describe says of a column, a field on the wire, so section 21a asks for the full form; the other changes the match-key rule the shell and the renderer share. The form's drafter states both, and its OPEN item on the choice goes to the advisor, who rules its slot when the form is drafted (item 4 (a), (c)). From the architect's read (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md), its wider note (b). The budget is the custodian's estimate.",
+      "blocked_by": [
+        "b1-shell-half"
       ]
     },
     {
@@ -2192,6 +2252,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-11-15 by the advisor's ruling ADV-2026-11-15-09 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-09-verify-quotes-and-the-docs-only-tool-read-files-over-one-mebibyte-a-node-in-the-docs-slot-now-s3-budget-60.md), item 5: two more reads in scripts/plan/ take the default buffer, the one in scripts/plan/verify-test-claims.mjs and the git helper of scripts/plan/verify-mutation.mjs; neither reads the plan, and by the advisor's listing no other tracked text file is over one mebibyte but site/data/plan.json. Not in verify-quotes-and-docsonly-read-files-over-one-mebibyte; one proposed node for the two, unplaced, so that the finding is on record. The reads in verify-cites.mjs, measure-reads.mjs and the three rotate scripts already set a buffer."
+    },
+    {
+      "id": "large-utf8-and-utf8-view-attribute-columns",
+      "title": "LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327)",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-11-16, not placed: added as proposed by the advisor's ruling ADV-2026-11-16-01, item 5 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md); the custodian's records commit of that ruling named the node as added but did not write it to the plan, an omission put right here. Two read-only reads first, then the advisor grades and places it; no code before the placement (item 5 (a) to (c)). Both reads are filed: lead-data's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-lead-data.md) and the architect's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md). By the architect's reading the map fails as a whole if either type reaches the shell, with no refusal shown in the shipped tiled arm; by lead-data's, no shipped path emits either type while the bundled DuckDB exports text as plain Utf8, which reading cannot settle. The advisor's ruling ADV-2026-11-16-03 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-03-large-utf8-node-probes-u1-and-u2-by-a-tester-nothing-installed-s1-if-either-type-reaches-a-batch.md) orders the probes U1 and U2 by a tester as scratch probes, nothing installed; either setting on or either type in a batch is told at once and graded S1; otherwise the node is placed as a queued piece. Its two wider notes became the nodes shell-tiled-arm-stream-refusal-shown-to-the-user and dictionary-column-described-as-its-value-type-for-the-chooser (ADV-2026-11-16-04)."
     }
   ],
   "unscheduled": [

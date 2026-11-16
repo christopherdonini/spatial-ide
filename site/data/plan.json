@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-16T01:29:59.836Z",
-  "plan_hash": "c08465d87a1bdc9af4a21f12ac81be4073d1230930962a227803d27ac2690c85",
+  "generated_at": "2026-11-16T02:31:17.801Z",
+  "plan_hash": "51dbc4ae6e9b419353a4e048d0cf9bec9edbc4fd92e46331f87f855b636039b9",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12048,6 +12048,108 @@
       "felt_verdict": false,
       "entries": [],
       "summary": "PLACED S3 2026-11-16 as filler entry 19, after the current entries, by the advisor's ruling ADV-2026-11-16-02 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-02-lod-tier-test-sweep-keeps-lock-until-folder-removed-filler-19-s3-budget-30-the-sweep-alone.md), budget 30, the engine lane, no dependency. The finding stands: the sweep removes a finished run's folder and then its lock file, ignoring the first removal's result, so a folder it could not remove loses its lock file and no later sweep finds it again; nothing reaches the machine-wide tier folder (item 1). It changes the sweep in engine/tests/common/mod.rs and nothing else: the lock file of a finished run is removed only when that run's folder is gone, removed by this sweep or already absent; otherwise the lock file stays, and a later sweep tries again (item 3). No file under engine/src or kernel/src changes, and no existing test's assertion (item 3 (a)). The form says how the change is proved: a test needs a folder that cannot be removed while its lock can be opened, for example a file inside it held open by the test; if no test without a timing window can do that, the form gives the mutation and the read that stand in its place, an OPEN item to the advisor (item 3 (b)). The rare lock race at a reused process id is not part of the node; it stays recorded in both gates' reports (item 3 (c)). Ordinary form and gating; rule (00) at the form's commit; its heavy runs yield to PR B's agents (ADV-2026-11-15-17 item 4). Nothing needs the human (item 5). From the architect gate of PR 326, its O2.",
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      }
+    },
+    {
+      "id": "large-utf8-and-utf8-view-attribute-columns",
+      "title": "LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-16, not placed: added as proposed by the advisor's ruling ADV-2026-11-16-01, item 5 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md); the custodian's records commit of that ruling named the node as added but did not write it to the plan, an omission put right here. Two read-only reads first, then the advisor grades and places it; no code before the placement (item 5 (a) to (c)). Both reads are filed: lead-data's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-lead-data.md) and the architect's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md). By the architect's reading the map fails as a whole if either type reaches the shell, with no refusal shown in the shipped tiled arm; by lead-data's, no shipped path emits either type while the bundled DuckDB exports text as plain Utf8, which reading cannot settle. The advisor's ruling ADV-2026-11-16-03 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-03-large-utf8-node-probes-u1-and-u2-by-a-tester-nothing-installed-s1-if-either-type-reaches-a-batch.md) orders the probes U1 and U2 by a tester as scratch probes, nothing installed; either setting on or either type in a batch is told at once and graded S1; otherwise the node is placed as a queued piece. Its two wider notes became the nodes shell-tiled-arm-stream-refusal-shown-to-the-user and dictionary-column-described-as-its-value-type-for-the-chooser (ADV-2026-11-16-04).",
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      }
+    },
+    {
+      "id": "shell-tiled-arm-stream-refusal-shown-to-the-user",
+      "title": "In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED S2 2026-11-16 in slot 2, now, by the advisor's ruling ADV-2026-11-16-05, item 4 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-05-known-limitations-item-56-tile-refusal-record-corrected-now-the-stream-refusal-node-s2-slot-2.md); added by ADV-2026-11-16-04, item 1 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-04-two-nodes-from-the-architects-read-the-stream-refusal-node-after-a-read-the-dictionary-node-s3-after-b1-shell-half.md), after the architect's read (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-read-architect.md). Full form and both gates. S2, because in the arm that ships the user is told at most that part of the view was not loaded and not why, and the record said otherwise (item 4 (a)). Its first step is a test that drives the shipped arm with the real session and reads what the status bar shows after a tile refused twice, after a tile stream that fails, and after a first look that fails at open; no test does that today (item 4 (c)). If a case leaves part of the view missing with no status, the node is S1, told to the advisor before the code's scope is fixed; the read names two candidates, a tile dropped after its second refusal when it was the last one tracked, and a first look that fails at open with no batch (item 4 (b)). The aim: a refused request and a failed stream shown by name, for a tile and for the first look, and no failure leaving the view without a status; the form's OPEN items to the advisor in one packet (item 4 (d)). Its records restore KNOWN-LIMITATIONS item 56's sentence to what the code then does (item 4 (e)). The budget is the custodian's estimate; the form declares its own.",
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      }
+    },
+    {
+      "id": "dictionary-column-described-as-its-value-type-for-the-chooser",
+      "title": "A column stored as a dictionary over text is described by its value type for the Colour by chooser, so that the chooser offers it (the architect read on the text types, note b)",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [
+        "b1-shell-half"
+      ],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 120,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED S3 2026-11-16, after b1-shell-half merges, not in the filler queue, by the advisor's ruling ADV-2026-11-16-04, item 4 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-04-two-nodes-from-the-architects-read-the-stream-refusal-node-after-a-read-the-dictionary-node-s3-after-b1-shell-half.md). A column the file's schema types as a dictionary is described by its dictionary type while its batches carry the value type, so the chooser does not offer it; nothing draws wrongly, and main has no chooser until PR B merges (item 4 (b)). Not the filler, because one way to settle it changes what the kernel's describe says of a column, a field on the wire, so section 21a asks for the full form; the other changes the match-key rule the shell and the renderer share. The form's drafter states both, and its OPEN item on the choice goes to the advisor, who rules its slot when the form is drafted (item 4 (a), (c)). From the architect's read (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md), its wider note (b). The budget is the custodian's estimate.",
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      }
+    },
+    {
+      "id": "known-limitations-item-56-tile-refusal-record",
+      "title": "KNOWN-LIMITATIONS item 56: the clause that a refused request is shown by name corrected for a tile of the map, which shows no code (one span and the item comment)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED S2 2026-11-16 in the docs lane, now, ahead of everything queued there, by the advisor's ruling ADV-2026-11-16-05, item 2 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-05-known-limitations-item-56-tile-refusal-record-corrected-now-the-stream-refusal-node-s2-slot-2.md). A five-line form, the reviewer and the architect both gating from dispatch. It changes one span of item 56, from Together they can leave a request refused to the end of the sentence The map asks again once for a tile it was refused, and the item's source comment; nothing else in the item or the file (item 2 (b)). The ruling's fence is the starting text, the advisor's wording in draft (item 2 (c)); the drafter checks each clause against the code with the filed read (state/consults/2026-11-16-shell-tiled-arm-stream-refusal-shown-to-the-user-read-architect.md), cuts or rewords what the code does not establish and says which; a clause for the Table and the export only if the drafter establishes how each shows the code; both gates check every clause; then the words go to the advisor before the merge request (item 2 (d)). The comment says the item is the human's wording but for this span, which is the advisor's wording under the delegation, why it replaces the human's clause, and where the code does each thing, by symbol (item 2 (e)). The drafter also searches the released records, the v0.1.0 list in KNOWN-LIMITATIONS, the release notes and the walkthrough, for the same claim; one found goes to the advisor at once (item 2 (f)). Item 56 is in turns with PR B: this piece first; PR B takes main in before its second gate attempts and re-applies its own clause on main's line by script; both reaching their points within the same hour goes to the advisor (item 3).",
       "dates": {
         "opened": "2026-11-16",
         "done": null
