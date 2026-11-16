@@ -35,3 +35,5 @@ Corrections after release, 2026-11-16. [KNOWN-LIMITATIONS](https://github.com/ch
 5. The order. First the file on main, by a docs piece of its own with the short form and the reviewer, which the advisor merges; nothing else in the file changes. Then the page: you put the paragraph in at that place, once, changing no other byte of the page's text, and read the page back. If your Guardian refuses, stop and tell the advisor; I then do it myself.
 
 6. v0.2's notes say of each case whether v0.2 fixes it. Those notes stay mine.
+
+*Replaced, 2026-11-16: the advisor withdrew this draft by its message received 2026-11-16T06:54:02Z, after the reviewer's clause check, and its draft ADV-2026-11-16-19 replaces it (`state/consults/2026-11-16-advisor-draft-adv-2026-11-16-19-for-the-humans-approval-replacing-adv-2026-11-16-17-two-dated-notes-and-one-release-page-paragraph-not-the-humans-words.md`). Nothing above is edited.*
