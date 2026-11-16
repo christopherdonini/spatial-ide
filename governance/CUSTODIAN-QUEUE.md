@@ -1,13 +1,14 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `51dbc4ae6e9b419353a4e048d0cf9bec9edbc4fd92e46331f87f855b636039b9`) at `2026-11-16T02:31:17.542Z`.
+Generated from `PLAN.yaml` (sha256 `c8de38f0e76b4cfd35b796370aa03fca088cafd90de3022ce862fa06c007ea47`) at `2026-11-16T03:14:30.267Z`.
 
 ## 1. Next
 
-- **lod-tier-test-sweep-keeps-lock-until-folder-removed** — The test tier-folder sweep removes a finished run lock file only when that run folder is gone, so a folder it could not remove is tried again by a later sweep (the architect O2 at PR 326; filler entry 19) (lane `engine`)
+- **large-utf8-and-utf8-view-attribute-columns** — LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327) (lane `engine`)
 
 ## 2. Ready
 
+- **large-utf8-and-utf8-view-attribute-columns** — LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327) (lane `engine`, order null, budget 60 min)
 - **lod-tier-test-sweep-keeps-lock-until-folder-removed** — The test tier-folder sweep removes a finished run lock file only when that run folder is gone, so a folder it could not remove is tried again by a later sweep (the architect O2 at PR 326; filler entry 19) (lane `engine`, order null, budget 30 min)
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) (lane `kernel-protocol`, order null, budget 0 min)
@@ -17,7 +18,6 @@ Generated from `PLAN.yaml` (sha256 `51dbc4ae6e9b419353a4e048d0cf9bec9edbc4fd92e4
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status (lane `shell`, order null, budget 240 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
-- **known-limitations-item-56-tile-refusal-record** — KNOWN-LIMITATIONS item 56: the clause that a refused request is shown by name corrected for a tile of the map, which shows no code (one span and the item comment) (lane `governance`, order null, budget 60 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
 - **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) (lane `platform`, order null, budget 60 min)
@@ -59,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `51dbc4ae6e9b419353a4e048d0cf9bec9edbc4fd92e4
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
+- **known-limitations-item-56-tile-refusal-record** — KNOWN-LIMITATIONS item 56: the clause that a refused request is shown by name corrected for a tile of the map, which shows no code (one span and the item comment) — evidence: branch `cut/known-limitations-item-56-tile-refusal-record`
 
 ## 6. Proposed / unscheduled
 
@@ -137,7 +138,6 @@ Generated from `PLAN.yaml` (sha256 `51dbc4ae6e9b419353a4e048d0cf9bec9edbc4fd92e4
 - **advisor-silence-two-hour-alarm** — Telegram's third alarm: one message when the advisor has not answered the custodian for two hours (the human's item 3 of 2026-11-13, 06:57Z); split from advisor-questions-and-telegram-three-alarms by ADV-2026-11-14-23 item 3 (d) and ADV-2026-11-14-24 item 4 (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
-- **large-utf8-and-utf8-view-attribute-columns** — LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
