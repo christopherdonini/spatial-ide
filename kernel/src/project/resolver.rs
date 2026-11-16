@@ -117,3 +117,29 @@ fn reached_through_link(data: &Path, f: &Path) -> bool {
     }
     !inside
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// **T5** (C-7; Amendment 30 item 5 (c)): a device name, a trailing dot and a `..` segment are
+    /// each refused by the text check, with a folder that does not exist, so nothing was read.
+    ///
+    /// MUTATION: `in_canonical_form` not called.
+    #[test]
+    fn check_inside_refuses_a_non_canonical_at_before_any_file_is_read() {
+        let folder = std::env::temp_dir().join("spatial-ide-resolver-t5-absent");
+        let _ = std::fs::remove_dir_all(&folder);
+        for at in [
+            "data/NUL.parquet",
+            "data/parcels.",
+            "data/../parcels.parquet",
+        ] {
+            let refused = check_inside(&folder, at);
+            assert!(
+                matches!(refused, Err(CheckRefused::NotCanonical(_))),
+                "{at}: {refused:?}"
+            );
+        }
+    }
+}
