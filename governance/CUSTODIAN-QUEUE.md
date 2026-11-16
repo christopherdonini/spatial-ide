@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `da13903b8ddedcd7a16f1d3a0326675128c79e1c158755b04b362273886f8d7c`) at `2026-11-16T05:31:02.707Z`.
+Generated from `PLAN.yaml` (sha256 `771594204fb9cfd5546b6058e7eabe2db33f5441b32727d37acf8649d6eb40db`) at `2026-11-16T05:55:57.295Z`.
 
 ## 1. Next
 
@@ -16,7 +16,7 @@ Generated from `PLAN.yaml` (sha256 `da13903b8ddedcd7a16f1d3a0326675128c79e1c1587
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
-- **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status (lane `shell`, order null, budget 240 min)
+- **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status (lane `shell`, order null, budget 300 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
