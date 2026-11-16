@@ -279,3 +279,33 @@ impl KnownFolders {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// **T7** (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` Amendment 30, item 6 (c); D-16): a
+    /// folder flush that fails after the rename keeps the save. `commit_with` is `Ok`,
+    /// `project.spatial` holds the new bytes, and no temp file is left.
+    ///
+    /// RECORDED MUTATION: the flush error returned. Expected failure: `commit_with` is an `Err`.
+    #[test]
+    fn a_folder_flush_failing_after_the_rename_keeps_the_save() {
+        let folder = std::env::temp_dir()
+            .join("spatial-ide-project-store-unit")
+            .join("t7");
+        let _ = fs::remove_dir_all(&folder);
+        fs::create_dir_all(&folder).expect("scratch folder");
+        let target = folder.join(PROJECT_FILE_NAME);
+        fs::write(&target, b"previous").expect("the previous project file");
+        let staged = stage(&folder, b"new bytes").expect("staged");
+        let failing = |_: &Path| Err(std::io::Error::other("the flush failed"));
+        staged.commit_with(failing).expect("the save is kept");
+        assert_eq!(fs::read(&target).expect("project.spatial"), b"new bytes");
+        let names: Vec<String> = fs::read_dir(&folder)
+            .expect("the folder")
+            .map(|e| e.expect("entry").file_name().to_string_lossy().into_owned())
+            .collect();
+        assert_eq!(names, [PROJECT_FILE_NAME], "no temp file is left");
+    }
+}
