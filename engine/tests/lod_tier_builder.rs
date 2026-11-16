@@ -39,9 +39,10 @@ use spatial_engine::dataset::Dataset;
 use spatial_engine::error::EngineError;
 use spatial_engine::fixture::{write_geoparquet, CoordinateDomain, CrsMode, FixtureSpec};
 use spatial_engine::lod::{
-    build_tiers, LodTierKey, TierBatch, TierBuildProgress, TierMiss, TierSet, LOD_BUILD_WORKERS,
+    LodTierKey, TierBatch, TierBuildProgress, TierMiss, TierSet, LOD_BUILD_WORKERS,
     LOD_BUILD_WORKERS_ARM_S, LOD_CRS_NOT_LINEAR, LOD_CRS_UNIT_UNDECLARED,
-    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_COUNT, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_STALE,
+    LOD_MIN_TRIANGLE_AREA_LADDER, LOD_TIER_COUNT, LOD_TIER_LARGER_THAN_SOURCE, LOD_TIER_ROOT,
+    LOD_TIER_STALE,
 };
 
 // ---------------------------------------------------------------------------------------------
@@ -55,7 +56,7 @@ use spatial_engine::lod::{
 // ---------------------------------------------------------------------------------------------
 
 mod common;
-use common::polygons_100k;
+use common::{build_tiers, polygons_100k, tier_run_root};
 
 /// §3's `parcels-5gb`, for the `#[ignore]`d rows only.
 const PARCELS_5GB: &str =
@@ -87,9 +88,7 @@ fn ladder() -> &'static Ladder {
 /// Remove whatever is in this source's tier directory, so a build is not silently a reuse.
 fn clear_tier_directory(source: &Dataset, cancel: &CancelToken) {
     let (hash, _ms) = spatial_engine::index::content_hash(source.path(), cancel).expect("hash");
-    let dir = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let dir = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     if dir.exists() {
         std::fs::remove_dir_all(&dir).expect("clear the tier directory");
     }
@@ -474,8 +473,8 @@ fn scratch_dir(name: &str) -> PathBuf {
     d
 }
 
-/// Remove the tier directory a small-fixture test created, so a test run leaves the app-local cache
-/// as it found it.
+/// Remove the tier directory a small-fixture test created, so this run's tier folder holds only the
+/// sets still in use.
 fn drop_tiers(set: &TierSet) {
     let _ = std::fs::remove_dir_all(set.directory());
 }
@@ -979,9 +978,9 @@ fn a_stale_tier_batch_cannot_exist_without_the_stale_label() {
 }
 
 // T6 — `cancel_observed_within_the_declared_ceiling` — lives in its own test binary,
-// `engine/tests/lod_tier_cancellation.rs`. It cancels a build of the *same* fixture and so owns the
-// same tier directory this file's ladder does; cargo runs test binaries one after another, which is
-// what keeps the two from asserting over each other's files.
+// `engine/tests/lod_tier_cancellation.rs`. It cancels a build of the *same* fixture. Each binary
+// builds below its own process's tier folder (`common::tier_run_root`), so the two do not assert
+// over each other's files, in either order or at once.
 
 // ---------------------------------------------------------------------------------------------
 // T7 — O4, the row order §2d rules on.
@@ -1151,9 +1150,7 @@ fn tier_larger_than_its_source_is_refused() {
     // Nothing over the ceiling is kept on disk.
     let (hash, _ms) =
         spatial_engine::index::content_hash(&path, &CancelToken::new()).expect("hash");
-    let tier_dir = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tier_dir = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let kept: Vec<PathBuf> = std::fs::read_dir(&tier_dir)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1367,9 +1364,16 @@ fn the_built_sets_size_is_disclosed_with_the_tiers() {
 /// (`engine/tests/import_layout_5gb_fixtures.rs:132`).
 const MIN_FREE_BYTES: u64 = 40 * 1024 * 1024 * 1024;
 
-fn free_bytes_on_c() -> Option<u64> {
+/// Free bytes on the volume this run's tier folder is on, which is where the 5 GB ladder is built
+/// and the volume I6's floor is about. `None` when that volume's letter cannot be read.
+fn free_bytes_on_run_volume() -> Option<u64> {
+    let drive = tier_run_root().to_str()?.chars().next()?;
     let out = std::process::Command::new("powershell")
-        .args(["-NoProfile", "-Command", "(Get-PSDrive C).Free"])
+        .args([
+            "-NoProfile",
+            "-Command",
+            &format!("(Get-PSDrive {drive}).Free"),
+        ])
         .output()
         .ok()?;
     String::from_utf8_lossy(&out.stdout).trim().parse().ok()
@@ -1402,7 +1406,7 @@ impl TierBuildProgress for DiskDiscipline {
             Ok(()) => println!(
                 "disk discipline: removed tier {previous} at {} before tier {tier} grew; free {} B",
                 path.display(),
-                free_bytes_on_c().unwrap_or(0)
+                free_bytes_on_run_volume().unwrap_or(0)
             ),
             Err(e) => println!("disk discipline: tier {previous} not removed ({e})"),
         }
@@ -1426,7 +1430,7 @@ fn the_5gb_ladder_under_disk_discipline() {
          something else, and never regenerates a fixture other cuts' records depend on",
         path.display()
     );
-    let free_before = free_bytes_on_c().unwrap_or(0);
+    let free_before = free_bytes_on_run_volume().unwrap_or(0);
     println!("free disk before: {free_before} B (floor {MIN_FREE_BYTES} B)");
     assert!(
         free_before >= MIN_FREE_BYTES,
@@ -1436,9 +1440,7 @@ fn the_5gb_ladder_under_disk_discipline() {
     let source = Dataset::open(&path).expect("open parcels-5gb");
     let cancel = CancelToken::new();
     let (hash, _ms) = spatial_engine::index::content_hash(&path, &cancel).expect("hash the source");
-    let directory = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(&hash);
+    let directory = tier_run_root().join(LOD_TIER_ROOT).join(&hash);
     let _ = std::fs::remove_dir_all(&directory);
     let discipline = DiskDiscipline {
         directory: directory.clone(),
@@ -1483,7 +1485,10 @@ fn the_5gb_ladder_under_disk_discipline() {
         left.is_empty(),
         "the tier directory still holds a parquet file after deletion: {left:?}"
     );
-    println!("free disk after: {} B", free_bytes_on_c().unwrap_or(0));
+    println!(
+        "free disk after: {} B",
+        free_bytes_on_run_volume().unwrap_or(0)
+    );
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -1539,9 +1544,7 @@ fn build_tiers_refuses_a_multipolygon_feature_by_name_and_writes_no_tier() {
 
     // No tier was written: the source's tier directory holds no parquet file.
     let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
-    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tiers = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1604,9 +1607,7 @@ fn build_tiers_refuses_a_point_feature_by_name_and_writes_no_tier() {
 
     // No tier was written: the source's tier directory holds no parquet file.
     let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
-    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tiers = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1669,9 +1670,7 @@ fn build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier() {
 
     // No tier was written: the source's tier directory holds no parquet file.
     let (hash, _) = spatial_engine::index::content_hash(source.path(), &cancel).expect("hash");
-    let tiers = PathBuf::from(std::env::var_os("LOCALAPPDATA").expect("LOCALAPPDATA"))
-        .join("spatial-ide/tiers")
-        .join(hash);
+    let tiers = tier_run_root().join(LOD_TIER_ROOT).join(hash);
     let written: Vec<PathBuf> = std::fs::read_dir(&tiers)
         .map(|rd| {
             rd.filter_map(|e| e.ok())
@@ -1682,4 +1681,146 @@ fn build_tiers_refuses_a_linestring_feature_by_name_and_writes_no_tier() {
         .unwrap_or_default();
     assert!(written.is_empty(), "a tier was written: {written:?}");
     let _ = std::fs::remove_dir_all(&tiers);
+}
+
+// ---------------------------------------------------------------------------------------------
+// Each test run builds its tiers in its own folder
+// (`LOD-TIER-TESTS-OWN-TIER-FOLDER-PREREGISTRATION.md`): `common::tier_run_root` is that folder,
+// and the tiers of two runs of this binary never share a directory. Both tests use a source whose
+// bytes no other test's has, so the tier directory keyed by its content hash is theirs alone within
+// a run.
+// ---------------------------------------------------------------------------------------------
+
+fn own_bytes_source(name: &str, circles: u64, spacing: f64) -> PathBuf {
+    let path = scratch_dir(name).join("source.parquet");
+    let rings: Vec<(u64, Vec<Vec<[f64; 2]>>)> = (0..circles)
+        .map(|i| {
+            (
+                i,
+                dense_circle(2_600_000.0 + i as f64 * spacing, 1_200_000.0, 22.0, 144),
+            )
+        })
+        .collect();
+    write_source(&path, &geo_key(&lv95_definition()), &rings);
+    path
+}
+
+// RECORDED MUTATION: in `engine/tests/common/mod.rs`, delete the line in `tier_run` that sets
+// `LOCALAPPDATA` to this process's own folder (the folder, its lock and the sweep are left as they
+// are, so the tiers go to the machine-wide root) → this test fails at its assertion (1) and
+// a_second_run_clearing_and_removing_its_own_tiers_leaves_this_runs_tiers_in_place fails at its
+// assertion (2). **Observed at commit 36c12ff285280f0549b792f0f98420a5bdae9aa6**, then reverted.
+/// A build through the real entry point puts its tiers below this process's own folder, and not
+/// below the machine-wide tier root this process inherited (`inherited_local_app_data`).
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories and free space (engine/src/app_dirs.rs, engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn a_test_runs_tiers_are_built_in_its_own_folder_and_never_under_the_machine_wide_tier_root() {
+    let path = own_bytes_source("own-folder", 18, 55.0);
+    let source = Dataset::open(&path).expect("open");
+    let set =
+        build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &CancelToken::new(), None).expect("build");
+    let directory = set.directory().to_path_buf();
+    let hash = set.source_content_hash().to_string();
+    drop_tiers(&set);
+
+    let inherited = common::inherited_local_app_data().expect("LOCALAPPDATA was set at start");
+    assert!(
+        !directory.starts_with(Path::new(inherited).join(LOD_TIER_ROOT)),
+        "(1) the tiers were built under the machine-wide tier root: {directory:?}"
+    );
+    assert_eq!(
+        directory,
+        tier_run_root().join(LOD_TIER_ROOT).join(hash),
+        "(2) the tiers were not built in this run's own folder"
+    );
+}
+
+/// Names the source the second run tiers; set on the second process only.
+const SECOND_RUN_SOURCE: &str = "LOD_TIER_SECOND_RUN_SOURCE";
+const SECOND_RUN_DIRECTORY: &str = "second run tier directory: ";
+
+// RECORDED MUTATION: in `engine/tests/common/mod.rs`, make `take_folder_and_sweep` remove a
+// sibling's folder whether or not the sibling's lock could be taken (the `let Ok(finished) = …
+// else { continue; }` becomes a plain `let finished = …`) → this test fails at its assertion (2),
+// the first process's tier files gone. **Observed at commit 36c12ff285280f0549b792f0f98420a5bdae9aa6**
+// (run on its own), then reverted.
+/// Another run of this binary clears its tier directory for the same source, builds over it and
+/// removes its set; this run's tiers stay on disk, and a second build here still reuses all three.
+/// The second run is a real second process, started and waited for here, so the order is the
+/// order of the calls and nothing is timed.
+#[test]
+#[cfg_attr(
+    not(windows),
+    ignore = "boundary: application directories and free space (engine/src/app_dirs.rs, engine/src/lod.rs); deferred by engine/LOD-PREREGISTRATION.md Amendment 8(a)"
+)]
+fn a_second_run_clearing_and_removing_its_own_tiers_leaves_this_runs_tiers_in_place() {
+    let path = own_bytes_source("second-run", 20, 65.0);
+    let source = Dataset::open(&path).expect("open");
+    let cancel = CancelToken::new();
+    let first = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
+    let tier_files: Vec<PathBuf> = first
+        .tiers()
+        .iter()
+        .map(|t| t.record().path().to_path_buf())
+        .collect();
+    assert_eq!(tier_files.len(), LOD_TIER_COUNT);
+
+    let second = std::process::Command::new(std::env::current_exe().expect("this test binary"))
+        .args([
+            "--exact",
+            "the_second_run_half_of_the_two_runs_test",
+            "--ignored",
+            "--nocapture",
+        ])
+        .env(SECOND_RUN_SOURCE, &path)
+        .output()
+        .expect("run the second process");
+    let stdout = String::from_utf8_lossy(&second.stdout);
+    assert!(
+        second.status.success(),
+        "(1) the second run did not exit 0: {}\n{stdout}",
+        String::from_utf8_lossy(&second.stderr)
+    );
+    let second_directory = PathBuf::from(
+        stdout
+            .lines()
+            .find_map(|l| l.strip_prefix(SECOND_RUN_DIRECTORY))
+            .expect("the second run printed its tier directory"),
+    );
+
+    let gone: Vec<&PathBuf> = tier_files.iter().filter(|f| !f.is_file()).collect();
+    assert!(
+        gone.is_empty(),
+        "(2) the second run took this run's tiers away: {gone:?}"
+    );
+    let again = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("reuse");
+    assert!(
+        again.tiers().iter().all(|t| !t.was_rebuilt()),
+        "(3) this run's tiers were not all reused"
+    );
+    assert_ne!(
+        second_directory,
+        first.directory(),
+        "(4) the second run built in this run's tier directory"
+    );
+    drop_tiers(&first);
+}
+
+/// The second process of the test above. It returns at once without `SECOND_RUN_SOURCE`, so a
+/// plain `--ignored` run does nothing.
+#[test]
+#[ignore = "the second process of a_second_run_clearing_and_removing_its_own_tiers_leaves_this_runs_tiers_in_place; returns at once unless LOD_TIER_SECOND_RUN_SOURCE names a source"]
+fn the_second_run_half_of_the_two_runs_test() {
+    let Some(path) = std::env::var_os(SECOND_RUN_SOURCE) else {
+        return;
+    };
+    let source = Dataset::open(Path::new(&path)).expect("open the first run's source");
+    let cancel = CancelToken::new();
+    clear_tier_directory(&source, &cancel);
+    let set = build_tiers(&source, LOD_BUILD_WORKERS_ARM_S, &cancel, None).expect("build");
+    println!("{SECOND_RUN_DIRECTORY}{}", set.directory().display());
+    drop_tiers(&set);
 }

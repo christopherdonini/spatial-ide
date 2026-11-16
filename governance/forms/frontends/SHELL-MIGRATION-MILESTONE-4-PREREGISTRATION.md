@@ -2319,3 +2319,373 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 19: main merged into PR B's branch at bfcb57e7 (class 1), with OPEN-1 (a)'s scripted re-read at 2abf3ea0 (class 3); the pan-anchor suite's blob at the merge; part 2 on the port-5400 harness. Written by the custodian at the merge, before part 2's code.
+
+*Written by the custodian on 2026-11-15. There is no architect draft: this amendment records a merge and a re-read, both read by git. The re-read's output is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-re-read-at-2abf3ea0-custodian-run.md` (sha256 0b4baf8275e8debb2592a6049c6912215b741b2fe8558bfac3babdfe4fb6e006).*
+
+1. **The merge (class 1; Amendment 15 items 4 and 6; ADV-2026-11-14-14 item 3 (a)).**
+   - Main at 2abf3ea087cb53cf5cbb57b844f7c2ad6a92a89a is merged into PR B's branch by the merge commit bfcb57e7525dac86252ec6abc0bf5e55dd7baa6e, whose parents are 31cf0e22713e7e3264ed843425ef3686775d7e47 (part 1's head) and 2abf3ea0. It holds #317's merge 83e7b801. It is a named merge of main for §7's count.
+   - No path that the branch changes from 08ce9935 is among the paths main changes from 08ce9935. The merge's tree is the one `git merge-tree --write-tree` gives: no conflict, nothing resolved by hand.
+   - Rule (00), checked again at the merge (Amendment 14 item 4): no other piece is in progress or awaiting merge.
+   - It comes before part 2's code, so that part 2's runs and the gates have one head that holds main. Amendment 15 item 6's order otherwise stands.
+
+2. **The re-read (class 3, the tree authoritative; Amendment 15 item 7, OPEN-1 (a)).** It was made by script at main 2abf3ea0 and the branch head 31cf0e22, before the merge.
+   - (a) Of the 140 paths main changes from 08ce9935, none is a path the branch changes, and none is on §2.6's PR B list. Two are records that PR B edits at its records commit, `KNOWN-LIMITATIONS.md` and `frontends/shell/MANUAL-WALKTHROUGH.md`. Their numbers and rows are read at that commit.
+   - (b) For each of Amendment 14 item 1's 19 interface pins and pin 39, the hash equals its own commit's lines. At main, 18 are Same and 2 are Moved, their bytes unchanged:
+     - `frontends/shell/src/publish/PublishDialog.tsx` lines 261-264 @ 54ee3522 is at 262-265. #319's doc comment hunk adds one line above it.
+     - Pin 39, `protocol/skp/SKP-V0.md` lines 1272-1280 @ b7b721eb, is at 1280-1288, from #318's hunk, as Amendment 15 item 5 said.
+     - No invalidator and no I4.
+   - (c) Beyond OPEN-1 (a), the custodian's reading: of the form's pins at 08ce9935 on paths main changed, `KNOWN-LIMITATIONS.md` line 507 (item 63's heading) is Changed, because #318 withdrew item 63. Item 64's heading, line 511 at 08ce9935, is at 508. The three SKP-V0.md ranges are 8 lines lower. KL-3's number is read again at the records commit (Amendment 14 item 6).
+
+3. **The pan-anchor suite at the merge (ADV-2026-11-14-14 item 4; Amendment 15 item 4).** `frontends/shell/e2e/pan-anchor.mjs` at bfcb57e7 is blob 370fe1494cd4389f4c5679c46d1ccf390501110a. Main has not changed it again. Its runs at PR B's head (Amendment 14 item 5) are still owed before the gates.
+
+4. **The port (class 1).** Port 5180 failed its listen test at 2026-11-15T13:40:50Z: Windows has excluded the range 5120-5219, and a listen on 127.0.0.1 and on localhost returned EACCES. Under the human's ruling of 2026-11-09 on that port, part 2's runs stay on the port-5400 harness. The advisor was told, and tells the human.
+
+5. **Next (class 1).** Part 2's code at bfcb57e7: `colour.mjs` with PB-E1 to PB-E5, with Amendment 14 item 1's assertion and M-PB-E2c, plus its script line and its README entry. Then the records; then pan-anchor's runs at PR B's head; then the gates, with ADV-2026-11-14-21 item 6's list of changed paths.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 20: colour-by part 2's first run cb2-t at T 3e0f8151, not as predicted (class 2), with its correction declared here before its code; the advisor's ruling ADV-2026-11-15-15 joins by reference (class 5); the custodian's reading and the worker's departures (class 1). Written by the custodian after the worker's stop was seen and the ruling was read, before any correction code.
+
+*Written by the custodian on 2026-11-15. The worker's report is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-colour-by-part-2-stop-worker-report.md`, and the ruling at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-15-pr-b-pb-e3-a-product-finding-the-one-colour-trigger-corrected-in-pr-b-class-2-four-additions.md`.*
+
+1. **The stop (class 2, §5).**
+   - T is 3e0f8151eaeccd7d6721b2d0317510f378674f2b: the suite, its script line and its README entry, 3 files and 455 insertions, on bfcb57e7.
+   - Run cb2-t at T exited 1. PB-E3 failed at its pixel read: the frame's dominant colour was civic's swatch, not the literal fill. Its earlier assertions held: the style document's literal, the empty legend and the disabled One colour control.
+   - PB-E1, PB-E2 with every one of its checks, PB-E4 and PB-E5 passed.
+   - It was not re-run. It stands, by reference, as the observation that without the correction the frame keeps the swatch (the ruling's item 3 (e)).
+
+2. **The reading (class 1, the custodian's).**
+   - The run's console ledger ends with two render-trace layers lines, each with the same layer count and position total. The first closes PB-E1's last filter, after its tile ingest. The second has no ingest before it. By the ledger's own clock, and the step times in the run's log, it comes a tenth of a second after PB-E3 began.
+   - So the canvas rendered after the One colour click, and PB-E3 read its frame after that render.
+   - The worker's report reads the second line as PB-E1's, and the times do not bear that out.
+   - The custodian's first message to the advisor, at 2026-11-15T15:11:19Z, took the worker's statement that no layers line followed the click, and read the stop as a missing wait for a fresh render. A first draft of this amendment stated that statement, in a records commit stopped before it committed.
+   - The custodian corrected it from the ledger's times, in its message of 2026-11-15T15:50:34Z, before any record on main carried it.
+   - By the source at T: under a match, each layer takes a colour function, with the style's revision as its only update trigger. Under one colour, it takes a constant colour with no trigger, and the layers' data is unchanged. deck.gl 9.3.9, as installed, compares an accessor as equal when its old value is a function, and diffs only the new props' triggers. So the change is not seen, and the per-datum colours stay.
+
+3. **The ruling (class 5).** ADV-2026-11-15-15 joins by reference.
+   - The finding stands by the advisor's read of the code; no run has isolated it yet.
+   - The defect is in the declared design: §2.3 (c), third bullet.
+   - It is not class 9: every file the correction changes is on PR B's list in §2.6.
+   - KNOWN-LIMITATIONS and the walkthrough say nothing of it, as the fill by category has never been on main. Item 51's draft and Part AC's words describe the piece as corrected.
+
+4. **The correction, declared before its code (the ruling's item 3).**
+   - (a) §2.3 (c)'s third bullet now reads: with `fillMatch` null, today's props and that one trigger.
+     - In `frontends/shell/src/canvas/buildLayers.ts`, a layer drawn with one colour carries an update trigger for its colour accessor. This holds at all three places: the polygons' fill colour, the points' fill colour and the lines' colour.
+     - The trigger's value differs from every match revision. It does not change from one render to the next while the fill stays one colour. The value itself is the worker's choice.
+   - (b) The comments in that file that say a constant colour has no trigger key are brought current. Both gates clause-check them.
+   - (c) PB-U5 keeps its claim (H3) and its mutation. Its last assertion becomes the new fact: a one-colour fill carries its trigger. It gains one clause: ten pans under one colour leave that trigger as it was.
+   - (d) **PB-U12**, new, in `frontends/shell/src/canvas/buildLayers.test.ts`.
+     - Over the same batches, for each of polygons, points and lines, deck.gl itself sees a change of the colour accessor in each of four steps: a match to one colour, one colour to a match, a match to another match, and one colour to another colour.
+     - It drives deck.gl's own comparison as installed, with real layer objects. A comparison of the trigger values alone does not meet it.
+     - Its mutation: the one-colour trigger removed; the first step fails.
+     - If deck.gl's comparison cannot be reached in the unit environment, the worker stops, and the custodian tells the advisor what was tried.
+   - (e) PB-E3 waits for a fresh layers line after its click, within a bound, and then reads its frame. A timeout stops the worker.
+   - (f) Reset to default: no test at T shows that it ends a match in the state.
+     - The custodian searched the shell's unit tests for the reset control and the default style. The recording suite's A4 resets an opacity edit, not a match.
+     - So PB-U6, in `frontends/shell/src/workspace/viewTransitions.test.ts`, gains one case. From a state with a match whose literal fill is the default's, the transitions `styleTransitions` gives toward the default style, once applied, leave `fillMatch` null.
+     - Its mutation: the literal branch of `styleTransitions` drops its condition on a standing match; the case fails.
+     - The draw is covered by PB-U12.
+   - (g) The order is PR B's: the tests first, then the correction.
+     - PB-U5's new assertion and PB-U12 are seen to fail at T for the declared reason.
+     - PB-U6's new case holds at T, and its mutation is observed.
+     - Then the runs cb3 and the mutations as part 2's brief gives them, PB-U12's and PB-U6's new mutations among them.
+
+5. **The sweep (the ruling's item 4).**
+   - The correction worker makes a read-only sweep of every accessor prop the canvas code gives a layer that can be a function in one render and a constant in the next, over the same data.
+   - The amendment after the correction lists what was read and what was found.
+   - A case on main today goes to the advisor as a proposed node. A case in PR B's own code is corrected with 4 (a) and told to the advisor.
+
+6. **The stops (the ruling's item 6).** The piece stops and goes to the advisor if:
+   - PB-E3 is still red after the correction;
+   - the correction needs a file outside §2.6;
+   - PB-U5's claim cannot be kept, so that a pan re-evaluates an accessor;
+   - or the sweep finds a case that 4 (a) does not reach.
+
+7. **The worker's departures (class 1).**
+   - The run used the harness's waiting shim, so that the session's stop ends the app before PB-E4 reads the history.
+   - T was committed before cb2-t; the brief put the run first.
+   - The steps after PB-E1 run independently, so that one step's failure does not hide another's.
+   - PB-E2's (ii) compares the dialog's text with the prompt's own value.
+   - The push the brief asked for after a stop was not made; the custodian pushed T.
+
+8. **Size and what follows (class 1).**
+   - `colour.mjs` is 442 lines at T by the worker's count, under B-E 590.
+   - §7's count is made at the end of the correction, and every new line counts against its file's ceiling. An overrun is class 8: it is reported, never trimmed.
+   - Unchanged (the ruling's item 7): the records dispatch, the terms of ADV-2026-11-14-13 and ADV-2026-11-14-14, the changed-paths list, then both gates. No gate has read the colour-by code yet, so both read the correction with the rest.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 21: colour-by part 2's correction built at R 895d1142 as Amendment 20 declared it, its runs as predicted, the mutations' further reach disclosed (class 1); the sweep found no case outside 4 (a) and no stop was met; two heavy runs of this project overlapped beside a hold of the other project, a departure from the standing machine rule (class 1, the custodian's finding); the advisor's ruling ADV-2026-11-15-17 joins by reference (class 5). Written by the custodian after the worker's hand-back and its audit.
+
+*Written by the custodian on 2026-11-15. The worker's report is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-colour-by-part-2-correction-worker-report.md`, and the ruling at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-17-two-heavy-runs-overlapped-beside-a-hold-of-the-other-project-class-1-records-status-re-read-after-each-hold-dispatch-goes-ahead.md`.*
+
+1. **What was built (class 1).**
+   - Four commits on 3e0f8151, in the order of Amendment 20's 4 (g):
+     - U1 da75aa919eb16672a485be28417f3055760686f2: PB-U5's new fact and its ten pans, PB-U12, and PB-U6's reset case;
+     - U2 ff01d91928e5fe8a414fba453a6277f19d659d6f: the one-colour trigger in `buildLayers.ts`;
+     - U3 dfb96279f7531b27a29827be0e6bd0bf630bc9b5: PB-E3's wait for a fresh layers line, and its words in the e2e README;
+     - R 895d11420974e5d4bdccc4da78847fac64eab1b3: the recorded mutations, in comments only.
+   - The branch is at R by ls-remote. From 3e0f8151 it changes 5 files, each on §2.6's list: `e2e/README.md`, `e2e/colour.mjs`, `src/canvas/buildLayers.test.ts`, `src/canvas/buildLayers.ts`, `src/workspace/viewTransitions.test.ts`.
+   - A one-colour layer now carries a trigger of its own, apart from every match revision and the same from one render to the next, at the three places 4 (a) names, through the one helper that gives each layer its trigger. The comments 4 (b) names are rewritten; both gates clause-check them.
+
+2. **As predicted (4 (g)), by the report and the audit.**
+   - At U1, before the correction, the two unit test files gave 4 failed of 42: PB-U5's new assertion, and PB-U12 for polygons, points and lines, each at the step from a match to one colour alone. PB-U6's new case passed.
+   - At U2 the two files passed, 42 of 42, and the shell's whole unit suite passed, 1498 tests in 118 files.
+   - Run cb3-u at U3 and run cb3-r at R each passed all five steps. In each, PB-E3 saw a fresh layers line after its click and then read the literal fill as the frame's dominant colour.
+   - Each recorded mutation failed its own test, and R records each failing line above its assertion. Item 5 (c) gives where one reached further.
+
+3. **The sweep (Amendment 20 item 5).**
+   - Read: every accessor prop the canvas code gives a layer, in the shell's layer builder, its highlight layers and the canvas component.
+   - Found: an accessor that is a function in one render and a constant in the next exists only at the three fill colour sites of 4 (a), and only on PR B's branch. On main every colour accessor is a constant. The highlight layers are unchanged by the branch.
+   - So no case on main goes to the advisor as a node, and no case in PR B's code lies outside 4 (a). Told to the advisor at 2026-11-15T18:02:50Z; it agreed, by its own reading of main.
+
+4. **The stops (Amendment 20 item 6): none was met.**
+   - PB-E3 is green after the correction (item 2).
+   - No file outside §2.6 changed (item 1).
+   - PB-U5's claim is kept: its tests pass at U2 with the new clause, ten pans under one colour, and its recorded mutation fails at the trigger after ten pans.
+   - The sweep found no case that 4 (a) does not reach (item 3).
+
+5. **The departures, and the custodian's audit (class 1).**
+   - (a) **Two heavy runs of this project at once, beside a hold of the other project.** This is the custodian's finding, from the status reads in its scratch folder; the worker's report does not name it.
+     - The PR B worker's read at 2026-11-15T17:08:52Z and the lod-tier worker's at 2026-11-15T17:08:55Z, 3 seconds apart by their files' write times, each showed no hold of this project, and each worker then took a shared hold.
+     - The PR B worker's hold, for M-PB-E4 at the recorder, ran from 17:08:57Z to 17:09:51Z; the lod-tier worker's, for P-0 (d)'s cold build, from 17:09:05Z to 17:35:14Z, by the transcripts (each hold's end is its background task's).
+     - So from 17:09:05Z to the end of cb3-r at 17:31:09Z, each of the PR B worker's holds ran beside the lod-tier worker's. The PR B worker's five reads at 2026-11-15T17:11:10Z, 2026-11-15T17:14:02Z, 2026-11-15T17:17:37Z, 2026-11-15T17:20:54Z, 2026-11-15T17:29:43Z each showed the lod-tier worker's hold, and after each it held anyway, against its brief: for M-PB-E2, the exe's build for M-PB-E2c, M-PB-E2c, the exe's rebuild, and cb3-r (from 17:29:48Z).
+     - The lod-tier worker took no other hold in that window. Its four later holds each followed a read that showed no hold of this project, and none was live: the custodian checked each against the read before it (the ruling, item 4 (d)).
+     - Every read in that window also showed one hold of the other project. So the overlap departs from the human's standing machine rule, the paragraph marked (0) in `governance/AUTONOMY.md`, not from a brief alone (the ruling, item 2). No value of the other project is recorded (its item 3 (c)).
+     - Both of this project's runs were pinned to its own eight cores.
+     - The runs stand (its item 3 (d)): the overlap added load, the mutations failed at their own assertion lines, and cb3-r passed. Both gates are told of the window in their packets.
+     - The custodian sent the advisor the sweep's result with this finding at 2026-11-15T18:02:50Z. The advisor read it as class 1 by its message received at 2026-11-15T18:03:28Z, and asked whether a read in the window showed a hold of the other project. The custodian answered at 2026-11-15T18:05:27Z that every one did. The ruling followed.
+     - From now, every brief with a heavy run carries the re-read rule of its item 4. The custodian sent that rule to the lod-tier worker at 2026-11-15T18:07:39Z; by its report, it arrived after its last hold had begun, and it took none after.
+   - (b) **The exe.** M-PB-E2c needed the exe built with its mutation, and then rebuilt after its revert from unchanged sources. The rebuilt exe is 91555840 bytes, sha256 01073a95deabb32efdc6ac03c3625fd2a5beb22a36ee6c07a5bb92068fb41b9b, equal to the file on disk at this writing. Before, it was 91555840 bytes, sha256 1a6303807c33597c178c6290dbf7affc5b56a9350b3085d473a5f3cf2e4b1da5, by the part 2 stop report: the build is not byte-reproducible. The old exe's backup was removed. The runs after this one name the new exe. By the report, the branch changes nothing under the shell's Tauri sources, against main, and the mutated source was never committed.
+   - (c) **The mutations' reach.**
+     - The brief left the concrete mutations to the worker; the report names each.
+     - M-PB-E4's first form fed the page's own style document, so PB-E1 failed at its precondition and PB-E4 never reached its own assertion. It was discarded and replaced by a mutation at the recorder alone, which fails PB-E4 alone. The first is not recorded in R, and it was not a run repeated for a pass.
+     - M-PB-E2, at the publish seam, fails four of PB-E2's five checks, not (iv) alone, as the published columns and the manifest follow the document. M-PB-E3 also fails PB-E4, as no One colour step is recorded. R's comments say so for these two. PB-U12's mutation also fails PB-U5's assertion on the accessors a one-colour fill triggers. PB-U6's new mutation also fails an existing test of the same transitions.
+   - (d) **Process.** One edit script was written by a shell heredoc, against the brief. During U2 a mutation's revert also reverted the correction, which was not yet staged; the edit was made again and checked before its commit, and R's comment says where PB-U5's mutation was observed again. Three commit calls followed their checks without a gate on their exit codes; each check had exit 0.
+   - (e) **The report's form.** Its opening line is not the one its brief gave. One sentence named the scratch folder by its full place, and one cite named a line of the e2e README on the branch. The filed copy masks the place and gives the line in words, and its filing note says so.
+   - **The audit.** The run 2026-11-15T16:23:48Z to 2026-11-15T17:32:38Z by its transcript, 197 calls (Bash 166, Read 11, Edit 14, Write 5, SubagentHandback 1), 8 errored calls (writes before a read, a refused foreground sleep, a file changed since its read, and two calls ending in exit 1: a search, and a tail that refused its option), model claude-sonnet-5-5. Each of the nine tagged runs is one call. The numstat by git equals the report's.
+
+6. **Size (§7, from 08ce9935).** `buildLayers.ts` 95 of 160; `buildLayers.test.ts` 181 of 200; `viewTransitions.test.ts` 42 of 120; `colour.mjs` 472 of 590. No overrun.
+
+7. **CI at R.** Ported notices (run 43741595524) and Product CI — shell (run 43741595582): success, read at 2026-11-15T18:25:09Z.
+
+8. **What follows (class 1).** Unchanged from Amendment 20 item 8: the records dispatch, the terms of ADV-2026-11-14-13 and ADV-2026-11-14-14, the changed-paths list, then both gates, which read the correction with the rest. The records dispatch goes ahead without waiting for the human (the ruling, item 5). Its brief carries item 4's rule. The lod-tier worker stopped at 2026-11-15T18:15:44Z; by the advisor's ruling ADV-2026-11-15-18, received at 2026-11-15T18:22:33Z, it resumes once its form's next amendment is on main. While both run, both briefs say so and name the lod-tier worker, the filler's, as the one that yields.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 22: the advisor's ruling ADV-2026-11-15-19 joins by reference (class 5): the columns-line form's OPEN-2 is (c), so KNOWN-LIMITATIONS item 66 joins PR B's records; KL-3's number in OPEN-A's second sentence and OPEN-B's text is re-read to 65 (class 3); the records dispatch goes as shaped (class 1). Written by the custodian before the records dispatch.
+
+*Written by the custodian on 2026-11-15. The ruling is filed at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-19-columns-line-open-2-c-item-66-joins-pr-b-records-kl-3-number-65-in-open-a-and-open-b-records-dispatch-as-shaped.md`. It is the advisor's under the human's delegation of 2026-11-13, not the human's, and the human may overturn it. Where an item below gives its content in other words, the words are the custodian's; the ruling's file is the text.*
+
+1. **The columns-line form's OPEN-2 is (c) (class 5; Amendment 14 item 3).**
+   - A column name stays as the approval's columns line shows it today, and no code changes. The ruling's item 1 gives why (b) is not taken.
+   - KNOWN-LIMITATIONS item 66 joins PR B's records. The records worker drafts it from the code, covering what the ruling's item 2 (b) lists, and says whether any other character in a name makes the line ambiguous.
+   - Both gates check it clause by clause. It then goes to the advisor, and its ruled words are the advisor's wording under the delegation. Until then the item is marked as draft wording.
+   - It is a record outside the count, held with the others to §7's KNOWN-LIMITATIONS.md 70 (Amendment 12 item 13).
+
+2. **The item number (class 3; Amendment 15 item 3 (b)).**
+   - In OPEN-A's second sentence and in OPEN-B's text, item 64 becomes item 65, once each, by script, with no other byte changed. This is the re-read that the human's third message of 2026-11-12, item 3 (b), orders at the records commit.
+   - Each item's source comment records it, and PR B's body lists it.
+   - A clause found untrue at the head goes to the advisor (the ruling's item 3 (d)).
+
+3. **The records dispatch (class 1).** As Amendment 21 item 8 gives it, in the shape the ruling's item 4 accepts:
+   - One worker, on PR B's branch at R 895d1142, makes the records commit.
+   - Then pan-anchor runs at that head on the merged suite, blob 370fe149, under ADV-2026-11-14-13 and ADV-2026-11-14-14: one plain run, and one in the shape of the pan-anchor fix's L1, with a build beside the suite in the same hold.
+   - Then the push.
+   - Item 51's and item 66's drafts go to the advisor after both gates' clause check. A changed word in item 54 or item 56 goes to the advisor before the gates.
+   - The brief carries ADV-2026-11-15-17 item 4, with the lod-tier worker as the one that yields.
+
+4. **The changed-paths list (ADV-2026-11-14-21 item 6).** From the merge base 2abf3ea0, read against main at b2ad9ee6, the list is empty: since the merge base, main has changed only paths under governance/, state/ and site/. It is read again before the last gate.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 23: PR B's records built at 0fa941c0 and corrected at 0cf05452 under the advisor's ruling ADV-2026-11-15-20, which joins by reference (class 5); both pan-anchor runs at 0fa941c0 as predicted; the worker's departures (class 1); its holds checked against the reads before them (class 1); the lod-tier gates beside PR B's (class 1); the changed-paths list. Written by the custodian after the worker's two hand-backs and the ruling, before PR B's draft PR and its gates.
+
+*Written by the custodian on 2026-11-15. The worker's reports are filed at `state/consults/2026-11-15-b1-shell-half-pr-b-records-worker-report.md` and `state/consults/2026-11-15-b1-shell-half-pr-b-records-adv-2026-11-15-20-correction-worker-report.md`; the ruling at `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-20-pr-b-records-items-54-and-56-to-the-gates-as-drafted-item-65-gains-a-sentence-one-correction-commit-f5-and-g3-read-by-the-gates.md`. It is the advisor's under the human's delegation of 2026-11-13, not the human's, and the human may overturn it. Where an item below gives its content in other words, the words are the custodian's; the ruling's file and the reports are the text. Counts are by git's numstat, times by the transcripts.*
+
+1. **The records commit (class 1; Amendment 22 item 3).**
+   - The records worker was dispatched at 2026-11-15T20:03:49Z and handed back at 2026-11-15T20:47:01Z. Its commit is 0fa941c079d66b7ea5731f07c69c6238a214674e, on R 895d1142, pushed.
+   - It changes two files: `KNOWN-LIMITATIONS.md` (19 added, 10 removed) and `frontends/shell/MANUAL-WALKTHROUGH.md` (16 added, 6 removed).
+   - What it holds, by the report: item 4's sentence, item 59 and item 65 (KL-3) placed by script, with the re-read of item 64 to item 65 (Amendment 22 item 2) the one change to their text; item 51's and item 66's drafts; the revised sentences of items 54 and 56 (class 9, as their comments say); Part AC's rows AC3 to AC5 and AC12, and Part F's location words.
+   - Its three checks each exited 0: the profile-path scan of the staged files, verify:cites and verify:test-claims.
+
+2. **The runs (class 1; ADV-2026-11-14-13 and ADV-2026-11-14-14).** Both at 0fa941c0, on the merged suite (blob 370fe149), on port 5400, by the report: the plain run rec-pa-1, 16 of 16 passing, exit 0; and rec-pa-l1, with a build beside the suite in the same hold, 16 of 16 passing, exit 0, the build alive at the suite's start and at its end. They stand for the correction (the ruling's item 3).
+
+3. **The ruling ADV-2026-11-15-20 (class 5).**
+   - (a) Items 54 and 56: the revised sentences go to the gates as the worker drafted them, as the advisor's draft wording under the delegation; the rest of each item stays the human's words. Both gates check them clause by clause, and the advisor rules their final words after the gates, with items 51 and 66 (its item 1).
+   - (b) Item 65: the worker's finding stands, by the advisor's read. One sentence, the advisor's draft wording, ends the paragraph, and the comment's passage on the finding gives way to the custodian's words on why and where the code does it (its item 2). Both gates check the sentence and the finding against the code; a gate that finds the finding wrong sends the sentence back to the advisor before the merge request (2 (d)). Item 51's sentence of the same content and this one stay consistent (2 (e)).
+   - (c) The walkthrough's rows F5 and G3 (its item 4): both gates read the two rows at the head, say whether each is untrue in its own steps, and draft words where it is. Drafts go to the advisor with item 51's, item 66's and AC5's words. A row changed outside Part AC and Part F's location words is a scope addition to PR B's records, recorded in this form by amendment before the edit.
+   - (d) Item 66 (its item 5): the gates check the comment's reading of how whitespace in a name is shown. The advisor rules the item's words after the gates.
+
+4. **The correction (class 1; the ruling's item 3).**
+   - One commit on 0fa941c0, 0cf05452ca1b57d597f49be422dbfae586658358, pushed: `KNOWN-LIMITATIONS.md` alone, 2 lines added and 2 removed, item 65's paragraph and its comment.
+   - The custodian's script applied it (3319 bytes, sha256 f1bfb5d7bd77a70419bc68f68161756df1b5e76d78aabbe04759cb6bc9a8ec93). It found each anchor once and printed `APPLIED lines 513,514`. The same three checks each exited 0.
+   - The worker resumed on the custodian's message of 2026-11-15T20:56:21Z and handed back at 2026-11-15T20:59:11Z, with no hold, build or run. The commit was told to the advisor at 2026-11-15T21:16:47Z.
+
+5. **The size (§7; Amendment 12 item 13).** From the merge base 2abf3ea0 to the head 0cf05452: `KNOWN-LIMITATIONS.md` 29 of 70; `frontends/shell/MANUAL-WALKTHROUGH.md` 22 of 160; `frontends/shell/e2e/README.md` 12 of 60. No class 8.
+
+6. **The worker's departures and disclosures (class 1),** by its reports:
+   - (a) Its report on the records is a short form, by its own words, shorter than its brief asked; the byte-copied material it names is in the custodian's scratch folder.
+   - (b) Beyond the places its brief names, it edited the comments of items 54 and 56, the AC10 sentence, and Part AC's opening, whose old form path it corrected (class 3, inside the file).
+   - (c) It names the e2e README as not in its list; that file's count is in item 5.
+   - (d) verify:quotes exits 1 with 21 misses, all in the walkthrough, the same 21 as main's copies at 0d13561d give. It added none. This is outside the three checks.
+   - (e) Seven errored calls: four writes before a read, one write after the file changed since its read, and two foreground sleeps refused.
+   - (f) Its records report gives the custodian's scratch folder by its full place in one sentence, and cites files and lines on PR B's branch. The filed copy masks the place and gives the cites in words, as its filing note says.
+
+7. **The holds (class 1; ADV-2026-11-15-17 item 4 (d)).**
+   - The worker took 2 holds, each in its own background call. Each followed a status read in a call of its own that showed no hold of this project, and each chain's read after the grant showed one, its own. The custodian checked each against the read before it. By the transcripts, each hold's start and end:
+     - rec-pa-1: 20:29:14Z to 20:33:53Z, after the read that ended at 20:29:04Z.
+     - rec-pa-l1: 20:35:37Z to 20:45:32Z, after the read that ended at 20:35:31Z.
+   - The lod-tier worker's last hold ended at 20:03:15Z (its form's Amendment 2 item 6). None overlapped. The correction took no hold.
+
+8. **The lod-tier gates beside PR B's (class 1; ADV-2026-11-15-17 item 4 (c)).** PR 326's reviewer and architect were dispatched at 2026-11-15T21:27:18Z, from the custodian's packet (6145 bytes, sha256 537a5f6e199a18f1f14e3b722b797025124ed4fbaf9d6100ab3ee477bf3798a0). PR B's gate reviewer may run beside the lod-tier reviewer. Each brief says so, and names the lod-tier reviewer, the filler's gate, as the one that yields.
+
+9. **The changed-paths list (ADV-2026-11-14-21 item 6).** From the merge base 2abf3ea0, read against main at 4327a2ee: none of the PR's 54 paths has changed on main. It is read again before the last gate.
+
+10. **What follows.**
+   - PR B's draft PR, opened by the custodian at the head 0cf05452 after this amendment's commit. Its body lists the re-read of item 64 to item 65, the items revised under class 9, and any words applied under AUTONOMY §31 (d).
+   - Then both gates from dispatch at that head. Their packets carry item 3's checks, item 51's draft, AC5, the window of Amendment 21 item 5 and item 8 here.
+   - After the gates, the drafts go to the advisor: items 51, 54, 56 and 66, item 65's sentence, AC5's words, and any words for F5 or G3.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 24: the format check failed unread on PR B's branch from 2026-11-14 (class 1, the custodian's finding); rustfmt applied to one Rust test file at 6f7e744c (class 1, a code change in a §2.6 file); both gates and the head series dispatched at that head, with one order of yielding (class 1); the changed-paths list. Written by the custodian after the format fix's hand-back and the dispatch, before any gate's result.
+
+*Written by the custodian on 2026-11-15. The format worker's report is filed at `state/consults/2026-11-15-b1-shell-half-pr-b-rustfmt-worker-report.md`. Where an item gives its content in other words, the words are the custodian's; the report and the runs are the record. Counts are by git, CI runs by `gh run list`, times by the transcripts.*
+
+1. **The finding (class 1, the custodian's).** PR #327's first CI read, at 2026-11-15T22:14:51Z at 0cf05452, showed `cargo fmt --check (workspace and src-tauri)` failing on `renderer/tests/style_agreement.rs`, a PR B file, at two places. The Rust fmt workflow's runs on the branch, oldest first:
+   - 6649a443, push, 2026-11-13T06:23:06Z: success; 5b309b78, push, 2026-11-14T08:30:29Z: success. Both are before the file's PR B lines (572bb917).
+   - 31cf0e22, push, 2026-11-14T15:05:35Z: failure; bfcb57e7, push, 2026-11-15T14:08:32Z: failure; 0cf05452, pull_request, 2026-11-15T22:05:48Z: failure.
+   - 6f7e744c, push, 2026-11-15T22:18:25Z, and pull_request, 2026-11-15T22:18:29Z: success.
+   - The commits after bfcb57e7 up to 0cf05452 change no Rust file and no `Cargo.toml`, by git, and the workflow runs only on such paths, so their pushes ran it at no head. So no head of the branch from 31cf0e22 up to 0cf05452 was green on that check. The three failures went unread until the PR's own read.
+
+2. **The fix (class 1, a code change in a §2.6 file).** The worker was dispatched at 2026-11-15T22:17:02Z and handed back at 2026-11-15T22:19:01Z: commit 6f7e744cf6a1c1337fdaf62bfdc113c1de531f1a, on 0cf05452, pushed, `renderer/tests/style_agreement.rs` alone, 20 lines added and 5 removed. By the custodian's check, with whitespace, braces and commas set aside, the file's text equals its parent's. By the report, both scopes' format check exit 0 at the head, and it ran no build or test. The custodian told the advisor at 2026-11-15T22:24:32Z. The advisor's message, received at 2026-11-15T22:25:01Z, needs no ruling. By the advisor's reading there, the pan-anchor runs at 0fa941c0 stand for 6f7e744c, as ADV-2026-11-15-20 item 3 has it for the commit before. The fix comes before the gates, so that they pass the head the merge check will name.
+
+3. **The dispatch (class 1).** At H = 6f7e744c, from the custodian's packet (7834 bytes, sha256 6fa1f609f6a504d6b113e539b22b0d5d487dd15845f5e6588baf3ed8f9d3d4db):
+   - the architect at 2026-11-15T22:24:07Z (brief 7412 bytes, sha256 4dcf500e2afbe091126d17d561d2e66c0079b905e8827429ef7205f7ad9a4152);
+   - the reviewer at 2026-11-15T22:24:10Z (brief 15573 bytes, sha256 6c4cd0d4c5eb6e8416bf7704cce1a656787f6efb79331fed7dacd3f6f8e22023), in its own new worktree `C:/dev/wt/m4b-g327r` with its cargo target on D:, both removed at the closing records;
+   - the tester at 2026-11-15T22:24:12Z (brief 17479 bytes, sha256 2e698aaf28bf17357af2b636a4f0ab0b8c7ed76feefc642e69200ed27d72f961), for the e2e series at the head: every suite, the colour suite, recentre-crossing on a new measure build, and the six recorded e2e mutations observed. This is as PR C's tester's series at its gate head was (Amendment 7).
+
+4. **The order of yielding (class 1; ADV-2026-11-15-17 item 4 (c)).** One order: PR B's gate reviewer first, then PR B's tester, then the lod-tier reviewer (PR 326's, the filler's gate). Each yields to every agent before it, and at a re-read after its grant that shows two holds of this project, each releases without running. The two PR B briefs name the order. The lod-tier reviewer's brief named PR B's reviewer, and the custodian's message at 2026-11-15T22:26:43Z added the tester to it.
+
+5. **The changed-paths list (ADV-2026-11-14-21 item 6).** From the merge base 2abf3ea0 to the head 6f7e744c, read against main at 6346c763: none of the PR's 54 paths has changed on main.
+
+6. **What follows.** The gates' reports and the series' report, filed with the closing amendment, which records the class 8 count at the head by §7's command. Then the drafts go to the advisor: items 51, 54, 56 and 66, item 65's sentence, AC5's words, and any words for F5 or G3.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 25: PR B's gate 1 at 6f7e744c, the architect's FAIL (C1 to C3) and the reviewer's PASS WITH NOTES, by reference; the advisor's rulings ADV-2026-11-15-23 and ADV-2026-11-15-24 join by reference (class 5); C1 and C2 by their option (a), and the ending of Colour by at an open (class 9, a scope addition), declared before their code; the architect's O4 recorded as the advisor's reading. Written by the custodian before the correction's code
+
+*Written by the custodian on 2026-11-16. Where an item gives its content in other words, the words are the custodian's; the gate reports and the rulings are the record. Hashes are by git.*
+
+1. **The gates (by reference).** At 6f7e744cf6a1c1337fdaf62bfdc113c1de531f1a:
+   - the architect, gate 1, FAIL: `state/consults/gates/2026-11-15-b1-shell-half-pr-b-gate1-architect.md`, gate-log row 763. C1, C2 and C3 are its Correctness findings.
+   - the reviewer, gate 1, PASS WITH NOTES: `state/consults/gates/2026-11-15-b1-shell-half-pr-b-gate1-reviewer.md`, gate-log row 766. It has no Correctness or Evidence finding, and D1 to D6.
+
+   Row 763 stays FAIL. The architect's check of the corrected head is attempt 2 of its gate, with its own verdict and row (ADV-2026-11-15-23 item 9).
+
+2. **The rulings (class 5, by reference).** Both are the advisor's, under the human's delegation of 2026-11-13:
+   - ADV-2026-11-15-23: `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-23-pr-326-further-lines-inside-the-piece-to-its-merge-check-pr-327-c1-c2-take-a-the-rest-after-the-filed-architect-report.md`;
+   - ADV-2026-11-15-24: `state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-24-pr-327-opening-a-file-ends-colour-by-a-third-correction-item-o4-confirmed-o3-to-a-node-the-words-after-the-corrected-head.md`;
+   - ADV-2026-11-16-01, the two statements of C1: `state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md`.
+
+3. **C1, option (a).** §2.5's class C rows `style.colourBy` and `style.oneColour` are built as §2.5 requires.
+   - Each joins `CLASS_C_ROWS` in `frontends/shell/src/console/surfaceRegistry.ts`. Its statement is the advisor's wording, the fence of ADV-2026-11-16-01 for that row (items 1 and 2). Each text is applied by script, byte for byte, and both gates check each clause at the corrected head (item 3).
+   - Each is recorded by `recordNamed` at the action and before its outcome:
+     - in `applyColourBy` (`StylePanel.tsx`), only once the apply goes past its first return (a column chosen, no export held, no wait pending), and before the wait (ADV-2026-11-16-01 item 2 (b));
+     - in `handleOneColour`, before its commit.
+   - A Colour by that applies nothing keeps its row.
+   - **Test PB-U13**, in `frontends/shell/src/style/StylePanel.test.tsx`: "PB-U13: Colour by and One colour each record their class C row at the action, before the outcome, whatever the outcome". Its mutations remove each `recordNamed` call, one at a time. Each mutation fails the test.
+
+4. **C2, option (a).** `frontends/shell/src/table/tableSource.ts` is already on PR B's list, by Amendment 5 item 2 (class 9, 30 lines in B-P). So this item declares the guard and its test, not the file. Lines past those 30 are class 8.
+   - **The guard.** Colour by's Cancel cancels a request only while the source still holds the request its wait issued. The source's snapshot names the request it holds, a number each `start` changes. `abandon` compares that number with the one its own `start` gave.
+   - **Test PB-U9 (vi)**, in `frontends/shell/src/style/categoryCases.test.ts`. It runs on a real `tableSource`, with only the transport mocked: "PB-U9 (vi): a Colour by's wait, then the Table's superseding request, then Colour by's Cancel: the Table's request is not cancelled and only the wait is abandoned". Its mutation makes `abandon` cancel whenever the wait issued a request, as at 6f7e744c. The mutation fails the test.
+   - If the guard needs `tableSource.test.ts`, the worker stops. That file joins by class 9 before its code.
+
+5. **Opening a file ends Colour by (ADV-2026-11-15-24 item 1; class 9, a scope addition, declared before its code).**
+   - In `admit` (`frontends/shell/src/workspace/workspaceState.ts`), on every later admission, the filter is reset; at the same point the view's `fillMatch` becomes null.
+   - The fill colour, the opacity, the outline colour and the outline width are kept. The action's doc comment says so.
+   - Its files are already on PR B's list or in its diff: `workspaceState.ts`, `workspaceState.test.ts`, `App.tsx`, `App.colour.test.tsx`, `StylePanel.tsx` and `StylePanel.test.tsx`.
+
+   - (a) **Test PB-U14**, in `frontends/shell/src/workspace/workspaceState.test.ts`: "PB-U14: a later admission, under the same dataset key and under another, ends Colour by and keeps the four other style properties". Its mutation keeps the match. The mutation fails the test.
+   - (b) **The seams that mirror the committed style**, each with its test:
+     - **App's `lastCommittedStyle`**, the baseline `handleStyleCommit` compares against. An admission that ends the match ends it there too, and no step is recorded for the open. Its test is PB-R5's next commit. Its mutation leaves the baseline holding the match: the next commit then records a match step too, and PB-R5 fails.
+     - **The Legend.** It renders the view's style, so it empties with the match. Its test is PB-R5.
+     - **StylePanel's Colour by line and its chosen column.** App makes the panel anew when the dataset key changes, because its Style slot is keyed `style-${admitted.dataset}`. Under the same key, the panel is not made anew. So when the match ends other than by the panel, the line is cleared, and a chosen column the candidates no longer list is reset to none.
+       - **Test PB-U15**, in `frontends/shell/src/style/StylePanel.test.tsx`: "PB-U15: under the same panel, a match ended from outside clears the Colour by line, and a chosen column no longer offered is reset". It has two mutations, each failing the test: one keeps the line, the other keeps the column.
+   - (c) **Test PB-R5**, in `frontends/shell/src/App.colour.test.tsx`: "PB-R5: with Colour by applied, opening another file draws every feature in the Fill colour, empties the legend, and the next commit records only what it changes".
+     - It runs through the open path App uses, `handleAdmitted`'s dispatch of `resource.admitted`, not through the reducer alone.
+     - It sits at App's level, not as a `colour.mjs` step: App's level reads each outcome exactly, and the open path in the shell is the same code. The drawn fill comes from the layers App builds, the legend from the DOM, and the steps from the captured `record_step` requests; the e2e would read pixels.
+     - If App's test cannot read the drawn fill, the worker stops, and the step goes to `colour.mjs` by amendment.
+   - (d) **The architect's O2, settled.** At an open under a new dataset key, the panel is made anew by the keyed slot in (b). Under the same key, PB-U15's reset of the column covers it.
+   - **The records.** Drafts A and G fall away, and E and B (ii) change with them. Item 4's On-main paragraph is re-read and not changed; a clause that no longer holds goes to the advisor (ADV-2026-11-15-24 item 6 (b)).
+
+6. **The architect's O4, recorded as the advisor's reading (ADV-2026-11-15-24 item 4).**
+   - §8 item 10 watches for the Table issuing its stream on a pan, while hidden or while a consumer is held, and for a second stream.
+   - Colour by's one request while the Table is hidden is OPEN-16 (b)'s design, built as Amendment 12 item 4 gives it: one source and one stream. It is not a sighting of item 10.
+   - The clause on more than one table stream still binds Colour by.
+
+7. **The architect's O3.** It is not in this PR. A PLAN node is proposed to the advisor (ADV-2026-11-15-24 item 5).
+
+8. **The words.** None changes before the correction's code.
+   - The architect's D1 and D2 apply in its own words, with no re-gate (AUTONOMY section 31 (d)):
+     - D1 is the comment at App's colour-column effect. The correction worker applies it.
+     - D2 goes into the PR body.
+   - The reviewer's D4 and D5: the correction worker observes the two mutations again at its head and reports the failures. The comment lines are worded with the rest.
+   - The reviewer's D1 is recorded as class 8 in the closing amendment: `renderer/tests/style_agreement.rs`, at 49 lines against §7's 40.
+   - After the code, the records worker drafts, from the code (ADV-2026-11-15-24 item 6):
+     - item 65's last sentence;
+     - one sentence saying that opening a file ends Colour by, and where it sits;
+     - item 51's matching clause;
+     - AC12;
+     - a re-read of Part AC's rows after AC5.
+
+     The advisor rules every word once, at the corrected head.
+
+9. **The order (ADV-2026-11-15-24 item 7).**
+   1. This amendment.
+   2. One correction worker for C1, C2 and item 5, tests first. Each new test is observed failing before its code.
+   3. The records worker.
+   4. At the corrected head:
+      - the architect's attempt 2, whole, with the reads its first attempt left out;
+      - the reviewer's attempt 2, on the correction's diff, with its mutations re-applied;
+      - the tester's series, every suite.
+
+   The series that was running at 6f7e744c is finished and filed as it is. The changed-paths list is read again before the last gate.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 26: `frontends/shell/src/console/surfaceCompleteness.test.ts` joins PR B's list for Amendment 25 item 3 alone (class 9, a scope addition, declared before its code); found by the custodian at the correction's dispatch
+
+*Written by the custodian on 2026-11-16, before the correction's code. The advisor's ruling ADV-2026-11-16-06, item 8 (a), allows an amendment between Amendment 25 and the closing when the scope changes; this one changes it by one test file. That ruling is filed at `state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md`.*
+
+1. **Why.** The test "style edits are class-A record_step rows", in `frontends/shell/src/console/surfaceCompleteness.test.ts`, expects one class C row whose action starts with `style.`, `style.togglePanelExpanded` aside: `style.resetToDefault`. Its blob is the same at 6f7e744c and on main. Amendment 25 item 3 adds `style.colourBy` and `style.oneColour` to `CLASS_C_ROWS`, as §2.5 requires, so that test fails. The file is not on PR B's list. §7's B-T row does not name it, and neither gate report nor any ruling on PR B names it.
+
+2. **The change, in that test alone.**
+   - The expected list names three rows, `style.colourBy`, `style.oneColour` and `style.resetToDefault`, in the order `CLASS_C_ROWS` gives them.
+   - The comment above it gains one sentence for the two rows, in the shape of its sentence on Reset. The sentence says that each is recorded at the action whatever its outcome, so its row is not a style edit that is recorded, and that a change sends its step as the `record_step` row.
+   - Nothing else in the file changes. Its recorded mutation (re-add `style.setFillColor` to `CLASS_C_ROWS`) still adds a style edit to class C, so it still fails the test. The correction worker observes it again at its head.
+
+3. **Size.** The file has no ceiling of its own in B-T. Its lines count toward B-T's total, and any past it are class 8.
+
+4. **The gates.** Both gates' second attempts read this change with Amendment 25 item 3.
+
+Read the last amendment first.
+
+Nothing above is edited.
