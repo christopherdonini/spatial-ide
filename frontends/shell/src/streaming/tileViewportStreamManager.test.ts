@@ -1134,6 +1134,84 @@ describe("TileViewportStreamManager", () => {
       expect(manager.inFlightCount).toBe(MAX_IN_FLIGHT_TILE_STREAMS - 1); // sh_2, sh_3 -- sh_1's tile never reached in-flight
       expect(manager.queuedCount).toBe(0); // the queued tile was drained into the freed slot
     });
+
+    // The stream-refusal piece S1 (`governance/forms/frontends/SHELL-TILED-ARM-STREAM-REFUSAL-SHOWN-TO-THE-USER-PREREGISTRATION.md`
+    // §4): a dropped tile is reported to the owner through `onTileDropped`, so the session can re-sync its scan and recompute its status.
+    describe("onTileDropped (the stream-refusal piece S1)", () => {
+      const originCell = (manager: TileViewportStreamManager) => {
+        const frame = manager.gridFrame!;
+        const cellSize = frame.baseSpan / 16;
+        return { xmin: frame.originX, ymin: frame.originY, xmax: frame.originX + cellSize, ymax: frame.originY + cellSize };
+      };
+      const issuedKey = (outcome: ReturnType<TileViewportStreamManager["onCameraChange"]>) => (outcome.kind === "planned" ? outcome.issued[0] : "none");
+      const setUp = () => {
+        const onTileDropped = vi.fn();
+        const { manager } = makeManager({ onTileDropped });
+        manager.establishGridFrame(ANCHOR, "metre");
+        return { manager, onTileDropped };
+      };
+
+      it("TM-D1: called once with the key after the second refusal, and after a non-retryable one; not on the requeue", async () => {
+        const { manager, onTileDropped } = setUp();
+        let rejectRetry!: (e: unknown) => void;
+        viewportQueryMock.mockRejectedValueOnce(RETRYABLE_ENGINE_ERR).mockImplementationOnce(() => new Promise((_, reject) => (rejectRetry = reject)));
+        const key = issuedKey(manager.onCameraChange(originCell(manager)));
+        await flushMicrotasks();
+        expect(viewportQueryMock).toHaveBeenCalledTimes(2);
+        expect(onTileDropped).not.toHaveBeenCalled(); // the requeue is not a drop
+        rejectRetry(RETRYABLE_ENGINE_ERR);
+        await flushMicrotasks();
+        expect(onTileDropped.mock.calls).toEqual([[key]]);
+
+        const other = setUp();
+        viewportQueryMock.mockRejectedValueOnce(new SkpCallError({ code: "skp.filter_too_long", message: "predicate too long", fields: {} }));
+        const otherKey = issuedKey(other.manager.onCameraChange(originCell(other.manager)));
+        await flushMicrotasks();
+        expect(other.onTileDropped.mock.calls).toEqual([[otherKey]]);
+      });
+
+      it("TM-D2: a dataPlaneAttach failure drops the tile and calls onTileDropped once", async () => {
+        const { manager, onTileDropped } = setUp();
+        viewportQueryMock.mockResolvedValueOnce({ stream: "sh_1", expires_in_ms: 30_000 });
+        dataPlaneAttachMock.mockRejectedValueOnce(new Error("data-plane attach failed"));
+        const key = issuedKey(manager.onCameraChange(originCell(manager)));
+        await flushMicrotasks();
+        expect(manager.trackedTileCount).toBe(0);
+        expect(onTileDropped.mock.calls).toEqual([[key]]);
+      });
+
+      it("TM-D3: a retryable refusal while over budget is dropped, not queued, and calls onTileDropped once", async () => {
+        const { manager, onTileDropped } = setUp();
+        viewportQueryMock.mockRejectedValueOnce(RETRYABLE_ENGINE_ERR);
+        const key = issuedKey(manager.onCameraChange(originCell(manager)));
+        manager.setOverBudget(true); // before the refusal lands
+        await flushMicrotasks();
+        expect(viewportQueryMock).toHaveBeenCalledTimes(1);
+        expect(manager.queuedCount).toBe(0);
+        expect(manager.trackedTileCount).toBe(0);
+        expect(onTileDropped.mock.calls).toEqual([[key]]);
+      });
+
+      it("TM-D4: control: a stale-epoch refusal and a stopped manager's refusal call no onTileDropped", async () => {
+        const stale = setUp();
+        let rejectStale!: (e: unknown) => void;
+        viewportQueryMock.mockImplementationOnce(() => new Promise((_, reject) => (rejectStale = reject)));
+        stale.manager.onCameraChange(originCell(stale.manager));
+        stale.manager.onCameraChange({ xmin: 10_000, ymin: 10_000, xmax: 10_001, ymax: 10_001 }); // the tile leaves the view
+        rejectStale(RETRYABLE_ENGINE_ERR);
+        await flushMicrotasks();
+        expect(stale.onTileDropped).not.toHaveBeenCalled();
+
+        const stopped = setUp();
+        let rejectStopped!: (e: unknown) => void;
+        viewportQueryMock.mockImplementationOnce(() => new Promise((_, reject) => (rejectStopped = reject)));
+        stopped.manager.onCameraChange(originCell(stopped.manager));
+        await stopped.manager.stop();
+        rejectStopped(RETRYABLE_ENGINE_ERR);
+        await flushMicrotasks();
+        expect(stopped.onTileDropped).not.toHaveBeenCalled();
+      });
+    });
   });
 
   // -------------------------------------------------------------------------------------

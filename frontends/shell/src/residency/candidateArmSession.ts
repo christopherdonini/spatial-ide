@@ -509,6 +509,10 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * dataset/filter change supersedes the sticky status honestly" moments, so a LATER terminal for an
    * already-superseded relinquish never mistakenly re-emits a status nothing is standing for any more. */
   let lastEmittedRelinquishedUntiled = false;
+  /** The stream-refusal piece S1 (§2.2 (b), (c)): `true` while a `candidate-first-look-failed` status
+   * this session emitted is standing. Consumed by the next fresh plan (`handleViewportChange`), which
+   * clears that status as its fill starts; reset by `reissueUnrestricted`, whose `query-issued` clears it. */
+  let firstLookFailureStanding = false;
   /** Piece 2(i) (residency-debt cut 1b, entry 36 rule (i)): `true` exactly when the LAST thing
    * `emitResidencyStatus` actually dispatched was `candidate-within-budget` with `settled: "complete"`
    * ("Showing all N features in view") -- read by that same function to decide whether a later silent
@@ -1053,6 +1057,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // to a genuine terminal exactly as it does to a supersede.
       if (manager.trackedTileCount === 0) emitResidencyStatus();
     },
+    // The stream-refusal piece S1 (§2.2 (a)): a tile dropped without a stream (its mint refused past
+    // the bounded requeue, or its `dataPlaneAttach` failed) ends its work here as a terminal would.
+    // Nothing goes into `failedCoveringTerminals`, and no `canvas.clearTile`: nothing of it was drawn.
+    onTileDropped: () => {
+      syncScanLiveness();
+      if (manager.trackedTileCount === 0) emitResidencyStatus();
+    },
     // **P3b §2a(iii): the owner's half of boundary 4, on the tiled arm.** Reached from every one of
     // the three places this arm can learn the fact -- a tile stream's terminal, the untiled
     // first-look stream's terminal (through `manager.notifySessionEnded`, below), and a tile
@@ -1434,9 +1445,33 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // the sticky refusal (that refusal names only within/over-budget events), so this reaches the
         // standing status unconditionally, exactly the "relinquish-over-relinquish" case its own doc
         // comment already permits.
-        if (wasCurrent && lastEmittedRelinquishedUntiled) {
+        const relinquishedReEmitted = wasCurrent && lastEmittedRelinquishedUntiled;
+        if (relinquishedReEmitted) {
           lastEmittedRelinquishedUntiled = false;
           emitResidencyRelinquished();
+        }
+        // The stream-refusal piece S1 (§2.2 (b); Amendment 2 item 2, C-1): this generation's own first
+        // look ended. After a plan, whatever its kind, the existing settled path recomputes the status:
+        // when the last tile ended while this look ran, it found the view not settled, so with nothing
+        // else outstanding this is the settling moment. Before any plan, only a failure speaks: nothing
+        // else would ever settle the bar, so it says what is left.
+        // Not covered (AUTONOMY §31), timing inside one request round trip: an earlier look whose
+        // terminal arrives after a reissue but before the new look's ticket is minted is read as current;
+        // if a plan ran and its tiles ended in that window, the status can read settled until the new
+        // look's first batch or its terminal recomputes it.
+        if (wasCurrent && !wasSelfCancelled && !relinquishedReEmitted && (hasPlanned || terminal.kind !== "Completed")) {
+          if (hasPlanned) {
+            emitResidencyStatus();
+          } else if (manager.gridFrame !== null && untiledRowsSeen > 0) {
+            deps.onResidencyStatusChange?.({
+              kind: "candidate-within-budget",
+              residentFeatureCount: canvas?.getResidentCounts().totalResidentFeatures ?? 0,
+              settled: "partial-failure",
+            });
+          } else {
+            deps.onResidencyStatusChange?.({ kind: "candidate-first-look-failed", frame: manager.gridFrame !== null });
+            firstLookFailureStanding = true;
+          }
         }
         syncScanLiveness(); // P5f should-fix 3: covers a genuine terminal (failure/complete/cancel)
       },
@@ -1506,6 +1541,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // untiled stream (if any) must never mistake this session's own state for "still the one that
       // relinquish left standing" (`lastEmittedRelinquishedUntiled`'s own doc comment, above).
       lastEmittedRelinquishedUntiled = false;
+      deps.onResidencyStatusChange?.({ kind: "candidate-fill-progress" });
+    }
+    // The stream-refusal piece S1 (§2.2 (c)): the retry a failed first look's sentence offered has
+    // started, so that sentence does not stand through its fill.
+    if (firstLookFailureStanding) {
+      firstLookFailureStanding = false;
       deps.onResidencyStatusChange?.({ kind: "candidate-fill-progress" });
     }
     // The common case: a tile the manager just began minting a real ticket for (`beginIssue`) --
@@ -1703,6 +1744,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // (App.tsx). Fired here, at the clear itself (residency truly is empty at this instant), not
       // only in App.tsx's dataset-open call to this function -- Apply/Clear reach this same seam.
       deps.onResidencyStatusChange?.({ kind: "query-issued" });
+      firstLookFailureStanding = false; // S1 (§2.2 (d)): the `query-issued` above cleared it
       syncScanLiveness(); // P5f should-fix 3: the clear may have ended every tracked tile's own work
       return issueUntiledQuery(bbox, filter);
     },

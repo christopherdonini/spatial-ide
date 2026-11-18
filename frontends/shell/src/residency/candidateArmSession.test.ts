@@ -2025,12 +2025,11 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
       expect(onResidencyStatusChange).not.toHaveBeenCalled(); // subsumes the narrower kind-shaped check too
 
       // M1: complete the untiled look now -- `sh_2` reaches its own terminal, clearing
-      // `untiledStreamRunning`. This alone does not itself emit (no `emitResidencyStatus()` call at the
-      // untiled stream's own terminal -- S2's own surfacing obligation is scoped to the TILE manager's
-      // `onTileSuperseded`/`onTerminal`, not this session-owned stream); `pendingViewportChange` is
-      // ALSO still `true` at this exact instant (the debounce has not fired yet either), so even if it
-      // did emit, it would still read not-settled. The already-scheduled debounce firing next is the
-      // first genuinely honest opportunity to settle.
+      // `untiledStreamRunning`. A plan has run, so this terminal recomputes the status (the
+      // stream-refusal piece S1, C-1's fix), but it emits nothing: `pendingViewportChange` is ALSO
+      // still `true` at this exact instant (the debounce has not fired yet either), so it reads
+      // not-settled. The already-scheduled debounce firing next is the first genuinely honest
+      // opportunity to settle.
       completeUntiledLook();
       expect(onResidencyStatusChange).not.toHaveBeenCalled();
 
@@ -2242,11 +2241,17 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
       expect(residencyStatusText(event)).not.toContain("Filling has stopped for this view");
 
       // M1: complete the untiled look now -- `sh_2` reaches its own terminal, clearing
-      // `untiledStreamRunning`. This alone does not itself emit (S2's own surfacing obligation is
-      // scoped to the TILE manager's `onTileSuperseded`/`onTerminal`, never this session-owned untiled
-      // stream) -- no NEW call beyond the one already asserted above.
+      // `untiledStreamRunning`. A plan has run, so this terminal now emits by itself (the stream-refusal
+      // piece S1, C-1's fix: the untiled sink's `onTerminal` recomputes the status after a plan, whatever
+      // the terminal's kind) -- one NEW call, carrying the settled status the last step also expects.
       completeUntiledLook();
-      expect(onResidencyStatusChange).toHaveBeenCalledTimes(1);
+      expect(onResidencyStatusChange).toHaveBeenCalledTimes(2);
+      expect(onResidencyStatusChange).toHaveBeenLastCalledWith({
+        kind: "candidate-over-budget",
+        residentFeatureCount: 7,
+        viewportTotal: null,
+        settled: "partial",
+      });
 
       // The next emission (another plan; the SAME candidate is still skipped, still over budget) now
       // settles honestly, classified settled-partial -- never a completeness/total claim over this
