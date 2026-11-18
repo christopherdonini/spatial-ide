@@ -2,7 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 /**
- * SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 4, PB-R1 (the chooser), PB-U8 and PB-R3, and Amendment 25's PB-U13 and PB-U15: the Colour by block of the REAL `StylePanel`, over a real `TableSource` whose transport is the stand-in
+ * SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md section 4, PB-R1 (the chooser), PB-U8 and PB-R3, Amendment 25's PB-U13 and PB-U15, and PB-U16 and PB-U17 (the line against a second wait): the Colour by block of the REAL `StylePanel`, over a real `TableSource` whose transport is the stand-in
  * (`categoryCases.test.ts` has the same one). The legend is `Legend.test.tsx`'s.
  */
 
@@ -144,9 +144,9 @@ describe("the Colour by block of the Style tab", () => {
     expect(q<HTMLButtonElement>(".style-colour-apply")!.disabled, "Apply after Cancel").toBe(false);
   });
 
-  const panel = (style: StyleState, table: TableSource | null, columns = COLUMNS): void =>
+  const panel = (style: StyleState, table: TableSource | null, columns = COLUMNS, view = filter): void =>
     act(() => {
-      root.render(<StylePanel style={style} onChange={onChange} onCommit={onCommit} columns={columns} source={table} filter={filter} exportHeld={false} />);
+      root.render(<StylePanel style={style} onChange={onChange} onCommit={onCommit} columns={columns} source={table} filter={view} exportHeld={false} />);
     });
   const rows = (action: string): number => consoleRecorder.entries().filter(isGuiActionEntry).filter((e) => e.action === action).length;
   const MATCH = { column: "tag", cases: [{ when: "a", then: CATEGORY_PALETTE[0] }], onNull: CATEGORY_NULL_COLOR, onUnmatched: CATEGORY_OTHER_COLOR };
@@ -197,5 +197,105 @@ describe("the Colour by block of the Style tab", () => {
     expect(line(), "the Colour by line after the match ended from outside").toBe("");
     expect(q<HTMLButtonElement>(".style-colour-apply")!.disabled, "Apply with the chosen column no longer offered").toBe(true);
     expect(q<HTMLSelectElement>(".style-colour-column")!.value, "the chosen column").toBe("");
+  });
+
+  const lastChange = (): StyleState => onChange.mock.calls[onChange.mock.calls.length - 1][0];
+  function fillColour(value: string): void {
+    const input = q<HTMLInputElement>(".style-fill-color")!;
+    act(() => {
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!.call(input, value);
+      input.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+  }
+  /** Colour by on `tag` applied through the panel over `table`'s first scope, its next style handed back as App would, with the controls shown. */
+  async function colouredBy(table: TableSource, handle: string | null, view = filter): Promise<StyleState> {
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    await flush();
+    if (handle !== null) deliver(handle, ["a", "b"]);
+    await flush();
+    const applied = lastChange();
+    panel(applied, table, COLUMNS, view);
+    return applied;
+  }
+  const other = { predicate: "zone = 'b'", dialect: FILTER_DIALECT_DUCKDB_EXPR_0 };
+
+  // RECORDED MUTATION for PB-U16, applied alone: in `StylePanel` (style/StylePanel.tsx) put back the flag the Fill colour, One colour and Reset set so that the effect on the match leaves the line (`endedHereRef`, as at d1d3a29f).
+  // Expected failure: (a) the Colour by line after the Fill colour change.
+  it("PB-U16: with Colour by applied, a Fill colour change and Reset each clear the Colour by line", async () => {
+    const table = source();
+    panel(DEFAULT_STYLE_STATE, table);
+    act(() => q<HTMLButtonElement>(".style-disclosure")!.click());
+    choose("tag");
+    await colouredBy(table, "sh_1");
+    expect(line(), "the line with the match applied").toContain("Coloured by tag");
+    fillColour("#ff0000");
+    panel(lastChange(), table);
+    expect(line(), "(a) the Colour by line after a Fill colour change").toBe("");
+    await colouredBy(table, null); // the first scope is held complete under the view's filter: reused, no wait
+    expect(line(), "the line with the match applied again").toContain("Coloured by tag");
+    act(() => q<HTMLButtonElement>(".style-reset")!.click());
+    panel(DEFAULT_STYLE_STATE, table);
+    expect(line(), "(b) the Colour by line after Reset").toBe("");
+  });
+
+  // RECORDED MUTATION for PB-U17, applied alone: in `StylePanel` (style/StylePanel.tsx) clear the line on an end of a match whether or not a wait runs (drop `waitRef.current === null` from the effect on the match).
+  // Expected failure: (a) the line during the second wait, after the Fill colour change.
+  it("PB-U17: while a second Colour by waits, a Fill colour change, Reset and an open leave the line the wait's, and the wait's outcome sets it", async () => {
+    const table = source();
+    panel(DEFAULT_STYLE_STATE, table);
+    act(() => q<HTMLButtonElement>(".style-disclosure")!.click());
+    choose("tag");
+    const waiting = (label: string): void => {
+      expect(line(), `${label}: the line`).toContain("Reading the first features");
+      expect(q(".style-colour-cancel"), `${label}: Cancel`).not.toBeNull();
+    };
+
+    // (a) A Fill colour change during the wait, then rows: the match is applied over the new fill colour.
+    const applied = await colouredBy(table, "sh_1");
+    panel(applied, table, COLUMNS, other); // the view's filter changed, so the first scope is read again
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    await flush();
+    waiting("(a) the second wait");
+    fillColour("#ff0000");
+    panel(lastChange(), table, COLUMNS, other);
+    waiting("(a) after a Fill colour change during the wait");
+    deliver("sh_2", ["c"]);
+    await flush();
+    expect([lastChange().fillColor, lastChange().fillMatch?.column], "(a) the wait's apply: the fill colour chosen during it, and the match").toEqual(["#ff0000", "tag"]);
+    expect(line(), "(a) the line after the wait's rows").toContain("Coloured by tag");
+    panel(lastChange(), table, COLUMNS, other);
+
+    // (b) Reset during the wait, then Cancel: nothing is applied.
+    panel(lastChange(), table); // the view's filter back, so the first scope is read again
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    await flush();
+    act(() => q<HTMLButtonElement>(".style-reset")!.click());
+    panel(DEFAULT_STYLE_STATE, table);
+    waiting("(b) after Reset during the wait");
+    const changes = onChange.mock.calls.length;
+    act(() => q<HTMLButtonElement>(".style-colour-cancel")!.click());
+    await flush();
+    expect([line(), onChange.mock.calls.length - changes], "(b) the line after Cancel, and the edits since").toEqual(["[P6 placeholder] Cancelled. Nothing was applied.", 0]);
+    expect(cancelMock, "(b) the stream the second wait issued").toHaveBeenCalledWith("sh_3");
+
+    // (c) The panel's side of an open under the same dataset key (App.tsx's table source effect, its cleanup and `resource.admitted`): the old
+    // source is disposed, then the style comes without the match, then the new source; the open ends the wait, as cancelled.
+    const again = await colouredBy(table, "sh_4");
+    panel(again, table, COLUMNS, other);
+    act(() => q<HTMLButtonElement>(".style-colour-apply")!.click());
+    await flush();
+    waiting("(c) the wait before the open");
+    const before = [onChange.mock.calls.length, viewportQueryMock.mock.calls.length];
+    act(() => {
+      table.dispose();
+      root.render(<StylePanel style={{ ...again, fillMatch: null }} onChange={onChange} onCommit={onCommit} columns={COLUMNS} source={table} filter={other} exportHeld={false} />);
+    });
+    await flush();
+    panel({ ...again, fillMatch: null }, source(), COLUMNS, other);
+    await flush();
+    expect(line(), "(c) the line after the open").toBe("[P6 placeholder] Cancelled. Nothing was applied.");
+    expect(q(".style-colour-cancel"), "(c) Cancel after the open").toBeNull();
+    expect([onChange.mock.calls.length, viewportQueryMock.mock.calls.length], "(c) edits and viewport_query calls since the open").toEqual(before);
+    expect(cancelMock, "(c) the stream of the wait the open ended").toHaveBeenCalledWith("sh_5");
   });
 });
