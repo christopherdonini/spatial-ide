@@ -2241,3 +2241,30 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 34 — P2's closing, before its merge request: the gates; the words commit; the counts, with two class 8 rows; two class 1 disclosures; the form's never opened; the runs; the stops; notes for P3a, P3b and P4
+
+*Written by the custodian, 2026-11-18, before PR 332's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates** (Amendment 31 item 9). Both at H = eeebe0977d71753fbeeaa8ffa288d6fe4997e2fb, both PASS WITH NOTES, with no Correctness or Evidence finding: `state/consults/gates/2026-11-18-b2-piece-1c-save-and-reopen-p2-gate-architect.md` and `state/consults/gates/2026-11-18-b2-piece-1c-save-and-reopen-p2-gate-reviewer.md`. The worker's report: `state/consults/2026-11-18-b2-piece-1c-save-and-reopen-p2-worker-report.md`.
+2. **The words commit.** W = f89e43b5c968a4f77467742e5a0478a5e804e50d, the one commit after H. It carries the architect's D1 words (its report, Drafts), applied by the custodian's script, which checked each new comment, unwrapped, against the filed report's bytes. From H to W only comment lines of `kernel/src/session_history.rs` change, 3 added and 2 deleted. The reviewer's D1 and D2 are in the PR body, in the reviewer's words.
+3. **The counts** (both columns, as Amendment 33 item 3 counts P1b's; the reviewer's D1), `git diff --numstat e567072f...f89e43b5`:
+   - `session_history.rs` 357 (341 added, 16 deleted) against 260, **class 8**;
+   - `project_reopen.rs` 397 (397 added) against 330, **class 8**;
+   - in all, 754 lines in 2 files, against 590 and 2. By item 4's table the groups hold: kernel product 1,282 of 1,400, kernel tests 1,137 of 1,300, protocol 310 of 320, unchanged. §2.11 and §7 are not edited.
+   - The worker's report counts one column (340 against 260, 737 in all); the counts above stand for it.
+   - From the merge base to main, no path of the pull request changed (ADV-2026-11-14-21 item 6 (a)).
+4. **Two class 1 disclosures** (the architect's D2, the reviewer's O7): L1's control assertion, without which L1's declared mutation could not be observed, and L4's extra case, a not-kept member with no file read as Absent. Both are beyond item 5's rows, were written before the code, and are named in the worker's report and in the tests commit's message.
+5. **The form's never opened** (item 3, the member not-kept; the architect's D1 and D2). The code holds never read: the presence is asked by metadata only. Item 3 stays as it is.
+6. **The runs.** The worker's focused runs at H (the four test targets and `--lib session_history`, `cargo fmt --check`, the empty lock-file diffs), reused by the reviewer; the reviewer's nine mutations of item 5 at H, each failing its own test at its own assertion, and one probe (its O1); P-base at 3db87301, a compile failure as predicted. W changes comment lines only, so these runs stand for W. No app-window run (item 9).
+7. **CI.** At W, read 2026-11-18T21:01:37Z: Product CI — Rust workspace passed on all three platforms in the pull_request run 44393641598 and the push run 44393628969 (the macOS jobs 135117629806 and 135117586446, 12 steps each), and the shell, governance, fmt, DCO, exposure and notices runs passed. The one red run on the branch is 43825113674 at 3db87301, P-base, as predicted.
+8. **The stops.** None fired. The reviewer's one departure, a first L1 run that failed in setup on a temporary folder not yet made, is in its report's section 7.
+9. **Notes for P3a, P3b and P4** (none blocks P2):
+   - P3a: a case for arm 2's steps check, a member with the previous file's sha256 and another steps (the reviewer's O1); step 6's place against the open's cancel key (the reviewer's O6, the architect's O9); the not-kept error and link edges (the reviewer's O3, the architect's O4 and O5); which refusal wins when two lines break different rules (the architect's O3).
+   - P3b: whether an unreadable file stays Damaged at line 0 or is a fact of its own (the reviewer's O2, the architect's O1); the lineage properties ADR-036 §8 leaves open (the architect's O6).
+   - P3b and P4: Damaged's rule text is a Debug form, not for a user (the reviewer's O5, the architect's O7).
+10. **Superseded index.** Nothing is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
