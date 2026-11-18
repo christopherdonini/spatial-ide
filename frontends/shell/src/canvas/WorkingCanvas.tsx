@@ -148,6 +148,12 @@ export interface WorkingCanvasHandle {
    * before the canvas's first camera write. It changes nothing. Its product caller is `App.tsx`'s save. Optional in the type only, as
    * `fitToBbox` is; the component always provides it. */
   currentView?(): { centre: [number, number]; zoom: number } | null;
+  /** The box the canvas shows now, in the authoritative CRS (ADR-010 rule 1): the camera last written, its target plus the offset
+   * frame's origin, at the canvas's CSS client size -- the computation `onResize`'s unreported branch makes for `onViewShown`. `null`
+   * before the canvas's first camera write or at a zero client size. It changes nothing and issues nothing. Its one product caller is
+   * the candidate session's first-look terminal (`candidateArmSession.ts`'s untiled sink, through `CandidateArmSessionDeps.canvas`),
+   * which plans this box. Optional in the type only, as `currentView?` is; the component always provides it. */
+  shownViewportBbox?(): AuthoritativeBbox | null;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
@@ -1625,6 +1631,14 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const camera = cameraRef.current;
         if (camera === null) return null;
         return { centre: [camera.targetX + camera.originX, camera.targetY + camera.originY], zoom: camera.zoom };
+      },
+
+      shownViewportBbox() {
+        const camera = cameraRef.current;
+        const widthPx = canvasElRef.current?.clientWidth ?? 0;
+        const heightPx = canvasElRef.current?.clientHeight ?? 0;
+        if (camera === null || widthPx <= 0 || heightPx <= 0) return null;
+        return computeAuthoritativeViewportBbox({ ...camera, widthPx, heightPx });
       },
 
       resetFitForNewGeneration() {
