@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3fa0ff5c059e21eae34672c5096f4424173e34ff36c5432c4ecefccace8f96bc`) at `2026-11-18T15:39:48.584Z`.
+Generated from `PLAN.yaml` (sha256 `34e86fb0a54d7298849cd0b9eb35989afd1dfd7b7b9edde3cb6c7ee4928addda`) at `2026-11-18T16:12:27.689Z`.
 
 ## 1. Next
 
@@ -56,7 +56,6 @@ Generated from `PLAN.yaml` (sha256 `3fa0ff5c059e21eae34672c5096f4424173e34ff36c5
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status — evidence: branch `cut/shell-tiled-arm-stream-refusal-s1`
 
 ## 6. Proposed / unscheduled
 
