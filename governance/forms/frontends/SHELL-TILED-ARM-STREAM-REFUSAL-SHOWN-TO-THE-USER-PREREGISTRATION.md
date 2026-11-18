@@ -429,3 +429,38 @@ Nothing above is edited.
    - The paragraph's source comment lines, and item 56's span (§10), go to the advisor after the gates.
 
 Nothing above is edited.
+
+## Amendment 3: class 9, `candidateArmSession.test.ts` joins §7 for the test M1 alone under ADV-2026-11-18-10; the fix keeps its shape; M1's last step observed; one sentence of item 4 for the records step under ADV-2026-11-18-11; recorded by the custodian before the code of the correction's step 2
+
+*Written by the custodian on 2026-11-18, after the correction stopped at its step 2 and before any of that step's code, under the advisor's rulings ADV-2026-11-18-10, filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-10-s1-m1-joins-section-7-for-m1-alone-the-fix-keeps-its-shape.md`, and ADV-2026-11-18-11 for item 7. The worker's report on the stop is `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-s1-correction-stop-at-step-2-worker-report.md`. Its observation of M1, uncommitted, is `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-s1-correction-m1-observation-worker-report.md`. References only.*
+
+1. **The stop.**
+   - The correction's step 1 is at b53d14ff3dfdba10bfdc982d5847cf8ac2f4be52: the three tests of Amendment 2 item 5, each failing at the base as predicted.
+   - With the fix of Amendment 2 item 2 applied, one existing test fails, and no other in the whole unit suite. It is "M1: over-budget + no-headroom skip reaches trackedTileCount 0 while the untiled stream still delivers", in `frontends/shell/src/residency/candidateArmSession.test.ts`.
+   - M1 counts one status call where the fix gives two. The second is the settled status, which the untiled terminal after a plan now emits.
+   - That file is not in §7's table, so its change is class 9, declared here before its code.
+
+2. **The file (the ruling's items 1 and 5).**
+   - §7's table gains one row, for M1 alone: unit, `frontends/shell/src/residency/candidateArmSession.test.ts`.
+   - The row has no ceiling of its own. Its lines count against the unit total of 1,010, which is unchanged. An excess is a class 8 row in the closing, and no more.
+   - The fix keeps the shape of Amendment 2 item 2.
+
+3. **What changes in M1 (item 3).**
+   - Everything up to and including the three assertions on the first event stays byte for byte. So do the test's name and the long comment above it.
+   - After `completeUntiledLook()`, the test expects one new call and asserts what that call carries, not the count alone. That is the settled status the last step already expects: `candidate-over-budget`, with `viewportTotal` null and `settled` "partial".
+   - The comment above that step is corrected to say that the untiled terminal after a plan now emits, by this piece.
+   - The last step was observed by a run, with the fix and this change in place and uncommitted (item 3 (d)). It passes unchanged, so it stays byte for byte. In that run no other test fails in `candidateArmSession.test.ts` or in the refusal file. M1's change is 10 lines added and 4 removed.
+
+4. **Its mutation (item 4).** The corrected step is observed failing with the fix removed. No new test is added for it.
+
+5. **The gates (item 6).** The same worker finishes the correction's steps. Both gates' second attempts of Amendment 2 item 7 read M1's change with the fix, as part of what the fix adds.
+
+6. **A stop (item 7).** If any other existing test fails once the fix is committed, the worker stops again, and the matter goes to the advisor.
+
+7. **One sentence of item 4 for the records step (class 9), by the advisor's ruling ADV-2026-11-18-11, filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-11-pr-b-draft-a-taken-for-s1s-records-step-the-architects-e-confirmed-for-the-form.md`.**
+   - At the records step of §10, after both gates, item 4's On-main paragraph in `KNOWN-LIMITATIONS.md` takes the old and new pair of that ruling's item 2, applied by script. The script checks that the old text stands once in the file before the change and the new text once after it. No other byte of the paragraph changes.
+   - The words are the reviewer's draft A from PR B's gate 2, ruled by the advisor as its own wording under the delegation of 2026-11-13.
+   - No gate reads that sentence again (the ruling's item 4). This piece does not change `frontends/shell/src/workspace/workspaceState.ts`.
+   - The paragraph's source comment gains one clause, which names the end of that sentence, from "and ends Colour by", as the advisor's wording ruled in ADV-2026-11-18-11, with the code by symbol (item 5). That comment line goes to the advisor with this piece's other comment lines (Amendment 2 item 8).
+
+Nothing above is edited.
