@@ -5,7 +5,7 @@
 //! item 5 (c), T1 to T4): `check_inside` walks a project-relative `at` from the project folder one
 //! segment at a time and refuses a link, a missing segment, an intermediate that is not a folder and
 //! a final that is not a regular file, each naming the segment; otherwise it returns the engine path.
-//! The data files here are a few bytes, not GeoParquet: the check opens no file.
+//! The data files here are a few bytes, not GeoParquet: the check reads no file's contents.
 //!
 //! A link is a junction on Windows and a symlink elsewhere (§2.9: `cfg` in test code only). T5, the
 //! text check before any read, is a unit test in `kernel/src/project/resolver.rs`.

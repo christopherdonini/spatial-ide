@@ -150,12 +150,13 @@ pub enum CheckRefused {
 /// 3. from F, one segment at a time, F joined with the segments so far is read by
 ///    `symlink_metadata`, which does not follow the last component: a link, a missing segment, an
 ///    intermediate that is not a folder and a final that is not a regular file are each refused,
-///    naming the segment. A cloud placeholder is not a name surrogate, so it is a regular file here
-///    and opens (H1).
+///    naming the segment. A cloud placeholder is not a name surrogate, so the check reads it as a
+///    regular file and passes it (H1); no test here makes one (Amendment 30 item 5 (c)).
 ///
 /// The engine path returned is F followed by the segments as checked, in the `\\?\` form on Windows
-/// (H4). No file is opened and no handle is held. This claims the check only: that the engine later
-/// reads the file checked here is not claimed (§2.5, the window).
+/// (H4). No file's contents are read, and no handle is held after the check returns. This claims
+/// the check only: that the engine later reads the file checked here is not claimed (§2.5, the
+/// window).
 ///
 /// A producer ahead of its consumer, pre-committed by Amendment 30 item 5 (d) (ADV-2026-11-16-10
 /// R2): its consumer is `Projects::open_project`'s data step, in P3a. The seam's end-to-end tests
