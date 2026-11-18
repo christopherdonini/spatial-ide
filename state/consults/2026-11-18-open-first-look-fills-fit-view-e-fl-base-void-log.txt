@@ -1,0 +1,7 @@
+
+> spatial-ide-shell@0.1.0 e2e:open-fills-fit-view
+> node e2e/open-fills-fit-view.mjs --measure-build D:/wt-targets/fl/release/spatial-ide-shell.exe
+
+precondition: first stream-issued sh_5d3eabaefde3b8ee95cf950eea1ee9a8, its batch rows 10000 (need 10000), fit view-state seen, describe.extent basis not-established-at-open, value null
+
+VOID  the precondition is unmet -- not a PASS (checks recorded before it: 0)
