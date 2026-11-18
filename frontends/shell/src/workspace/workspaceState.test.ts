@@ -104,7 +104,7 @@ describe("UA2: a resource is closable only when its consumer set is empty, and i
     state = workspaceReducer(state, { type: "consumer.released", resource: "ds_a", consumer: "view-1" });
     expect(selectClosable(state)).toEqual(["ds_a"]);
     expect(workspaceReducer(state, { type: "consumer.released", resource: "ds_a", consumer: "view-1" })).toBe(state);
-    expect(workspaceReducer(state, { type: "resource.generationEnded", resource: "ds_a" }).resources.ds_a.generationEnded).toBe(true);
+    expect(workspaceReducer(state, { type: "resource.generationEnded", resource: "ds_a", reason: "source-changed" }).resources.ds_a.generationEnded).toBe(true);
   });
 });
 
@@ -219,5 +219,22 @@ describe("UC7 (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 4): resour
     state = run(state, admit("b"));
     expect([state.views["view-1"].filter, viewClauses(state.views["view-1"])]).toEqual([null, []]);
     expect(viewNextClauseNumber(state.views["view-1"]), "the counter survives the reopen").toBe(2);
+  });
+});
+
+// RECORDED MUTATION for PB-U14, applied alone: in `admit` (workspaceState.ts) keep the view's `fillMatch` on a later admission.
+// Expected failure: the style after a later admission still holds the match.
+describe("PB-U14 (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md Amendment 25 item 5): a later admission ends Colour by", () => {
+  it("PB-U14: a later admission, under the same dataset key and under another, ends Colour by and keeps the four other style properties", () => {
+    const set = (property: string, value: unknown): WorkspaceAction =>
+      ({ type: "view.transition", view: "view-1", transition: { action: "style.set", params: { property, value } } }) as WorkspaceAction;
+    const match = { match: { column: "zone", cases: [{ when: "a", then: "#112233" }], on_null: "#aaaaaa", on_unmatched: "#bbbbbb" } };
+    const styled = [set("fillColor", "#123456"), set("fillOpacity", 0.5), set("outlineColor", "#445566"), set("outlineWidth", { value: 3, unit: "px" }), set("fillColor", match)];
+    for (const [later, where] of [["a", "under the same dataset key"], ["b", "under another"]]) {
+      let state = run(initialWorkspaceState, admit("a"), ...styled);
+      expect(state.views["view-1"].style.fillMatch?.column, `the match before the admission ${where}`).toBe("zone");
+      state = run(state, admit(later));
+      expect(state.views["view-1"].style, `the style after a later admission ${where}`).toEqual({ fillColor: "#123456", fillOpacity: 0.5, outlineColor: "#445566", outlineWidth: 3, fillMatch: null });
+    }
   });
 });

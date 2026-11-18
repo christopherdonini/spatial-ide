@@ -36,6 +36,16 @@ import { StyleParseError } from './style-error.js';
 
 export const SUPPORTED_STYLE_VERSION = 1;
 
+/**
+ * Whether a column of this Arrow type may be a match key: Utf8, LargeUtf8 and Utf8View, the spellings
+ * Arrow's `DataType` displays and the kernel's describe reply carries as `arrow_type`. It is the TypeScript
+ * half of `compiled.rs::admit_match_type`, and `renderer/tests/data/style-agreement.json`'s
+ * `match_key_rows` is read by both sides so that the two cannot drift.
+ */
+export function admitsMatchKeyType(arrowType: string): boolean {
+  return arrowType === 'Utf8' || arrowType === 'LargeUtf8' || arrowType === 'Utf8View';
+}
+
 export interface DrawParameters {
   fillColor: string;
   fillOpacity: number;
@@ -176,5 +186,11 @@ export class Style {
     if (key === null) return this.legend.length - 2;
     const i = this.legend.findIndex((e) => e.kind.kind === 'case' && e.kind.value === key);
     return i >= 0 ? i : this.legend.length - 1;
+  }
+
+  /** The group of a feature that has no key at all (its batch does not hold the match column): the
+   * unmatched group `groupFor` gives a value no case declares, or 0 for an all-literal style. */
+  unmatchedGroup(): number {
+    return this.matchColumn === null ? 0 : this.legend.length - 1;
   }
 }

@@ -3,8 +3,8 @@
 
 import { describe, expect, it } from "vitest";
 
-import { COORDINATE_SYSTEM } from "@deck.gl/core";
-import type { Position } from "@deck.gl/core";
+import { _ComponentState, COORDINATE_SYSTEM } from "@deck.gl/core";
+import type { Layer, Position } from "@deck.gl/core";
 import { PathLayer, ScatterplotLayer, SolidPolygonLayer } from "@deck.gl/layers";
 
 import {
@@ -18,6 +18,9 @@ import {
 import type { ResolvedDrawParams } from "./buildLayers";
 import { decodeBatch, ENCODING_LINESTRING, ENCODING_MULTILINESTRING, ENCODING_POINT } from "./decodeBatch";
 import type { ResidentBatch } from "./decodeBatch";
+import { DEFAULT_STYLE_STATE, parseStyleState, resolveDrawParameters } from "../style/document";
+import type { StyleState } from "../style/document";
+import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import {
   lineL1Positions,
   loadBatchFixture,
@@ -583,5 +586,180 @@ describe("toResolvedDrawParams (DrawParameters -> deck.gl's 0-255 RGBA accessor 
     const result = toResolvedDrawParams({ fillColor: "#000000", fillOpacity: 0, outlineColor: "#112233", outlineWidth: 5 });
     expect(result.outlineColor).toEqual([17, 34, 51, 255]);
     expect(result.outlineWidth).toBe(5);
+  });
+});
+
+describe("buildLayers -- a fill by category (milestone 4 PR B, section 2.3 (c))", () => {
+  const FILL_MATCH = { column: "tag", cases: [{ when: "a", then: "#aa0000" }, { when: "b", then: "#0000bb" }], onNull: "#888888", onUnmatched: "#cccccc" };
+  const state: StyleState = { ...DEFAULT_STYLE_STATE, fillOpacity: 0.5, fillMatch: FILL_MATCH };
+  const style = parseStyleState(state);
+  const drawOf = () => toResolvedDrawParams(resolveDrawParameters(state), style);
+  /** What one value must draw as: the resolver's own answer for it, converted by the same function the product uses. */
+  const colourOf = (value: string | null) => toResolvedDrawParams(style.resolve(value)).fillColor;
+  const accessor = (layer: { props: { getFillColor?: unknown; getColor?: unknown } }, name: "getFillColor" | "getColor") =>
+    layer.props[name] as (d: unknown, info: { index: number }) => number[];
+  /** `base` with the attribute block of a decoded batch of `tags` as its tag column (the real decode over the helper's IPC). */
+  function tagged(base: ResidentBatch, tags: Array<string | null>): ResidentBatch {
+    const { ipc, encoding } = attributeBatchIpc(tags.map((_, i) => BigInt(i)), [{ name: "tag", kind: "utf8", values: tags }]);
+    return { ...base, attributes: decodeBatch("sh_t", 0, ipc, "geometry", encoding, ["tag"], null).attributes };
+  }
+  const frame = () => {
+    const f = new OffsetFrame(100);
+    f.maybeRecenter(2_600_000, 1_200_000);
+    return f;
+  };
+  const polygons = (): ResidentBatch => ({
+    streamHandle: "sh_m",
+    batchSeq: 0,
+    ids: BigUint64Array.from([10n, 20n, 30n, 40n]),
+    ...partsOfFeatures([
+      [[[[2_600_000, 1_200_000], [2_600_004, 1_200_000], [2_600_004, 1_200_004], [2_600_000, 1_200_000]]], [[[2_600_100, 1_200_100], [2_600_101, 1_200_100], [2_600_101, 1_200_101], [2_600_100, 1_200_100]]]],
+      [[[[2_600_200, 1_200_200], [2_600_201, 1_200_200], [2_600_201, 1_200_201], [2_600_200, 1_200_200]]]],
+      [[[[2_600_300, 1_200_300], [2_600_301, 1_200_300], [2_600_301, 1_200_301], [2_600_300, 1_200_300]]]],
+      [[[[2_600_400, 1_200_400], [2_600_401, 1_200_400], [2_600_401, 1_200_401], [2_600_400, 1_200_400]]]],
+    ]),
+    totalVertices: 20,
+    attributes: null,
+    filter: null,
+  });
+
+  // RECORDED MUTATION for PB-U3, applied alone: in `rowGroups` (canvas/matchGroups.ts) a non-null value that `Style.groupFor` gives as the Other group takes group 0, the first case.
+  // Expected failure: the datum of an unlisted value (row 2, 'zzz') draws as the first case, not as Other.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U3: each datum draws as Style.resolve gives its row's value, for polygons (a part reads its feature's row), points and lines; NULL is No value and an unlisted value is Other": AssertionError: polygon datum 3 (row 2, zzz): expected [ 170, +0, +0, 128 ] to deeply equal [ 204, 204, 204, 128 ]. Reverted after observing.
+  // The same mutation also failed, in canvas/matchGroups.test.ts: OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U10b: a match block gives the same groups as the full block of the same decode, and a block without the column, not-held and no block give every row Other": AssertionError: the groups of the full block: expected [ +0, 2, +0, 1, +0 ] to deeply equal [ +0, 2, 3, 1, +0 ]. Reverted after observing.
+  it("PB-U3: each datum draws as Style.resolve gives its row's value, for polygons (a part reads its feature's row), points and lines; NULL is No value and an unlisted value is Other", () => {
+    const rows = ["a", null, "zzz", "b"];
+    const draw = drawOf();
+    const polygon = buildLayers([tagged(polygons(), rows)], frame(), draw, "polygonal")[0];
+    const partRows = [0, 0, 1, 2, 3];
+    partRows.forEach((row, datum) => expect(accessor(polygon, "getFillColor")(undefined, { index: datum }), `polygon datum ${datum} (row ${row}, ${String(rows[row])})`).toEqual(colourOf(rows[row])));
+
+    const pointBase = decodeBatch("sh_p", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null, null);
+    const lineBase = decodeBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null, null);
+    const cycle = ["a", "b", null, "zzz"];
+    for (const [base, kind, name] of [[pointBase, "point", "getFillColor"], [lineBase, "line", "getColor"]] as const) {
+      const values = Array.from({ length: base.ids.length }, (_, i) => cycle[i % cycle.length]);
+      const layer = buildLayers([tagged(base, values)], frame(), draw, kind)[0];
+      for (let datum = 0; datum < base.partCount; datum++) {
+        expect(accessor(layer, name)(undefined, { index: datum }), `${kind} datum ${datum} (${String(values[base.partToRow[datum]])})`).toEqual(colourOf(values[base.partToRow[datum]]));
+      }
+    }
+    expect([colourOf(null), colourOf("zzz")], "No value and Other are not any case's colour").toEqual([[136, 136, 136, 128], [204, 204, 204, 128]]);
+    for (const attributes of [null, "not-held"] as const) {
+      const bare = buildLayers([{ ...polygons(), attributes }], frame(), draw, "polygonal")[0];
+      expect(accessor(bare, "getFillColor")(undefined, { index: 0 }), `a batch with attributes ${String(attributes)} draws as Other`).toEqual(colourOf("zzz"));
+    }
+  });
+
+  // RECORDED MUTATION for PB-U5, applied alone: in `fillProps` (canvas/buildLayers.ts) take the trigger as `++matchFillRevision` in place of `match.revision`.
+  // Expected failure: a rebuild after ten pans carries a new trigger.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger": AssertionError: the trigger after ten pans: expected { getFillColor: [ 17 ] } to deeply equal { getFillColor: [ 7 ] }. Reverted after observing.
+  // The one-colour trigger (the correction of Amendment 20 item 4): the same mutation, applied alone over the staged tree that was then committed as ff01d91928e5fe8a414fba453a6277f19d659d6f, is OBSERVED AGAIN AT ff01d91928e5fe8a414fba453a6277f19d659d6f: FAILED -- "PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger": AssertionError: the trigger after ten pans: expected { getFillColor: [ 17 ] } to deeply equal { getFillColor: [ 7 ] }. Reverted after observing.
+  // The same mutation fails four tests in this file: OBSERVED AGAIN AT 95b6beb7: FAILED -- "PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger" (as above), and three of PB-U12: "PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for polygonal": AssertionError: deck.gl's view of the getFillColor change for polygonal: expected { matchToOneColour: true, …(4) } to deeply equal { matchToOneColour: true, …(4) } (diff: samePaintAgain expected false, received true); "PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for point": AssertionError: deck.gl's view of the getFillColor change for point: expected { matchToOneColour: true, …(4) } to deeply equal { matchToOneColour: true, …(4) } (diff: samePaintAgain expected false, received true); "PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for line": AssertionError: deck.gl's view of the getColor change for line: expected { matchToOneColour: true, …(4) } to deeply equal { matchToOneColour: true, …(4) } (diff: samePaintAgain expected false, received true). Reverted after observing.
+  it("PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger", () => {
+    const draw = drawOf();
+    let reads = 0;
+    const counted = new Proxy(draw.match!.colours, { get: (target, key, receiver) => { if (typeof key === "string" && /^\d+$/.test(key)) reads += 1; return Reflect.get(target, key, receiver); } });
+    const counting = { ...draw, match: { ...draw.match!, colours: counted } };
+    const f = frame();
+    const batches = [tagged(polygons(), ["a", null, "zzz", "b"])];
+    const triggers: unknown[] = [];
+    for (let pan = 0; pan < 10; pan++) {
+      f.maybeRecenter(2_600_000 + pan * 500, 1_200_000);
+      const layer = buildLayers(batches, f, counting, "polygonal")[0];
+      triggers.push(layer.props.updateTriggers);
+    }
+    expect(reads, "colour reads made while building ten renders").toBe(0);
+    expect(triggers[9], "the trigger after ten pans").toEqual({ getFillColor: [draw.match!.revision] });
+    expect(new Set(triggers.map((t) => JSON.stringify(t))).size, "distinct triggers across the ten renders").toBe(1);
+    expect(drawOf().match!.revision, "a style resolved again").not.toBe(draw.match!.revision);
+    const oneColourTriggers: unknown[] = [];
+    for (let pan = 0; pan < 10; pan++) {
+      f.maybeRecenter(2_600_000 + pan * 500, 1_200_000);
+      oneColourTriggers.push(buildLayers(batches, f, FIXED_DRAW, "polygonal")[0].props.updateTriggers);
+    }
+    const oneColour = oneColourTriggers[9] as { getFillColor?: unknown[] };
+    expect(Object.keys(oneColour), "the accessors a one-colour fill triggers").toEqual(["getFillColor"]);
+    expect(oneColour.getFillColor, "a one-colour fill's colour trigger").toHaveLength(1);
+    expect([draw.match!.revision, drawOf().match!.revision].map((revision) => oneColour.getFillColor?.[0] === revision), "the one-colour trigger against two match revisions").toEqual([false, false]);
+    expect(new Set(oneColourTriggers.map((t) => JSON.stringify(t))).size, "distinct triggers across ten pans under one colour").toBe(1);
+  });
+
+  const MATCH_B = { ...FILL_MATCH, cases: [{ when: "a", then: "#00aa00" }, { when: "b", then: "#0000bb" }] };
+  const OTHER_state: StyleState = { ...state, fillMatch: MATCH_B };
+  const ONE_COLOUR_STATE: StyleState = { ...state, fillMatch: null };
+  const OTHER_COLOUR_STATE: StyleState = { ...ONE_COLOUR_STATE, fillColor: "#123456" };
+  /** What the product draws for `s`: `WorkingCanvas.tsx`'s own conversion of the parsed style, a new match revision for each call. */
+  const drawFor = (s: StyleState): ResolvedDrawParams => {
+    const parsed = parseStyleState(s);
+    return toResolvedDrawParams(parsed.resolve(null), parsed);
+  };
+  /** The shape of deck.gl's own change flags (`lib/layer-state.d.ts`, `ChangeFlags`), for the two members read below. */
+  interface DeckChangeFlags {
+    propsChanged: string | false;
+    updateTriggersChanged: Record<string, true> | false;
+  }
+  /**
+   * Whether deck.gl, given `next` as the update of `previous`, sees a change of the colour accessor `name`. It runs deck.gl's own
+   * `_transferState` on the two real layer objects, which calls its `diffProps` (`compareProps` for the props, `diffUpdateTriggers` for
+   * the triggers), and reads the change flags that comparison sets: the accessor's update trigger as changed, or the prop as changed.
+   * `_ComponentState` is deck.gl's own; the layer is given no attribute manager, which needs a GPU device and which that comparison
+   * only calls to invalidate the attribute a trigger names.
+   */
+  function deckSees(previous: Layer, next: Layer, name: string): boolean {
+    const internal = new _ComponentState(previous);
+    internal.resetOldProps();
+    previous.internalState = Object.assign(internal, {
+      changeFlags: { dataChanged: false, propsChanged: false, updateTriggersChanged: false, viewportChanged: false, stateChanged: false, extensionsChanged: false, propsOrDataChanged: false, somethingChanged: false },
+    }) as never;
+    next._transferState(previous);
+    const flags = (next.internalState as unknown as { changeFlags: DeckChangeFlags }).changeFlags;
+    return (flags.updateTriggersChanged !== false && flags.updateTriggersChanged[name] === true) || (typeof flags.propsChanged === "string" && flags.propsChanged.startsWith(`props.${name} `));
+  }
+  const cycleOf = (base: ResidentBatch): Array<string | null> => Array.from({ length: base.ids.length }, (_, i) => ["a", "b", null, "zzz"][i % 4]);
+  const KINDS = [
+    { kind: "polygonal", accessor: "getFillColor", batches: () => [tagged(polygons(), ["a", null, "zzz", "b"])] },
+    {
+      kind: "point",
+      accessor: "getFillColor",
+      batches: () => {
+        const base = decodeBatch("sh_p", 0, loadBatchFixture("lv95-point-batch"), "geometry", ENCODING_POINT, null, null);
+        return [tagged(base, cycleOf(base))];
+      },
+    },
+    {
+      kind: "line",
+      accessor: "getColor",
+      batches: () => {
+        const base = decodeBatch("sh_l", 0, loadBatchFixture("lv95-linestring-batch"), "geometry", ENCODING_LINESTRING, null, null);
+        return [tagged(base, cycleOf(base))];
+      },
+    },
+  ] as const;
+
+  // RECORDED MUTATION for PB-U12, applied alone: in `triggersOf` (canvas/buildLayers.ts) a one-colour fill's trigger is dropped, so that a one-colour layer carries no `updateTriggers` key (return `{}` when the trigger is the one-colour trigger).
+  // Expected failure: the first step, a match to one colour, is not seen by deck.gl, for each of the three layer kinds; the other steps pass.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for polygonal": AssertionError: deck.gl's view of the getFillColor change for polygonal: expected { matchToOneColour: false, …(4) } to deeply equal { matchToOneColour: true, …(4) }. Reverted after observing.
+  // The same mutation failed the point and line cases the same way: OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for point": AssertionError: deck.gl's view of the getFillColor change for point: expected { matchToOneColour: false, …(4) } to deeply equal { matchToOneColour: true, …(4) } and "PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for line": AssertionError: deck.gl's view of the getColor change for line: expected { matchToOneColour: false, …(4) } to deeply equal { matchToOneColour: true, …(4) }. Reverted after observing.
+  // It also failed PB-U5's new fact: OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-U5: ten pans evaluate no accessor and leave every layer's update trigger as it was; a new style is a new trigger": AssertionError: the accessors a one-colour fill triggers: expected [] to deeply equal [ 'getFillColor' ]. Reverted after observing.
+  it.each(KINDS)("PB-U12: deck.gl's own comparison sees a change of the colour accessor from a match to one colour, one colour to a match, a match to another match and one colour to another colour, for $kind", ({ kind, accessor, batches }) => {
+    const f = frame();
+    const held = batches();
+    const layerOf = (draw: ResolvedDrawParams) => buildLayers(held, f, draw, kind)[0] as unknown as Layer;
+    const seen = (before: StyleState, after: StyleState) => deckSees(layerOf(drawFor(before)), layerOf(drawFor(after)), accessor);
+    const samePaint = (s: StyleState) => {
+      const draw = drawFor(s);
+      return deckSees(layerOf(draw), layerOf(draw), accessor);
+    };
+    expect(
+      {
+        matchToOneColour: seen(state, ONE_COLOUR_STATE),
+        oneColourToMatch: seen(ONE_COLOUR_STATE, state),
+        matchToOtherMatch: seen(state, OTHER_state),
+        oneColourToOtherColour: seen(ONE_COLOUR_STATE, OTHER_COLOUR_STATE),
+        samePaintAgain: samePaint(state) || samePaint(ONE_COLOUR_STATE),
+      },
+      `deck.gl's view of the ${accessor} change for ${kind}`
+    ).toEqual({ matchToOneColour: true, oneColourToMatch: true, matchToOtherMatch: true, oneColourToOtherColour: true, samePaintAgain: false });
   });
 });

@@ -2,6 +2,7 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 import type { AttributeRow } from "../attributes/values";
+import type { SessionEndReason } from "../canvas/pick";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
 import type { Filter } from "../skp/types";
 import { applySelectionMode } from "../workspace/selection";
@@ -42,8 +43,8 @@ interface ClickEffect {
   readonly row: "feature.inspect" | "selection.change" | null;
 }
 
-export function clickEffect(view: ViewState, click: ClickInput, sessionEnded: boolean): ClickEffect {
-  if (sessionEnded) return { lastClick: { kind: "session-ended" }, transitions: [], row: null };
+export function clickEffect(view: ViewState, click: ClickInput, endedBy: SessionEndReason | null): ClickEffect {
+  if (endedBy !== null) return { lastClick: { kind: "session-ended", reason: endedBy }, transitions: [], row: null };
   if (click.kind === "below-pick-resolution") return { lastClick: click, transitions: [], row: null };
   const navigate = viewTool(view) === "navigate";
   if (click.kind === "nothing") {

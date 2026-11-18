@@ -148,7 +148,7 @@ describe("applyStyleChange (NEXT-CUT.md P3, binding note 7)", () => {
   // the guarantee, not one call's own mock.
 
   it("re-resolves through the SAME imported resolver a real style change would -- not the default's cached value", () => {
-    const custom: StyleState = { fillColor: "#00ff00", fillOpacity: 0.5, outlineColor: "#111111", outlineWidth: 3 };
+    const custom: StyleState = { fillColor: "#00ff00", fillOpacity: 0.5, outlineColor: "#111111", outlineWidth: 3, fillMatch: null };
     const setDrawParams = vi.fn();
 
     applyStyleChange(custom, { setDrawParams, render: vi.fn() });

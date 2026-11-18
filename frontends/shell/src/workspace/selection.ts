@@ -83,8 +83,11 @@ export type SelectionOutcome =
   | { readonly kind: "unchanged"; readonly members: SelectionMembers }
   | { readonly kind: "refused"; readonly members: SelectionMembers; readonly refusal: SelectionRefusal };
 
-/** What ended a selection: the source changed under the open dataset, or the dataset was reopened or another opened. */
-export type SelectionEndReason = "source-changed" | "reopened";
+/** What ended a generation: the source changed under the open dataset, or the watch on it lost coverage. */
+export type GenerationEndReason = "source-changed" | "coverage-lost";
+
+/** What ended a selection: a generation's end, or the dataset was reopened or another opened. */
+export type SelectionEndReason = GenerationEndReason | "reopened";
 
 /** The notice a view's selection leaves behind. It stands until the next selection transition and has no timer
  * (ADR-018). `ended` is section 2.3's end-of-generation notice; `refused` is the ceiling's. */
