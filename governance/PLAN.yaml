@@ -7516,3 +7516,20 @@ nodes:
     entries: []
     summary: "PLACED 2026-11-16 by the human's approval of ADV-2026-11-16-19, item 5: the file on main first, by a docs piece of its own with the short form and the reviewer, which the advisor merges; then the custodian puts the release page's paragraph in, once, and reads the page back. The reviewer confirms each note equals its filed fence byte for byte (ADV-2026-11-16-20 item 3). Not on v0.2's list. DONE 2026-11-18: the advisor merged it; the release page paragraph followed, once, by item 5."
     dates: {opened: 2026-11-16, done: 2026-11-18}
+  - id: selection-export-unknown-attempt
+    title: "The selection suite's export steps end unknown-attempt on main since 2026-11-18: settle which place answered and whether a person can reach it; then the suite waits for the dialog, or the defect goes to the advisor (ADV-2026-11-18-05 item 2)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: ready
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: governance/forms/frontends/SELECTION-EXPORT-UNKNOWN-ATTEMPT-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 90
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PLACED 2026-11-18 by the advisor's ruling ADV-2026-11-18-05 item 2, its node id kept by ADV-2026-11-18-07 item 1: a five-line form, the reviewer alone and the Sonnet worker, after the slots' current steps and ahead of the next piece whose series runs selection. Step 1 reads which place answered (the page's own answer before its attempt reference is set, or the host's store) and whether a person can reach the execute in that window; step 2 makes the suite wait for the dialog, or stops and sends the read to the advisor. Until it merges a series that runs selection records these steps as the known failure (item 3)."
+    dates: {opened: 2026-11-18, done: null}

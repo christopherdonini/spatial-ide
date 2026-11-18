@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-18T11:38:58.388Z",
-  "plan_hash": "e37e12be51bdba78cc13c8da5ed598b954e243b4268e565f1173bed0f8aacfe8",
+  "generated_at": "2026-11-18T12:04:12.368Z",
+  "plan_hash": "3bda23d0d9dfa2342da09e44e5351f49009d7ee1fba6c7bead7171bf73ce25e0",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12216,6 +12216,31 @@
       "dates": {
         "opened": "2026-11-16",
         "done": "2026-11-18"
+      }
+    },
+    {
+      "id": "selection-export-unknown-attempt",
+      "title": "The selection suite's export steps end unknown-attempt on main since 2026-11-18: settle which place answered and whether a person can reach it; then the suite waits for the dialog, or the defect goes to the advisor (ADV-2026-11-18-05 item 2)",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "governance/forms/frontends/SELECTION-EXPORT-UNKNOWN-ATTEMPT-PREREGISTRATION.md",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-11-18 by the advisor's ruling ADV-2026-11-18-05 item 2, its node id kept by ADV-2026-11-18-07 item 1: a five-line form, the reviewer alone and the Sonnet worker, after the slots' current steps and ahead of the next piece whose series runs selection. Step 1 reads which place answered (the page's own answer before its attempt reference is set, or the host's store) and whether a person can reach the execute in that window; step 2 makes the suite wait for the dialog, or stops and sends the read to the advisor. Until it merges a series that runs selection records these steps as the known failure (item 3).",
+      "dates": {
+        "opened": "2026-11-18",
+        "done": null
       }
     }
   ]
