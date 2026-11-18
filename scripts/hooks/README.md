@@ -328,3 +328,19 @@ The PreCompact record and the resume line add tests on real temporary git reposi
 shipped entries: each call's record line, the automatic path through the CLI, a record that cannot
 be written, and the resume facts (a repository with commits past the tip and a modified tracked
 file; a directory git cannot read).
+
+## StopFailure — `notify-stop-failure.mjs`
+
+Added by the human's approval of ADV-2026-11-18-06 (items 1 to 3; `AUTONOMY.md` §38 Part C). The
+hook listens for the StopFailure event, with no matcher, so every error type the event names is
+covered. It reads the hook's JSON from stdin and sends one Telegram message through
+`sendTelegramDeduped` (`telegram.mjs`): that the session stopped on an error, the `error` value, the
+`error_details` value when present, and the basename of `cwd`. A repeat with the same `error`
+value within ten minutes, under the same project root, is not sent.
+
+It never sends `last_assistant_message` or any other field, and none is in the dedupe key. It reads
+no token variable and prints none. In a cloud session it exits at once. It always exits 0.
+
+Not proven (the approval's item 6): that the app raises this event when a usage limit is reached.
+`notify-stop-failure.test.mjs` runs the script on the documentation's example input
+(`fixtures/stop-failure-input.json`), every run a dry run.
