@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `34e86fb0a54d7298849cd0b9eb35989afd1dfd7b7b9edde3cb6c7ee4928addda`) at `2026-11-18T17:19:54.843Z`.
+Generated from `PLAN.yaml` (sha256 `af0ada0a9aefac6c903ae6c1c87914c602c0946ccbd6b569a056d58fcb9ae822`) at `2026-11-18T17:42:14.728Z`.
 
 ## 1. Next
 
@@ -15,7 +15,6 @@ Generated from `PLAN.yaml` (sha256 `34e86fb0a54d7298849cd0b9eb35989afd1dfd7b7b9e
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
-- **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) (lane `shell`, order null, budget 0 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **selection-export-unknown-attempt** — The selection suite's export steps end unknown-attempt on main since 2026-11-18: settle which place answered and whether a person can reach it; then the suite waits for the dialog, or the defect goes to the advisor (ADV-2026-11-18-05 item 2) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
@@ -56,6 +55,7 @@ Generated from `PLAN.yaml` (sha256 `34e86fb0a54d7298849cd0b9eb35989afd1dfd7b7b9e
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — evidence: branch `cut/open-first-look-fills-fit-view`
 
 ## 6. Proposed / unscheduled
 
