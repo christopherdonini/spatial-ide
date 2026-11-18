@@ -2765,3 +2765,34 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 30: PR B merged by the advisor; main's CI at the merge; the architect's statement E under ADV-2026-11-18-11; draft A to S1's records step; entry 79's item 2; the pins owed on main; the node done; recorded by the custodian after the merge
+
+*Written by the custodian on 2026-11-18, after the merge. The verdict is filed at `state/consults/merge-checks/PR-327-f06f8105fd5d.md`, and the advisor's ruling ADV-2026-11-18-11 at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-11-pr-b-draft-a-taken-for-s1s-records-step-the-architects-e-confirmed-for-the-form.md`, and ADV-2026-11-18-12 at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-12-main-macos-job-no-runner-the-records-go-ahead-the-ci-item-states-the-facts-one-later-re-run.md`. References only.*
+
+1. **The merge.** The advisor merged PR 327 on the verdict MERGE. The merge commit is 1d2d4af996b486ae4a391e50de8c226e57e098cb, made at 2026-11-18T13:05:22Z by GitHub's record, with head f06f8105fd5df6b1baf2c6df5da69625acaa6070.
+
+2. **Main's CI at the merge (ADV-2026-11-18-12 item 3).** Run 44310184909, Product CI — Rust workspace, ran on the push of the merge commit. In each of its two attempts the macOS job was cancelled with no runner and no step: the first at 2026-11-18T13:20:27Z, and the second, the failed job alone re-run, at 2026-11-18T13:44:58Z. GitHub's annotation each time: "The job was not acquired by Runner of type hosted even after multiple attempts". Its Ubuntu and Windows jobs succeeded. The seven other runs at the merge commit succeeded, read at 2026-11-18T13:27:07Z. The same macOS job succeeded at PR B's head f06f8105 on the pull request run 44303055641, from 2026-11-18T12:21:01Z to 2026-11-18T12:31:36Z. No macOS test has run at 1d2d4af9, so main is not called green there. One more re-run of the failed job follows, not before 16:00Z today (ADV-2026-11-18-12 item 4).
+
+3. **A statement of this form (ADV-2026-11-18-11 item 6).** The architect's E, as the architect wrote it, is a statement of this form and not a KNOWN-LIMITATIONS item:
+
+   A Reset or One colour during a running Colour by wait does not stop it: when the rows arrive the match is applied over the style as it then is; Cancel stops the wait.
+
+4. **Draft A (items 1 to 5).** The reviewer's draft A is taken, in the reviewer's words, and is not PR B's. S1's form declares it for S1's records step in its Amendment 3 item 7, filed at cd8c43a9.
+
+5. **Entry 79's item 2 (ADV-2026-11-16-20 item 2).**
+   - PR A (#246, merge 1b6b04a6) built it as the Feature tab's Attributes section of §2.2 (f): every projected column of the inspected feature, in declared order.
+   - It was built under OPEN-3 (a) of §11: the Feature tab only, with the hover readout unchanged, entry 79 (2) being read as the inspection surface.
+   - The node `entry-79-b1-consult-items` records the same.
+
+6. **The pins owed on main.**
+   - In `KNOWN-LIMITATIONS.md`, the comments of items 4, 51, 54, 56, 59, 65 and 66 say that their pins into PR B's code follow on main after the merge.
+   - They are added at 1d2d4af9 in a PR that changes those comment lines alone, after S1's records step, which changes item 56. The reviewer reads it, with no form (ADV-2026-11-16-06 item 2 (c)).
+
+7. **The nodes.**
+   - `b1-shell-half` is done: PR A (#246), PR C (#253) and PR B (#327) are merged.
+   - `session-end-lines-name-coverage-lost-as-source-change` is done too, since PR B built it.
+
+Read the last amendment first.
+
+Nothing above is edited.
