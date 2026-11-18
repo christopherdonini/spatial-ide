@@ -1450,10 +1450,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
           lastEmittedRelinquishedUntiled = false;
           emitResidencyRelinquished();
         }
-        // The stream-refusal piece S1 (§2.2 (b)): this generation's own first look failed. Before any
-        // plan, nothing else would ever settle the bar, so it says what is left; after one, the
-        // existing settled path does.
-        if (wasCurrent && !wasSelfCancelled && terminal.kind !== "Completed" && !relinquishedReEmitted) {
+        // The stream-refusal piece S1 (§2.2 (b); Amendment 2 item 2, C-1): this generation's own first
+        // look ended. After a plan, whatever its kind, the existing settled path recomputes the status:
+        // a tile that ended while this look ran found the view not settled, so this is the settling
+        // moment. Before any plan, only a failure speaks: nothing else would ever settle the bar, so it
+        // says what is left.
+        if (wasCurrent && !wasSelfCancelled && !relinquishedReEmitted && (hasPlanned || terminal.kind !== "Completed")) {
           if (hasPlanned) {
             emitResidencyStatus();
           } else if (manager.gridFrame !== null && untiledRowsSeen > 0) {

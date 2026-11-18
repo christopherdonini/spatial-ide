@@ -107,7 +107,7 @@ export interface TileViewportStreamManagerOptions {
    * **A tracked tile was dropped without a stream** (the stream-refusal piece S1, §2.1): its mint was
    * refused and the bounded requeue declined, or its `dataPlaneAttach` failed. Called after the
    * queue is re-drained, only while the tile's epoch still matches and the manager is not stopped.
-   * Its one product caller is `candidateArmSession.ts`, which settles its status and its scan.
+   * Its one product caller is `candidateArmSession.ts`, which re-syncs its scan and, when no tile is still tracked, recomputes its status.
    */
   onTileDropped?: (tileKey: string) => void;
 }
@@ -988,7 +988,7 @@ export class TileViewportStreamManager {
         const membership = this.latestMembership;
         if (
           !this.stopped &&
-          !this.overBudgetFlag && // S1 (OPEN-1 (a)): the held drain would never issue the retry
+          !this.overBudgetFlag && // S1 (OPEN-1 (a)): while over budget the drain is held, so a requeued retry would wait for the next camera change
           isRetryableRefusal(err) &&
           !this.requeuedTiles.has(tileKey) &&
           (membership === null || membership.has(tileKey)) &&

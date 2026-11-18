@@ -1136,7 +1136,7 @@ describe("TileViewportStreamManager", () => {
     });
 
     // The stream-refusal piece S1 (`governance/forms/frontends/SHELL-TILED-ARM-STREAM-REFUSAL-SHOWN-TO-THE-USER-PREREGISTRATION.md`
-    // §4): a dropped tile is reported to the owner through `onTileDropped`, so the session can settle its status and its scan.
+    // §4): a dropped tile is reported to the owner through `onTileDropped`, so the session can re-sync its scan and recompute its status.
     describe("onTileDropped (the stream-refusal piece S1)", () => {
       const originCell = (manager: TileViewportStreamManager) => {
         const frame = manager.gridFrame!;

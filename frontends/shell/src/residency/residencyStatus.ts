@@ -109,8 +109,8 @@ export type ResidencyStatus =
    * camera-change plan runs. A relinquished fill is therefore never "settled" by construction -- there
    * is no settled classification for this event to carry. */
   | { kind: "candidate-relinquished"; residentFeatureCount: number; untiledStreamStillRunning?: true }
-  /** The stream-refusal piece S1 (§2.3): the first look failed before any plan and without a row of
-   * its own. `frame` says whether a grid frame exists, so whether a pan can plan tiles. */
+  /** The stream-refusal piece S1 (§2.3): the first look failed before any plan, either with no grid frame, or with one and no row of its own.
+   * `frame` says whether a grid frame exists, so whether a pan can plan tiles. */
   | { kind: "candidate-first-look-failed"; frame: boolean };
 
 /**
@@ -447,13 +447,15 @@ const SETTLED_PARTIAL_WITHIN_BUDGET_TEXT =
  * not session-ended, not `Completed` first-look terminal after `establishFrameFromExtent` left no
  * frame, so nothing is drawn; its second holds because opening the file again stops the old session
  * and starts a new first look. It does not say a pan retries, which is false without a frame.
- * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch. */
+ * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch.
+ * Not covered (AUTONOMY §31), timing inside one request round trip: an earlier first look that fails after a reissue (an Apply, a Clear or a Colour by refill) has started a new one, but before the new one's ticket is minted, is read as current, so this sentence can stand over the new look until the session next emits a status. */
 const FIRST_LOOK_FAILED_NO_FRAME_TEXT = "The data for the map failed to load. Open the file again to retry.";
 /** W2, the stream-refusal piece S1 (the form's §9), copied from the form by script. Clause check
  * (§9, in short): its first clause holds for the same terminal with a frame and no row of this look
  * (`untiledRowsSeen === 0`); its second holds because with a frame `onCameraChange` plans tiles. It
  * does not stand through that fill: `handleViewportChange`'s fresh plan clears it.
- * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch. */
+ * Not covered (AUTONOMY §31): no e2e reaches this sentence without a fault injector, a dev-only switch.
+ * Not covered (AUTONOMY §31), timing inside one request round trip: an earlier first look that fails after a reissue (an Apply, a Clear or a Colour by refill) has started a new one, but before the new one's ticket is minted, is read as current, so this sentence can stand over the new look until the session next emits a status. */
 const FIRST_LOOK_FAILED_TEXT = "The data for this view failed to load. Pan or zoom to retry.";
 /** Item A draft (24(b) sight), RULED 2026-09-05 (24(b) string sight, "not fetched" -> "not loaded",
  * rest verbatim): 32a's own rider -- never "complete", never silent. */
