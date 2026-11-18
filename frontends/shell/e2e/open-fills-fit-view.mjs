@@ -11,11 +11,11 @@
 //   (a) after the open's first stream (the first look) delivers its last batch, at least one further `stream-issued` render-trace line arrives;
 //   (b) the render trace then goes quiet (no `viewport_query`, `stream-issued` or `batch` line for 3 s) within 180 s;
 //   (c) `.residency-status` then reads the complete-in-view sentence (a pattern built from residencyStatusText's `candidate-within-budget` template);
-//   (d) a screenshot clipped to `.working-canvas`, cut into an 8x8 grid, shows a pixel with alpha above 0 in every cell whose world rectangle lies
-//       wholly inside the describe extent (the world rectangle is computed from the fit's first `view-state` line).
+//   (d) a screenshot clipped to `.working-canvas`, cut into an 8x8 grid, shows a pixel unlike the ring background in every cell whose world rectangle lies
+//       wholly inside the fixture's parcel area (the world rectangle is computed from the fit's first `view-state` line).
 // Exit codes: 0 when (a) to (d) pass; 1 when any fails; 2 VOID (a precondition is unmet, or (e) fails, or a fatal error): a VOID run is never a PASS.
 // Precondition (else VOID): the first `stream-issued` line arrives with its `batch` rows reaching 10,000 (the first look's limit), the fit's `view-state`
-//   line arrives, and the describe extent line carries a value.
+//   line arrives, and the fixture file's sha256 is the one the parcel area is valid under (describe.extent is printed and decides nothing).
 // (e), my reading of the form: a failure of (d) is only attributable to the defect when at least one failing cell lies outside the first look's rows, so
 //   the run is VOID when (d) fails and no blank qualifying cell lies wholly above the first 10,000 rows of the fixture (file order, 317 columns of 40 m
 //   cells from N 1,200,000 -- the generator's constants, restated as layout.mjs restates them). With (d) passing, (e) is reported and decides nothing.
@@ -24,12 +24,12 @@
 // The console lines are read as recentre-crossing.mjs reads them: the render-trace arguments' JSON, kept in arrival order by a queue.
 //
 // What this does not prove: any docs/08 figure, macOS or Linux, a file other than this fixture, the arm or level other than the shipped default, the
-// complete-in-view claim for any view but the fit, or that a pixel with alpha above 0 is a feature (it is a pixel the page screenshot did not leave
-// transparent). If the screenshot carries alpha 255 everywhere, (d) passes without testing anything and (e) cannot hold; that is reported, not hidden.
-// The two REPORT lines (background-colour blank cells) decide nothing.
+// complete-in-view claim for any view but the fit, or that a pixel unlike the ring background is a feature (a blank cell has no pixel off the ring's commonest colour by more than 8 on any
+// channel). The screenshot is composited and opaque, so the alpha reading is printed and decides nothing.
+// The REPORT lines give the first look's side of each qualifying cell (o above its rows, i not) and whether it holds a marked pixel (+ or -).
 
 import { createHash } from "node:crypto";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { inflateSync } from "node:zlib";
@@ -43,6 +43,9 @@ const PRECONDITION_TIMEOUT_MS = 120_000;
 const GRID = 8;
 const COLS = 317, CELL_M = 40, N_LO = 1_200_000; // the generator's constants (engine/src/fixture.rs, as layout.mjs restates them)
 const FIRST_LOOK_YMAX = N_LO + Math.ceil(FIRST_LOOK_ROWS / COLS) * CELL_M; // above this the first look holds no row
+// the fixture's parcel area in EPSG:2056 m, restated from the generator (engine/src/fixture.rs:67-68,93,1404-1412) as layout.mjs:419 restates it; valid only under FIXTURE_SHA256
+const PARCEL = { xmin: 2_600_000, ymin: 1_200_000, xmax: 2_612_680, ymax: 1_212_600 };
+const FIXTURE_SHA256 = "fd0c74ab2d5df1e1df084802134d2a6678278e764ba180ea2ea5812f53ddfb49";
 const OUT_DIR = join(dirname(dirname(fileURLToPath(import.meta.url))), "e2e", "out"); // gitignored
 const TAG = `efl-${Date.now()}`;
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -141,12 +144,13 @@ async function main() {
       return { issued0, h0, rows0, fit: L.find((l) => l.event === "view-state"), ext: L.find((l) => l.event === "describe.extent") };
     };
     let pre = await read();
-    for (let i = 0; i < PRECONDITION_TIMEOUT_MS / 250 && !(pre.issued0 && pre.rows0 >= FIRST_LOOK_ROWS && pre.fit && pre.ext); i++) { await sleep(250); pre = await read(); }
+    for (let i = 0; i < PRECONDITION_TIMEOUT_MS / 250 && !(pre.issued0 && pre.rows0 >= FIRST_LOOK_ROWS && pre.fit); i++) { await sleep(250); pre = await read(); }
     const extentHex = pre.ext?.data?.value;
     console.log(`precondition: first stream-issued ${pre.issued0 ? pre.h0 : "NOT SEEN"}, its batch rows ${pre.rows0} (need ${FIRST_LOOK_ROWS}), fit view-state ${pre.fit ? "seen" : "NOT SEEN"}, describe.extent ${pre.ext ? `basis ${pre.ext.data?.basis}, value ${extentHex ? "present" : "null"}` : "NOT SEEN"}`);
-    if (!(pre.issued0 && pre.rows0 >= FIRST_LOOK_ROWS && pre.fit && Array.isArray(extentHex))) throw new Void("the precondition is unmet");
-    const [exMinX, exMinY, exMaxX, exMaxY] = extentHex.map(decodeHexF64);
-    console.log(`  describe extent [${exMinX}, ${exMinY}, ${exMaxX}, ${exMaxY}]; fit view-state ${JSON.stringify(pre.fit.data)}`);
+    if (!(pre.issued0 && pre.rows0 >= FIRST_LOOK_ROWS && pre.fit)) throw new Void("the precondition is unmet");
+    const fixtureSha = createHash("sha256").update(readFileSync(FIXTURE)).digest("hex");
+    console.log(`  fixture sha256 ${fixtureSha}; fit view-state ${JSON.stringify(pre.fit.data)}`);
+    if (fixtureSha !== FIXTURE_SHA256) throw new Void(`the fixture's sha256 is not ${FIXTURE_SHA256}: the parcel area is not valid for it`);
 
     // ---- (b) settle: no viewport_query, stream-issued or batch line for QUIET_MS, within SETTLE_TIMEOUT_MS ----
     const wire = (l) => l.event === "viewport_query" || l.event === "stream-issued" || l.event === "batch";
@@ -220,17 +224,17 @@ async function main() {
       // the cell's world rectangle: CSS x grows right, CSS y grows down, world y grows up; W is the canvas centre
       const [cxL, cxR, cyT, cyB] = [(i * box.cw) / GRID, ((i + 1) * box.cw) / GRID, (j * box.ch) / GRID, ((j + 1) * box.ch) / GRID];
       const world = { xmin: wx + (cxL - box.cw / 2) / s, xmax: wx + (cxR - box.cw / 2) / s, ymax: wy - (cyT - box.ch / 2) / s, ymin: wy - (cyB - box.ch / 2) / s };
-      const qualifying = world.xmin >= exMinX && world.xmax <= exMaxX && world.ymin >= exMinY && world.ymax <= exMaxY;
+      const qualifying = world.xmin >= PARCEL.xmin && world.xmax <= PARCEL.xmax && world.ymin >= PARCEL.ymin && world.ymax <= PARCEL.ymax;
       cells.push({ i, j, world, qualifying, hasAlpha, hasMarked, outsideFirstLook: qualifying && world.ymin >= FIRST_LOOK_YMAX });
     }
     const qual = cells.filter((c) => c.qualifying);
-    const blank = qual.filter((c) => !c.hasAlpha);
+    const blank = qual.filter((c) => !c.hasMarked);
     const dPass = qual.length > 0 && blank.length === 0;
-    record("(d) every qualifying cell of the 8x8 grid holds a pixel with alpha above 0", dPass, `${qual.length} qualifying cell(s) of ${GRID * GRID}; ${blank.length} blank: ${blank.map((c) => `(${c.i},${c.j})`).join(" ") || "none"}; screenshot has a pixel below alpha 255: ${anyAlphaBelow255}`);
+    record("(d) every qualifying cell of the 8x8 grid holds a pixel unlike the ring background (tolerance 8)", dPass, `${qual.length} qualifying cell(s) of ${GRID * GRID}; ${blank.length} blank: ${blank.map((c) => `(${c.i},${c.j})`).join(" ") || "none"}; screenshot has a pixel below alpha 255: ${anyAlphaBelow255}`);
     const eCells = blank.filter((c) => c.outsideFirstLook);
     console.log(`  (e) ${eCells.length} blank qualifying cell(s) lie wholly above the first look's rows (N > ${FIRST_LOOK_YMAX}): ${eCells.map((c) => `(${c.i},${c.j})`).join(" ") || "none"}`);
-    console.log(`  REPORT  background-colour rule (ring B ${bg.join(",")}, tolerance 8; decides nothing): qualifying cells with no marked pixel: ${qual.filter((c) => !c.hasMarked).map((c) => `(${c.i},${c.j})`).join(" ") || "none"}`);
-    console.log(`  REPORT  qualifying cells: ${qual.map((c) => `(${c.i},${c.j})${c.outsideFirstLook ? "o" : "i"}`).join(" ")}`);
+    console.log(`  REPORT  alpha reading (decides nothing; ring B ${bg.join(",")}): qualifying cells with no pixel above alpha 0: ${qual.filter((c) => !c.hasAlpha).map((c) => `(${c.i},${c.j})`).join(" ") || "none"}`);
+    console.log(`  REPORT  qualifying cells: ${qual.map((c) => `(${c.i},${c.j})${c.outsideFirstLook ? "o" : "i"}${c.hasMarked ? "+" : "-"}`).join(" ")}`);
     if (!dPass && eCells.length === 0) throw new Void("(d) failed and no blank qualifying cell lies outside the first look's rows: the failure cannot be attributed (e)");
   } finally {
     await session.stop().catch(() => {});
