@@ -13,3 +13,17 @@ Tests+mutation: none added or changed (documents only); the reviewer confirms th
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the closing, written after the single gate's result was seen (class 1): D1 fixed in the same pull request, with no re-gate (AUTONOMY §22)
+
+*Written by the custodian on 2026-11-18, after the gate's result was seen. References only.*
+
+1. **The single gate** (`state/consults/gates/2026-11-18-known-limitations-v0-1-0-two-notes-2026-11-16-gate-reviewer.md`), attempt 1 at 396cf62dcb9717deff770f4d6d3fa55eea8aab10, gate-log row 768, ended PASS WITH NOTES. Its Correctness and Evidence sections have no finding. Its one Documentation item, D1, is in the two comment lines, the custodian's wording.
+2. **D1 is fixed in the same pull request** under AUTONOMY §22, which gives a Documentation finding no re-gate: the reviewer's two replacement clauses, taken from the report byte for byte by script, in 17f9a660fc71204be8fba6dd25fdd8f95ab13b4a. `git diff --numstat 396cf62d 17f9a660` names `KNOWN-LIMITATIONS.md` alone, 2 lines in and 2 out, and the two notes' lines are equal at both heads. I checked the finding against `state/consults/2026-11-16-v0-1-0-notes-adv-2026-11-16-17-clause-check-reviewer.md` and `state/consults/2026-11-16-v0-1-0-notes-adv-2026-11-16-19-clause-check-reviewer.md` before applying it.
+3. **The notes N1 to N3 are not taken.** N1, a rewording the reviewer marks as not blocking, is not applied, so that nothing but D1's words changed after the gated head. N2: Governance CI's paths filter does not cover this file, and no cite or quotation in the change needed it. N3: the PR stays a draft until its merge request.
+4. **Against Scope:** from the merge base 5bb2f2e343b7a3fd06befee1159df5a7045ffe31 the PR adds 5 lines to `KNOWN-LIMITATIONS.md` and removes none, within the declared budget. Main at a15e3bed70983dfaed6182951ec010ca8a20c374 has not changed the PR's one path since the merge base.
+5. **CI at 17f9a660**, read 2026-11-18T08:40:59Z: DCO sign-off (run 44268973288), Exposure scan (44268973299) and Ported notices (44268966257 and 44268973320), each success.
+6. **The words.** The two notes are the human's, approved as ADV-2026-11-16-19 item 2. The two comment lines are the custodian's wording with D1's clauses, sent to the advisor with the merge request (ADV-2026-11-16-06 item 2 (b)).
+7. **The stop.** The gate's run stopped on 2026-11-16 on the account's usage limit and was resumed on 2026-11-18 by message; its report is held to its transcript (ADV-2026-11-18-01 item 4).
+
+Nothing above is edited.
