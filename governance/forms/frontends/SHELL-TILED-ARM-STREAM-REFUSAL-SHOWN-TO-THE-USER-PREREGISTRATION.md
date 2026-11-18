@@ -492,3 +492,58 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5: the closing: the heads after the gates (the words commit, main taken in, the records step); Amendment 4 item 7 replaced by ADV-2026-11-18-14; the runs at the merge request's head; the counts; the test spans with their commit; the records at the merge; the slips; recorded by the custodian before the merge request
+
+*Written by the custodian on 2026-11-18, before the merge request. The advisor's rulings are filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-14-s1-the-runs-at-the-merge-requests-head-the-five-suites-and-colour-with-verify-after-the-records-step.md` and `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-15-s1-the-records-drafts-all-four-taken-d3-with-two-changes-the-architects-points-kept.md`; the reports at `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-app-window-suites-at-6abaa9fb-tester-report.md`, `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-s1-words-commit-and-main-taken-in-worker-report.md`, `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-records-step-drafts-architect.md`, `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-s1-records-step-worker-report.md` and `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-series-at-d144373b-tester-report.md`. References only.*
+
+1. **The heads after the gates.** Both gates closed at H = 6abaa9fb74de1eee303e3de84f6eafab67df56c6 (Amendment 4 item 1). After H the branch has three commits, and none is gated again:
+   - W = ce51285818ac1de98687f2adea951212256e78f1, the words commit (Amendment 4 item 3; ADV-2026-11-18-13 items 1 to 3, with no re-gate). The custodian's script reads every changed line of the diff from H to W and prints `COMMENT-ONLY` only when each changed line of a source file is a comment line. Its output, byte for byte:
+```
+source frontends/shell/src/residency/candidateArmSession.test.ts +5 -6
+source frontends/shell/src/residency/candidateArmSession.ts +7 -3
+source frontends/shell/src/streaming/tileViewportStreamManager.ts +3 -2
+COMMENT-ONLY
+```
+   - X = ec6a6382bc35c9273b31f7036f9215c4c5330d14, main taken in by a merge commit (ADV-2026-11-18-14 item 4), with no conflict. Its parents are W and a18552e79950200884b17a4f7ed45761fa9bd2a8, and its tree, 82893582a38512c895bf4ac1cf6547c57eebd250, equals the tree that `git merge-tree --write-tree` gave for W and a18552e7 before the merge.
+   - R = d144373be9e0cc587b26d22bfe87da720917b135, the records step: `KNOWN-LIMITATIONS.md` alone, 6 lines added and 6 deleted by `git diff --numstat` from X. Its eight pairs were cut by script from the fences of ADV-2026-11-18-11 item 2, ADV-2026-11-18-13 item 4 and ADV-2026-11-18-15, each Old once at X, and applied by script in one commit (ADV-2026-11-18-11 item 4: no gate reads them again). The file's sha256 is ecc80d8d31c6d1030930e6031fb8a7dbafd6977536c5fd6a0fe7b61a2b315086 at X and 06c2b2075e29bd6e2b1c4cd0743ea49366517b6c98655ed07953f6696370c76d at R.
+
+2. **Amendment 4 item 7 is replaced** by ADV-2026-11-18-14, which replaces ADV-2026-11-18-13 item 7 (a). The records step needed main taken in, because PR B changed the lines it lands on, so the run at H does not stand for R. That run stays filed as the corrected head's run (its item 3): the five suites, each rc 0, with the same step results as the series at 00bead77, and the fixtures equal.
+
+3. **The runs at R** (ADV-2026-11-18-14 items 1 and 2), by the tester, each heavy command in a shared hold, on the port-5400 harness with the exe built from 6f7e744c (no build input changed from there to R):
+   - `npm run verify`, whole, once, in a hold: rc 0; its vitest run passed 120 files and 1527 tests.
+   - The six suites, each once in its own hold, each rc 0 with no failing step, each log's first line naming d144373b: `regression` 17 steps passed and one INFO; `residency-harness` by its exit code alone; `filter` 3; `pan-anchor` 16; `source-changed` 8; `colour` 5 (PB-E1, PB-E5, PB-E2, PB-E3 and PB-E4). The five that also ran at H gave the same step results there.
+   - The fixtures, 34 files, equal before and after by `cmp`; none regenerated.
+   - Seven holds, the first asked at 15:16:13Z and the last suite ended at 15:35:24Z; each was granted at its first call. No timing failure and no re-run.
+
+4. **The counts** (§7, as Amendments 1 and 3 keep it), insertions plus deletions from the merge base with main, `git diff --numstat a18552e7...R`:
+   - product, `tileViewportStreamManager.ts`: 15 of 25;
+   - product, `candidateArmSession.ts`: 44 of 60;
+   - product, `residencyStatus.ts`: 30 of 35;
+   - unit, `candidateArmSession.refusal.test.ts`: 519 of 540;
+   - unit, `tileViewportStreamManager.test.ts`: 78 of 110;
+   - unit, `residencyStatus.test.ts`: 18 of 50;
+   - unit, `App.streamFailure.test.tsx`: 251 of 310;
+   - unit, `candidateArmSession.test.ts`: 25, the class 9 row of Amendment 3 (the test M1 alone), with no ceiling of its own and counted in the unit total;
+   - product total 89 of 120, unit total 891 of 1,010, total 980 of 1,130;
+   - counted apart (§7), the records step's `KNOWN-LIMITATIONS.md`: 12.
+   The same counts stand at W from the earlier merge base, 2a8907b8786dd0dc714213fa21fdb41cd6ada52c.
+   None is over its ceiling, so there is no class 8 row. The words worker's report says in its Result line that three figures are over their ceilings; its own counts say none is, and the custodian's count agrees with the counts. The report contradicts itself in that line, and nothing else follows from it.
+
+5. **The test spans, with their commit** (the architect's O-2 of attempt 2; §11 item 10). The worker-high's third report cites lines 483, 499 and 514 of `frontends/shell/src/residency/candidateArmSession.refusal.test.ts` and line 2249 of `frontends/shell/src/residency/candidateArmSession.test.ts`. Each is a line at 6abaa9fb74de1eee303e3de84f6eafab67df56c6, where each holds the assertion the report quotes, checked by script at this closing. The refusal test file is the same at R as at H, so its three lines stand at R; in `candidateArmSession.test.ts` the words commit changes comment lines above that line, which is line 2248 at W and at R.
+
+6. **The reviewer's duties at the final head (§12).** Attempt 1 at 00bead7749ac7fd91708d2fb31ec96e5a1e4c2c3 recomputed the counts and re-applied all 12 of §4's mutations by Bash. Attempt 2 at H was limited to the fix (ADV-2026-11-18-09 item 7): it reused the worker's runs at H and reproduced M-M1 and M-C1c in shared holds. What changed after H is item 1's three commits.
+
+7. **CI at R:** the PR's checks at R, read at 2026-11-18T15:37:12Z, all success: the sign-off check (run 44331843231), the exposure scan (44331843398), ported notices (44331843233 and 44331828061) and the shell's product CI (44331843669: typecheck, build, vitest and cargo test, and the tauri build). The governance CI's path filters do not select this PR's paths, so the custodian dispatched it once on the branch (44333847214, at R): success, with its scripts suite and its cite, quote, plan, queue and site checks.
+
+8. **The records at the merge (§10).** The custodian adds §5's out-of-scope items to the node's notes (B1 after Dismiss, A3's mid-fill staleness, the relinquished case, S2), and W1 and W2 to `operator-sitting-queue`, in the records commit after the merge. The fallback is not used if the piece is on main before the release's records are written. The node `untiled-reissue-holds-earlier-look-handle-until-mint` stays proposed and not placed (Amendment 4 item 6).
+
+9. **Slips and stops, with their times.**
+   - The usage-limit stop, from 2026-11-16T09:03Z to 2026-11-18T08:27Z: all work stopped, this piece included.
+   - The custodian's proposal of Amendment 4 item 7, that the run at H stand for the merge request's head, did not hold: the records step needs main taken in. The advisor's ruling replacing it was received at 2026-11-18T14:21:54.829Z.
+   - The architect's brief for attempt 2 named its ground as ADV-2026-11-18-02 item 1; the models item is item 2. The ground it named, concurrency, was right.
+   C-1, the finding of both gates' first attempts, and its correction are recorded in Amendments 2 to 4.
+
+Read the last amendment first.
+
+Nothing above is edited.
