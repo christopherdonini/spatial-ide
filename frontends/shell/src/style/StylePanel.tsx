@@ -226,7 +226,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
     const next = { ...style, fillMatch: null };
     onChange(next);
     onCommit(next);
-    setLine(null);
+    if (waitRef.current === null) setLine(null); // while a wait runs the line is the wait's, as for the other ends of a match
   }
 
   function handleReset(): void {
