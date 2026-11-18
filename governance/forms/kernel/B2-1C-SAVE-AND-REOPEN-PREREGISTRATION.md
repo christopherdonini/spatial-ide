@@ -2268,3 +2268,30 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 35 — P1a's closing, before its merge request: the gates; the words commit; the counts; a class 1 disclosure; clippy not in CI; what is not tested; the runs; the stops; notes for P3a and P3b
+
+*Written by the custodian, 2026-11-18, before PR 333's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates** (Amendment 30 item 5 (f)). Both at H = 7e76347271780d20103bb3b4b36b8650a0967456, both PASS WITH NOTES, with no Correctness or Evidence finding: `state/consults/gates/2026-11-18-b2-piece-1c-save-and-reopen-p1a-gate-architect.md` and `state/consults/gates/2026-11-18-b2-piece-1c-save-and-reopen-p1a-gate-reviewer.md`. The worker's report: `state/consults/2026-11-18-b2-piece-1c-save-and-reopen-p1a-worker-report.md`. Before their dispatch, at 2026-11-18T21:26:13Z by their transcripts, the Rust workspace had passed at H on all three platforms, in the push run 44267900966, which ended at 08:50:22Z (the architect's O10).
+2. **The words commit.** W = 3717537f9ec7a5039683bed70fd72175e835edfd, the one commit after H. It carries the reviewer's D1 (a) to (c), which also meet the architect's D1 at the same lines, applied by the custodian, who checked each new comment, unwrapped, against the filed report's bytes. Comment lines only (ADV-2026-11-16-06 item 2 (c)). The architect's O5 words are not applied: the reviewer's D1 (a) and (c) cover the same two lines.
+3. **The counts** (both columns, item 5 (b)), `git diff --numstat bdc72f5f...3717537f`:
+   - `resolver.rs` 97 (96 added, 1 deleted) of 130; `dataset_ref.rs` 2 (1 and 1) of 5; kernel product 99 of 135;
+   - `project_resolver.rs` 145 (145 added) of 200;
+   - in all, 244 lines in 3 files, of 335 and 3. No row is over.
+   - From the merge base to main, no path of the pull request changed (ADV-2026-11-14-21 item 6 (a)).
+4. **A class 1 disclosure** (the reviewer's D2; the architect's O1). The variant `FolderUnresolvable` of the pre-committed error type, for a project folder that `canonicalize` cannot resolve, is not named in item 5 (a). It is not a new `pub` item. No test reaches it; it is what T5's case returns under M5. Its wire code goes with P3's packet (item 10).
+5. **Clippy** (the reviewer's D3). Item 5 (f) says CI runs clippy; no CI job runs it. The reviewer ran `cargo clippy --locked -p spatial-kernel --all-targets` at H: rc 0, with no warning in the three files. Item 5 (f) is not edited.
+6. **What is not tested** (item 5 (c)). The cloud placeholder, as declared. On Windows T1 builds a folder junction only; the symlink case ran in CI's Ubuntu and macOS jobs at H (run 44267900966). A link to a regular file as the final segment is built on no platform (the architect's O4, the reviewer's O6).
+7. **The runs.** The worker's focused runs at H (`--test project_resolver` 4 passed, `--lib project::resolver` 1 passed, `cargo fmt --check` rc 0, the empty lock-file diffs) and P-base at fe162292, reused by the reviewer; the reviewer's mutations M1 to M5 at H, each failing its own test at its own assertion, and one probe, X1, beyond item 5 (c), which failed T1. Nothing was reproduced.
+8. **CI.** At W, read 2026-11-18T22:36:06Z: Product CI — Rust workspace passed on all three platforms in the pull_request run 44409444598 and the push run 44409435670 (the macOS jobs 135173332562 and 135173300599, 12 steps each), and the shell, governance, fmt, ported-notices, exposure-scan and DCO workflows passed: twelve runs, all success. The one red run on the branch is 43820500481 at fe162292 (Rust, push), P-base, as predicted.
+9. **The stops.** None of item 5 (e)'s fired. The usage limit stopped the worker's run from 2026-11-16T09:01:11Z to 2026-11-18T08:31:20Z, by its transcript; it was resumed and finished.
+10. **Notes for P3a and P3b** (none blocks P1a):
+   - P3a: `NotCanonical` carries `$` as its path, so the data step names the locator's `at` itself (the architect's O2, the reviewer's O1); K-R1 takes a link to a regular file as the final segment, built off Windows (the architect's O4); the race between the check and the open is §2.5's declared window (the architect's O6); H4 is discriminated by K-O1 (the architect's O7); only parsed `at`s are passed, which bounds the segments (the architect's O8).
+   - P3b: the wire codes for `FolderUnresolvable` (item 4) and for `Unresolvable`, which covers any metadata error, access denied included (the architect's O3, the reviewer's O2).
+   - Whether `symlink_metadata` and `canonicalize` open a handle inside the call on Windows was checked by no call (the architect's O5); W's words hold either way.
+11. **Superseded index.** Nothing is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
