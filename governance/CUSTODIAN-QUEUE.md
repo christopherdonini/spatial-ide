@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4093d32146fe3b22f97937331e8a04846cbecddace28bd6d5c93f5675d6adda5`) at `2026-11-18T22:39:40.237Z`.
+Generated from `PLAN.yaml` (sha256 `76f4f73e06ed985c064fa5c807b6d6acc1f0505f24c5385e770df60c83d6797b`) at `2026-11-18T23:09:36.836Z`.
 
 ## 1. Next
 
@@ -56,6 +56,7 @@ Generated from `PLAN.yaml` (sha256 `4093d32146fe3b22f97937331e8a04846cbecddace28
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **open-first-look-fills-fit-view** — After an open the view is partial and nothing says so, on every file over 10,000 rows: the open plans the tiles of the view the fit shows, so the view fills without a pan and the status line speaks (S1, the human's grade) — evidence: branch `cut/open-first-look-fills-fit-view`
+- **stop-failure-alarm** — The stop alarm: a StopFailure hook tells the human by Telegram when a turn of the custodian ends on an error from the service, and the Notification hook also forwards quota_auto_resume_fired (the human's approval of ADV-2026-11-18-06; ADV-2026-11-18-22) — evidence: branch `cut/stop-failure-alarm`
 
 ## 6. Proposed / unscheduled
 
