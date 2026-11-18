@@ -2051,7 +2051,7 @@ export default function App() {
     for (const transition of transitions) stepQueue.enqueue(dataset, transition);
   }
 
-  // Milestone 4 PR B (OPEN-20 (a), the form's Amendment 16): when Colour by changes to a column other than the one the previous render coloured by (after One colour, that is none), while the status bar says attributes were not held, the first look is issued again under the active filter; `withinAttributeCeiling` then keeps that column. No step is recorded: the filter did not change.
+  // Milestone 4 PR B (OPEN-20 (a), the form's Amendment 16): when Colour by changes to a column other than the one the previous render coloured by (when no match is set, as after One colour or an open, that is none), while the status bar says attributes were not held, the first look is issued again under the active filter; `withinAttributeCeiling` then keeps that column. No step is recorded: the filter did not change.
   const previousColourColumn = useRef<string | null>(null);
   const colourColumn = view?.style.fillMatch?.column ?? null;
   useEffect(() => {

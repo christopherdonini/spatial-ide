@@ -41,7 +41,7 @@ export interface TableSnapshot {
   readonly phase: TablePhase;
   /** The filter this result was issued with: `null` for none, and before any issue. */
   readonly filter: Filter | null;
-  /** The request this result belongs to: a number each `start` changes, 0 before any (a wait compares it with the one its own `start` gave). */
+  /** The request this result belongs to: a number each `start` made before `end` or `dispose` changes, 0 before any (a wait compares it with the one its own `start` gave). */
   readonly request: number;
   readonly count: number;
   readonly ids: ReadonlySet<bigint>;

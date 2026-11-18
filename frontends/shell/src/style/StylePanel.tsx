@@ -100,7 +100,7 @@ export default function StylePanel({ style, onChange, onCommit, columns, source,
   filterRef.current = filter;
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
-  // The wait ends with the panel (a dataset change keys a new one): it cancels a stream it issued and leaves a joined one running.
+  // The wait ends with the panel (a dataset change keys a new one): it cancels a stream it issued while the source still holds that request, and leaves a joined or superseded one running.
   useEffect(() => () => waitRef.current?.abandon(), []);
   // A match ended other than by the panel clears the Colour by line: an open ends it (`resource.admitted`), and under the same dataset key App does
   // not make the panel anew. It clears the line on every end of a match, except while a wait runs: the line is then the wait's, and the wait's outcome sets it.
