@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-18T23:09:36.836Z",
-  "plan_hash": "76f4f73e06ed985c064fa5c807b6d6acc1f0505f24c5385e770df60c83d6797b",
+  "generated_at": "2026-11-18T23:35:03.056Z",
+  "plan_hash": "b9cca8670461fb569e7653721722bfb457a1f6a63d23a547252fc93498333cd2",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -813,7 +813,7 @@
         "opened": "2026-11-18",
         "done": null
       },
-      "summary": "PLACED 2026-11-18 by the advisor's ruling ADV-2026-11-18-22 on the human's approval of ADV-2026-11-18-06: a five-line form, the reviewer alone and the Sonnet worker; not among what v0.2 waits for. The custodian's settings commit holds that file alone; the worker builds the script, its tests on the documented example input, and the words of AUTONOMY section 38 and the hooks README. Live check (b), one TEST message and the human's line, comes after the reviewer's PASS and before the merge request.",
+      "summary": "STOPPED 2026-11-18 AT COMMIT 1 (c756afab): the existing test that pins the settings file fails under the approved settings change; check (d) is reserved and the draft ADV-2026-11-18-25 is with the human; until their line is filed nothing changes that test, no TEST message is sent and no merge request is made (state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-26-the-stop-alarm-stopped-at-its-first-commit-a-hook-test-pins-the-settings-check-d-reserved-the-draft-to-the-human-the-words-meanwhile.md); the words are being written meanwhile. PLACED 2026-11-18 by the advisor's ruling ADV-2026-11-18-22 on the human's approval of ADV-2026-11-18-06: a five-line form, the reviewer alone and the Sonnet worker; not among what v0.2 waits for. The custodian's settings commit holds that file alone; the worker builds the script, its tests on the documented example input, and the words of AUTONOMY section 38 and the hooks README. Live check (b), one TEST message and the human's line, comes after the reviewer's PASS and before the merge request.",
       "evidence_label": "branch `cut/stop-failure-alarm`"
     }
   ],
