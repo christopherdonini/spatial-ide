@@ -392,3 +392,40 @@ The packet's OPEN-1 to OPEN-5 are settled by ADV-2026-11-16-13 (§0.1). The cust
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2: C-1 of both gates closed by closure (a) under ADV-2026-11-18-09; the Completed terminal after a plan moves to this piece; the success case claimed; three tests; one correction by worker-high; the gates' second attempts and the runs; the on-main paragraph's words for the records step; recorded by the custodian before the correction's code
+
+*Written by the custodian on 2026-11-18, after both gates' first attempts were seen and before the correction's code, under the advisor's ruling ADV-2026-11-18-09, filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-09-s1-takes-the-fix-the-completed-terminal-after-a-plan-moves-to-s1-the-success-case-claimed-the-on-main-words.md`. The gate reports are `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-reviewer.md` (gate-log row 770) and `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-architect.md` (row 772). References only.*
+
+1. **The finding.** Both gates ended FAIL at 00bead7749ac7fd91708d2fb31ec96e5a1e4c2c3 on one Correctness finding, C-1. The architect concurs with the reviewer's C-1. A tile dropped while an Apply's first look still runs leaves the view with no status once that look ends `Completed`, though the scan ends. §3's first claim does not hold in that order, and ADV-2026-11-16-13 item 1 is not met without the fix.
+
+2. **The fix (the ruling's item 2).** In the untiled sink's `onTerminal`, under the guards this piece's branch already has, the status is recomputed after a plan whatever the terminal's kind. Those guards are: the terminal is current, it is not self-cancelled, and it does not follow a relinquish's re-emit. The branches for a first look that fails before any plan stay non-`Completed` only. The shape is the first of the architect's drafts for the advisor; where the filed report gives a different shape, the report's stands.
+
+3. **The region (item 3).**
+   - The current first look's `Completed` terminal after a plan moves to this piece.
+   - `open-first-look-fills-fit-view` keeps the `Completed` terminal where no plan has run.
+   - §8's sentence that this piece's branch is non-`Completed` only is corrected to read: this piece's branch takes a non-`Completed` terminal, or any terminal after a plan; the first-look node's accept call takes a `Completed` terminal with no plan.
+   - The first-look node reads its own region again when it takes main in, as §8 asks.
+
+4. **The success case, a claim of this piece (item 4).** §3's claims gain one: after an Apply and a pan during its first look, a load that ends well shows its settled status. Before this piece the status stayed empty there, as the reviewer's probe G330R-CTL showed at 00bead77.
+
+5. **Three tests (item 5).** Each asserts the status the view settles to, and each has its own mutation, observed failing:
+   - the reviewer's probe G330R-SIB: a tile is refused twice during an Apply's first look, then the look ends `Completed`;
+   - the reviewer's probe G330R-PRE: the same order, with the tile's stream ending `ProducerFailed`;
+   - the success case of item 4.
+
+   §7's ceilings stand as Amendment 1 item 2 keeps them. Any excess is a class 8 row in the closing, and no more.
+
+6. **One correction, by worker-high (item 6).** Its ground: the order in which the terminals of streams that run side by side arrive, in the session's state. It carries the reviewer's D-1, and the architect's D-3, D-4 and D-5, in the words their reports give. Nothing else changes.
+
+7. **After the correction (item 7).**
+   - Both gates make second attempts, each limited to C-1's fix and what it adds (Part 1 item 6 of the directive of 2026-11-05).
+   - At the corrected head, `npm run verify` runs whole and the series' five app-window suites run once more, because the fix is in the session's status path.
+
+8. **The records step (items 8 and 9).**
+   - Amendment 1 item 4's on-main paragraph takes the old and new pair of ADV-2026-11-18-09 item 8. That pair is the advisor's wording under the delegation.
+   - It is applied by script after both gates, and no other byte of the paragraph changes.
+   - The gates' second attempts check the new text's clauses at the corrected head.
+   - The paragraph's source comment lines, and item 56's span (§10), go to the advisor after the gates.
+
+Nothing above is edited.

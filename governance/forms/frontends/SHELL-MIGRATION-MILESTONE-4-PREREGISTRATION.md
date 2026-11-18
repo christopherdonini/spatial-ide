@@ -2706,3 +2706,26 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 28: the Colour by line against a second wait, one rule for every end of a match (ADV-2026-11-18-04 item 3, ADV-2026-11-18-08); recorded by the custodian after gate 2's attempts at bdf918e1, with their Documentation words applied
+
+*Written by the custodian on 2026-11-18. The rulings are filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-04-pr-b-after-gate-2-one-correction-two-workers-the-reviewer-at-the-corrected-head-the-narrower-runs.md` and `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-08-pr-b-one-colour-during-a-second-wait-follows-the-rule-of-the-other-three-ends-of-a-match.md`. Gate 2's reports at bdf918e1dcf7669a52e583131d645ef748c8855d, both PASS WITH NOTES, are `state/consults/gates/2026-11-18-b1-shell-half-pr-b-gate2-reviewer.md` (the reviewer's attempt 2, gate-log row 773) and `state/consults/gates/2026-11-18-b1-shell-half-pr-b-gate2-architect-attempt-3.md` (the architect's attempt 3, row 771). References only.*
+
+1. **The text.** These are the worker's words, with the gates' Documentation words applied by script: the architect's D-B (1), D-C and D-D, and the reviewer's D-1 and D-2 (its Drafts B and C).
+
+- **The Colour by line against a second wait (ADV-2026-11-18-04 item 3 and ADV-2026-11-18-08; the worker's words, from `StylePanel.tsx` at d1d3a29f28e6ac813a269bdd2e44d0e2f03687a7 and the correction after it, to e00d7b1fd85a07c14a152d77f658e38d2beda7aa).** A second Colour by waits when a match stands, Apply is clicked again, and the Table's source holds no completed or stopped result for the view's filter and has not ended.
+  - The rule, for all four ends of a match (the Fill colour, Reset, One colour and an open): with no wait running, the end clears the line (C-1). While a wait runs, the Fill colour, Reset and One colour leave the waiting line and Cancel to the wait, and the wait's outcome, or its Cancel, sets the line when it ends; an open ends the wait at once (the bullet on an open, below).
+  - The wait's outcome, as for any wait: on rows under the view's filter that hold at least one value of the column that is not null, the match is applied over the style as it then is, so a Fill colour chosen during the wait stays the fill colour, and the line names the column and its counts. Otherwise the line says why nothing was applied.
+  - An open under the same dataset key ends the wait at once: App disposes the old table source, which cancels the request, so the line says the apply was cancelled and nothing was applied, and the new source issues nothing for the panel. Under another key the panel is made anew, and its end abandons the wait.
+  - The same-key branch has no caller in the product, because every open mints a new dataset key. PB-U15 and PB-U17 (c) test it as code, not as something a person reaches (ADV-2026-11-18-08 item 3).
+  - Tests, in `StylePanel.test.tsx` beside PB-U15: PB-U16, with Colour by applied, a Fill colour change and Reset each clear the line; PB-U17, during a second wait, a Fill colour change (a), Reset (b), One colour (d) and the panel's side of an open (c), each against the rule above.
+  - Mutations: (i) PB-U16's, the panel's own-end flag put back; (ii) PB-U17's first, the effect clearing the line whether or not a wait runs; (iii) PB-U17's second, One colour's handler clearing it unconditionally (the test's comment numbers (ii) and (iii) as (1) and (2)).
+  - Mutation (i), the flag put back, fails PB-U16 at (a) and does not reach PB-U16 (b) (ADV-2026-11-18-08 item 4).
+
+2. **Two findings on one clause.** The architect's D-B (2) and the reviewer's D-1 both correct the first sentence's condition. The reviewer's words are taken, because they also cover a source that has ended. The architect's point, that a stopped result is reused, is in them.
+
+3. **PB-U16 (b)** (ADV-2026-11-18-08 item 4). The reviewer judges that (b) needs no recorded mutation of its own. Its probe probe-ib, the flag put back in Reset alone, fails PB-U16 at (b) (the reviewer's report, check 5 and O-4).
+
+Read the last amendment first.
+
+Nothing above is edited.
