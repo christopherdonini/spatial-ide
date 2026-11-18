@@ -446,3 +446,74 @@ describe("case B: the first look fails before any plan", () => {
     expect(failedAfter(c, cMark.s)).toEqual([]);
   });
 });
+
+// C-1 of both gates (the form's Amendment 2, items 2, 4 and 5; the reviewer's probes G330R-SIB, G330R-PRE and G330R-CTL): the
+// tile ends while an Apply's first look still runs, so the view can settle only at that look's `Completed` terminal, after a plan.
+// Each mutation below narrows the fix's condition so that it skips the one settled state its test reaches.
+describe("case A-apply: the tile ends while an Apply's first look runs, then the look completes", () => {
+  /** Open; a pan to 0:0 that settles; an Apply; a pan to 0:0 during its first look, its tile query answered by `answers`. */
+  async function panDuringApply(p: Probe, ...answers: Array<string | Ticket>) {
+    await openFirstLook(p);
+    tileQueries("sh_t00");
+    await pan(p, inner(tile(p, 0, 0)));
+    complete("sh_t00");
+    tileQueries("sh_apply", ...answers);
+    await p.session.reissueUnrestricted(null, null);
+    const mark = p.mark();
+    await pan(p, inner(tile(p, 0, 0)));
+    return mark;
+  }
+  async function lookCompletes(): Promise<void> {
+    sinkFor("sh_apply").onBatch(new Uint8Array([1]), true);
+    sinkFor("sh_apply").onTerminal({ kind: "Completed", detail: "" });
+    await flush();
+  }
+
+  // Mutation M-C1a: the fix skips a view that settles partial (`(hasPlanned && currentSettledState() !== "settled-partial")`
+  // in its condition). Expected failure: no status event after the mark, so the first status assertion reads undefined.
+  it("SR-A-apply-refused: the only tracked tile refused twice during the look, which then completes: the partial sentence, and the scan ends", async () => {
+    const p = makeProbe();
+    const [first, second] = [deferred<{ stream: string }>(), deferred<{ stream: string }>()];
+    const mark = await panDuringApply(p, first, second);
+    expect(p.session.manager.trackedTileCount).toBe(1);
+    await refuseTwice(first, second, 2);
+    expect(p.session.manager.trackedTileCount).toBe(0);
+    await lookCompletes();
+
+    expect(p.statusEvents.slice(mark.s).at(-1)).toEqual(WITHIN_PARTIAL);
+    expect(p.text()).toBe(PARTIAL);
+    expect(p.scanEvents.slice(mark.sc).at(-1)).toEqual({ kind: "reset" });
+    expect(p.scanKind()).toBe("idle");
+  });
+
+  // Mutation M-C1b: the fix skips a view that settles with a failure (`... !== "settled-partial-failure"`). Expected failure:
+  // no status event after the mark, so the first status assertion reads undefined.
+  it("SR-A-apply-failed: the tile's stream ends ProducerFailed during the look, which then completes: the failure sentence, and the scan ends", async () => {
+    const p = makeProbe();
+    const mark = await panDuringApply(p, "sh_t00b");
+    sinkFor("sh_t00b").onTerminal({ kind: "ProducerFailed", detail: "engine.stream_failed" });
+    await flush();
+    expect(p.session.manager.trackedTileCount).toBe(0);
+    await lookCompletes();
+
+    expect(p.statusEvents.slice(mark.s).at(-1)).toEqual({ kind: "candidate-within-budget", residentFeatureCount: 3, settled: "partial-failure" });
+    expect(p.text()).toBe(PARTIAL_FAILURE);
+    expect(p.scanEvents.slice(mark.sc).at(-1)).toEqual({ kind: "reset" });
+    expect(p.scanKind()).toBe("idle");
+  });
+
+  // Amendment 2 item 4's success case. Mutation M-C1c: the fix skips a view that settles complete (`... !== "settled-complete"`).
+  // Expected failure: no status event after the mark, so the first status assertion reads undefined.
+  it("SR-A-apply-success: the tile completes during the look, which then completes: the settled sentence, and the scan ends", async () => {
+    const p = makeProbe();
+    const mark = await panDuringApply(p, "sh_t00b");
+    complete("sh_t00b");
+    expect(p.session.manager.trackedTileCount).toBe(0);
+    await lookCompletes();
+
+    expect(p.statusEvents.slice(mark.s).at(-1)).toEqual({ kind: "candidate-within-budget", residentFeatureCount: 3, settled: "complete" });
+    expect(p.text()).toBe("Showing all 3 features in view");
+    expect(p.scanEvents.slice(mark.sc).at(-1)).toEqual({ kind: "reset" });
+    expect(p.scanKind()).toBe("idle");
+  });
+});
