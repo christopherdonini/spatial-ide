@@ -16,6 +16,9 @@
 //! - The other tests are written against `Projects::save`. Each states what it asserts and the
 //!   mutation it was observed failing under. Two are not named by the form: the withheld mark and
 //!   the first save without a folder.
+//! - **T11 and T14** (the form's Amendment 30, item 6 (c)), appended last: the reader of
+//!   `locations.json` reads back what a save writes, and a save whose folder path `folders.json`
+//!   cannot hold is refused before it writes anything.
 
 mod watch_support;
 
@@ -971,5 +974,73 @@ fn the_first_save_records_its_folder_as_first_in_folders_json() {
         file_names(&record),
         ["folders.json", "locations.json"],
         "no temp file is left"
+    );
+}
+
+// ---------------------------------------------------------------------------------------------
+// T11 and T14 (Amendment 30, item 6 (c)): the machine store's writers on the save path
+// ---------------------------------------------------------------------------------------------
+
+use spatial_kernel::project::store::{read_locations, Location, FOLDERS, LOCATIONS};
+
+/// **T11**: after a real `Projects::save`, `read_locations` of the `locations.json` it wrote gives
+/// the project file's dataset identity and the absolute path the data was opened from.
+///
+/// RECORDED MUTATION: the reader's field names changed. Expected failure: the reader refuses the
+/// file the save wrote.
+#[test]
+fn the_locations_reader_reads_back_what_a_save_writes() {
+    let rig = rig("t11");
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    let ws = workspace(&ds, None, -4.5);
+    let saved = rig
+        .projects
+        .save(handle.as_str(), &ds, Some(&rig.folder), ws)
+        .expect("saved");
+    let record = rig.machine.join(saved.project.hex());
+    let bytes = std::fs::read(record.join(LOCATIONS)).expect("locations.json");
+    let read = read_locations(&bytes).expect("the reader accepts what the save wrote");
+    let file = read_project(&rig.project_file()).expect("the project file");
+    let dataset = file.dataset.uri().clone();
+    let path = std::path::absolute(ds.path()).expect("absolute");
+    assert_eq!(read, [Location { dataset, path }]);
+}
+
+/// **T14**, on Windows only, checked at run time; it prints the operating system it ran on. A
+/// first save into an existing folder whose absolute path is over 4,096 bytes is refused as
+/// `MachineRecordRefused` naming `folders.json`, the folder holds no `project.spatial`, and the
+/// machine store holds no identity folder. On any other operating system it returns at once and
+/// proves nothing there.
+///
+/// RECORDED MUTATIONS: (a) the bound removed; expected failure: the save is `Ok`. (b) the
+/// documents built after the first write, which is main's order; expected failure: the machine
+/// store holds the identity's folder.
+#[test]
+fn a_save_whose_folder_path_folders_json_cannot_hold_is_refused_by_name_and_writes_nothing() {
+    println!("T14 runs on {}", std::env::consts::OS);
+    if std::env::consts::OS != "windows" {
+        return;
+    }
+    let rig = rig("t14");
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    let mut long = std::path::absolute(&rig.dir).expect("absolute");
+    while long.as_os_str().len() <= 4_096 {
+        long.push("a".repeat(200));
+    }
+    std::fs::create_dir_all(&long).expect("a folder over 4,096 bytes");
+    let ws = workspace(&ds, None, -4.5);
+    let refused = rig
+        .projects
+        .save(handle.as_str(), &ds, Some(&long), ws)
+        .expect_err("refused");
+    match &refused {
+        SaveFailure::MachineRecordRefused(r) => assert_eq!(r.file, FOLDERS),
+        other => panic!("refused as a machine record: {other}"),
+    }
+    assert!(!long.join(PROJECT_FILE_NAME).exists(), "no project file");
+    let identities = rig.machine.exists().then(|| file_names(&rig.machine));
+    assert!(
+        identities.unwrap_or_default().is_empty(),
+        "no identity folder"
     );
 }

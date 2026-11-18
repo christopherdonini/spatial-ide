@@ -33,7 +33,7 @@ use std::str::FromStr;
 use std::sync::{Arc, Mutex};
 
 use spatial_engine::Dataset;
-use spatial_renderer::canonical::{sha256_hex, to_canonical_string, Json};
+use spatial_renderer::canonical::sha256_hex;
 use spatial_renderer::style::{self, Value};
 use spatial_skp::v0::{
     HistoryMarkState, ProjectRelativeLocator, ProjectWorkspace, SaveProjectRequest,
@@ -286,12 +286,13 @@ impl Projects {
 
         let dir = record_dir(&self.root, &project);
         let machine = |what| move |source| SaveFailure::MachineStore { what, source };
-        std::fs::create_dir_all(&dir).map_err(machine("the project's machine folder"))?;
+        // Both of the machine store's documents are built, and refused where their readers would
+        // refuse them, before its first write: a refusal writes nothing (the form's Amendment 30,
+        // item 4 (a)).
         let at = std::path::absolute(ds.path()).unwrap_or_else(|_| ds.path().to_path_buf());
-        let locations = locations_json(&uri, &at).map_err(SaveFailure::MachineRecordRefused)?;
-        write_machine_file(&dir, store::LOCATIONS, locations.as_bytes())
-            .map_err(machine(store::LOCATIONS))?;
-        if first {
+        let locations =
+            store::locations_to_bytes(&uri, &at).map_err(SaveFailure::MachineRecordRefused)?;
+        let folders = if first {
             let first = std::path::absolute(&folder).unwrap_or_else(|_| folder.clone());
             let folders = KnownFolders {
                 first,
@@ -300,6 +301,14 @@ impl Projects {
             let bytes = folders
                 .to_bytes()
                 .map_err(SaveFailure::MachineRecordRefused)?;
+            Some(bytes)
+        } else {
+            None
+        };
+        std::fs::create_dir_all(&dir).map_err(machine("the project's machine folder"))?;
+        write_machine_file(&dir, store::LOCATIONS, &locations)
+            .map_err(machine(store::LOCATIONS))?;
+        if let Some(bytes) = folders {
             write_machine_file(&dir, store::FOLDERS, &bytes).map_err(machine(store::FOLDERS))?;
         }
         replace(&folder, text.as_bytes()).map_err(SaveFailure::ProjectFileUnwritable)?;
@@ -503,27 +512,6 @@ fn read_existing(target: &Path) -> Result<Option<Vec<u8>>, SaveFailure> {
         .read_to_end(&mut bytes)
         .map_err(unreadable)?;
     Ok(Some(bytes))
-}
-
-/// `locations.json` (ADR-036 §9's `spatial-locations` format): where this machine found the
-/// dataset the project names.
-fn locations_json(uri: &DatasetUri, at: &Path) -> Result<String, MachineRecordRefused> {
-    let refused = |rule: String| MachineRecordRefused {
-        file: store::LOCATIONS,
-        rule,
-    };
-    let entry = Json::obj([
-        ("dataset", Json::str(uri.as_str())),
-        ("path", Json::str(at.to_string_lossy())),
-    ]);
-    let locations = Json::obj([
-        ("format", Json::str("spatial-locations")),
-        ("version", Json::Int(1)),
-        ("entries", Json::Arr(vec![entry])),
-    ]);
-    to_canonical_string(&locations)
-        .map(|text| text + "\n")
-        .map_err(|e| refused(e.to_string()))
 }
 
 /// A machine store file, written whole or not at all: a temp file in the same folder, synced, then
