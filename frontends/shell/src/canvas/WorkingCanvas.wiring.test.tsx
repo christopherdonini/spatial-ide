@@ -61,6 +61,7 @@ import { loadBatchFixture } from "../testUtils/batchFixtures";
 import { decodeBatch, ENCODING_POLYGON } from "./decodeBatch";
 import WorkingCanvas from "./WorkingCanvas";
 import type { WorkingCanvasHandle, WorkingCanvasProps } from "./WorkingCanvas";
+import { INITIAL_TILE_KEY } from "./tileGridConstants";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -417,5 +418,39 @@ describe("V-C1: the canvas's current view (B2 piece 1c, Amendment 12 item 2)", (
     const moved = ref.current!.currentView!()!;
     expect(Object.is(moved.centre[0], 1_000_000 + 2_600_050), "x is the dataset-space point after the origin moved").toBe(true);
     expect(Object.is(moved.centre[1], -500_000.25 + 1_200_050), "y is the dataset-space point after the origin moved").toBe(true);
+  });
+});
+
+describe("U-FL4: the view the canvas shows (open-first-look-fills-fit-view, the form's §2.1 and §4)", () => {
+  const tick = (target: [number, number], zoom: number, isDragging: boolean): void => {
+    act(() => {
+      theDeck().props.onViewStateChange({ viewState: { target: [target[0], target[1], 0], zoom }, interactionState: { isDragging } });
+    });
+  };
+
+  // M-U4 (the form's §4): in `shownViewportBbox` (WorkingCanvas.tsx) drop the origin. Expected failure: at the fit, whose
+  // `forceRecenter` moves the origin to the fitted box's midpoint.
+  it("U-FL4: shownViewportBbox is null before any camera write, the box onViewShown received after the one-shot fit, and the box onViewportChanged received after an interactive tick", () => {
+    __resetResidencyArmForTests();
+    setResidencyArm("candidate"); // the tile arm's one-shot fit, as the first look's batches reach it
+    const onViewShown = vi.fn<NonNullable<WorkingCanvasProps["onViewShown"]>>();
+    const onViewportChanged = vi.fn<WorkingCanvasProps["onViewportChanged"]>();
+    const { ref } = mount({ onViewShown, onViewportChanged });
+    const shown = () => ref.current!.shownViewportBbox!();
+    expect(shown(), "nothing written to the camera yet").toBeNull();
+
+    act(() => {
+      ref.current!.pushTileBatch(INITIAL_TILE_KEY, "sh_fl", 0, loadBatchFixture("lv95-polygon-batch"), null);
+    });
+    expect(onViewShown, "the one-shot fit").toHaveBeenCalledTimes(1);
+    expect(onViewportChanged, "the fit reports nothing").not.toHaveBeenCalled();
+    expect(shown(), "after the fit").toEqual(onViewShown.mock.calls[0][0]);
+
+    tick([123.45678901234567, -67.89012345678901], 7.5, true);
+    expect(onViewportChanged).toHaveBeenCalledTimes(1);
+    expect(shown(), "after a drag tick").toEqual(onViewportChanged.mock.calls[0][0]);
+    tick([1_000_000, -500_000.25], 7.5, false); // a settled tick far from the origin moves it
+    expect(onViewportChanged).toHaveBeenCalledTimes(2);
+    expect(shown(), "after a settled tick that moved the origin").toEqual(onViewportChanged.mock.calls[1][0]);
   });
 });
