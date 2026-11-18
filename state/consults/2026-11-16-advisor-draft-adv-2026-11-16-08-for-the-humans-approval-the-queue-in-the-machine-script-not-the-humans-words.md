@@ -25,3 +25,5 @@ You write nothing else in the machine's folder, now or later. A later change to 
 4. From then, a brief's hold is one call that waits in the script. The status read before a hold and the re-read after it, from the advisor's ruling ADV-2026-11-15-17 item 4, stop. Each day you read the machine log's hold lines of this project; if two of them overlap, tell the advisor at once.
 
 5. The rules of the machine are otherwise unchanged. Neither project has priority, and nobody stops, slows or kills another project's run.
+
+*Approved, 2026-11-16: the human's typed message of 07:53Z approves this draft by its id (`state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md`); from then its text is the human's words. Nothing above is edited.*

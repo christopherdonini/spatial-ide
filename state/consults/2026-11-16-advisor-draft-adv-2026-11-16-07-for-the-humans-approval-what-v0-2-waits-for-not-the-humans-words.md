@@ -22,3 +22,5 @@ To the custodian, 2026-11-16. What v0.2 waits for.
 2. `shell-tiled-arm-stream-refusal-shown-to-the-user` joins the list only if its test shows that part of the map can be missing with nothing said. Otherwise it waits, and limitation 56 says how it is.
 
 3. The twelve dependencies already done stay as they are. Nothing is added to the list without my word. The tag, the notes and the release page stay mine.
+
+*Approved, 2026-11-16: the human's typed message of 07:53Z approves this draft by its id (`state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md`); from then its text is the human's words. Nothing above is edited.*

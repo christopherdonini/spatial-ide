@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866370fcccb92e2a53ce2e0`) at `2026-11-16T04:56:30.490Z`.
+Generated from `PLAN.yaml` (sha256 `74785e71756cd40acd5981dfaa601110d96a80aeaad467fb0204a47a5b0f6fad`) at `2026-11-18T08:48:02.447Z`.
 
 ## 1. Next
 
@@ -16,7 +16,6 @@ Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
-- **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status (lane `shell`, order null, budget 240 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
@@ -55,10 +54,11 @@ Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866
 ## 5. In progress
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
-- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice, the recovery offer after a crash, and the saved-here mark — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
-- **known-limitations-item-56-tile-refusal-record** — KNOWN-LIMITATIONS item 56: the clause that a refused request is shown by name corrected for a tile of the map, which shows no code (one span and the item comment) — evidence: branch `cut/known-limitations-item-56-tile-refusal-record`
+- **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status — evidence: branch `cut/shell-tiled-arm-stream-refusal-s1`
+- **known-limitations-v0-1-0-two-notes-2026-11-16** — KNOWN-LIMITATIONS: v0.1.0's two dated notes of 2026-11-16, the human's words (ADV-2026-11-16-19 item 2), each followed by its comment — evidence: branch `cut/known-limitations-v0-1-0-two-notes`
 
 ## 6. Proposed / unscheduled
 
@@ -116,6 +116,7 @@ Generated from `PLAN.yaml` (sha256 `219344a97e792fd77433c0e63a402b4f092213279866
 - **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
+- **b2-piece-1c-step-3-recovery-offer** — B2 piece 1c step 3 -- the recovery offer after a crash, split from b2-piece-1c-save-and-reopen; not in v0.2 (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **publish-dev-hook-attempt-from-effect** — The export panel's publishExecute dev hook reads the current attempt from a passive effect, so an execute sent as soon as the prepare answers can return unknown-attempt with no host call (the e2e export steps under load) (phase `prototype`) — never queued until placed
 - **lod-tiers-geographic-crs** — LOD tiers for a geographic CRS -- its own preregistered gate, owed by the LOD form's amendment (phase `prototype`) — never queued until placed
