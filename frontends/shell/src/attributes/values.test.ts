@@ -6,7 +6,7 @@ import { describe, expect, it } from "vitest";
 import { decodeBatch } from "../canvas/decodeBatch";
 import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import type { AttributeColumn } from "../testUtils/attributeBatchIpc";
-import { ATTRIBUTE_NULL_MARKER, displayValue, readRow } from "./values";
+import { ATTRIBUTE_NULL_MARKER, displayValue, readColumn, readRow } from "./values";
 
 /** The cells of row `row` as the text the Feature tab shows, read through the real decode and `readRow`. */
 function shown(columns: AttributeColumn[], rows: number): string[][] {
@@ -50,5 +50,19 @@ describe("readRow and displayValue (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.
     const batch = decodeBatch("sh_v", 0, ipc, "geometry", encoding, null, null);
     expect(readRow(batch, 0)).toBeNull();
     expect(readRow({ attributes: "not-held" }, 0)).toBe("not-held");
+  });
+});
+
+describe("readColumn (section 2.3 (c))", () => {
+  it("reads a text column with its NULLs, and gives null for a column that is missing or not text", () => {
+    const { ipc, encoding } = attributeBatchIpc([1n, 2n, 3n], [
+      { name: "tag", kind: "utf8", values: ["a", null, ""] },
+      { name: "n", kind: "int64", values: [1n, 2n, 3n] },
+    ]);
+    const batch = decodeBatch("sh_c", 0, ipc, "geometry", encoding, ["tag", "n"], null);
+    expect(readColumn(batch, "tag"), "the text column, NULL as null and the empty text kept").toEqual(["a", null, ""]);
+    expect(readColumn(batch, "n"), "an integer column").toBeNull();
+    expect(readColumn(batch, "absent"), "a column the block lacks").toBeNull();
+    expect(readColumn({ attributes: null }, "tag"), "a batch decoded with no projection").toBeNull();
   });
 });

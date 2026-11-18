@@ -185,7 +185,8 @@ const CLASS_B_ROWS = [
  * B2 piece 1b: each committed edit is the class-A `record_step` row above. The one row that stays is
  * `style.resetToDefault`, for a Reset that changes nothing: it records no step, so no class-A row shows it. Milestone 3 adds `filter.clauseNotSent`
  * (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md Amendment 3 item 4(b)), for a card or bar change the shell refuses under OPEN-3 (A) and so does not send;
- * a change that is sent shows the class-A rows an Apply shows. `as const satisfies` for
+ * a change that is sent shows the class-A rows an Apply shows. Milestone 4 PR B adds `style.colourBy` and `style.oneColour`
+ * (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md Amendment 25 item 3), each recorded at the action whatever its outcome. `as const satisfies` for
  * the same literal-preserving reason `CLASS_B_ROWS` above uses it. */
 const CLASS_C_ROWS = [
   {
@@ -195,6 +196,20 @@ const CLASS_C_ROWS = [
       "no API equivalent exists -- StylePanel's collapsed/expanded disclosure is pure view state, " +
       "discarded on every dataset change.",
     owner: 'docs/03 §"The action console" (pure view state)',
+  },
+  {
+    class: "C",
+    action: "style.colourBy",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- Colour by is the app's own control: it reads the chosen column's values from the first features of the Table's request, which is the viewport_query row shown beside this one when Colour by asks for it; a Colour by that changes the style sends one step to the session history, the record_step row beside it, and one that changes nothing sends none; when it applies nothing, Colour by's line says why.",
+    owner: 'docs/03 §"The action console"',
+  },
+  {
+    class: "C",
+    action: "style.oneColour",
+    statement:
+      "[P6 placeholder] no API equivalent exists -- One colour is the app's own control: it ends Colour by, so that every feature draws in the Fill colour, and sends one step to the session history, the record_step row shown beside this one.",
+    owner: 'docs/03 §"The action console"',
   },
   {
     class: "C",

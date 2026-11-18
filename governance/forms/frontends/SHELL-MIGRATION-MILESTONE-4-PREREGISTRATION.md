@@ -2706,3 +2706,93 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 28: the Colour by line against a second wait, one rule for every end of a match (ADV-2026-11-18-04 item 3, ADV-2026-11-18-08); recorded by the custodian after gate 2's attempts at bdf918e1, with their Documentation words applied
+
+*Written by the custodian on 2026-11-18. The rulings are filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-04-pr-b-after-gate-2-one-correction-two-workers-the-reviewer-at-the-corrected-head-the-narrower-runs.md` and `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-08-pr-b-one-colour-during-a-second-wait-follows-the-rule-of-the-other-three-ends-of-a-match.md`. Gate 2's reports at bdf918e1dcf7669a52e583131d645ef748c8855d, both PASS WITH NOTES, are `state/consults/gates/2026-11-18-b1-shell-half-pr-b-gate2-reviewer.md` (the reviewer's attempt 2, gate-log row 773) and `state/consults/gates/2026-11-18-b1-shell-half-pr-b-gate2-architect-attempt-3.md` (the architect's attempt 3, row 771). References only.*
+
+1. **The text.** These are the worker's words, with the gates' Documentation words applied by script: the architect's D-B (1), D-C and D-D, and the reviewer's D-1 and D-2 (its Drafts B and C).
+
+- **The Colour by line against a second wait (ADV-2026-11-18-04 item 3 and ADV-2026-11-18-08; the worker's words, from `StylePanel.tsx` at d1d3a29f28e6ac813a269bdd2e44d0e2f03687a7 and the correction after it, to e00d7b1fd85a07c14a152d77f658e38d2beda7aa).** A second Colour by waits when a match stands, Apply is clicked again, and the Table's source holds no completed or stopped result for the view's filter and has not ended.
+  - The rule, for all four ends of a match (the Fill colour, Reset, One colour and an open): with no wait running, the end clears the line (C-1). While a wait runs, the Fill colour, Reset and One colour leave the waiting line and Cancel to the wait, and the wait's outcome, or its Cancel, sets the line when it ends; an open ends the wait at once (the bullet on an open, below).
+  - The wait's outcome, as for any wait: on rows under the view's filter that hold at least one value of the column that is not null, the match is applied over the style as it then is, so a Fill colour chosen during the wait stays the fill colour, and the line names the column and its counts. Otherwise the line says why nothing was applied.
+  - An open under the same dataset key ends the wait at once: App disposes the old table source, which cancels the request, so the line says the apply was cancelled and nothing was applied, and the new source issues nothing for the panel. Under another key the panel is made anew, and its end abandons the wait.
+  - The same-key branch has no caller in the product, because every open mints a new dataset key. PB-U15 and PB-U17 (c) test it as code, not as something a person reaches (ADV-2026-11-18-08 item 3).
+  - Tests, in `StylePanel.test.tsx` beside PB-U15: PB-U16, with Colour by applied, a Fill colour change and Reset each clear the line; PB-U17, during a second wait, a Fill colour change (a), Reset (b), One colour (d) and the panel's side of an open (c), each against the rule above.
+  - Mutations: (i) PB-U16's, the panel's own-end flag put back; (ii) PB-U17's first, the effect clearing the line whether or not a wait runs; (iii) PB-U17's second, One colour's handler clearing it unconditionally (the test's comment numbers (ii) and (iii) as (1) and (2)).
+  - Mutation (i), the flag put back, fails PB-U16 at (a) and does not reach PB-U16 (b) (ADV-2026-11-18-08 item 4).
+
+2. **Two findings on one clause.** The architect's D-B (2) and the reviewer's D-1 both correct the first sentence's condition. The reviewer's words are taken, because they also cover a source that has ended. The architect's point, that a stopped result is reused, is in them.
+
+3. **PB-U16 (b)** (ADV-2026-11-18-08 item 4). The reviewer judges that (b) needs no recorded mutation of its own. Its probe probe-ib, the flag put back in Reset alone, fails PB-U16 at (b) (the reviewer's report, check 5 and O-4).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 29: the closing, references and hashes only; recorded by the custodian at PR B's final head before the merge request
+
+*Written by the custodian on 2026-11-18. The head is f06f8105fd5df6b1baf2c6df5da69625acaa6070, the one commit after bdf918e1dcf7669a52e583131d645ef748c8855d, where both of gate 2's attempts passed with notes (Amendment 28). References only.*
+
+1. **After the gated head.** One commit, f06f8105fd5df6b1baf2c6df5da69625acaa6070, changes the two comment lines above the match effect in `StylePanel.tsx`. The new lines are the architect's D-A words, byte for byte, and they also meet the reviewer's D-3. No other byte changes. None of the gates' Documentation findings is the human's wording, so none needs a re-gate.
+
+2. **The runs** (ADV-2026-11-18-04 item 5).
+   - (a) `npm run verify`, whole: rc 0 at bdf918e1 (the tester), and rc 0, its 118 test files and 1505 tests passing, at f06f8105fd5df6b1baf2c6df5da69625acaa6070 (the worker's second run). The worker's first run at f06f8105fd5df6b1baf2c6df5da69625acaa6070, rc 1, timed out in a cargo-calling test file that the change does not reach, while the custodian's records gate ran beside it.
+   - (b) At bdf918e1, the colour, style, console and project suites passed. The recording suite passed with the waiting shim, as the series at 6f95993e ran it; its first run without the shim failed at RECORD, by the custodian's brief.
+   - (c) From 6f95993e the product diff is `StylePanel.tsx`, plus the D-1 and D-3 comment lines in `tableSource.ts` and `App.tsx`. So the other suites stand from 6f95993e.
+
+3. **§7's class 8 rows,** by §7's command at f06f8105fd5df6b1baf2c6df5da69625acaa6070 from the merge base 0372c5a304ae38213d2ee9f2cf0799b143339a77, none trimmed:
+   - `renderer/tests/style_agreement.rs`, 49 of 40 (gate 1, the reviewer's D1);
+   - `frontends/shell/src/workspace/workspaceState.ts`, 26 of 10, and of the cumulative 25 (gate 2, the architect's D-4);
+   - `frontends/shell/src/style/StylePanel.test.tsx` 316 with `frontends/shell/src/style/Legend.test.tsx` 58, 374 of 250 (the architect's D-4; the reviewer's gate 2 D-4 (b));
+   - `frontends/shell/src/workspace/workspaceState.test.ts`, 19 of 4 (the reviewer's gate 2 D-4 (a)).
+
+4. **Recorded mutations.**
+   - Gate 1's D4 and D5 are re-observed at bdf918e1, as m08 and m28 in check 5 of the reviewer's gate 2 report (ADV-2026-11-18-03 item 13).
+   - The further tests that m01, m19, m20 and m23 fail are listed in the same check (its D-5).
+   - Its probe probe-ib stands for PB-U16 (b) (Amendment 28 item 3).
+
+5. **ADV-2026-11-18-05 item 1's three conditions.**
+   - (a) The base run at 619a7cc9 is filed in `state/consults/2026-11-18-b1-shell-half-pr-b-selection-export-diagnosis-tester-report.md`.
+   - (b) No PR B file is on the export's path, by the reviewer's gate 2 check 2.
+   - (c) Two suites of the series wait for the dialog before they execute, `publish.mjs` and `colour.mjs`, as the same report finds. Both pass: publish in `state/consults/2026-11-16-b1-shell-half-pr-b-series-at-6f95993e-tester-report.md`, and colour as hc-colour-3 in `state/consults/2026-11-18-b1-shell-half-pr-b-series-completion-tester-report.md`.
+   - Until `selection-export-unknown-attempt` merges, the selection suite's export steps are recorded as the known failure (item 3).
+
+6. **ADV-2026-11-18-03 item 12.** No row of Part AC after AC5 opens a file and then expects category colours, so none is redrafted (the reviewer's gate 2 check 7).
+
+7. **Paths** (ADV-2026-11-18-04 item 6). The paths were read again at f06f8105fd5df6b1baf2c6df5da69625acaa6070: 57 from the merge base, none of them among the 29 paths main (e45cf5e8) has changed since it.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 30: PR B merged by the advisor; main's CI at the merge; the architect's statement E under ADV-2026-11-18-11; draft A to S1's records step; entry 79's item 2; the pins owed on main; the node done; recorded by the custodian after the merge
+
+*Written by the custodian on 2026-11-18, after the merge. The verdict is filed at `state/consults/merge-checks/PR-327-f06f8105fd5d.md`, and the advisor's ruling ADV-2026-11-18-11 at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-11-pr-b-draft-a-taken-for-s1s-records-step-the-architects-e-confirmed-for-the-form.md`, and ADV-2026-11-18-12 at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-12-main-macos-job-no-runner-the-records-go-ahead-the-ci-item-states-the-facts-one-later-re-run.md`. References only.*
+
+1. **The merge.** The advisor merged PR 327 on the verdict MERGE. The merge commit is 1d2d4af996b486ae4a391e50de8c226e57e098cb, made at 2026-11-18T13:05:22Z by GitHub's record, with head f06f8105fd5df6b1baf2c6df5da69625acaa6070.
+
+2. **Main's CI at the merge (ADV-2026-11-18-12 item 3).** Run 44310184909, Product CI — Rust workspace, ran on the push of the merge commit. In each of its two attempts the macOS job was cancelled with no runner and no step: the first at 2026-11-18T13:20:27Z, and the second, the failed job alone re-run, at 2026-11-18T13:44:58Z. GitHub's annotation each time: "The job was not acquired by Runner of type hosted even after multiple attempts". Its Ubuntu and Windows jobs succeeded. The seven other runs at the merge commit succeeded, read at 2026-11-18T13:27:07Z. The same macOS job succeeded at PR B's head f06f8105 on the pull request run 44303055641, from 2026-11-18T12:21:01Z to 2026-11-18T12:31:36Z. No macOS test has run at 1d2d4af9, so main is not called green there. One more re-run of the failed job follows, not before 16:00Z today (ADV-2026-11-18-12 item 4).
+
+3. **A statement of this form (ADV-2026-11-18-11 item 6).** The architect's E, as the architect wrote it, is a statement of this form and not a KNOWN-LIMITATIONS item:
+
+   A Reset or One colour during a running Colour by wait does not stop it: when the rows arrive the match is applied over the style as it then is; Cancel stops the wait.
+
+4. **Draft A (items 1 to 5).** The reviewer's draft A is taken, in the reviewer's words, and is not PR B's. S1's form declares it for S1's records step in its Amendment 3 item 7, filed at cd8c43a9.
+
+5. **Entry 79's item 2 (ADV-2026-11-16-20 item 2).**
+   - PR A (#246, merge 1b6b04a6) built it as the Feature tab's Attributes section of §2.2 (f): every projected column of the inspected feature, in declared order.
+   - It was built under OPEN-3 (a) of §11: the Feature tab only, with the hover readout unchanged, entry 79 (2) being read as the inspection surface.
+   - The node `entry-79-b1-consult-items` records the same.
+
+6. **The pins owed on main.**
+   - In `KNOWN-LIMITATIONS.md`, the comments of items 4, 51, 54, 56, 59, 65 and 66 say that their pins into PR B's code follow on main after the merge.
+   - They are added at 1d2d4af9 in a PR that changes those comment lines alone, after S1's records step, which changes item 56. The reviewer reads it, with no form (ADV-2026-11-16-06 item 2 (c)).
+
+7. **The nodes.**
+   - `b1-shell-half` is done: PR A (#246), PR C (#253) and PR B (#327) are merged.
+   - `session-end-lines-name-coverage-lost-as-source-change` is done too, since PR B built it.
+
+Read the last amendment first.
+
+Nothing above is edited.

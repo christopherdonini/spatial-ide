@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
+import { keepMatchColumn } from "../attributes/values";
 import type { ResidentBatch } from "./decodeBatch";
 
 /**
@@ -75,19 +76,26 @@ export const MAX_RESIDENT_VERTICES = 2_000_000;
  * The copied attribute bytes (`ResidentBatch.attributes.bytes`) the resident batches of either arm may hold in all (SHELL-MIGRATION-MILESTONE-4-PREREGISTRATION.md
  * section 2.2 (d), OPEN-12 (a)). A batch that would pass it keeps its geometry and is marked `attributes: "not-held"` -- no refusal, no eviction, and the vertex
  * ceiling above is untouched. The sum counts `bytes` only; the row map and `partToRow` are not attribute data and are not summed.
+ *
+ * A batch that passes it while a match column is current (section 2.3, OPEN-20 (a)) keeps that one column instead
+ * (`BatchAttributes.kept` is `"match"`): its bytes are in the sum, and **no byte bound of its own limits them**, so the declared
+ * figure can be passed by the kept columns of many batches. That bound is not measured here.
  */
 export const RESIDENT_ATTRIBUTE_MAX_BYTES = 268_435_456;
 
-/** The attribute bytes the given resident batches hold: zero for a batch with no block or a not-held one. */
+/** The attribute bytes the given resident batches hold, a match block's included: zero for a batch with no block or a not-held one. */
 export function residentAttributeBytes(batches: readonly ResidentBatch[]): number {
   return batches.reduce((sum, b) => sum + (b.attributes === null || b.attributes === "not-held" ? 0 : b.attributes.bytes), 0);
 }
 
-/** `batch` itself while its attribute bytes, added to the `heldBytes` already resident, stay within the ceiling; else the same batch marked not-held. */
-export function withinAttributeCeiling(batch: ResidentBatch, heldBytes: number): ResidentBatch {
+/** `batch` itself while its attribute bytes, added to the `heldBytes` already resident, stay within the ceiling; else the same batch
+ * with the one column `matchColumn` kept (a match block), or marked not-held when `matchColumn` is null or the block has no such column.
+ * A block that is already a match block is returned as it is. */
+export function withinAttributeCeiling(batch: ResidentBatch, heldBytes: number, matchColumn: string | null): ResidentBatch {
   const block = batch.attributes;
-  if (block === null || block === "not-held" || heldBytes + block.bytes <= RESIDENT_ATTRIBUTE_MAX_BYTES) return batch;
-  return { ...batch, attributes: "not-held" };
+  if (block === null || block === "not-held" || block.kept === "match" || heldBytes + block.bytes <= RESIDENT_ATTRIBUTE_MAX_BYTES) return batch;
+  const kept = matchColumn === null ? null : keepMatchColumn(block, matchColumn);
+  return { ...batch, attributes: kept ?? "not-held" };
 }
 
 export class PickCeilingExceeded extends Error {

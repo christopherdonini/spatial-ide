@@ -392,3 +392,103 @@ The packet's OPEN-1 to OPEN-5 are settled by ADV-2026-11-16-13 (§0.1). The cust
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2: C-1 of both gates closed by closure (a) under ADV-2026-11-18-09; the Completed terminal after a plan moves to this piece; the success case claimed; three tests; one correction by worker-high; the gates' second attempts and the runs; the on-main paragraph's words for the records step; recorded by the custodian before the correction's code
+
+*Written by the custodian on 2026-11-18, after both gates' first attempts were seen and before the correction's code, under the advisor's ruling ADV-2026-11-18-09, filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-09-s1-takes-the-fix-the-completed-terminal-after-a-plan-moves-to-s1-the-success-case-claimed-the-on-main-words.md`. The gate reports are `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-reviewer.md` (gate-log row 770) and `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-architect.md` (row 772). References only.*
+
+1. **The finding.** Both gates ended FAIL at 00bead7749ac7fd91708d2fb31ec96e5a1e4c2c3 on one Correctness finding, C-1. The architect concurs with the reviewer's C-1. A tile dropped while an Apply's first look still runs leaves the view with no status once that look ends `Completed`, though the scan ends. §3's first claim does not hold in that order, and ADV-2026-11-16-13 item 1 is not met without the fix.
+
+2. **The fix (the ruling's item 2).** In the untiled sink's `onTerminal`, under the guards this piece's branch already has, the status is recomputed after a plan whatever the terminal's kind. Those guards are: the terminal is current, it is not self-cancelled, and it does not follow a relinquish's re-emit. The branches for a first look that fails before any plan stay non-`Completed` only. The shape is the first of the architect's drafts for the advisor; where the filed report gives a different shape, the report's stands.
+
+3. **The region (item 3).**
+   - The current first look's `Completed` terminal after a plan moves to this piece.
+   - `open-first-look-fills-fit-view` keeps the `Completed` terminal where no plan has run.
+   - §8's sentence that this piece's branch is non-`Completed` only is corrected to read: this piece's branch takes a non-`Completed` terminal, or any terminal after a plan; the first-look node's accept call takes a `Completed` terminal with no plan.
+   - The first-look node reads its own region again when it takes main in, as §8 asks.
+
+4. **The success case, a claim of this piece (item 4).** §3's claims gain one: after an Apply and a pan during its first look, a load that ends well shows its settled status. Before this piece the status stayed empty there, as the reviewer's probe G330R-CTL showed at 00bead77.
+
+5. **Three tests (item 5).** Each asserts the status the view settles to, and each has its own mutation, observed failing:
+   - the reviewer's probe G330R-SIB: a tile is refused twice during an Apply's first look, then the look ends `Completed`;
+   - the reviewer's probe G330R-PRE: the same order, with the tile's stream ending `ProducerFailed`;
+   - the success case of item 4.
+
+   §7's ceilings stand as Amendment 1 item 2 keeps them. Any excess is a class 8 row in the closing, and no more.
+
+6. **One correction, by worker-high (item 6).** Its ground: the order in which the terminals of streams that run side by side arrive, in the session's state. It carries the reviewer's D-1, and the architect's D-3, D-4 and D-5, in the words their reports give. Nothing else changes.
+
+7. **After the correction (item 7).**
+   - Both gates make second attempts, each limited to C-1's fix and what it adds (Part 1 item 6 of the directive of 2026-11-05).
+   - At the corrected head, `npm run verify` runs whole and the series' five app-window suites run once more, because the fix is in the session's status path.
+
+8. **The records step (items 8 and 9).**
+   - Amendment 1 item 4's on-main paragraph takes the old and new pair of ADV-2026-11-18-09 item 8. That pair is the advisor's wording under the delegation.
+   - It is applied by script after both gates, and no other byte of the paragraph changes.
+   - The gates' second attempts check the new text's clauses at the corrected head.
+   - The paragraph's source comment lines, and item 56's span (§10), go to the advisor after the gates.
+
+Nothing above is edited.
+
+## Amendment 3: class 9, `candidateArmSession.test.ts` joins §7 for the test M1 alone under ADV-2026-11-18-10; the fix keeps its shape; M1's last step observed; one sentence of item 4 for the records step under ADV-2026-11-18-11; recorded by the custodian before the code of the correction's step 2
+
+*Written by the custodian on 2026-11-18, after the correction stopped at its step 2 and before any of that step's code, under the advisor's rulings ADV-2026-11-18-10, filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-10-s1-m1-joins-section-7-for-m1-alone-the-fix-keeps-its-shape.md`, and ADV-2026-11-18-11 for item 7. The worker's report on the stop is `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-s1-correction-stop-at-step-2-worker-report.md`. Its observation of M1, uncommitted, is `state/consults/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-s1-correction-m1-observation-worker-report.md`. References only.*
+
+1. **The stop.**
+   - The correction's step 1 is at b53d14ff3dfdba10bfdc982d5847cf8ac2f4be52: the three tests of Amendment 2 item 5, each failing at the base as predicted.
+   - With the fix of Amendment 2 item 2 applied, one existing test fails, and no other in the whole unit suite. It is "M1: over-budget + no-headroom skip reaches trackedTileCount 0 while the untiled stream still delivers", in `frontends/shell/src/residency/candidateArmSession.test.ts`.
+   - M1 counts one status call where the fix gives two. The second is the settled status, which the untiled terminal after a plan now emits.
+   - That file is not in §7's table, so its change is class 9, declared here before its code.
+
+2. **The file (the ruling's items 1 and 5).**
+   - §7's table gains one row, for M1 alone: unit, `frontends/shell/src/residency/candidateArmSession.test.ts`.
+   - The row has no ceiling of its own. Its lines count against the unit total of 1,010, which is unchanged. An excess is a class 8 row in the closing, and no more.
+   - The fix keeps the shape of Amendment 2 item 2.
+
+3. **What changes in M1 (item 3).**
+   - Everything up to and including the three assertions on the first event stays byte for byte. So do the test's name and the long comment above it.
+   - After `completeUntiledLook()`, the test expects one new call and asserts what that call carries, not the count alone. That is the settled status the last step already expects: `candidate-over-budget`, with `viewportTotal` null and `settled` "partial".
+   - The comment above that step is corrected to say that the untiled terminal after a plan now emits, by this piece.
+   - The last step was observed by a run, with the fix and this change in place and uncommitted (item 3 (d)). It passes unchanged, so it stays byte for byte. In that run no other test fails in `candidateArmSession.test.ts` or in the refusal file. M1's change is 10 lines added and 4 removed.
+
+4. **Its mutation (item 4).** The corrected step is observed failing with the fix removed. No new test is added for it.
+
+5. **The gates (item 6).** The same worker finishes the correction's steps. Both gates' second attempts of Amendment 2 item 7 read M1's change with the fix, as part of what the fix adds.
+
+6. **A stop (item 7).** If any other existing test fails once the fix is committed, the worker stops again, and the matter goes to the advisor.
+
+7. **One sentence of item 4 for the records step (class 9), by the advisor's ruling ADV-2026-11-18-11, filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-11-pr-b-draft-a-taken-for-s1s-records-step-the-architects-e-confirmed-for-the-form.md`.**
+   - At the records step of §10, after both gates, item 4's On-main paragraph in `KNOWN-LIMITATIONS.md` takes the old and new pair of that ruling's item 2, applied by script. The script checks that the old text stands once in the file before the change and the new text once after it. No other byte of the paragraph changes.
+   - The words are the reviewer's draft A from PR B's gate 2, ruled by the advisor as its own wording under the delegation of 2026-11-13.
+   - No gate reads that sentence again (the ruling's item 4). This piece does not change `frontends/shell/src/workspace/workspaceState.ts`.
+   - The paragraph's source comment gains one clause, which names the end of that sentence, from "and ends Colour by", as the advisor's wording ruled in ADV-2026-11-18-11, with the code by symbol (item 5). That comment line goes to the advisor with this piece's other comment lines (Amendment 2 item 8).
+
+Nothing above is edited.
+
+## Amendment 4: both gates' second attempts at 6abaa9fb; the class 9 line; the words of ADV-2026-11-18-13 items 1 to 3; the on-main pair replaced; one node proposed; the runs; recorded by the custodian before the words commit
+
+*Written by the custodian on 2026-11-18, before the words commit. The advisor's ruling ADV-2026-11-18-13 is filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-13-s1-after-its-gates-second-attempts-the-reviewers-block-the-class-9-line-the-on-main-pair-replaced.md`; the two reports at `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-architect-attempt-2.md` and `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-reviewer-attempt-2.md`. References only.*
+
+1. **The gates.** Both second attempts, limited to the fix (ADV-2026-11-18-09 item 7, ADV-2026-11-18-10 item 6), read PASS WITH NOTES at 6abaa9fb74de1eee303e3de84f6eafab67df56c6, with no Correctness or Evidence finding: C-1 is closed. Gate-log rows 774 and 775.
+
+2. **Class 9 (ADV-2026-11-18-13 item 2).** In the architect's words, from its report's draft 1: "`candidateArmSession.test.ts` also takes the corrected comment at :2028-2033 of the test above M1 (its assertion unchanged), because C-1's fix made its parenthetical untrue."
+
+3. **The words (items 1 to 3).** One Sonnet worker applies them by script in one commit, each from its filed report, with no re-gate (AUTONOMY §31):
+   - in `candidateArmSession.ts`, the reviewer's D-A block replaces the fix branch's comment; the architect's DA2-1 and its draft 3 are not applied beside it (item 1);
+   - in `candidateArmSession.test.ts`, the architect's DA2-2 replacement, for the comment of the test above M1, from its "`untiledStreamRunning`." to that comment's end (item 2);
+   - in `tileViewportStreamManager.ts`, the architect's DA2-3 replacement for the first clause of the comment above the requeue's conditions (item 3).
+   No other line changes, and no string the app shows. The comment of the "Showing all" constant is not changed (item 5).
+
+4. **The counts.** With D-A alone the reviewer counts that file at 44 of its 60 lines, the product at 84 of 120 and the total at 964 of 1,130. DA2-2's and DA2-3's lines are added to their files' rows. The worker gives the counts at the words head against §7 as Amendments 1 and 3 keep it; an excess over a ceiling is a class 8 row (ADV-2026-11-18-10 item 5).
+
+5. **The on-main pair (item 4).** Item 4's Old and New, from that ruling's fences, replace the pair of ADV-2026-11-18-09 item 8 (Amendment 2 item 8): the Old text is unchanged, and the New text's second sentence is the reviewer's. The records step applies it by script, with the pair of ADV-2026-11-18-11 item 2 (Amendment 3 item 7), and changes no other byte of the paragraph.
+
+6. **One node, proposed and not placed (item 6):** `untiled-reissue-holds-earlier-look-handle-until-mint`. After a reissue, the session holds the earlier look's handle until the new look's ticket is minted, so that look's terminal is read as current; both cases the comments now name as not covered share this root. It goes to the advisor in the daily batch, with the two reports and the probe G330R2-RACE. It is not on v0.2's list, and no code or read is ordered.
+
+7. **The runs (item 7).** The five app-window suites run at 6abaa9fb. They stand for the head the merge request names if that head's diff from 6abaa9fb changes only comment lines in the source files and records, checked by script, with the script's output in the closing amendment; otherwise they run again. `npm run verify` runs whole once at that head, after the records step.
+
+8. **Then (item 8).** The records step; item 56's span and the comment lines go to the advisor before the merge request.
+
+Read the last amendment first.
+
+Nothing above is edited.

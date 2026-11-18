@@ -15,8 +15,8 @@
 
 import type { AttributeRow } from "../attributes/values";
 import type { AuthoritativeBbox } from "../canvas/viewportBbox";
-import type { Filter } from "../skp/types";
-import type { StyleState } from "../style/document";
+import type { Filter, StyleMatchValue } from "../skp/types";
+import type { FillMatch, StyleState } from "../style/document";
 import { clauseNumber, combineClauses, NO_CLAUSES } from "./filterClauses";
 import type { ClauseStep, FilterClause } from "./filterClauses";
 import { applySelectionMode, NO_MEMBERS } from "./selection";
@@ -31,9 +31,10 @@ export type FilterClausesSetTransition = { action: "filter.clauses.set"; params:
 
 /** One transition per changed `StyleState` property. The style document carries `outline_width` as a bare number
  * (ADR-017 section 5a) and the shell draws it in pixels (`canvas/buildLayers.ts`), so the width is carried as
- * `{value, unit}`. */
+ * `{value, unit}`. A `fillColor` with a literal value sets the one colour and clears `fillMatch`; with a match it sets `fillMatch`. */
 export type StyleSetTransition =
   | { action: "style.set"; params: { property: "fillColor"; value: string } }
+  | { action: "style.set"; params: { property: "fillColor"; value: StyleMatchValue } }
   | { action: "style.set"; params: { property: "fillOpacity"; value: number } }
   | { action: "style.set"; params: { property: "outlineColor"; value: string } }
   | { action: "style.set"; params: { property: "outlineWidth"; value: { value: number; unit: "px" } } };
@@ -83,8 +84,12 @@ export const viewNextClauseNumber = (view: ViewState): number => view.clauseCoun
 function applyStyleSet(style: StyleState, transition: StyleSetTransition): StyleState {
   const params = transition.params;
   switch (params.property) {
-    case "fillColor":
-      return { ...style, fillColor: params.value };
+    case "fillColor": {
+      const value = params.value;
+      if (typeof value === "string") return { ...style, fillColor: value, fillMatch: null };
+      const { column, cases, on_null, on_unmatched } = value.match;
+      return { ...style, fillMatch: { column, cases, onNull: on_null, onUnmatched: on_unmatched } };
+    }
     case "fillOpacity":
       return { ...style, fillOpacity: params.value };
     case "outlineColor":
@@ -153,11 +158,28 @@ export function applyViewTransition(view: ViewState, transition: ViewTransition)
   }
 }
 
+function sameFillMatch(a: FillMatch | null, b: FillMatch): boolean {
+  return (
+    a !== null &&
+    a.column === b.column &&
+    a.onNull === b.onNull &&
+    a.onUnmatched === b.onUnmatched &&
+    a.cases.length === b.cases.length &&
+    a.cases.every((c, i) => c.when === b.cases[i]!.when && c.then === b.cases[i]!.then)
+  );
+}
+
 /** The `style.set` transitions that turn `prev` into `next`: one per property that differs, none when equal.
  * `StylePanel` reports the whole next `StyleState`; this is where that becomes one transition per property. */
 export function styleTransitions(prev: StyleState, next: StyleState): StyleSetTransition[] {
   const out: StyleSetTransition[] = [];
-  if (prev.fillColor !== next.fillColor) {
+  const match = next.fillMatch;
+  if (match !== null) {
+    if (!sameFillMatch(prev.fillMatch, match)) {
+      const value = { match: { column: match.column, cases: [...match.cases], on_null: match.onNull, on_unmatched: match.onUnmatched } };
+      out.push({ action: "style.set", params: { property: "fillColor", value } });
+    }
+  } else if (prev.fillColor !== next.fillColor || prev.fillMatch !== null) {
     out.push({ action: "style.set", params: { property: "fillColor", value: next.fillColor } });
   }
   if (prev.fillOpacity !== next.fillOpacity) {

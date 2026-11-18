@@ -26,7 +26,7 @@ const deepFreeze = <T extends object>(value: T): T => {
   for (const inner of Object.values(value)) if (typeof inner === "object" && inner !== null) deepFreeze(inner);
   return Object.freeze(value);
 };
-const edited: StyleState = { fillColor: "#112233", fillOpacity: 0.5, outlineColor: "#ffffff", outlineWidth: 4 };
+const edited: StyleState = { fillColor: "#112233", fillOpacity: 0.5, outlineColor: "#ffffff", outlineWidth: 4, fillMatch: null };
 const box = (xmin: number, ymin: number, xmax: number, ymax: number) => ({ xmin, ymin, xmax, ymax });
 const pickOf = (id: bigint) => ({ streamHandle: "stream-1", batchSeq: 0, id, anchor: [0, 0] as [number, number] });
 
@@ -94,6 +94,47 @@ describe("UA4: transitions are pure and typed, and a style edit is one transitio
   it("applying a style edit's transitions in order yields the next style", () => {
     const result = styleTransitions(DEFAULT_STYLE_STATE, edited).reduce(applyViewTransition, view);
     expect(result.style).toEqual(edited);
+  });
+});
+
+describe("PB-U6: a fill by category is one style.set on fillColor, and a literal ends it", () => {
+  const byZone: StyleState = { ...edited, fillMatch: { column: "zone", cases: [{ when: "a", then: "#aa0000" }], onNull: "#888888", onUnmatched: "#cccccc" } };
+  const matchSet: ViewTransition = {
+    action: "style.set",
+    params: { property: "fillColor", value: { match: { column: "zone", cases: [{ when: "a", then: "#aa0000" }], on_null: "#888888", on_unmatched: "#cccccc" } } },
+  };
+
+  // RECORDED MUTATION for PB-U6, applied alone: in the `fillColor` case of the transition (workspace/viewTransitions.ts) a literal colour sets `fillColor` and keeps `fillMatch`.
+  // Expected failure: at the literal fill.
+  // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U6: a match sets fillMatch from the wire's names, a literal clears it, and the transition does not write the view": AssertionError: a literal fill: expected [ '#112233', { column: 'zone', …(3) } ] to deeply equal [ '#112233', null ]. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT 95b6beb7: FAILED -- "PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null": AssertionError: the match after the transitions toward the default: expected { column: 'zone', …(3) } to be null. Reverted after observing.
+  it("PB-U6: a match sets fillMatch from the wire's names, a literal clears it, and the transition does not write the view", () => {
+    const frozen = deepFreeze(structuredClone(view));
+    const matched = applyViewTransition(frozen, matchSet);
+    expect(matched.style.fillMatch, "the member a match sets").toEqual(byZone.fillMatch);
+    expect(matched.style.fillColor, "the literal colour a match leaves").toBe(DEFAULT_STYLE_STATE.fillColor);
+    expect(frozen.style.fillMatch, "the view the transition read").toBeNull();
+    const literal = applyViewTransition(matched, { action: "style.set", params: { property: "fillColor", value: "#112233" } });
+    expect([literal.style.fillColor, literal.style.fillMatch], "a literal fill").toEqual(["#112233", null]);
+  });
+
+  it("styleTransitions emits one match transition for a new match, a literal when the match ends, and nothing for equal states", () => {
+    expect(styleTransitions(edited, byZone), "a match over the same other properties").toEqual([matchSet]);
+    expect(styleTransitions(byZone, { ...byZone, fillMatch: { ...byZone.fillMatch!, onNull: "#000001" } }).length, "a changed No value colour").toBe(1);
+    expect(styleTransitions(byZone, structuredClone(byZone)), "an equal match").toEqual([]);
+    expect(styleTransitions(byZone, edited).map((t) => t.params.value), "the match ending at the same fillColor").toEqual(["#112233"]);
+    expect(styleTransitions(edited, byZone).reduce(applyViewTransition, { ...view, style: edited }).style, "applying the edit").toEqual(byZone);
+  });
+
+  // RECORDED MUTATION for PB-U6's reset case, applied alone: in `styleTransitions` (workspace/viewTransitions.ts) the literal branch drops its condition on a standing match (`prev.fillColor !== next.fillColor || prev.fillMatch !== null` becomes `prev.fillColor !== next.fillColor`).
+  // Expected failure: a match whose literal fill is the default's gives no transition toward the default style, so the state keeps its match.
+  // OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null": AssertionError: the match after the transitions toward the default: expected { column: 'zone', …(3) } to be null. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT dfb96279f7531b27a29827be0e6bd0bf630bc9b5: FAILED -- "styleTransitions emits one match transition for a new match, a literal when the match ends, and nothing for equal states": AssertionError: the match ending at the same fillColor: expected [] to deeply equal [ '#112233' ]. Reverted after observing.
+  it("PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null", () => {
+    const matchedAtDefault: StyleState = { ...DEFAULT_STYLE_STATE, fillMatch: byZone.fillMatch };
+    const result = styleTransitions(matchedAtDefault, DEFAULT_STYLE_STATE).reduce(applyViewTransition, { ...view, style: matchedAtDefault });
+    expect(result.style.fillMatch, "the match after the transitions toward the default").toBeNull();
+    expect(result.style, "the style after the transitions toward the default").toEqual(DEFAULT_STYLE_STATE);
   });
 });
 

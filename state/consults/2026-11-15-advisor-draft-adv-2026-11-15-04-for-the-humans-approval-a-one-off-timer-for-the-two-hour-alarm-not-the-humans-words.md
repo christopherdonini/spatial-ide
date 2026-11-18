@@ -19,3 +19,5 @@ To the custodian, 2026-11-15. On the timer for the two-hour alarm.
 4. After the piece merges you may run one drill of the timer in dry-run mode. It sends nothing.
 
 5. The alarm works only while your session is open. I accept that.
+
+*Approved, 2026-11-16: the human's typed message of 07:53Z approves this draft by its id (`state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md`); from then its text is the human's words. Nothing above is edited.*

@@ -28,7 +28,7 @@ import {
 import { begin, end } from "../diagnostics/watchdog";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import type { StyleState } from "../style/document";
-import { resolveDrawParameters } from "../style/document";
+import { parseStyleState } from "../style/document";
 import { batchForLayerId, buildLayers, toResolvedDrawParams } from "./buildLayers";
 import type { ResolvedDrawParams } from "./buildLayers";
 import { createTapHandler } from "./clickPick";
@@ -180,8 +180,8 @@ export interface WorkingCanvasHandle {
   resetFitForNewGeneration(): void;
   /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
    * read directly off the same `ResidentSet` `pushBatch`/`clearStream` already maintain -- no new
-   * counting logic, a read-only accessor. Reached only from the DEV-only `residencyEndStep` E2E hook
-   * (`App.tsx`), never from product code. */
+   * counting logic, a read-only accessor. Reached from the DEV-only `residencyEndStep` E2E hook
+   * (`App.tsx`) and from product code, the candidate session (`candidateArmSession.ts`). */
   getResidentCounts(): ResidentCounts;
   /** Milestone 4 PR C (section 2.4 (c)): the ids of the resident batches whose `ResidentBatch.filter` `streamedUnder` accepts, read off the arm's resident set; it changes nothing.
    * REQUIRED, with no `?`: its product caller is `table/TableTab.tsx`, through App's `residentIdsStreamedUnder` callback, and `table/tableScope.ts`'s `secondScope` reads the set it returns (the second scope's "an id in a resident batch streamed under the view's filter"). */
@@ -706,6 +706,12 @@ export interface ApplyStyleChangeDeps {
   render: () => void;
 }
 
+/** What `buildLayers` draws for `style`: the resolver's one-colour parameters, with the parsed match when the style has one (section 2.3 (c)). */
+function drawParamsFor(style: StyleState): ResolvedDrawParams {
+  const parsed = parseStyleState(style);
+  return toResolvedDrawParams(parsed.resolve(null), parsed);
+}
+
 /**
  * The style-change re-render seam (NEXT-CUT.md binding note 7): given a new style, recomputes the
  * resolved draw parameters and calls `render` exactly once -- and reaches nothing else. Its own
@@ -719,7 +725,7 @@ export interface ApplyStyleChangeDeps {
  * established note), so this is the pure seam a unit test can actually drive without one.
  */
 export function applyStyleChange(style: StyleState, deps: ApplyStyleChangeDeps): void {
-  deps.setDrawParams(toResolvedDrawParams(resolveDrawParameters(style)));
+  deps.setDrawParams(drawParamsFor(style));
   deps.render();
 }
 
@@ -962,7 +968,7 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * call between two style changes (a batch arriving, a recenter) reuses the exact same
    * `ResolvedDrawParams` object, and therefore the exact same `fillColor` array reference, that
    * `buildLayers.ts`'s own doc comment relies on. */
-  const drawParamsRef = useRef<ResolvedDrawParams>(toResolvedDrawParams(resolveDrawParameters(style)));
+  const drawParamsRef = useRef<ResolvedDrawParams>(drawParamsFor(style));
   /** Bbox of every ring vertex across every currently-resident batch, or `null` while nothing
    * resident carries any geometry. Kept in lockstep with `residentRef` -- grown in `pushBatch`,
    * recomputed from scratch in `clearStream` (a union has no inverse, so "shrink" means "refold"). */
@@ -1069,9 +1075,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
   onAttributesNotHeldRef.current = onAttributesNotHeld;
   const projectionRef = useRef(projection);
   projectionRef.current = projection;
-  /** Marks `decoded` not-held when its attributes would pass the ceiling together with those of `held`, the batches resident now, and says so once (section 2.2 (d)). */
+  /** Marks `decoded` not-held when its attributes would pass the ceiling together with those of `held`, the batches resident now, and says so once (section 2.2 (d)).
+   * While the style colours by a column, the batch keeps that column alone (a match block) and says so all the same: its other columns are not held. */
   function withinAttributes(decoded: ResidentBatch, held: readonly ResidentBatch[]): ResidentBatch {
-    const kept = withinAttributeCeiling(decoded, residentAttributeBytes(held));
+    const kept = withinAttributeCeiling(decoded, residentAttributeBytes(held), drawParamsRef.current.match?.style.matchColumn ?? null);
     if (kept !== decoded) onAttributesNotHeldRef.current?.();
     return kept;
   }

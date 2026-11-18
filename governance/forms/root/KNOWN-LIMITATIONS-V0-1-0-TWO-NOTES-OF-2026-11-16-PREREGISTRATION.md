@@ -1,0 +1,29 @@
+# KNOWN-LIMITATIONS: v0.1.0's two dated notes of 2026-11-16, the human's words — five-line short form (`AUTONOMY.md` §21d)
+
+Committed before any change, per the short-form discipline. The docs piece of the human's approved draft ADV-2026-11-16-19, item 5: the file on main first, by a docs piece of its own with the short form and the reviewer, which the advisor merges; the release page's paragraph only after that merge. Its class is the one-page form and one gate, the reviewer alone, by the advisor's ruling ADV-2026-11-16-06 item 2 (b) (KNOWN-LIMITATIONS and docs wording), filed at state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md. Drafted by the custodian.
+
+```
+Authority: PLAN node known-limitations-v0-1-0-two-notes-2026-11-16; the human's message of 2026-11-16 approving ADV-2026-11-16-19, filed at state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md (items 2, 4, 5 and 6; the two notes are the first and second fences of its ADV-2026-11-16-19 text); the advisor's ruling ADV-2026-11-16-20 item 3, filed at state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-20-the-humans-five-approvals-s1-joins-v0-2-entry-79-at-the-sitting-on-a-condition-what-follows-from-each.md; the clause check at state/consults/2026-11-16-v0-1-0-notes-adv-2026-11-16-19-clause-check-reviewer.md, which stands for item 4; KNOWN-LIMITATIONS items as disjoint paths (rule (00a)): PR 327 (PR B) changes this file only in item 4's region and in the on-main list, neither region named here, and the later of the two takes main in before its gate.
+Scope: KNOWN-LIMITATIONS.md only. Note one and its comment go directly after the last text line of the paragraph that begins Under a row filter at wide zooms, and before that paragraph's source comment (lines 187 and 188 at the form's commit). Note two and its comment go after the blank line that ends the v0.1.0 list, followed by one blank line, before the heading On main since v0.1.0 (lines 224 and 225 at the form's commit); 1 file; declared line budget <= 5 added lines, 0 removed.
+Change: the two notes are the human's words, copied by script byte for byte from the directive's fences, each at column 0, each followed by one comment line at column 0 that says the words are the human's, approved by that message; the two comment lines are the custodian's wording and go to the advisor with the merge request. Made by the custodian, by script, in a worktree of its own.
+Out-of-scope: every other byte of the file, the paragraph above note one and every item of either list included; the release page's paragraph (the directive's third fence), which goes in after this merge, once, by item 5; v0.2's notes, which stay the human's (item 6); the tag and its message (item 1).
+Tests+mutation: none added or changed (documents only); the reviewer confirms that each note in the diff equals its filed fence byte for byte (ADV-2026-11-16-20 item 3), that the PR adds exactly these five lines at these two places and changes no other, and that each comment says what the line above it is; CI's checks on the PR head.
+```
+
+### Amendments
+
+*(Opens empty; append-only.)*
+
+### Amendment 1 — the closing, written after the single gate's result was seen (class 1): D1 fixed in the same pull request, with no re-gate (AUTONOMY §22)
+
+*Written by the custodian on 2026-11-18, after the gate's result was seen. References only.*
+
+1. **The single gate** (`state/consults/gates/2026-11-18-known-limitations-v0-1-0-two-notes-2026-11-16-gate-reviewer.md`), attempt 1 at 396cf62dcb9717deff770f4d6d3fa55eea8aab10, gate-log row 768, ended PASS WITH NOTES. Its Correctness and Evidence sections have no finding. Its one Documentation item, D1, is in the two comment lines, the custodian's wording.
+2. **D1 is fixed in the same pull request** under AUTONOMY §22, which gives a Documentation finding no re-gate: the reviewer's two replacement clauses, taken from the report byte for byte by script, in 17f9a660fc71204be8fba6dd25fdd8f95ab13b4a. `git diff --numstat 396cf62d 17f9a660` names `KNOWN-LIMITATIONS.md` alone, 2 lines in and 2 out, and the two notes' lines are equal at both heads. I checked the finding against `state/consults/2026-11-16-v0-1-0-notes-adv-2026-11-16-17-clause-check-reviewer.md` and `state/consults/2026-11-16-v0-1-0-notes-adv-2026-11-16-19-clause-check-reviewer.md` before applying it.
+3. **The notes N1 to N3 are not taken.** N1, a rewording the reviewer marks as not blocking, is not applied, so that nothing but D1's words changed after the gated head. N2: Governance CI's paths filter does not cover this file, and no cite or quotation in the change needed it. N3: the PR stays a draft until its merge request.
+4. **Against Scope:** from the merge base 5bb2f2e343b7a3fd06befee1159df5a7045ffe31 the PR adds 5 lines to `KNOWN-LIMITATIONS.md` and removes none, within the declared budget. Main at a15e3bed70983dfaed6182951ec010ca8a20c374 has not changed the PR's one path since the merge base.
+5. **CI at 17f9a660**, read 2026-11-18T08:40:59Z: DCO sign-off (run 44268973288), Exposure scan (44268973299) and Ported notices (44268966257 and 44268973320), each success.
+6. **The words.** The two notes are the human's, approved as ADV-2026-11-16-19 item 2. The two comment lines are the custodian's wording with D1's clauses, sent to the advisor with the merge request (ADV-2026-11-16-06 item 2 (b)).
+7. **The stop.** The gate's run stopped on 2026-11-16 on the account's usage limit and was resumed on 2026-11-18 by message; its report is held to its transcript (ADV-2026-11-18-01 item 4).
+
+Nothing above is edited.

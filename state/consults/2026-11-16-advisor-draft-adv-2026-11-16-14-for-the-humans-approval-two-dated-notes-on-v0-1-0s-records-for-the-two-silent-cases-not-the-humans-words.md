@@ -31,3 +31,5 @@ The second goes at the end of the v0.1.0 list:
 5. On the v0.1.0 release page: you add, below the page's text and changing nothing above it, the line "Found after release, added 2026-11-16." and the two notes, once, and read the page back. If your Guardian refuses, stop and tell the advisor; I then do it myself.
 
 6. v0.2's notes say of each case whether v0.2 fixes it. Those notes stay mine.
+
+*Replaced, 2026-11-16: the advisor withdrew this draft by its message received 2026-11-16T06:32:55Z, and its draft ADV-2026-11-16-17 replaces it (`state/consults/2026-11-16-advisor-draft-adv-2026-11-16-17-for-the-humans-approval-replacing-adv-2026-11-16-14-two-dated-notes-and-one-release-page-paragraph-not-the-humans-words.md`). Nothing above is edited.*

@@ -3,15 +3,16 @@
 
 import {
   HOVER_BELOW_RESOLUTION_TEXT,
-  HOVER_SESSION_ENDED_TEXT,
   idLine,
+  sessionEndedText,
 } from "../canvas/HoverReadoutView";
+import type { SessionEndReason } from "../canvas/pick";
 import { ATTRIBUTE_PROJECTION_MAX } from "../attributes/projection";
 import type { ProjectionSummary } from "../attributes/projection";
 import { displayValue } from "../attributes/values";
 import type { AttributeRow } from "../attributes/values";
 import { actionEntry } from "../layout/actionRegistry";
-import type { SelectionCounts, SelectionNotice } from "../workspace/selection";
+import type { SelectionCounts, SelectionEndReason, SelectionNotice } from "../workspace/selection";
 import type { InspectedFeature, InspectedPick } from "../workspace/workspaceState";
 
 /**
@@ -42,7 +43,7 @@ export type LastClick =
   | { readonly kind: "feature"; readonly pick: InspectedPick; readonly keptPinned: InspectedPick | null }
   | { readonly kind: "nothing" }
   | { readonly kind: "below-pick-resolution" }
-  | { readonly kind: "session-ended" };
+  | { readonly kind: "session-ended"; readonly reason: SessionEndReason };
 
 /** The label of the count shown: every selected feature, ignoring the filter (the plan's section 3; Amendment 1 A9). */
 const SELECTED_LABEL = "Selected, ignoring filter";
@@ -101,16 +102,22 @@ function lastClickLine(click: LastClick): JSX.Element {
     case "below-pick-resolution":
       return <p className="feature-last-click feature-last-click-below-resolution">{HOVER_BELOW_RESOLUTION_TEXT}</p>;
     case "session-ended":
-      return <p className="feature-last-click feature-last-click-session-ended">{HOVER_SESSION_ENDED_TEXT}</p>;
+      return <p className="feature-last-click feature-last-click-session-ended">{sessionEndedText(click.reason)}</p>;
   }
 }
+
+const ENDED_BECAUSE: Record<SelectionEndReason, string> = {
+  "source-changed": "the source file changed",
+  "coverage-lost": "the source watch lost coverage of the file",
+  reopened: "a dataset was opened",
+};
 
 /** The notice's words: the Feature tab shows them, and so does the status bar item for an ended selection (App). */
 export function noticeText(notice: SelectionNotice): string {
   if (notice.kind === "refused") {
     return `[P6 placeholder] The selection holds at most ${notice.refusal.max} features: this one was not added.`;
   }
-  const because = notice.reason === "source-changed" ? "the source file changed" : "a dataset was opened";
+  const because = ENDED_BECAUSE[notice.reason];
   const dropped = `${notice.dropped} selected ${notice.dropped === 1 ? "feature was" : "features were"} dropped`;
   return `[P6 placeholder] The selection ended: ${dropped}, because ${because}.`;
 }
