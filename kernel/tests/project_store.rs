@@ -47,7 +47,8 @@ fn a_same_answer_past_256_known_folders_is_refused_and_the_folders_are_unchanged
     assert_eq!(known.to_bytes().expect("written"), before);
 }
 
-/// **T9** (S2-2 (a)). Mutation: the old first kept in `same`. Expected failure: the first equality.
+/// **T9** (S2-2 (a)). Mutation: the old first kept in `same`. Expected failure: the `same`
+/// equality.
 #[test]
 fn a_move_makes_this_folder_first_and_forgets_the_old_first() {
     let known = KnownFolders {
@@ -141,7 +142,8 @@ fn not_unicode() -> PathBuf {
 }
 
 /// **T13**. Mutations: (a) the string bound removed; expected failure: the 4,097-byte path is
-/// written. (b) `to_string_lossy` restored; expected failure: the path that is not Unicode is
+/// written. (b) `to_string_lossy` restored; expected failure: the 4,097-byte path is written,
+/// since that line has no bound either; with the bound kept, the path that is not Unicode is
 /// written.
 #[test]
 fn the_locations_writer_refuses_what_its_reader_refuses_and_reads_back_the_rest() {

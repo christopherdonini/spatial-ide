@@ -180,9 +180,10 @@ pub fn replace(folder: &Path, bytes: &[u8]) -> Result<(), SaveError> {
     stage(folder, bytes)?.commit()
 }
 
-/// Flush `folder` where the platform lets a program open a directory to flush it (POSIX). Where it
-/// does not (Windows), the open is refused and there is nothing to flush with: that is `Ok`. A flush
-/// that fails is an `Err`, which [`Staged::commit`] writes to standard error and refuses nothing over.
+/// Flush `folder` where the platform lets a program open a directory to flush it (POSIX). Where the
+/// open is refused (always on Windows, and on POSIX when the folder cannot be opened), there is
+/// nothing to flush with: that is `Ok`, and nothing is reported. A flush that fails is an `Err`,
+/// which [`Staged::commit`] writes to standard error and refuses nothing over.
 fn sync_folder(folder: &Path) -> std::io::Result<()> {
     match File::open(folder) {
         Ok(dir) => dir.sync_all(),
