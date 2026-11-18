@@ -391,3 +391,28 @@ Architect and reviewer from dispatch. Verdicts under §22. A Documentation findi
 | 11: E-FL as its own file (A), or as a case of `recentre-crossing.mjs` reusing its helpers (B, about 250 lines fewer) | ADV-2026-11-18-16 item 4: (A), its own file |
 
 ## §13 Amendments (opens empty; append-only)
+
+## Amendment 1 — step S2 stopped on I7: two rows added to §5's table, observed at the base and the head; a new invalidator, I8; step S2's remainder; step S3's order
+
+*Written by the custodian, 2026-11-18, by the advisor's ruling ADV-2026-11-18-17 (`state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-17-the-first-look-stopped-at-s2-on-i7-two-suite-rows-observed-at-base-and-head-i8-and-s2s-remainder.md`), before any code and any run of this piece. It adds scope. It changes no prediction, tolerance or test above.*
+
+1. **The stop.** S1 at the base, 349cec82e5ecbfab40db3ae9b6811d471d9ea2de, found no §2 symbol changed (I0 not hit). S2 stopped on I7: two assertions that could change are not in §5's table. Nothing was committed, built or run. The worker's report, handed back at 2026-11-18T18:07:14Z by its transcript, is `state/consults/2026-11-18-open-first-look-fills-fit-view-s1-s2-worker-report.md`.
+2. **Two rows added to §5's table**, each "could change; observed":
+   - `filter-panel.mjs` FIND'. After the Apply's first look ends, the block plans the fit view under the filter, and each tile's stream scans the slow file again. Cancel and the liveness line stay until the last one ends, so the step's 180 s wait covers the first look and the fill.
+   - `table.mjs` PC-E4. The step finds the table's handle by counting `stream-issued` lines after the point it marks before the Table tab is shown. The fill's lines can fall after that point if the Apply's first look is still scanning when the settle returns. The count of one is how the step finds the handle, not a claim about the map.
+3. **The runs of the two suites.**
+   - (a) Each suite whole, as its README entry runs it, in a shared hold: once at the base, in S4, and once at the head, in S7. Each run records its exit code and every step's line with its milliseconds.
+   - (b) P-S-base: at the base both exit 0. A failure there voids that row and goes to the advisor before S5.
+   - (c) At the head nothing is predicted. A failure of FIND' or of PC-E4 at the head is I8 (item 5).
+   - (d) PC-E4 can pass by luck. S7's record says where the fill's `stream-issued` lines fell in the head run's trace: before the Table tab was shown, inside the lines the step reads, or after them. If by that trace's timing they can fall inside, it goes to the advisor as a question, not a stop.
+   - (e) If a product file changes after S7, both suites run again in S9's series.
+4. **FIND's durations.** S7's record puts the base and head durations of FIND' side by side. No pass or fail hangs on them; OPEN-7 (B) stands. They go to the advisor with item 64's draft.
+5. **I8**, added to §5's invalidators: a failure of FIND' or of PC-E4 at the head. The piece stops, and the failure goes to the advisor with the step's line and the trace lines around it. I4 does not excuse these two steps: a failure of either at the head is I8 whether or not a second run passes. At an I8, an edit of either suite is class 9, declared before its code by the advisor's ruling; a change of the block's design goes to the architect first, then to the advisor.
+6. **S2's remainder.** The Sonnet worker reads `regression.mjs` and `residency-harness.mjs` whole and finishes the inventory before S4's commit. A further assertion that could change and is not in the table as amended here is I7 again. Its report lists every e2e suite of `package.json` as read whole or not read whole.
+7. **Order.** S3 may be dispatched once this amendment is on main, under the cap of ADV-2026-11-18-02 item 1. S5 waits for S2 whole and for S3's and S4's records (§7).
+8. **`colour.mjs`.** Nothing is added (ADV-2026-11-18-16 item 3). By the worker's reading, its Apply re-issues the first look only when the app says the attributes were not held, which the script neither reads nor forces.
+9. **Budget.** The node's `budget_minutes` goes from 400 to 440, my estimate: S2's remainder and the four runs of item 3. §7's budget table is not edited.
+
+Read the last amendment first.
+
+Nothing above is edited.
