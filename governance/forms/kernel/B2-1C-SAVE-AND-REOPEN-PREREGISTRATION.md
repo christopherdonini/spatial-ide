@@ -2214,3 +2214,30 @@ Nothing above is edited.
 3. **Unchanged.** No section, ceiling, test or rule of step 3 changes. KNOWN-LIMITATIONS item 43 stays as it is, by the same item. Where Amendments 30 and 31 name a part of step 3, such as the record's own locations writer of Amendment 30 item 4 (a), it stays step 3's and now lives in that node.
 
 Nothing above is edited.
+
+## Amendment 33 — P1b's closing, before its merge request: the words commit after both gates; the counts, with two class 8 rows; what the user is told; T13 (b); the runs; the seam tests in the plan; the stops; notes for P3a
+
+*Written by the custodian, 2026-11-18, before PR 331's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates** (item 6 (f)). Both at F = 1ad509ad69f1be832ef92af43c26cb03ada00a56, both PASS WITH NOTES, with no Correctness or Evidence finding: `state/consults/gates/2026-11-18-b2-piece-1c-save-and-reopen-p1b-gate-architect.md` and `state/consults/gates/2026-11-18-b2-piece-1c-save-and-reopen-p1b-gate-reviewer.md`.
+2. **The words commit.** W = 5a396eacb64505e56a6101e250ac0f070750fdcd, the one commit after F. It carries the reviewer's D1, D2 and D3 words (its report, Documentation), applied by the custodian's script, which checked each new comment, unwrapped, against the filed report's bytes. From F to W only comment lines change: `kernel/tests/project_store.rs` 4 added and 2 deleted, `kernel/src/project/store.rs` 4 added and 3 deleted. Under ADV-2026-11-16-06 item 2 (c), no gate reads it again. The architect's W1 and W2, for the same two test comments, are not used: the reviewer's words also cover its probe of T13 (b) (item 5 below). The words worker's report is `state/consults/2026-11-18-b2-piece-1c-save-and-reopen-p1b-words-worker-report.md`.
+3. **The counts** (item 6 (b), both columns), `git diff --numstat bdc72f5f...5a396eac`:
+   - `store.rs` 294 of 300; `mod.rs` 42 of 40, **class 8**; kernel product 336 of 340;
+   - the two protocol comments, 5 of 10;
+   - `project_lock_crash.rs` 102 of 130; `project_save.rs` 71 of 90; `project_store.rs` 168 of 140, **class 8** (166 at F; the words commit adds 2); kernel tests 341 of 360;
+   - in all, 682 lines in 7 files, against 710 and 7. The groups and the piece hold. §2.11 and §7 are not edited.
+   - `mod.rs`'s third hunk is its import, cut to one name when `locations_json` was removed (the architect's O-6, the reviewer's D6). The architect reads it as part of that removal's region and not a breach of item 6 (e) stop 2; the reviewer leaves that to the advisor (its A2), whom the merge request asks.
+   - The fix commit, 1ad509ad, edits T6, this piece's own new test, and changes no assertion (the worker's departure (d)); it is not an I3 stop.
+   - From the merge base to main, no path of the pull request changed (ADV-2026-11-14-21 item 6 (a)).
+4. **What the user is told** (the architect's D-5). Item 4 (a) holds no string change; that is true of the shell's strings, but not of the kernel's rule texts: a save the store now refuses ends in `project_file_refused`, whose message carries the rule text built at line 312, 314 or 342 of `kernel/src/project/store.rs` at W, and the shell shows that message inside its not-saved notice. The byte bound's text takes the reader's own words, and the text for a path that is not Unicode is main's existing one, now also naming `locations.json`; new words for these are drafts for the advisor (both gates' A1), outside this piece.
+5. **T13 (b)** (the architect's D-2 and O-2, the reviewer's Evidence). Item 6 (c)'s mutation, main's lossy conversion restored, also drops the string bound, so T13 fails at its 4,097-byte case, before the case that is not Unicode runs. The reviewer's probe kept the bound and the lossy conversion; T13 then fails at the case that is not Unicode. Both runs are in the reviewer's report (Mutations). Item 6 (c) and stop 5 are met.
+6. **The runs.** E-SAVE once at F, all 12 steps passing, rc 0, on an exe built from F's tree: `state/consults/2026-11-18-b2-piece-1c-save-and-reopen-p1b-e-save-at-1ad509ad-tester-report.md`. W changes comment lines only, so that run stands for W. The worker's own report is `state/consults/2026-11-18-b2-piece-1c-save-and-reopen-p1b-worker-report.md`. CI at W, read at 2026-11-18T18:15:26Z, all success: on push, the Rust workspace (run 44363538936), the shell (44363539238), fmt (44363538887), governance (44363538769) and ported notices (44363539100); on the pull request, the Rust workspace (44363553987), the shell (44363552043), fmt (44363552027), governance (44363552123), ported notices (44363552005), the sign-off check (44363552006) and the exposure scan (44363552060). The one red run on the branch is 43821156061, the Rust workspace at a374590c, the commit of the tests before the code, failing as P-base predicts.
+7. **The seam tests in the plan** (the architect's D-4, the reviewer's D4). The node's plan summary now names each pre-committed producer's seam tests: item 5 (d)'s for P1a, item 6 (d)'s table for P1b, and Amendment 31 item 6's for P2, all in the commit that adds this amendment. PR 331's body names P1b's.
+8. **The stops, with their times.**
+   - The usage-limit stop, 2026-11-16T09:03Z to 2026-11-18T08:27Z, came after the code was built (the worker's run ended at 2026-11-16T08:33:41Z) and held the run and the gates.
+   - The E-SAVE run's two setup stops, at 2026-11-18T16:54:34Z and 17:04:47Z by the tester's hand-backs, were the custodian's brief: it named neither the viewer's build nor the shell's, which the exe's resources need. The run itself had no failure.
+9. **For P3a, not P1b's** (the reviewer's A3). P3a's amendment declares: a lock freed late after a crash on Windows, and a bounded retry if T6 or a reopen ever needs one (the architect's O-1, the reviewer's O2); the lock makes the identity's folder, so P3a takes it after the documents are built or declares a T14 edit (the reviewer's O1); the same folder spelled with another case counts as a new one toward the 256 (the architect's O-7).
+
+Read the last amendment first.
+
+Nothing above is edited.
