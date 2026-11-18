@@ -1610,7 +1610,7 @@ pub struct LineageRead {
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub enum FolderLineage {
     Absent,
-    /// The project file records no lineage; the file was not opened.
+    /// The project file records no lineage; the file was not read.
     NotRead,
     Recorded,
     /// Its first lines are the recorded lineage, and valid lines follow them.
@@ -1683,7 +1683,8 @@ impl std::fmt::Display for PreviousLineage {
 /// folder's lineage file `folder_file` first, then `previous_file`, the previous lineage file
 /// kept on this machine. Each is checked whole before any of it is used ([`lineage_file`]). Each
 /// is opened read only and closed before this returns; no file is written, truncated, renamed or
-/// locked. For a `not-kept` member only the folder file's presence is asked; it is not opened.
+/// locked. For a `not-kept` member only the folder file's presence is asked, by its metadata;
+/// it is not read.
 ///
 /// A producer ahead of its consumer, pre-committed (ADV-2026-11-16-10 R2; the 1c form's
 /// Amendment 31 item 6): its consumer is P3a's `Projects::open_project`, step 6.
