@@ -2729,3 +2729,39 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 29: the closing, references and hashes only; recorded by the custodian at PR B's final head before the merge request
+
+*Written by the custodian on 2026-11-18. The head is f06f8105fd5df6b1baf2c6df5da69625acaa6070, the one commit after bdf918e1dcf7669a52e583131d645ef748c8855d, where both of gate 2's attempts passed with notes (Amendment 28). References only.*
+
+1. **After the gated head.** One commit, f06f8105fd5df6b1baf2c6df5da69625acaa6070, changes the two comment lines above the match effect in `StylePanel.tsx`. The new lines are the architect's D-A words, byte for byte, and they also meet the reviewer's D-3. No other byte changes. None of the gates' Documentation findings is the human's wording, so none needs a re-gate.
+
+2. **The runs** (ADV-2026-11-18-04 item 5).
+   - (a) `npm run verify`, whole: rc 0 at bdf918e1 (the tester), and rc 0, its 118 test files and 1505 tests passing, at f06f8105fd5df6b1baf2c6df5da69625acaa6070 (the worker's second run). The worker's first run at f06f8105fd5df6b1baf2c6df5da69625acaa6070, rc 1, timed out in a cargo-calling test file that the change does not reach, while the custodian's records gate ran beside it.
+   - (b) At bdf918e1, the colour, style, console and project suites passed. The recording suite passed with the waiting shim, as the series at 6f95993e ran it; its first run without the shim failed at RECORD, by the custodian's brief.
+   - (c) From 6f95993e the product diff is `StylePanel.tsx`, plus the D-1 and D-3 comment lines in `tableSource.ts` and `App.tsx`. So the other suites stand from 6f95993e.
+
+3. **§7's class 8 rows,** by §7's command at f06f8105fd5df6b1baf2c6df5da69625acaa6070 from the merge base 0372c5a304ae38213d2ee9f2cf0799b143339a77, none trimmed:
+   - `renderer/tests/style_agreement.rs`, 49 of 40 (gate 1, the reviewer's D1);
+   - `frontends/shell/src/workspace/workspaceState.ts`, 26 of 10, and of the cumulative 25 (gate 2, the architect's D-4);
+   - `frontends/shell/src/style/StylePanel.test.tsx` 316 with `frontends/shell/src/style/Legend.test.tsx` 58, 374 of 250 (the architect's D-4; the reviewer's gate 2 D-4 (b));
+   - `frontends/shell/src/workspace/workspaceState.test.ts`, 19 of 4 (the reviewer's gate 2 D-4 (a)).
+
+4. **Recorded mutations.**
+   - Gate 1's D4 and D5 are re-observed at bdf918e1, as m08 and m28 in check 5 of the reviewer's gate 2 report (ADV-2026-11-18-03 item 13).
+   - The further tests that m01, m19, m20 and m23 fail are listed in the same check (its D-5).
+   - Its probe probe-ib stands for PB-U16 (b) (Amendment 28 item 3).
+
+5. **ADV-2026-11-18-05 item 1's three conditions.**
+   - (a) The base run at 619a7cc9 is filed in `state/consults/2026-11-18-b1-shell-half-pr-b-selection-export-diagnosis-tester-report.md`.
+   - (b) No PR B file is on the export's path, by the reviewer's gate 2 check 2.
+   - (c) Two suites of the series wait for the dialog before they execute, `publish.mjs` and `colour.mjs`, as the same report finds. Both pass: publish in `state/consults/2026-11-16-b1-shell-half-pr-b-series-at-6f95993e-tester-report.md`, and colour as hc-colour-3 in `state/consults/2026-11-18-b1-shell-half-pr-b-series-completion-tester-report.md`.
+   - Until `selection-export-unknown-attempt` merges, the selection suite's export steps are recorded as the known failure (item 3).
+
+6. **ADV-2026-11-18-03 item 12.** No row of Part AC after AC5 opens a file and then expects category colours, so none is redrafted (the reviewer's gate 2 check 7).
+
+7. **Paths** (ADV-2026-11-18-04 item 6). The paths were read again at f06f8105fd5df6b1baf2c6df5da69625acaa6070: 57 from the merge base, none of them among the 29 paths main (e45cf5e8) has changed since it.
+
+Read the last amendment first.
+
+Nothing above is edited.
