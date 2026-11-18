@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `74785e71756cd40acd5981dfaa601110d96a80aeaad467fb0204a47a5b0f6fad`) at `2026-11-18T08:48:02.447Z`.
+Generated from `PLAN.yaml` (sha256 `e37e12be51bdba78cc13c8da5ed598b954e243b4268e565f1173bed0f8aacfe8`) at `2026-11-18T09:32:27.769Z`.
 
 ## 1. Next
 
@@ -58,7 +58,6 @@ Generated from `PLAN.yaml` (sha256 `74785e71756cd40acd5981dfaa601110d96a80aeaad4
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **b1-shell-half** — Shell migration, milestone 4 -- B1 shell half: attributes of the inspected feature, colour by category with its legend, and the table — evidence: branch `cut/b1-shell-half-pr-c`
 - **shell-tiled-arm-stream-refusal-shown-to-the-user** — In the shipped tiled arm a refused request and a failed stream are shown to the user by name, for a tile and for the first look, and no failure leaves the view without a status — evidence: branch `cut/shell-tiled-arm-stream-refusal-s1`
-- **known-limitations-v0-1-0-two-notes-2026-11-16** — KNOWN-LIMITATIONS: v0.1.0's two dated notes of 2026-11-16, the human's words (ADV-2026-11-16-19 item 2), each followed by its comment — evidence: branch `cut/known-limitations-v0-1-0-two-notes`
 
 ## 6. Proposed / unscheduled
 

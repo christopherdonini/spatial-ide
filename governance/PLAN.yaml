@@ -7504,15 +7504,15 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/root/KNOWN-LIMITATIONS-V0-1-0-TWO-NOTES-OF-2026-11-16-PREREGISTRATION.md
-    evidence: {branch: cut/known-limitations-v0-1-0-two-notes}
+    evidence: {pr: 329}
     budget_minutes: 60
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-11-16 by the human's approval of ADV-2026-11-16-19, item 5: the file on main first, by a docs piece of its own with the short form and the reviewer, which the advisor merges; then the custodian puts the release page's paragraph in, once, and reads the page back. The reviewer confirms each note equals its filed fence byte for byte (ADV-2026-11-16-20 item 3). Not on v0.2's list."
-    dates: {opened: 2026-11-16, done: null}
+    summary: "PLACED 2026-11-16 by the human's approval of ADV-2026-11-16-19, item 5: the file on main first, by a docs piece of its own with the short form and the reviewer, which the advisor merges; then the custodian puts the release page's paragraph in, once, and reads the page back. The reviewer confirms each note equals its filed fence byte for byte (ADV-2026-11-16-20 item 3). Not on v0.2's list. DONE 2026-11-18: the advisor merged it; the release page paragraph followed, once, by item 5."
+    dates: {opened: 2026-11-16, done: 2026-11-18}
