@@ -971,8 +971,9 @@ export class TileViewportStreamManager {
         return;
       }
       if (this.issueEpoch.get(tileKey) === epoch) {
-        // Entry 87 §2.3(iii): the bounded requeue. Five conditions, all required: not stopped, a
-        // declared-retryable code (`isRetryableRefusal`), this tile has not already spent its one
+        // Entry 87 §2.3(iii): the bounded requeue. Six conditions, all required: not stopped, not
+        // over budget (S1, OPEN-1 (a)), a declared-retryable code (`isRetryableRefusal`), this
+        // tile has not already spent its one
         // retry this candidacy (`requeuedTiles`), the tile is still in view by `latestMembership` --
         // the SAME geometric `coverMembershipFor` predicate entry 66 (b)'s supersede keep-test and
         // `drainQueueIfRoom`'s own re-check use, never the enumerated `coveringKeys` window: past

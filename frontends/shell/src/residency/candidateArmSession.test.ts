@@ -2025,12 +2025,11 @@ describe("Item B: the settled-partial signal (RESIDENCY-DEBT-1B.md, BS5/BS6)", (
       expect(onResidencyStatusChange).not.toHaveBeenCalled(); // subsumes the narrower kind-shaped check too
 
       // M1: complete the untiled look now -- `sh_2` reaches its own terminal, clearing
-      // `untiledStreamRunning`. This alone does not itself emit (no `emitResidencyStatus()` call at the
-      // untiled stream's own terminal -- S2's own surfacing obligation is scoped to the TILE manager's
-      // `onTileSuperseded`/`onTerminal`, not this session-owned stream); `pendingViewportChange` is
-      // ALSO still `true` at this exact instant (the debounce has not fired yet either), so even if it
-      // did emit, it would still read not-settled. The already-scheduled debounce firing next is the
-      // first genuinely honest opportunity to settle.
+      // `untiledStreamRunning`. A plan has run, so this terminal recomputes the status (the
+      // stream-refusal piece S1, C-1's fix), but it emits nothing: `pendingViewportChange` is ALSO
+      // still `true` at this exact instant (the debounce has not fired yet either), so it reads
+      // not-settled. The already-scheduled debounce firing next is the first genuinely honest
+      // opportunity to settle.
       completeUntiledLook();
       expect(onResidencyStatusChange).not.toHaveBeenCalled();
 

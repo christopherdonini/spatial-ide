@@ -1452,9 +1452,13 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         }
         // The stream-refusal piece S1 (§2.2 (b); Amendment 2 item 2, C-1): this generation's own first
         // look ended. After a plan, whatever its kind, the existing settled path recomputes the status:
-        // a tile that ended while this look ran found the view not settled, so this is the settling
-        // moment. Before any plan, only a failure speaks: nothing else would ever settle the bar, so it
-        // says what is left.
+        // when the last tile ended while this look ran, it found the view not settled, so with nothing
+        // else outstanding this is the settling moment. Before any plan, only a failure speaks: nothing
+        // else would ever settle the bar, so it says what is left.
+        // Not covered (AUTONOMY §31), timing inside one request round trip: an earlier look whose
+        // terminal arrives after a reissue but before the new look's ticket is minted is read as current;
+        // if a plan ran and its tiles ended in that window, the status can read settled until the new
+        // look's first batch or its terminal recomputes it.
         if (wasCurrent && !wasSelfCancelled && !relinquishedReEmitted && (hasPlanned || terminal.kind !== "Completed")) {
           if (hasPlanned) {
             emitResidencyStatus();
