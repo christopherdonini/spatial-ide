@@ -107,6 +107,7 @@ describe("PB-U6: a fill by category is one style.set on fillColor, and a literal
   // RECORDED MUTATION for PB-U6, applied alone: in the `fillColor` case of the transition (workspace/viewTransitions.ts) a literal colour sets `fillColor` and keeps `fillMatch`.
   // Expected failure: at the literal fill.
   // OBSERVED AT 572bb917d93dd759196be47ddd218762abae1810: FAILED -- "PB-U6: a match sets fillMatch from the wire's names, a literal clears it, and the transition does not write the view": AssertionError: a literal fill: expected [ '#112233', { column: 'zone', …(3) } ] to deeply equal [ '#112233', null ]. Reverted after observing.
+  // The same mutation also failed, in this file: OBSERVED AT 95b6beb7: FAILED -- "PB-U6: the transitions toward the default style, from a match whose literal fill is the default's, leave fillMatch null": AssertionError: the match after the transitions toward the default: expected { column: 'zone', …(3) } to be null. Reverted after observing.
   it("PB-U6: a match sets fillMatch from the wire's names, a literal clears it, and the transition does not write the view", () => {
     const frozen = deepFreeze(structuredClone(view));
     const matched = applyViewTransition(frozen, matchSet);
