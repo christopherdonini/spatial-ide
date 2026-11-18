@@ -14,11 +14,14 @@
 //!
 //! Containment is judged on this machine at the moment of the save. That the data later read is the
 //! data judged here is not claimed (ADR-036 §5, last sentence).
+//!
+//! **At reopen**, [`check_inside`] walks a `project-relative` locator's `at` from the folder by
+//! path calls alone and refuses a link, a missing segment or a wrong kind of object (§2.5).
 
 use std::path::{Component, Path, PathBuf};
 
 use super::file::MAX_LOCATOR_SEGMENTS;
-use crate::dataset_ref::DatasetRef;
+use crate::dataset_ref::{in_canonical_form, DatasetRef, RefParseError};
 
 /// What a project file carries for the data, and, where it is `machine-recorded` alone, why.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -116,4 +119,96 @@ fn reached_through_link(data: &Path, f: &Path) -> bool {
         }
     }
     !inside
+}
+
+/// Why [`check_inside`] refused a `project-relative` locator's `at`: a closed set. A `segment` is
+/// `at` up to and including the refused segment, `/`-separated, as `at` spells it.
+///
+/// Pre-committed with [`check_inside`], whose doc names its consumer (Amendment 30 item 5 (d)).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum CheckRefused {
+    /// `at` is not in canonical form (ADR-036 §5), refused before any file is read.
+    NotCanonical(RefParseError),
+    /// The project folder could not be resolved.
+    FolderUnresolvable,
+    /// The segment is a link: a symlink, or on Windows a name-surrogate reparse point such as a
+    /// junction (H1).
+    ThroughLink { segment: String },
+    /// The segment's metadata could not be read: it is missing, or it cannot be reached.
+    Unresolvable { segment: String },
+    /// A segment before the last is not a folder.
+    NotADirectory { segment: String },
+    /// The last segment is not a regular file.
+    NotARegularFile { segment: String },
+}
+
+/// §2.5's check at reopen, the same on every platform, for the project folder `folder` and a
+/// `project-relative` locator's `at`:
+///
+/// 1. `at` goes through the canonical-form text check first, so a refused `at` reads no file;
+/// 2. the folder is canonicalized to F;
+/// 3. from F, one segment at a time, F joined with the segments so far is read by
+///    `symlink_metadata`, which does not follow the last component: a link, a missing segment, an
+///    intermediate that is not a folder and a final that is not a regular file are each refused,
+///    naming the segment. A cloud placeholder is not a name surrogate, so the check reads it as a
+///    regular file and passes it (H1); no test here makes one (Amendment 30 item 5 (c)).
+///
+/// The engine path returned is F followed by the segments as checked, in the `\\?\` form on Windows
+/// (H4). No file's contents are read, and no handle is held after the check returns. This claims
+/// the check only: that the engine later reads the file checked here is not claimed (§2.5, the
+/// window).
+///
+/// A producer ahead of its consumer, pre-committed by Amendment 30 item 5 (d) (ADV-2026-11-16-10
+/// R2): its consumer is `Projects::open_project`'s data step, in P3a. The seam's end-to-end tests
+/// are K-R1, K-R2 and K-R4, K-R3 as C-7 restates it (working name
+/// `a_device_name_or_trailing_dot_target_is_refused_at_read_before_any_open`), then E-REOPEN.
+pub fn check_inside(folder: &Path, at: &str) -> Result<PathBuf, CheckRefused> {
+    in_canonical_form(at, "$").map_err(CheckRefused::NotCanonical)?;
+    let mut path = std::fs::canonicalize(folder).map_err(|_| CheckRefused::FolderUnresolvable)?;
+    let segments: Vec<&str> = at.split('/').collect();
+    for (i, name) in segments.iter().enumerate() {
+        path.push(name);
+        let segment = segments[..=i].join("/");
+        let (link, dir, file) = match std::fs::symlink_metadata(&path) {
+            Ok(m) => (m.is_symlink(), m.is_dir(), m.is_file()),
+            Err(_) => return Err(CheckRefused::Unresolvable { segment }),
+        };
+        if link {
+            return Err(CheckRefused::ThroughLink { segment });
+        }
+        let last = i + 1 == segments.len();
+        if last && !file {
+            return Err(CheckRefused::NotARegularFile { segment });
+        }
+        if !last && !dir {
+            return Err(CheckRefused::NotADirectory { segment });
+        }
+    }
+    Ok(path)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// **T5** (C-7; Amendment 30 item 5 (c)): a device name, a trailing dot and a `..` segment are
+    /// each refused by the text check, with a folder that does not exist, so nothing was read.
+    ///
+    /// MUTATION: `in_canonical_form` not called.
+    #[test]
+    fn check_inside_refuses_a_non_canonical_at_before_any_file_is_read() {
+        let folder = std::env::temp_dir().join("spatial-ide-resolver-t5-absent");
+        let _ = std::fs::remove_dir_all(&folder);
+        for at in [
+            "data/NUL.parquet",
+            "data/parcels.",
+            "data/../parcels.parquet",
+        ] {
+            let refused = check_inside(&folder, at);
+            assert!(
+                matches!(refused, Err(CheckRefused::NotCanonical(_))),
+                "{at}: {refused:?}"
+            );
+        }
+    }
 }
