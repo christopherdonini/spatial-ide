@@ -464,3 +464,31 @@ Nothing above is edited.
    - The paragraph's source comment gains one clause, which names the end of that sentence, from "and ends Colour by", as the advisor's wording ruled in ADV-2026-11-18-11, with the code by symbol (item 5). That comment line goes to the advisor with this piece's other comment lines (Amendment 2 item 8).
 
 Nothing above is edited.
+
+## Amendment 4: both gates' second attempts at 6abaa9fb; the class 9 line; the words of ADV-2026-11-18-13 items 1 to 3; the on-main pair replaced; one node proposed; the runs; recorded by the custodian before the words commit
+
+*Written by the custodian on 2026-11-18, before the words commit. The advisor's ruling ADV-2026-11-18-13 is filed at `state/directives/2026-11-18-advisor-ruling-adv-2026-11-18-13-s1-after-its-gates-second-attempts-the-reviewers-block-the-class-9-line-the-on-main-pair-replaced.md`; the two reports at `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-architect-attempt-2.md` and `state/consults/gates/2026-11-18-shell-tiled-arm-stream-refusal-shown-to-the-user-gate-reviewer-attempt-2.md`. References only.*
+
+1. **The gates.** Both second attempts, limited to the fix (ADV-2026-11-18-09 item 7, ADV-2026-11-18-10 item 6), read PASS WITH NOTES at 6abaa9fb74de1eee303e3de84f6eafab67df56c6, with no Correctness or Evidence finding: C-1 is closed. Gate-log rows 774 and 775.
+
+2. **Class 9 (ADV-2026-11-18-13 item 2).** In the architect's words, from its report's draft 1: "`candidateArmSession.test.ts` also takes the corrected comment at :2028-2033 of the test above M1 (its assertion unchanged), because C-1's fix made its parenthetical untrue."
+
+3. **The words (items 1 to 3).** One Sonnet worker applies them by script in one commit, each from its filed report, with no re-gate (AUTONOMY §31):
+   - in `candidateArmSession.ts`, the reviewer's D-A block replaces the fix branch's comment; the architect's DA2-1 and its draft 3 are not applied beside it (item 1);
+   - in `candidateArmSession.test.ts`, the architect's DA2-2 replacement, for the comment of the test above M1, from its "`untiledStreamRunning`." to that comment's end (item 2);
+   - in `tileViewportStreamManager.ts`, the architect's DA2-3 replacement for the first clause of the comment above the requeue's conditions (item 3).
+   No other line changes, and no string the app shows. The comment of the "Showing all" constant is not changed (item 5).
+
+4. **The counts.** With D-A alone the reviewer counts that file at 44 of its 60 lines, the product at 84 of 120 and the total at 964 of 1,130. DA2-2's and DA2-3's lines are added to their files' rows. The worker gives the counts at the words head against §7 as Amendments 1 and 3 keep it; an excess over a ceiling is a class 8 row (ADV-2026-11-18-10 item 5).
+
+5. **The on-main pair (item 4).** Item 4's Old and New, from that ruling's fences, replace the pair of ADV-2026-11-18-09 item 8 (Amendment 2 item 8): the Old text is unchanged, and the New text's second sentence is the reviewer's. The records step applies it by script, with the pair of ADV-2026-11-18-11 item 2 (Amendment 3 item 7), and changes no other byte of the paragraph.
+
+6. **One node, proposed and not placed (item 6):** `untiled-reissue-holds-earlier-look-handle-until-mint`. After a reissue, the session holds the earlier look's handle until the new look's ticket is minted, so that look's terminal is read as current; both cases the comments now name as not covered share this root. It goes to the advisor in the daily batch, with the two reports and the probe G330R2-RACE. It is not on v0.2's list, and no code or read is ordered.
+
+7. **The runs (item 7).** The five app-window suites run at 6abaa9fb. They stand for the head the merge request names if that head's diff from 6abaa9fb changes only comment lines in the source files and records, checked by script, with the script's output in the closing amendment; otherwise they run again. `npm run verify` runs whole once at that head, after the records step.
+
+8. **Then (item 8).** The records step; item 56's span and the comment lines go to the advisor before the merge request.
+
+Read the last amendment first.
+
+Nothing above is edited.
