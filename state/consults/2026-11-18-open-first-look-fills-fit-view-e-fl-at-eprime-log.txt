@@ -1,0 +1,17 @@
+
+> spatial-ide-shell@0.1.0 e2e:open-fills-fit-view
+> node e2e/open-fills-fit-view.mjs --measure-build D:/wt-targets/fl/release/spatial-ide-shell.exe
+
+precondition: first stream-issued sh_402947994159c836380bfa65bb8f477c, its batch rows 10000 (need 10000), fit view-state seen, describe.extent basis not-established-at-open, value null
+  fixture sha256 fd0c74ab2d5df1e1df084802134d2a6678278e764ba180ea2ea5812f53ddfb49; fit view-state {"targetX":0,"targetY":0,"zoom":-3.692532927362801,"originX":2603460.114163697,"originY":1200019.902370003}
+PASS  (b) settle: no viewport_query, stream-issued or batch line for 3 s within 180 s  ::  quiet after 2846 ms of waiting; 8 wire lines in all
+FAIL  (a) a further stream-issued line arrives after the first look's last batch, with no input  ::  first look sh_402947994159c836380bfa65bb8f477c, last batch at line 28; 0 further stream-issued line(s), 0 viewport_query line(s) after it
+FAIL  (c) .residency-status reads the complete-in-view sentence  ::  .residency-status is null; pattern /^Showing all \d+ features in view$/
+  image: C:\dev\wt\fl\frontends\shell\e2e\out\open-fills-fit-view-efl-1795036971856.png 34623 bytes sha256 102996b14908f10ff21f6afb7bbb1ec30dfacfdd7997510285c082331159f3f2
+FAIL  (d) every qualifying cell of the 8x8 grid holds a pixel unlike the ring background (tolerance 8)  ::  28 qualifying cell(s) of 64; 14 blank: (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (1,1) (2,1) (3,1) (4,1) (5,1) (6,1) (7,1); screenshot has a pixel below alpha 255: false
+  (e) 14 blank qualifying cell(s) lie wholly above the first look's rows (N > 1201280): (1,0) (2,0) (3,0) (4,0) (5,0) (6,0) (7,0) (1,1) (2,1) (3,1) (4,1) (5,1) (6,1) (7,1)
+  REPORT  alpha reading (decides nothing; ring B 255,255,255): qualifying cells with no pixel above alpha 0: none
+  REPORT  qualifying cells: (1,0)o- (2,0)o- (3,0)o- (4,0)o- (5,0)o- (6,0)o- (7,0)o- (1,1)o- (2,1)o- (3,1)o- (4,1)o- (5,1)o- (6,1)o- (7,1)o- (1,2)i+ (2,2)i+ (3,2)i+ (4,2)i+ (5,2)i+ (6,2)i+ (7,2)i+ (1,3)i+ (2,3)i+ (3,3)i+ (4,3)i+ (5,3)i+ (6,3)i+ (7,3)i+
+
+==== 1/4 PASS ====
+FAILED: (a) a further stream-issued line arrives after the first look's last batch, with no input; (c) .residency-status reads the complete-in-view sentence; (d) every qualifying cell of the 8x8 grid holds a pixel unlike the ring background (tolerance 8)
