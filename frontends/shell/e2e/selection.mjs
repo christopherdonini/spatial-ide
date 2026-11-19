@@ -561,8 +561,20 @@ async function prepareExport(page, destination) {
   return pairEvaluate(page, "prepare", (d) => window.__SPATIAL_E2E__.publishPrepareWithDestination(d, "whole"), destination);
 }
 
+/**
+ * Waits for the dialog the prepare opens, and for the publishExecute hook, before an execute is sent, as colour.mjs does; publish.mjs waits for the hook alone (SELECTION-EXPORT-UNKNOWN-ATTEMPT-PREREGISTRATION.md, step 2).
+ * The hook answers unknown-attempt while PublishPanel's attemptIdRef is not yet set. A passive effect sets it after the commit that mounts the dialog, so the dialog can be in the DOM a moment before the ref is set: this wait narrows that window and does not close it (a case inside one CDP round trip, the gate's check 4).
+ * A person's confirm passes PublishDialog's own attemptId prop and never reads that ref, so the wait hides nothing a person can meet.
+ */
+async function waitForExportDialog(page) {
+  const ready = await pollUntil(() => page.evaluate(() => typeof window.__SPATIAL_E2E__?.publishExecute === "function" && document.querySelector(".publish-dialog") !== null), (ok) => ok === true, 20_000);
+  expect(ready.ok, "the export dialog and the publishExecute hook never appeared after the prepare");
+}
 /** Executes the prepared attempt with the phrase an operator types (the destination's final path component), through the dev hook that shares the dialog's path. */
-const executeExport = (page, prompt) => pairEvaluate(page, "execute", (p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
+const executeExport = async (page, prompt) => {
+  await waitForExportDialog(page);
+  return pairEvaluate(page, "execute", (p) => window.__SPATIAL_E2E__.publishExecute(p), basename(prompt.destination_display));
+};
 
 /** E-EXPORT: with a selection standing and without one, the prompt's row scope and the bundle's row count are equal, and the section says the selection is not used. */
 async function stepExport(page, consoleHandle) {
@@ -618,6 +630,7 @@ async function startExportThenOpen(page, consoleHandle, label) {
   await openFixture(page, consoleHandle, FIXTURE_100K, label);
   const prepared = await prepareExport(page, freshDestination("ask"));
   expect(prepared.status === "prompt", `${label}: prepare returned ${JSON.stringify(prepared)}`);
+  await waitForExportDialog(page);
   await pairEvaluate(page, "send", ([phrase, path]) => {
     const run = (window.__askRun = { done: false });
     run.promise = window.__SPATIAL_E2E__.publishExecute(phrase).then((o) => ((run.done = true), o));
