@@ -3586,3 +3586,52 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 46 — P3b-1's stop 4, ruled (ADV-2026-11-19-28): K-O4's mutation moved to K-O26, close_dataset's release off the main thread, the doc words, one arm named not covered, and P3b-1's ceilings restated (class 8)
+
+*Written by the custodian from ADV-2026-11-19-28's items, on main before the worker continues (its opening paragraph). References only. Nothing below is a quotation. Every text the worker copies is in the ruling's own fences, and the worker copies it from the filed ruling byte for byte, never from this amendment.*
+
+1. **Stop 4 was rightly taken** (the ruling's item 1). K-O4 makes each second open through a new `Projects`, so no change to `release_ended` can turn it red.
+   - (a) K-O4's row in Amendment 43's table loses its mutation. K-O4 stays unedited and keeps the two recorded mutations it merged with.
+   - (b) **K-O26 gains a second recorded mutation:** `release_ended` drops every entry. K-O26's control reopens the folder through the same `Projects` that holds the lock, while the open is live. Predicted: that reopen replies `opened`, and the test fails at the assertion named the control.
+   - (c) The worker adds the mutation to K-O26's doc comment, runs it once, restores the file and reports the assertion it failed at. If K-O26 stays green, that is stop 4 again and goes to the advisor.
+   - (d) It is the one mutation of the part that shows the lock is kept while the open is live (item 1 (d)).
+2. **The main thread** (item 2), ruled before the gates.
+   - (a) `close_dataset` does not call `release_ended` itself. After the host's close it hands the call to another thread with `std::thread::spawn` and does not wait for it.
+   - (b) What follows is named in `close_dataset`'s doc in the worker's words, as item 2 (b) states it: the lock can still be held when `close_dataset` replies, for as long as a save in flight takes; a reopen in this process is not affected; a reopen from another process inside that time is refused as already open.
+   - (c) The kernel tests are not changed by this.
+   - (d) **Not covered in this part, by name:** the binding's hand-off. No test of this part reaches `close_dataset`; P4's suites are the first to run it.
+   - (e) **For P3b-2:** `open_project`'s binding runs it off the main thread, as `save_project`'s does.
+   - (f) Both gates read (a) and (b), and say whether anything relies on the lock being free when `close_dataset` replies.
+3. **Doc words** (item 3). The worker copies each from the ruling's fences, wraps lines at the file's width, and changes no other word.
+   - (a) The form's D4 sentence in the `save_project` binding's doc becomes the ruling's first fence.
+   - (b) `kernel/src/project/store.rs` joins P3b-1's files, comment lines only, for one sentence of `ProjectLock`'s doc: the second fence (Old) is replaced by the third (New).
+   - (c) In the module doc of `commands.rs`, the fourth fence is inserted directly after the word `serialize` in the sentence that begins with the bold words on logic, with one space before it.
+   - (d) The worker's own docs of `release_ended` and of `close_dataset` follow item 2 here, in the worker's words. Both gates read them.
+4. **Not covered, added to item 13 by name** (item 4): the arm `SaveFailure::Open(e) => e` of `skp_error_of`. Reaching it needs a release between the command's own checks and the mutex, inside one call. Amendment 44 item 3 (a)'s sentence that the seam's tests are K-O28 and K-O26's added assertion was wrong for the consumer: K-O28 reaches the producer, and neither reaches the arm.
+5. **Recorded, no action** (item 5):
+   - class 2: K-O17 (b) failed at its base on missing symbols, where item 7 (b) predicted an assertion;
+   - class 1: K-O17 (b) reuses K-O17's child through a helper, and one extra test commit corrects the worker's own type error;
+   - the two clippy warnings in `commands.rs` are outside the part's hunks and stay.
+6. **P3b-1's ceilings, class 8** (item 6), in both numstat columns. Amendment 44's are superseded by these:
+
+   | Group | Ceiling |
+   |---|---|
+   | kernel product | 95 |
+   | kernel tests | 240 |
+   | src-tauri | 25 |
+   | **Total** | **360** |
+
+   The overrun of 229 on 220 is accepted as counted. Nothing is cut or packed to fit.
+7. **How it continues** (item 7). The same worker-high, or a new one on the strongest model with the ruling and the report, on the same branch, `cut/b2-piece-1c-p3b-1`. Its commits are pushed together, under ADV-2026-11-19-10. It reruns the part's focused tests, clippy and fmt at its head, and K-O26's two mutations. Then the pull request and both gates, whose first question stays the lock order.
+8. **Superseded index:**
+   - Amendment 43's K-O4 row mutation, by item 1 (a) here;
+   - the form's D4 sentence, by item 3 (a) here;
+   - Amendment 44 item 3 (a)'s sentence on the seam's tests, by item 4 here;
+   - Amendment 44's ceilings, by item 6 here;
+   - P3b-1's files, which gain `kernel/src/project/store.rs` (comment lines only), by item 3 (b) here.
+   - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
