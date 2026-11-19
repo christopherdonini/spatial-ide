@@ -116,7 +116,6 @@ pub struct Projects {
     saved: Mutex<Vec<SavedProject>>,
 }
 
-#[derive(Clone)]
 struct SavedProject {
     /// The catalog name of the dataset, which `open_dataset` mints once per open.
     dataset: String,
@@ -124,6 +123,9 @@ struct SavedProject {
     folder: PathBuf,
     /// The dataset entry's `logical_uri`, kept so every save of this open writes the same one.
     uri: DatasetUri,
+    /// The identity's open lock, taken by the first save. It is held for as long as this entry is,
+    /// which is until [`Projects`] is dropped.
+    _lock: store::ProjectLock,
 }
 
 /// What a save did.
@@ -225,8 +227,12 @@ impl Projects {
     /// - **A later save** keeps the identity and goes to the folder the first one used; it ignores
     ///   `folder`. It refuses to replace a project file that records a kept lineage, and one the
     ///   reader refuses, since either could hold what a rewrite would lose.
-    /// - **Every save** writes `locations.json`, judges the locators ([`resolver::judge`]), checks
-    ///   the document against the reader's rules, and replaces `project.spatial` whole or not at all.
+    /// - **Every save** judges the locators ([`resolver::judge`]), checks the document against the
+    ///   reader's rules, and builds `locations.json`, and `folders.json` at a first save, each
+    ///   refused where its reader would refuse it. A first save then takes the identity's open
+    ///   lock ([`store::ProjectLock`]), which [`Projects`] holds until it is dropped. The save then
+    ///   writes `locations.json`, and `folders.json` at a first save, and replaces
+    ///   `project.spatial` whole or not at all.
     ///   Only then does the history take its moves: the open is bound to the project, which moves
     ///   the open's own record under the project's identity if the open has one, and a `saved-here`
     ///   mark is written in the project's record when the steps reach the workspace. A second open
@@ -241,10 +247,11 @@ impl Projects {
         workspace: Workspace,
     ) -> Result<Saved, SaveFailure> {
         let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
-        let known = saved.iter().find(|s| s.dataset == name).cloned();
+        let known = saved.iter().find(|s| s.dataset == name);
+        let known = known.map(|k| (k.project.clone(), k.folder.clone(), k.uri.clone()));
         let first = known.is_none();
         let (project, folder, uri) = match known {
-            Some(k) => (k.project, k.folder, k.uri),
+            Some(known) => known,
             None => {
                 let folder = folder.ok_or(SaveFailure::FolderRequired)?;
                 (
@@ -305,6 +312,24 @@ impl Projects {
         } else {
             None
         };
+        // A first save takes the identity's open lock after both documents are built, so that a
+        // refusal above writes nothing, and before the first write (the form's Amendment 36, item
+        // 6 (a)). A lock that cannot be taken refuses the save, naming `open.lock`.
+        let lock_refused = |e| {
+            let source = match e {
+                store::LockRefused::Held => std::io::Error::other("another handle holds it"),
+                store::LockRefused::Io(e) => e,
+            };
+            SaveFailure::MachineStore {
+                what: store::OPEN_LOCK,
+                source,
+            }
+        };
+        let lock = if first {
+            Some(store::ProjectLock::try_lock(&self.root, &project).map_err(lock_refused)?)
+        } else {
+            None
+        };
         std::fs::create_dir_all(&dir).map_err(machine("the project's machine folder"))?;
         write_machine_file(&dir, store::LOCATIONS, &locations)
             .map_err(machine(store::LOCATIONS))?;
@@ -312,13 +337,14 @@ impl Projects {
             write_machine_file(&dir, store::FOLDERS, &bytes).map_err(machine(store::FOLDERS))?;
         }
         replace(&folder, text.as_bytes()).map_err(SaveFailure::ProjectFileUnwritable)?;
-        if first {
+        if let Some(lock) = lock {
             let dataset = name.to_string();
             saved.push(SavedProject {
                 dataset,
                 project: project.clone(),
                 folder,
                 uri,
+                _lock: lock,
             });
         }
 
@@ -515,7 +541,8 @@ fn read_existing(target: &Path) -> Result<Option<Vec<u8>>, SaveFailure> {
 }
 
 /// A machine store file, written whole or not at all: a temp file in the same folder, synced, then
-/// renamed over the name.
+/// renamed over the name. A process that ends between the temp file's creation and the rename
+/// leaves `<name>.tmp-<16 hex>` in `dir`, the identity's machine folder, and nothing removes it.
 fn write_machine_file(dir: &Path, name: &str, bytes: &[u8]) -> std::io::Result<()> {
     use std::io::Write;
     let mut random = [0u8; 8];
