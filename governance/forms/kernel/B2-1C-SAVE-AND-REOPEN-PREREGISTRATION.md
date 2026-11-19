@@ -3522,3 +3522,116 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 45 — P3b-2's strings, ruled (ADV-2026-11-19-26): P-9's bound met at the wire by one helper, the sixteen messages, the three A1 places, ADR-036 Amendment 4, and P3b-2's ceilings restated (class 9)
+
+*Written by the custodian from ADV-2026-11-19-26's items, on main before P3b-2's code (its opening paragraph). References only. Nothing below is a quotation. Every text the worker copies is in the ruling's own fences, and the worker copies it from the filed ruling byte for byte, never from this amendment.*
+
+1. **The strings ruling.** Item 20's strings ruling for P3b-2 is ADV-2026-11-19-26, given on the architect's table at `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-2-strings-table-architect.md`. Stop 11 of item 20 is met once this amendment is on main (the ruling's item 7).
+2. **P-9's bound is met at the wire, not in the reader** (the ruling's item 1). The shared reader's files are not touched.
+   - (a) **One helper** in `kernel/src/project/mod.rs`, named by the worker, bounds a text taken from a file the kernel did not write: at most 256 bytes, cut on a character boundary with the cut marked, and every control character replaced (item 1 (a) gives the mark and the replacement).
+   - (b) It applies to `path` and `rule` of `project_file_refused`, to `rule` of `project_machine_record_refused`, and to `segment`, in the reopen's map and in the save's `skp_error_of`, before the constructor builds the message.
+   - (c) **W-4 gains three cases**, as item 1 (c) states them: a number token of 100,000 digits, a control character in a key, and a word of 4,096 bytes where a closed word is expected. Each asserts that no field and no message holds a control character, and that each bounded field is at most 262 bytes. Its mutation: the helper returns its input. Predicted: all three red.
+   - (d) **Stop 10** is restated by item 1 (d): a text from a file the kernel did not write that reaches the wire without the helper.
+   - (e) **Two named exceptions** (item 1 (e)): an engine message through `Open(e)`, unedited as P-11 has it; and an identity read from a file, which is validated.
+3. **The messages** (the ruling's item 2). Its first fence gives the whole format of each of sixteen messages.
+   - The worker copies each byte for byte. Where `OpenFailure`'s own text differs from its line, the worker makes that arm equal to the line.
+   - What each line changes is in item 2's list under the fence. In short:
+     - `cancel_key_in_use` names both calls;
+     - `project_file_refused` has a new head for the save and the reopen alike. Its data file `v0-error-project_file_refused.json` changes with it, class 1;
+     - `project_open_elsewhere` keeps its code and gets a new message;
+     - a new code, `skp.project_machine_store_failed` with one field `detail`, carries the reopen's `MachineStore` failures and the binding with no `Projects`. It replaces the P-7 note that `MachineStore` stays under `project_file_unwritable`, which keeps the save's failures and the copy's `replace`;
+     - the two unreachable arms take `skp.project_target_unresolvable` with `locator` alone;
+     - the not-Unicode line has no field and no path, replacing item 5 (c)'s `detail`;
+     - O3's code has the fields `project` and `found`;
+     - a join failure at the binding is `skp.open_project_panicked`, by the binding's pattern.
+   - **`kernel/src/skp.rs` joins P3b-2's files** for the two untrue doc clauses of `OpenRegistry`, comment lines only, in the words the architect's gate gives.
+4. **Two messages stand with a clause that can be untrue, named** (item 3):
+   - the engine's clause on the caller's assertion at a reopen; P4's form decides what the shell shows;
+   - `skp.unknown_dataset` from the reopen's own check after its open. It is named in a source comment and in the closing, and not changed.
+5. **The three A1 places of item 5 (g)** (item 4).
+   - `stored_path` takes a noun and prints no path. Its three texts are the ruling's second fence, and the nouns are given in item 4.
+   - The reviewer's A1 (i) is the new head of item 3 here.
+   - A test inside `store.rs`, `file.rs` or `strict_json.rs` that pins one of the old texts, or the old head, is edited to the new text and to nothing else, and the worker names each in its report. Any other edit of an existing test is stop 3.
+6. **ADR-036 Amendment 4** (item 5). The ruling's third fence is appended to `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md` after Amendment 3, by script, byte for byte, with the date of landing in its slot. Both gates check each clause against the code at P3b-2's head. An untrue clause goes to the advisor.
+7. **Docs that widen** (item 6), in the worker's words, read by both gates:
+   - the doc of `project_file_refused`;
+   - SKP-V0.md §4 item 5's list, which gains `open_project`;
+   - the new §12.
+8. **P3b-2's ceilings** (item 7). Item 20's P3b-2 rows are superseded by these:
+
+   | Group | Ceiling |
+   |---|---|
+   | protocol | 455 |
+   | fixtures | 390 |
+   | literal | 190, in at most 22 files |
+   | kernel product | 285 |
+   | kernel tests | 590 |
+   | src-tauri | 35 |
+   | records | 10 |
+   | **Total** | **1,955** |
+
+9. **For P4's strings** (item 8), which go to the advisor:
+   - the shell's own words for each code;
+   - the clause of item 4 here on the caller's assertion;
+   - how the shell bounds what it shows and logs of an engine message.
+10. **Superseded index:**
+    - item 5 (c)'s `detail` for the not-Unicode arm, by item 3 here;
+    - the P-7 note on `MachineStore`, by item 3 here;
+    - item 20's stop 10 wording, by item 2 (d) here;
+    - item 20's P3b-2 ceilings, by item 8 here;
+    - P3b-2's files, which gain `kernel/src/skp.rs` (comment lines only), by item 3 here.
+    - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 46 — P3b-1's stop 4, ruled (ADV-2026-11-19-28): K-O4's mutation moved to K-O26, close_dataset's release off the main thread, the doc words, one arm named not covered, and P3b-1's ceilings restated (class 8)
+
+*Written by the custodian from ADV-2026-11-19-28's items, on main before the worker continues (its opening paragraph). References only. Nothing below is a quotation. Every text the worker copies is in the ruling's own fences, and the worker copies it from the filed ruling byte for byte, never from this amendment.*
+
+1. **Stop 4 was rightly taken** (the ruling's item 1). K-O4 makes each second open through a new `Projects`, so no change to `release_ended` can turn it red.
+   - (a) K-O4's row in Amendment 43's table loses its mutation. K-O4 stays unedited and keeps the two recorded mutations it merged with.
+   - (b) **K-O26 gains a second recorded mutation:** `release_ended` drops every entry. K-O26's control reopens the folder through the same `Projects` that holds the lock, while the open is live. Predicted: that reopen replies `opened`, and the test fails at the assertion named the control.
+   - (c) The worker adds the mutation to K-O26's doc comment, runs it once, restores the file and reports the assertion it failed at. If K-O26 stays green, that is stop 4 again and goes to the advisor.
+   - (d) It is the one mutation of the part that shows the lock is kept while the open is live (item 1 (d)).
+2. **The main thread** (item 2), ruled before the gates.
+   - (a) `close_dataset` does not call `release_ended` itself. After the host's close it hands the call to another thread with `std::thread::spawn` and does not wait for it.
+   - (b) What follows is named in `close_dataset`'s doc in the worker's words, as item 2 (b) states it: the lock can still be held when `close_dataset` replies, for as long as a save in flight takes; a reopen in this process is not affected; a reopen from another process inside that time is refused as already open.
+   - (c) The kernel tests are not changed by this.
+   - (d) **Not covered in this part, by name:** the binding's hand-off. No test of this part reaches `close_dataset`; P4's suites are the first to run it.
+   - (e) **For P3b-2:** `open_project`'s binding runs it off the main thread, as `save_project`'s does.
+   - (f) Both gates read (a) and (b), and say whether anything relies on the lock being free when `close_dataset` replies.
+3. **Doc words** (item 3). The worker copies each from the ruling's fences, wraps lines at the file's width, and changes no other word.
+   - (a) The form's D4 sentence in the `save_project` binding's doc becomes the ruling's first fence.
+   - (b) `kernel/src/project/store.rs` joins P3b-1's files, comment lines only, for one sentence of `ProjectLock`'s doc: the second fence (Old) is replaced by the third (New).
+   - (c) In the module doc of `commands.rs`, the fourth fence is inserted directly after the word `serialize` in the sentence that begins with the bold words on logic, with one space before it.
+   - (d) The worker's own docs of `release_ended` and of `close_dataset` follow item 2 here, in the worker's words. Both gates read them.
+4. **Not covered, added to item 13 by name** (item 4): the arm `SaveFailure::Open(e) => e` of `skp_error_of`. Reaching it needs a release between the command's own checks and the mutex, inside one call. Amendment 44 item 3 (a)'s sentence that the seam's tests are K-O28 and K-O26's added assertion was wrong for the consumer: K-O28 reaches the producer, and neither reaches the arm.
+5. **Recorded, no action** (item 5):
+   - class 2: K-O17 (b) failed at its base on missing symbols, where item 7 (b) predicted an assertion;
+   - class 1: K-O17 (b) reuses K-O17's child through a helper, and one extra test commit corrects the worker's own type error;
+   - the two clippy warnings in `commands.rs` are outside the part's hunks and stay.
+6. **P3b-1's ceilings, class 8** (item 6), in both numstat columns. Amendment 44's are superseded by these:
+
+   | Group | Ceiling |
+   |---|---|
+   | kernel product | 95 |
+   | kernel tests | 240 |
+   | src-tauri | 25 |
+   | **Total** | **360** |
+
+   The overrun of 229 on 220 is accepted as counted. Nothing is cut or packed to fit.
+7. **How it continues** (item 7). The same worker-high, or a new one on the strongest model with the ruling and the report, on the same branch, `cut/b2-piece-1c-p3b-1`. Its commits are pushed together, under ADV-2026-11-19-10. It reruns the part's focused tests, clippy and fmt at its head, and K-O26's two mutations. Then the pull request and both gates, whose first question stays the lock order.
+8. **Superseded index:**
+   - Amendment 43's K-O4 row mutation, by item 1 (a) here;
+   - the form's D4 sentence, by item 3 (a) here;
+   - Amendment 44 item 3 (a)'s sentence on the seam's tests, by item 4 here;
+   - Amendment 44's ceilings, by item 6 here;
+   - P3b-1's files, which gain `kernel/src/project/store.rs` (comment lines only), by item 3 (b) here.
+   - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
