@@ -1660,7 +1660,13 @@ fn a_save_after_a_reopen_with_no_step_whose_project_record_another_run_left_leav
 /// **K-O19** (R3 (b), under P-2 (i)). After that save, the first step is recorded under a record
 /// of the open's own, and the leftover is unchanged.
 ///
-/// RECORDED MUTATION: `create`'s `create_dir` replaced by `create_dir_all`.
+/// RECORDED MUTATION (Amendment 39, declared after the result was seen; K-O18's mutation, not one
+/// of K-O19's own): item 5 (g)'s arm never taken, so `adopt_project` binds the open with no move
+/// over another run's folder.
+/// Seen failing at kernel/tests/project_reopen.rs:1673: assertion failed:
+/// withheld_unwritable(&saved.expect("saved").history_mark).
+/// The declared mutation, `create`'s `create_dir` replaced by `create_dir_all`, did not fail this
+/// test: under P-2 option (i) the first step never meets an existing folder (Amendment 39 item 1).
 #[test]
 fn the_first_step_after_that_save_meets_no_leftover_folder_and_has_a_record_of_its_own() {
     let rig = rig("k-o19");
