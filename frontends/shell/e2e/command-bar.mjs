@@ -364,6 +364,16 @@ async function readRecordStepRows(page) {
   );
 }
 
+/** One row's step as the suites name it: the request text (console/render.ts prints it with JSON.stringify(request, null, 2)) parsed, its intent reduced to a string. */
+const stepKey = (request) => {
+  try {
+    const { action, params } = JSON.parse(request).intent;
+    return action === "filter.apply" ? `filter:${params.filter?.predicate ?? null}` : `${action}:${params.property}=${JSON.stringify(params.value)}`;
+  } catch { return null; }
+};
+/** The console's ring drops its oldest entries, so a count of rows since the open is not kept: wait until the newest rows end with the tail of the steps committed (as many as were read, in order) and the last row is ok. */
+const waitCommitted = (page, committed) => waitFor(() => readRecordStepRows(page), (r) => { const n = Math.min(r.length, committed.length); return n > 0 && r.at(-1).outcome === "ok" && JSON.stringify(r.slice(-n).map((row) => stepKey(row.request))) === JSON.stringify(committed.slice(-n)); }, 30_000);
+
 /** The Filter section's Clear: every card goes. A step starts from here. */
 async function clearCards(page, consoleHandle) {
   await page.click("button.filter-clear");
@@ -416,12 +426,12 @@ async function stepAnd(page, consoleHandle) {
   const sentA = await sendCondition(page, ZONE_A);
   if (!sentA.cleared) throw new Error(`E-AND: card A was not applied (${JSON.stringify(sentA)})`);
   await expectApplied("E-AND", page, [ZONE_A]);
+  const committed = [`filter:${ZONE_A}`];
   await settleMap(consoleHandle);
   const fractionA = await mapFraction(page);
   if (fractionA >= unfiltered * FRACTION_MARGIN || fractionA <= FRACTION_BLANK) throw new Error(`E-AND: card A's map is ${(fractionA * 100).toFixed(2)}% non-background against ${(unfiltered * 100).toFixed(2)}% unfiltered; expected under ${FRACTION_MARGIN * 100}% of it and not blank`);
-  const settledRows = await waitFor(() => readRecordStepRows(page), (r) => r.every((row) => row.outcome === "ok"), 30_000);
-  if (!settledRows.ok) throw new Error(`E-AND: record_step rows had not all reached ok before card B (${JSON.stringify(settledRows.last?.map((row) => row.outcome))})`);
-  const rowsBefore = settledRows.last.length;
+  const settledRows = await waitCommitted(page, committed);
+  if (!settledRows.ok) throw new Error(`E-AND: the newest record_step rows did not end with card A's step at ok before card B (${JSON.stringify(settledRows.last?.map((row) => [stepKey(row.request), row.outcome]).slice(-3))})`);
   const sentB = await sendCondition(page, ZONE_B);
   if (!sentB.cleared) throw new Error(`E-AND: card B was not applied (${JSON.stringify(sentB)})`);
   const both = await expectApplied("E-AND", page, [ZONE_A, ZONE_B]);
@@ -429,8 +439,9 @@ async function stepAnd(page, consoleHandle) {
   const fractionAB = await mapFraction(page);
   if (fractionAB > FRACTION_BLANK) throw new Error(`E-AND: with A and B on the map is ${(fractionAB * 100).toFixed(2)}% non-background, expected it empty (at most ${FRACTION_BLANK * 100}%)`);
   if (both.cards.applied !== both.expectedApplied || both.cards.on.join() !== "true,true") throw new Error(`E-AND: .filter-active reads ${JSON.stringify(both.cards.applied)} with the cards ${both.cards.on.join()}, expected ${JSON.stringify(both.expectedApplied)} with true,true`);
-  const rows = await waitFor(() => readRecordStepRows(page), (r) => r.length === rowsBefore + 1 && r.every((row) => row.outcome === "ok"), 30_000);
-  if (!rows.ok || !rows.last.at(-1)?.request?.includes(JSON.stringify(ZONE_AB).slice(1, -1))) throw new Error(`E-AND: after card B was added the console holds ${rows.last?.length} record_step rows against ${rowsBefore} + 1, the last carrying the combined text: ${rows.last?.at(-1)?.request?.includes(JSON.stringify(ZONE_AB).slice(1, -1))}`);
+  committed.push(`filter:${ZONE_AB}`);
+  const rows = await waitCommitted(page, committed);
+  if (!rows.ok) throw new Error(`E-AND: after card B was added the newest record_step rows did not end with A's step then the combined text's, the last at ok: ${JSON.stringify(rows.last?.map((row) => [stepKey(row.request), row.outcome]).slice(-3))}`);
   await page.click(".clause-card:nth-child(2) .clause-switch");
   const off = await waitFor(() => readCards(page), (c) => c.on.join() === "true,false" && c.applied === `Applied: ${ZONE_A}`, 30_000);
   if (!off.ok) throw new Error(`E-AND: with B switched off the cards read ${JSON.stringify(off.last)}, expected on true,false and Applied: ${ZONE_A}`);
