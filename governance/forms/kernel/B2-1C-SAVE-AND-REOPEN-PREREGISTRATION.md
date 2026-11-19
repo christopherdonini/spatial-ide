@@ -2915,3 +2915,25 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 40 — P3a-2's K-O19 step, its result, written after the result was seen (class 1): under K-O18's mutation K-O19 fails at the save's mark, an earlier place than Amendment 39 item 2 predicted; one more mutation, K-O19's own, declared before its run; nothing committed
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-14, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-14-k-o19s-result-stands-as-seen-one-more-mutation-k-o19s-own-declared-before-its-run-nothing-committed.md`. It is written after the result was seen. References and hashes only, except item 1's two lines, which are byte-copied from the K-O19 step's report: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-k-o19-step-worker-report.md`.*
+
+1. **The result** (Amendment 39 item 4; ADV-2026-11-19-14 item 1). K-O18's mutation was applied at 270d3ac2c17c6551f7783c1feba1bfc5ad140178 and K-O19 was run alone: cargo rc 101. The two lines, byte-copied from the report:
+   - `thread 'the_first_step_after_that_save_meets_no_leftover_folder_and_has_a_record_of_its_own' (69832) panicked at kernel\tests\project_reopen.rs:1673:5:`
+   - `assertion failed: withheld_unwritable(&saved.expect("saved").history_mark)`
+   The line is the tree at 270d3ac2. The assertion is the first thing K-O19 asserts, right after the save and before its step, and K-O18 asserts the same mark. The revert left the diff empty. The comment above K-O19 at b5c351564dd4798fdd341e783b9d71b0054242e9 names K-O18's mutation and this failure.
+2. **The prediction** (ADV-2026-11-19-14 item 1). Amendment 39 item 2's prediction named a later place than the one seen. The cause is the advisor's (ADV-2026-11-19-14 item 1). So nothing yet shows that K-O19's own assertions can fail. Amendment 39 is not edited.
+3. **One more observation, declared before its run** (ADV-2026-11-19-14 item 2). The mutation is K-O19's own, as that item declares it: in `StepRecorder::adopt_project` (`kernel/src/session_history.rs` on the branch), in the arm of item 5 (g), the open is bound to the project before the refusal is returned.
+   - Predicted for K-O19: the mark assertion passes, and the test fails at its step or at the count of the open's own records.
+   - Predicted for K-O18: it fails at its second save.
+   - The worker applies it, runs K-O19 and K-O18 alone, records each failing line, and reverts with the diff empty. It commits nothing, so PR 337's head stays at b5c35156.
+   - If K-O19 passes, or fails at the mark assertion, it goes to the advisor, and nothing is redeclared.
+4. **The comment above K-O19** (ADV-2026-11-19-14 item 4). It changes once more, in the words commit after the gates, comment lines only. It names item 3's mutation as K-O19's own with the failure seen, keeps K-O18's as seen at the mark, and cites no line number: it names the assertion by its text. The reviewer's gate re-runs item 3's mutation by the round-25 rule and gives the words.
+5. **Not covered, unchanged** (ADV-2026-11-19-14 item 5; Amendment 39 item 3). If item 3's mutation fails K-O19 at its step, the closing may say that the refusal by `create` of a record folder that exists was reached under that mutation, and no more than that.
+6. **The architect's gate** (ADV-2026-11-19-14 item 6). It ran at b5c35156 and handed back before this amendment was written. Its report is filed at `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect.md`. What closes its Evidence finding goes to the advisor.
+
+Read the last amendment first.
+
+Nothing above is edited.
