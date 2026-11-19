@@ -3675,3 +3675,35 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 48 — P3b-1's closing, before PR 339's merge request: the fix commit, the gates, the counts, the runs, E-SAVE at the head, CI, main since the merge base, and the notes to the advisor
+
+*Written by the custodian, 2026-11-19, before PR 339's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The fix commit** (Amendment 47 items 4, 5 and 8). H = 4b8d67023461320c44f5ef70631d5057133eab6d, the one commit after 70335c37eacc479347f811f6332ab197c3cec593, by the worker on the standard model: its report is `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-1-a47-worker-report.md`. It applies Amendment 47 item 4's change and the five fences of ADV-2026-11-19-29 (4 (b), then 5 (a) to (d)) by its script from the filed ruling, each old text found once. The script's first run applied item 4 and stopped on a locate bug of its own; the rerun applied the four texts (the report says so).
+
+2. **The gates.**
+   - Attempt 1, at 70335c37, both PASS WITH NOTES: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3b-1-gate-architect.md` and `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3b-1-gate-reviewer.md` (gate-log 795 and 796), ruled by ADV-2026-11-19-29.
+   - Attempt 2, the reviewer alone at H (Amendment 47 item 8): PASS WITH NOTES, no correctness or documentation finding, and no clause of the four texts untrue: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3b-1-gate-reviewer-attempt-2.md` (gate-log 797). The architect was not asked again.
+
+3. **The counts** (Amendment 47 item 6). By section 2.11's command over 99cceff7...4b8d6702, both columns, the worker's and the reviewer's equal: kernel product 92 of 100, kernel tests 234 of 240, src-tauri 31 of 40; 357 of 380. No ceiling is passed. The lock files are unchanged.
+
+4. **Runs at H** (Amendment 47 item 7).
+   - The src-tauri tests: rc 0, 76 and 2 passed (the worker's; the reviewer reused them).
+   - Clippy in src-tauri: rc 0, the three standing warnings, none in a changed hunk (the worker's; the reviewer reproduced it in a hold).
+   - fmt: rc 0 in src-tauri and at the root (both ran it).
+   - Every changed line under the kernel after 70335c37 is a comment line (0 others, both counted), so the kernel's earlier runs stand.
+
+5. **E-SAVE at H** (Amendment 47 item 7): one run on port 5400, rc 0, all twelve steps PASS, from 2026-11-19T18:52:18Z to 18:52:53Z by its log. The debug exe was 91578880 bytes, sha256 2dd2a1b21def166e29a988ad4549a55eef2dcebf48e1d62d8fbf05eaf9b1e3fc. The Sonnet tester's report is `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-1-e-save-series-tester-report.md`; it handed back once mid-build and was resumed by message, and its report covers the whole run. The early read at 70335c37 also passed every step (the ledger's 1119am entry). It is not this part's run and is not filed as a series report (ADV-2026-11-16-06: one series report per PR).
+
+6. **CI at H**: 12 runs, all success, read at 2026-11-19T19:00:24Z.
+
+7. **Main since the merge base** (ADV-2026-11-14-21 item 6 (a)). The merge base is d3522d779b18059f7c788bc2126ceb82e2626db7. None of the PR's seven paths changed on main after it, so the branch takes nothing from main.
+
+8. **To the advisor, with the merge request** (Amendment 47 item 8): attempt 2's notes N1 (the refused thread's line goes to stderr alone, not the session log; a packaged build has no console) and N3 (another call of the release can run first, so item 5 (d)'s held-until clause holds of any such call), by reference to its report, unreworded. The reviewer marks neither as an untrue clause. N2 and N4 are notes.
+
+9. **Not covered, at H**: the error branch of Amendment 47 item 4 (its item 4 (c)), and the arm of the open's failure in the save (Amendment 46 item 4, its condition as Amendment 47 item 3 corrects it). Both are still true: attempt 2's question 2, and attempt 1's mutation of the arm.
+
+Read the last amendment first.
+
+Nothing above is edited.
