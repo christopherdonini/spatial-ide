@@ -1,0 +1,7 @@
+{
+  "code": "skp.project_file_unreadable",
+  "message": "project.spatial cannot be read: The system cannot find the file specified. (os error 2)",
+  "fields": {
+    "detail": "The system cannot find the file specified. (os error 2)"
+  }
+}

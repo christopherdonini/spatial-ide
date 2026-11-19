@@ -1,0 +1,8 @@
+{
+  "code": "skp.project_target_unresolvable",
+  "message": "$.datasets[0].resource.locators[0].at: data cannot be resolved",
+  "fields": {
+    "locator": "$.datasets[0].resource.locators[0].at",
+    "segment": "data"
+  }
+}

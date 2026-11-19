@@ -1,0 +1,7 @@
+{
+  "code": "skp.project_open_elsewhere",
+  "message": "spatial://project/0123456789abcdef0123456789abcdef is already open",
+  "fields": {
+    "project": "spatial://project/0123456789abcdef0123456789abcdef"
+  }
+}

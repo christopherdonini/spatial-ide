@@ -1,0 +1,8 @@
+{
+  "code": "skp.project_file_names_another_project",
+  "message": "the folder's project.spatial names another project, spatial://project/fedcba9876543210fedcba9876543210, and was not replaced",
+  "fields": {
+    "project": "spatial://project/0123456789abcdef0123456789abcdef",
+    "found": "spatial://project/fedcba9876543210fedcba9876543210"
+  }
+}

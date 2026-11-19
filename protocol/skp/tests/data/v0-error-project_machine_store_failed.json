@@ -1,0 +1,7 @@
+{
+  "code": "skp.project_machine_store_failed",
+  "message": "this machine's store for the project could not be used: open.lock: Access is denied. (os error 5)",
+  "fields": {
+    "detail": "open.lock: Access is denied. (os error 5)"
+  }
+}

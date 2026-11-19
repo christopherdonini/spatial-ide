@@ -1,0 +1,8 @@
+{
+  "code": "skp.project_machine_record_refused",
+  "message": "folders.json: $ (line 1): a duplicate key `first`",
+  "fields": {
+    "file": "folders.json",
+    "rule": "$ (line 1): a duplicate key `first`"
+  }
+}

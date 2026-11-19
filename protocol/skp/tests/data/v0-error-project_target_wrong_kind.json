@@ -1,0 +1,9 @@
+{
+  "code": "skp.project_target_wrong_kind",
+  "message": "$.datasets[0].resource.locators[0].at: parcels.parquet is not a regular file",
+  "fields": {
+    "locator": "$.datasets[0].resource.locators[0].at",
+    "segment": "parcels.parquet",
+    "expected": "file"
+  }
+}

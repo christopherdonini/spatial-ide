@@ -1,0 +1,8 @@
+{
+  "code": "skp.project_target_through_link",
+  "message": "$.datasets[0].resource.locators[0].at: data is a link",
+  "fields": {
+    "locator": "$.datasets[0].resource.locators[0].at",
+    "segment": "data"
+  }
+}

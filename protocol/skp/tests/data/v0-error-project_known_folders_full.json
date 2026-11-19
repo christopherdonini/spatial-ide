@@ -1,0 +1,8 @@
+{
+  "code": "skp.project_known_folders_full",
+  "message": "spatial://project/0123456789abcdef0123456789abcdef remembers 256 folders, and no more can be added",
+  "fields": {
+    "project": "spatial://project/0123456789abcdef0123456789abcdef",
+    "count": "256"
+  }
+}
