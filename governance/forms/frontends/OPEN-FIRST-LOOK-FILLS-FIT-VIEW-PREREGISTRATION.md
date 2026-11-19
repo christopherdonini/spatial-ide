@@ -552,3 +552,77 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — step S9 stopped on I7: each first look's fill now goes into the console's 256-entry ring, so `command-bar.mjs` E-AND and `project.mjs` STYLE count `record_step` rows the ring has dropped; both suites read the newest rows by their content, declared here (class 9)
+
+*Drafted by the architect (claude-opus-5-5), read only, at main 3d94561d50dc9bebd7f8346cf8d9cdbfeb3634dc and at F = e1fd84957b7ae042a075e7ccc5628a3de5670eb7, for the advisor's ruling; appended by the custodian's script after it. Code is cited by symbol and line at F. Reuse index: the custodian's line, byte-copied, the output of `node tools/reuse.mjs console ring record_step e2e suite rows dropped` in the reuse clone: `No prior art recorded for "console ring record_step e2e suite rows dropped". Research it before planning an implementation.`. It changes no product file, no test of §4 and no prediction of §5.*
+
+1. **The stop.**
+   - S9 at F failed `command-bar.mjs` E-AND and `project.mjs` STYLE twice each, with the same line each time. The reports are `state/consults/2026-11-19-open-first-look-fills-fit-view-s9-series-at-e1fd8495-tester-report.md` and `state/consults/2026-11-19-open-first-look-fills-fit-view-s9-re-runs-at-e1fd8495-tester-report.md`.
+   - At the base, 9a4c58332661b6fd69fb477b1184f0147f38df2b, both suites passed once (`<S>/flbr-1.md`).
+   - These are assertions not in §5's table, so this is I7. I4 is not engaged.
+2. **The cause.**
+   - The block (`candidateArmSession.ts:1490-1505`) plans the cover at every `Completed` first look.
+   - Each tile is minted by `viewportQuery` (`tileViewportStreamManager.ts:955`). Every call is recorded in the console (`skp/client.ts:57`).
+   - The console's ring drops its oldest entry when it holds 256 (`console/recorder.ts:141`, `:284`).
+   - Evidence: in `<S>/fl9-s9-command-bar.session.log` the fills at `:140-252`, `:260-372` and `:379-490` hold 110 tile terminals each; in `<S>/fl9-s9-project.session.log` the fill at `:195-306` holds 110.
+3. **What a user sees.**
+   - After an open, and more after each Apply or Clear, the Console fills with the fill's `viewport_query` rows.
+   - Older rows leave, and the label shows them as dropped (`ConsolePanel.tsx:65-68`).
+   - Steps still reach the session history. No string changes.
+   - §3 did not name this change. KNOWN-LIMITATIONS gains item 67, in the advisor's words (ADV-2026-11-19-06 item 5; class 9, a scope addition), and a node is proposed (item 14, A4-6).
+4. **The fix (class 9, declared here before its code).**
+   - `e2e/command-bar.mjs` `stepAnd` and `e2e/project.mjs` (`readRecordStepRows`, `waitRecorded`, `stepClauses`, `stepStyle`) read each `record_step` row's request and outcome.
+   - After each commit they wait until the rows' requests end with the tail of the steps the suite has committed, in order, and the last row is `ok`.
+   - Ceilings, `git diff --numstat` against F, added plus removed: `command-bar.mjs` 30; `project.mjs` 40.
+   - No other file changes, except the records. §7's table is not edited.
+5. **§5's last row failed for two suites, and is recorded as failed.** The row predicted no change for `command-bar.mjs` and `project.mjs`. At F, E-AND and STYLE failed; CLAUSES passed, and its reading changes with theirs. The row is not rewritten. Three rows are added below it, each marked "found at S9, not predicted", each with the cause of item 2:
+   - `command-bar.mjs` E-AND;
+   - `project.mjs` CLAUSES;
+   - `project.mjs` STYLE.
+6. **§11 item 11 is engaged, and the advisor lifts it for this case (ADV-2026-11-19-06 item 3).** A prediction of §5 failed at S9, and two suites' readings change after that run. The block is lifted on three conditions. The failed prediction is recorded as failed (item 5). The new reading is declared here before its code and keeps the property each step asserted: one row per commit, in order, `ok`. Each of item 7's three mutations is seen to fail. Both gates check all three. A gate that finds the property weakened reports it as a Correctness finding.
+7. **Mutations.** Each is applied by hand on the frontend, its suite is run whole, the failing line is recorded with its commit id, and it is reverted with the porcelain empty. None is committed. A `verify-mutation` run is a check of a mutation's text, not its observation.
+   - **M-A4-1:** delete `App.tsx:1060`. Expect E-AND to fail after B, and CLAUSES to fail.
+   - **M-A4-2:** delete the loop at `App.tsx:2051`. Expect STYLE to fail after the opacity.
+   - **M-A4-3:** enqueue the `App.tsx:1060` step twice. Expect E-AND to fail on the tail.
+8. **The worker's steps** (the Sonnet worker, ADV-2026-11-18-16 item 7 (b)):
+   - (a) Read the real request text of a `record_step` row (`console/render.ts`; `StepIntent` in `skp/types.ts`) before writing any matcher.
+   - (b) Commit item 4's edits as F'.
+   - (c) Run both suites whole at F', each in its own shared hold, with the S9 debug exe and its sha256 checked.
+   - (d) Run item 7's three mutations.
+   - (e) Report each run's lines byte-copied, with the commit ids.
+9. **The custodian's steps:**
+   - commit this amendment after the ruling;
+   - dispatch item 8;
+   - file the report;
+   - give the reviewer `git diff --name-only e1fd8495 F'`;
+   - the closing names F', the two runs and the three mutations by reference.
+10. **The runs at F'.**
+    - Only `command-bar.mjs` and `project.mjs` run. The product and the exe are unchanged, so S9's other results stand at F' by that diff.
+    - Prediction: both exit 0, and each mutation fails as item 7 says.
+    - A failure of E-AND, CLAUSES or STYLE at F' is I7 again. It goes to the advisor, with no second run.
+11. **Budget.** `budget_minutes` goes from 440 to 500, my estimate. §7's table is not edited.
+12. **Superseded index.**
+    - Nothing of §5 is superseded: its last row stands, as a prediction that failed for `command-bar.mjs` and `project.mjs` (item 5).
+    - The S9 series report's "as seen" for those two suites, and the re-runs report's reading of `s9-command-bar-2` as I4: by item 1.
+13. **Packet for the advisor.**
+    - **A4-1, the fix:** Option 1, the two suites (recommended); Option 2 adds `recording.mjs`; Options 3 and 4 are rejected.
+    - **A4-2:** confirm item 6's reading of §11 item 11 (recommended: confirm).
+    - **A4-3, the runs at F':** the two suites only (recommended), or the whole series again.
+    - **A4-4:** base runs of the edited suites: none (recommended; item 7 shows the strength), or one each.
+    - **A4-5:** `console`'s REGRESS' through K7 stays as the custodian classed it. It is not diagnosed here.
+    - **A4-6:** the group that collapses when its first entry is dropped is reached right after an open now. Recommended: a proposed node, not this piece.
+    - **A4-7:** a note on walkthrough rows AA1 and AA2: none (recommended; AA1 stays true by my reading), or a note in the advisor's words.
+14. **The packet, as the advisor ruled it (ADV-2026-11-19-06).** Where an item above says "recommended", this item settles it.
+    - **A4-1:** Option 1. `recording.mjs` is not changed. Not covered: its `waitForRecordedRows` counts the `record_step` rows since the open, and passed at F with one open's fill and one Apply's fill in the ring. The proposed node of A4-6 names it, and the form of the next piece that adds a first look to that suite's path reads it.
+    - **A4-2:** item 6, as it now reads.
+    - **A4-3:** the two suites only, if `git diff --name-only` from F to the merge request's head names only `frontends/shell/e2e/command-bar.mjs`, `frontends/shell/e2e/project.mjs` and `KNOWN-LIMITATIONS.md`. Any other path there comes to the advisor.
+    - **A4-4:** no base runs of the edited suites.
+    - **A4-5:** the `console` suite's one failure through K7 stays as classed (I4; its re-run passed). The reviewer's brief carries one question on it (ADV-2026-11-19-06 item 7).
+    - **A4-6:** one node is proposed, not placed, and not on v0.2's list: the Console's ring against a view load's tile requests. Its summary names three things: the entries before two or three loads are dropped, a recorded step among them; an opened group closes when its first entry is dropped; `recording.mjs` counts rows since the open.
+    - **A4-7:** no note on AA1 or AA2. J1 says "at least one `viewport_query`" and stays true by the advisor's reading.
+    - **The reuse index:** the slot in this amendment's first paragraph takes the custodian's line, byte-copied and marked.
+
+Read the last amendment first.
+
+Nothing above is edited.
