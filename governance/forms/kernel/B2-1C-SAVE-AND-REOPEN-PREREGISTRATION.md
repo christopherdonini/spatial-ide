@@ -3635,3 +3635,43 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 47 — PR 339's gate findings, ruled (ADV-2026-11-19-29): the thread's start by a builder, four doc texts, two clauses of Amendment 46 corrected by reference, the ceilings restated, and E-SAVE repeated
+
+*Written by the custodian from ADV-2026-11-19-29's items, on main before the worker's commit. References only. Nothing below is a quotation. Every text the worker copies is in the ruling's own fences, and the worker copies it from the filed ruling byte for byte, never from this amendment.*
+
+1. **The ruling.** ADV-2026-11-19-29, the advisor's under the human's delegation of 2026-11-13, filed under `state/directives/` in the same commit as this amendment. It rules PR 339's two first-attempt gates at 70335c37: both PASS WITH NOTES, nothing blocking; the gates are right on the architect's D-1, D-2 and D-3.
+
+2. **D-1, corrected by reference, class 3** (ruling item 2). Amendment 46 item 2 (d)'s clause naming P4's suites as the first to run the hand-off is superseded by ruling item 2: the existing suites that close a dataset already run it, none asserts its effect, and P4's E-SECOND and E-CRASH-UNLOCK are the first to assert it. Amendment 46 stays unedited.
+
+3. **D-2, corrected the same way, class 3** (ruling item 3). Amendment 46 item 4's condition for reaching the arm `SaveFailure::Open(e) => e` is superseded by ruling item 3: a close or a session end between the command's own checks and the check under the `saved` mutex reaches it, with no release needed, and that time is not always short. The arm stays not covered.
+
+4. **The thread's start, changed in this part** (ruling item 4).
+   - (a) `close_dataset` starts the release thread with a builder that returns an error where a plain spawn panics. On an error the command logs the error alone, as the emitter thread in the shell's `lib.rs` logs its own, and goes on. The close's result is unchanged.
+   - (b) The logged line is the one in ruling item 4 (b)'s fence, with the error after it.
+   - (c) Not covered, by name: the error branch.
+
+5. **Doc words** (ruling item 5): its four fences, (a) to (d), each replacing the text the item names on the branch: the module doc's parenthesis in `commands.rs`; the paragraph of `close_dataset`'s doc; the D4 sentence in the `save_project` binding's doc; and the tail of `release_ended`'s doc in `kernel/src/project/mod.rs`. The worker applies them by script, wraps lines at the file's width and changes no other word.
+
+6. **Ceilings** (ruling item 6), in both numstat columns from the part's base, by section 2.11's command: kernel product 100, kernel tests 240, src-tauri 40; 380 in all. The src-tauri overrun at the first attempt, 27 on 25, is accepted as counted, class 8. Nothing is cut or packed to fit.
+
+7. **Runs** (ruling item 7).
+   - The kernel's runs, the worker's and the first-attempt reviewer's, stand where git shows that every line under `kernel/` changed after them is a comment line.
+   - At the new head: the src-tauri tests, clippy and fmt.
+   - E-SAVE is repeated at the new head, because item 4 changes code. The run at 70335c37 passed every step with rc 0; it is an early read, not this part's run.
+
+8. **How it closes** (ruling item 8).
+   - A worker on the standard model applies item 4 and item 5's four texts.
+   - The reviewer alone reads the changed lines in a short second attempt: item 4's code, and each clause of item 5's texts against the code. The architect is not asked again.
+   - An untrue clause goes to the advisor, unreworded.
+   - Then the merge request, with the two first-attempt reports, the second attempt's, and E-SAVE's result at the head.
+
+9. **Noticed, not this part's** (ruling item 5 (a)). The sentence of `commands.rs`'s module doc that the parenthesis sits in was already untrue on main for the `binding_publish_*` commands. It is listed for a later docs correction.
+
+10. **For P3b-2's form** (ruling item 9): `open_project`'s binding off the main thread (ADV-2026-11-19-28 item 2 (e)); P4's E-SECOND polls for the lock after a close; `open_project` pushes its entry after `open_under`.
+
+**Superseded by this amendment:** Amendment 46 item 2 (d)'s first-to-run clause (item 2 here); Amendment 46 item 4's condition (item 3 here); Amendment 46 item 6's ceilings (item 6 here).
+
+Read the last amendment first.
+
+Nothing above is edited.
