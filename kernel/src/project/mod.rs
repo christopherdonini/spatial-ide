@@ -1155,7 +1155,7 @@ mod tests {
                     file: "folders.json",
                     rule: "a rule".to_string(),
                 }),
-                "skp.project_file_refused",
+                "skp.project_machine_record_refused",
             ),
         ];
         for (failure, code) in cases {
@@ -1181,7 +1181,7 @@ mod tests {
             file: "folders.json",
             rule: "a rule".to_string(),
         }));
-        assert_eq!(refused.fields["path"], "folders.json");
+        assert_eq!(refused.fields["file"], "folders.json");
         assert_eq!(refused.fields["rule"], "a rule");
         let holds = skp_error_of(SaveFailure::FolderHoldsProject(PathBuf::from("C:/p")));
         assert_eq!(holds.fields["folder"], "C:/p");
