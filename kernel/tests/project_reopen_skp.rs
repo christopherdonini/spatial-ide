@@ -130,12 +130,14 @@ impl Rig {
         self.projects.save_project(req).expect("saved").project
     }
 
-    /// F1 written at `data`, opened, saved with no filter and closed: the identity.
+    /// F1 written at `data`, opened, saved with no filter and closed, and the save's lock released
+    /// as the shell's `close_dataset` releases it: the identity.
     fn saved(&self, data: &Path) -> String {
         write_f1(data);
         let handle = self.open(data);
         let project = self.save(&handle, workspace(json!([]), Value::Null));
         self.close(&handle);
+        self.projects.release_ended();
         project
     }
 
@@ -476,12 +478,13 @@ fn each_reopen_refusal_reaches_the_wire_as_its_code_with_no_path_it_was_not_give
         ("256", &project)
     );
 
-    let digits = format!("\"version\":1{},", "0".repeat(99_999));
-    let word = format!("\"format\":\"{}\"", "x".repeat(4_096));
+    // The file as the writer lays it out: one member a line, `": "` between a key and its value.
+    let digits = format!("\"version\": 1{},", "0".repeat(99_999));
+    let word = format!("\"format\": \"{}\"", "x".repeat(4_096));
     let edits = [
-        ("number", "\"version\":1,", digits.as_str()),
-        ("key", "{", "{\"\\u0001\":1,"),
-        ("word", "\"format\":\"spatial-project\"", word.as_str()),
+        ("number", "\"version\": 1,", digits.as_str()),
+        ("key", "{\n", "{\n  \"\\u0001\": 1,\n"),
+        ("word", "\"format\": \"spatial-project\"", word.as_str()),
     ];
     for (name, from, to) in edits {
         let (rig, _) = case(name);
@@ -620,8 +623,8 @@ fn a_copy_answer_whose_data_is_not_found_writes_nothing_and_its_second_call_keep
 fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_control_character() {
     let a = rig("w-7a");
     a.inside();
-    let identifier = format!("\"identifier\":\"\\u0001{}\"", "E".repeat(4_095));
-    a.edit("\"identifier\":\"EPSG:2056\"", &identifier);
+    let identifier = format!("\"identifier\": \"\\u0001{}\"", "E".repeat(4_095));
+    a.edit("\"identifier\": \"EPSG:2056\"", &identifier);
     let reply = a.reopen(&a.folder, Value::Null, None).expect("opened");
     let view = &reply["opened"]["view"];
     assert_eq!(view["state"], "saved-in-another-space", "{reply}");
