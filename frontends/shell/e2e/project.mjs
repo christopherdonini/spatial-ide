@@ -180,19 +180,27 @@ async function readRecordStepRows(page) {
   return page.evaluate(() =>
     [...document.querySelectorAll(".console-entry-class-a")]
       .filter((el) => el.querySelector(".console-entry-header")?.textContent === "record_step")
-      .map((el) => el.querySelector(".console-outcome")?.textContent ?? null)
+      .map((el) => ({ request: el.querySelector(".console-request-text")?.textContent ?? null, outcome: el.querySelector(".console-outcome")?.textContent ?? null }))
   );
 }
 
-/** Waits until at least `atLeast` rows exist and every one has reached `ok` (the kernel replied, after its flush). */
-async function waitRecorded(page, atLeast, what) {
-  const outcomes = await waitFor(
-    `at least ${atLeast} record_step rows, all ok (${what})`,
+/** One row's step as the suites name it: the request text (console/render.ts prints it with JSON.stringify(request, null, 2)) parsed, its intent reduced to a string. */
+const stepKey = (request) => {
+  try {
+    const { action, params } = JSON.parse(request).intent;
+    return action === "filter.apply" ? `filter:${params.filter?.predicate ?? null}` : `${action}:${params.property}=${JSON.stringify(params.value)}`;
+  } catch { return null; }
+};
+
+/** The console's ring drops its oldest entries, so a count of rows since the open is not kept: waits until the newest rows end with the tail of `committed` (the steps this suite has made, in order; as many as were read) and the last row has reached `ok` (the kernel replied, after its flush). */
+async function waitRecorded(page, committed, step, what) {
+  committed.push(step);
+  await waitFor(
+    `the newest record_step rows to end with ${JSON.stringify(committed.slice(-3))}, the last ok (${what})`,
     () => readRecordStepRows(page),
-    (rows) => rows.length >= atLeast && rows.every((outcome) => outcome === "ok"),
+    (rows) => { const n = Math.min(rows.length, committed.length); return n > 0 && rows.at(-1).outcome === "ok" && JSON.stringify(rows.slice(-n).map((row) => stepKey(row.request))) === JSON.stringify(committed.slice(-n)); },
     30_000
   );
-  return outcomes.length;
 }
 
 async function stepOpen(page, consoleHandle) {
@@ -219,18 +227,20 @@ async function stepClauses(page, consoleHandle, ctx) {
   await page.fill("input.filter-predicate", CLAUSE_A);
   await page.click("button.filter-apply");
   await expectCards(page, [CLAUSE_A], ["true"], CLAUSE_A);
-  let rows = await waitRecorded(page, 1, "after clause A");
+  const committed = [];
+  await waitRecorded(page, committed, `filter:${CLAUSE_A}`, "after clause A");
   await sendCondition(page, CLAUSE_C);
   await expectCards(page, [CLAUSE_A, CLAUSE_C], ["true", "true"], `(${CLAUSE_A}) AND (${CLAUSE_C})`);
-  rows = await waitRecorded(page, rows + 1, "after clause C");
+  await waitRecorded(page, committed, `filter:(${CLAUSE_A}) AND (${CLAUSE_C})`, "after clause C");
   await page.click(".clause-card:nth-child(2) .clause-switch");
   await expectCards(page, [CLAUSE_A, CLAUSE_C], ["true", "false"], CLAUSE_A);
-  rows = await waitRecorded(page, rows, "after clause C was switched off");
+  await waitRecorded(page, committed, `filter:${CLAUSE_A}`, "after clause C was switched off");
   await sendCondition(page, CLAUSE_B);
   await expectCards(page, [CLAUSE_A, CLAUSE_C, CLAUSE_B], ["true", "false", "true"], FILTER_AB);
-  ctx.rows = await waitRecorded(page, rows + 1, "after clause B");
+  await waitRecorded(page, committed, `filter:${FILTER_AB}`, "after clause B");
+  ctx.committed = committed;
   await settle(consoleHandle, "after the clauses");
-  return `three clauses, the second off; the Filter section reads Applied: ${FILTER_AB}; ${ctx.rows} record_step rows reached ok`;
+  return `three clauses, the second off; the Filter section reads Applied: ${FILTER_AB}; their ${committed.length} record_step rows reached ok`;
 }
 
 async function stepStyle(page, consoleHandle, ctx) {
@@ -240,9 +250,9 @@ async function stepStyle(page, consoleHandle, ctx) {
   await waitFor("the style controls (.style-fill-opacity)", () => page.evaluate(() => document.querySelector(".style-fill-opacity") !== null), (present) => present, 5_000);
   await page.fill("input.style-fill-opacity", SET_OPACITY);
   ctx.appliedOpacity = await page.$eval("input.style-fill-opacity", (el) => Number(el.value));
-  await waitRecorded(page, ctx.rows + 1, "after the opacity");
+  await waitRecorded(page, ctx.committed, `style.set:fillOpacity=${JSON.stringify(ctx.appliedOpacity)}`, "after the opacity");
   await page.fill("input.style-fill-color", SET_COLOUR);
-  await waitRecorded(page, ctx.rows + 2, "after the colour");
+  await waitRecorded(page, ctx.committed, `style.set:fillColor=${JSON.stringify(SET_COLOUR)}`, "after the colour");
   await settle(consoleHandle, "after the style");
   return `opacity ${SET_OPACITY} and colour ${SET_COLOUR} committed; their record_step rows reached ok`;
 }

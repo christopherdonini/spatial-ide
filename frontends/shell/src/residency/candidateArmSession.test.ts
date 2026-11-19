@@ -53,6 +53,8 @@ import { INITIAL_TILE_KEY, bboxesIntersect, startCandidateArmSession } from "./c
 import { REAL_SOURCE_CHANGED_TERMINAL_DETAIL } from "../testUtils/terminalShapes";
 import { nextResidencyStatus, residencyStatusText } from "./residencyStatus";
 import type { ResidencyStatus, ResidencyStatusEvent } from "./residencyStatus";
+import { tileKeyToString, tilesCoveringBbox } from "../canvas/tileGrid";
+import type { Filter } from "../skp/types";
 
 /** `skp/0.4`, crs-unit-fact-and-bounds, §4 item 10: the shared Rust/TypeScript wire fixture --
  * `deny_unknown_fields`-verified on the Rust side (`protocol/skp/tests/fixtures.rs`), read here by
@@ -3777,4 +3779,303 @@ describe("candidate arm: a source-changed terminal clears every resident tile (b
     sink.onBatch(new Uint8Array([1, 2, 3]), true);
     expect(canvas.pushTileBatch).not.toHaveBeenCalled();
   });
+});
+
+// open-first-look-fills-fit-view, `governance/forms/frontends/OPEN-FIRST-LOOK-FILLS-FIT-VIEW-PREREGISTRATION.md` §4: after a first
+// look that ends Completed with no plan this generation, the session plans the box the canvas shows (`shownViewportBbox`) from that
+// terminal. Committed at the form's step S3, before the change; the form's §5 names what each test does at the base.
+describe("the first look plans its shown view at its Completed terminal (open-first-look-fills-fit-view)", () => {
+  beforeEach(() => {
+    cancelMock.mockReset().mockResolvedValue({ state: "requested" });
+    dataPlaneAttachMock.mockReset().mockResolvedValue({ url: "ws://127.0.0.1:1/stream", subprotocols: ["spatial-dp.v0", "tok.x"] });
+    startStreamMock.mockReset().mockReturnValue({ cancel: vi.fn(), stats: { reassemblyCopies: 0, jsonFramesSeen: 0 } });
+  });
+
+  // A first look whose batches union to {0,0,0,0} freezes a frame with origin (-1, -1) and 0.125-wide cells at the default level
+  // (this file's "Item B" block). SHOWN_BOX covers two cells, both issued at once (MAX_IN_FLIGHT_TILE_STREAMS is 3);
+  // PENDING_BOX covers one other cell.
+  const SHOWN_BOX: AuthoritativeBbox = { xmin: -0.99, ymin: -0.99, xmax: -0.8, ymax: -0.9 };
+  const PENDING_BOX: AuthoritativeBbox = { xmin: -0.5, ymin: -0.5, xmax: -0.45, ymax: -0.45 };
+  const FEATURES = 7;
+  const COMPLETED: Parameters<StreamSink["onTerminal"]>[0] = { kind: "Completed", detail: "" };
+  type Session = ReturnType<typeof startCandidateArmSession>;
+
+  /** The untiled look (bbox null) is minted as the next handle of `untiled`, a tile query as the next of `tiles`; past the end of
+   * its list a query never resolves. */
+  function routeQueries(untiled: string[], tiles: string[] = []): void {
+    viewportQueryMock.mockReset().mockImplementation((_dataset: string, bbox: unknown) => {
+      const stream = bbox === null ? untiled.shift() : tiles.shift();
+      return stream === undefined ? new Promise(() => {}) : Promise.resolve({ stream });
+    });
+  }
+  function sinkFor(handle: string): StreamSink {
+    const call = startStreamMock.mock.calls.find((c) => c[0].ticketHandle === handle);
+    if (!call) throw new Error(`no stream started for handle ${handle}`);
+    return call[0].sink;
+  }
+  const startedHandles = (): string[] => startStreamMock.mock.calls.map((c) => c[0].ticketHandle);
+  const viewPlannedLines = (): unknown[][] => logSessionEventMock.mock.calls.filter((c) => c[0] === "candidate-first-look-view-planned");
+  const settleMints = async (): Promise<void> => {
+    for (let i = 0; i < 10; i++) await Promise.resolve();
+  };
+  async function underFakeTimers(body: () => Promise<void>): Promise<void> {
+    vi.useFakeTimers();
+    await body().finally(() => vi.useRealTimers());
+  }
+
+  /** The fake of "The seam" (§4): built by `fakeCanvas`, typed against the real `WorkingCanvasHandle`, with no cast. A tile reads
+   * complete once marked complete, until `clearAllTiles`; with `allComplete` every tile reads complete from the start. */
+  function firstLookCanvas(opts: { shown?: AuthoritativeBbox | null; allComplete?: boolean } = {}) {
+    const complete = new Set<string>();
+    const shown = opts.shown === undefined ? SHOWN_BOX : opts.shown;
+    const isComplete = (tileKey: string): boolean => opts.allComplete === true || complete.has(tileKey);
+    const applyTileViewportContext = vi.fn<WorkingCanvasHandle["applyTileViewportContext"]>(() => true);
+    const canvas = fakeCanvas({
+      pushTileBatch: vi.fn(() => ({ ...OK_INGEST, fitAnchor: { xmin: 0, ymin: 0, xmax: 0, ymax: 0 } })),
+      getResidentCounts: vi.fn(() => ({ totalResidentVertices: 10, totalResidentFeatures: FEATURES })),
+      isTileResidentInCandidateSet: vi.fn(isComplete),
+      isTileCompleteInCandidateSet: vi.fn(isComplete),
+      markTileComplete: vi.fn((tileKey: string) => void complete.add(tileKey)),
+      clearAllTiles: vi.fn(() => complete.clear()),
+      applyTileViewportContext,
+      shownViewportBbox: vi.fn((): AuthoritativeBbox | null => shown),
+    });
+    return { canvas, applyTileViewportContext };
+  }
+  function start(canvas: WorkingCanvasHandle, extra: Partial<Parameters<typeof startCandidateArmSession>[0]> = {}): Session {
+    return startCandidateArmSession({ dataset: "ds_x", crsUnit: "metre", canvas, columns: null, ...extra });
+  }
+  /** Issues a first look through `reissueUnrestricted` (the open's seam, and Apply's, Clear's and the Colour-by refill's) and
+   * delivers one batch that carries geometry. */
+  async function openFirstLook(session: Session, handle: string, filter: Filter | null = null): Promise<void> {
+    await session.reissueUnrestricted(null, filter);
+    sinkFor(handle).onBatch(new Uint8Array([1]), true);
+  }
+  /** A session on `firstLookCanvas(opts)` whose first look, minted as `untiled[0]`, has delivered one batch; tile queries mint as
+   * sh_t1, then sh_t2. */
+  async function opened(opts: Parameters<typeof firstLookCanvas>[0] = {}, extra: Parameters<typeof start>[1] = {}, untiled = ["sh_1"]) {
+    const { canvas, applyTileViewportContext } = firstLookCanvas(opts);
+    const session = start(canvas, extra);
+    routeQueries(untiled, ["sh_t1", "sh_t2"]);
+    await openFirstLook(session, untiled[0]);
+    return { session, apply: applyTileViewportContext };
+  }
+  const coverOf = (session: Session, box: AuthoritativeBbox): string[] =>
+    tilesCoveringBbox(session.manager.gridFrame!, session.manager.activeLevel, box).map(tileKeyToString);
+  /** Runs `terminal`, then asserts that nothing planned inside it. */
+  function expectNoPlanAt(apply: ReturnType<typeof firstLookCanvas>["applyTileViewportContext"], terminal: () => void): void {
+    apply.mockClear();
+    viewportQueryMock.mockClear();
+    logSessionEventMock.mockClear();
+    terminal();
+    expect(apply, "no plan reached the canvas").not.toHaveBeenCalled();
+    expect(viewportQueryMock, "no tile was queried").not.toHaveBeenCalled();
+    expect(viewPlannedLines(), "no planned line").toEqual([]);
+  }
+
+  // M-U1 (§4): delete the block. Expected failure: no tile query.
+  it("U-FL1: a first look that ends Completed with no plan plans the box the canvas shows, synchronously in its terminal, with no onViewportChanged and no timer advanced", () =>
+    underFakeTimers(async () => {
+      const { session, apply } = await opened();
+      viewportQueryMock.mockClear();
+      logSessionEventMock.mockClear();
+
+      sinkFor("sh_1").onTerminal(COMPLETED);
+
+      expect(session.manager.gridFrame, "the terminal froze the frame").not.toBeNull();
+      const covering = coverOf(session, SHOWN_BOX);
+      expect(covering).toHaveLength(2);
+      expect(apply, "one plan, in the terminal").toHaveBeenCalledTimes(1);
+      expect(apply.mock.calls[0][0], "of the shown box").toEqual(covering);
+      expect(viewportQueryMock, "one viewport_query per covering tile").toHaveBeenCalledTimes(covering.length);
+      for (const call of viewportQueryMock.mock.calls) {
+        expect(call[1], "a tile's bbox").not.toBeNull();
+        expect(call[3], "a tile query carries no row limit").toBeNull();
+      }
+      expect(viewPlannedLines()).toHaveLength(1);
+    }));
+
+  // M-U2 (§4): drop term (vii); the (a) case before the mint fails. M-U2g: drop term (iv); (g) fails, with two status emits.
+  const U_FL2_CASES: Array<{ name: string; run: () => Promise<void> }> = [
+    {
+      name: "U-FL2 (a): no plan at the terminal when relinquishFill() ran while the frameless look streamed",
+      run: async () => {
+        const { session, apply } = await opened();
+        session.relinquishFill();
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal(COMPLETED));
+      },
+    },
+    {
+      name: "U-FL2 (a): no plan at the terminal when relinquishFill() ran after the look was issued and before its ticket was minted",
+      run: async () => {
+        const { canvas, applyTileViewportContext } = firstLookCanvas();
+        const session = start(canvas);
+        routeQueries([]);
+        let mint: (ticket: { stream: string }) => void = () => {};
+        viewportQueryMock.mockImplementationOnce(() => new Promise((resolve) => (mint = resolve)));
+        const issued = session.reissueUnrestricted(null, null);
+        session.relinquishFill();
+        mint({ stream: "sh_1" });
+        await issued;
+        sinkFor("sh_1").onBatch(new Uint8Array([1]), true);
+        expectNoPlanAt(applyTileViewportContext, () => sinkFor("sh_1").onTerminal(COMPLETED));
+      },
+    },
+    {
+      name: "U-FL2 (b): no plan at the terminal when stop() ran first",
+      run: async () => {
+        const { session, apply } = await opened();
+        await session.stop();
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal(COMPLETED));
+      },
+    },
+    {
+      name: "U-FL2 (c): no plan at a terminal that is not Completed, and S1's emission is unchanged",
+      run: async () => {
+        const onResidencyStatusChange = vi.fn<(event: ResidencyStatusEvent) => void>();
+        const { apply } = await opened({}, { onResidencyStatusChange });
+        onResidencyStatusChange.mockClear();
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal({ kind: "ProducerFailed", detail: "engine.stream_failed" }));
+        expect(onResidencyStatusChange.mock.calls, "S1's sentence, alone").toEqual([
+          [{ kind: "candidate-within-budget", residentFeatureCount: FEATURES, settled: "partial-failure" }],
+        ]);
+      },
+    },
+    {
+      name: "U-FL2 (d): no plan at an orphan's terminal, arriving after reissueUnrestricted minted the next look",
+      run: async () => {
+        const { session, apply } = await opened({}, {}, ["sh_1", "sh_2", "sh_3"]);
+        sinkFor("sh_1").onTerminal(COMPLETED); // the frame now exists, and survives every reissue
+        await openFirstLook(session, "sh_2");
+        await session.reissueUnrestricted(null, null); // sh_3 is the current look; sh_2 is orphaned
+        expectNoPlanAt(apply, () => sinkFor("sh_2").onTerminal(COMPLETED));
+      },
+    },
+    {
+      name: "U-FL2 (e): no plan at the terminal when the canvas's shown box is null",
+      run: async () => {
+        const { apply } = await opened({ shown: null });
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal(COMPLETED));
+      },
+    },
+    {
+      name: "U-FL2 (f): with a change pending at the terminal, exactly one plan runs in total, of the pending box, after the debounce",
+      run: async () => {
+        const { session, apply } = await opened();
+        session.onViewportChanged(PENDING_BOX); // before the frame: accepted for the debounce
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal(COMPLETED));
+        await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+        expect(apply, "one plan in total").toHaveBeenCalledTimes(1);
+        expect(apply.mock.calls[0][0], "of the pending box").toEqual(coverOf(session, PENDING_BOX));
+      },
+    },
+    {
+      name: "U-FL2 (g): no plan at the terminal when a plan already ran this generation; S1's emitResidencyStatus runs and this block does not",
+      run: async () => {
+        const onResidencyStatusChange = vi.fn<(event: ResidencyStatusEvent) => void>();
+        const { session, apply } = await opened({ allComplete: true }, { onResidencyStatusChange }, ["sh_1", "sh_2"]);
+        sinkFor("sh_1").onTerminal(COMPLETED);
+        await openFirstLook(session, "sh_2"); // the frame survives the reissue, so a pan plans while this look runs
+        session.onViewportChanged(SHOWN_BOX);
+        await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+        expect(apply, "the pan planned during the look").toHaveBeenCalled();
+        onResidencyStatusChange.mockClear();
+        expectNoPlanAt(apply, () => sinkFor("sh_2").onTerminal(COMPLETED));
+        expect(onResidencyStatusChange.mock.calls, "one status emit, S1's").toEqual([
+          [{ kind: "candidate-within-budget", residentFeatureCount: FEATURES, settled: "complete" }],
+        ]);
+      },
+    },
+    {
+      name: "U-FL2 (h): no plan when the session ended: the look's own terminal says the source changed",
+      run: async () => {
+        const { apply } = await opened();
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal({ kind: "ProducerFailed", detail: REAL_SOURCE_CHANGED_TERMINAL_DETAIL }));
+      },
+    },
+    {
+      name: "U-FL2 (h): no plan at the look's Completed terminal when the session ended by another route first",
+      run: async () => {
+        const { session, apply } = await opened();
+        session.manager.notifySessionEnded(REAL_SOURCE_CHANGED_TERMINAL_DETAIL);
+        expectNoPlanAt(apply, () => sinkFor("sh_1").onTerminal(COMPLETED));
+      },
+    },
+  ];
+  for (const testCase of U_FL2_CASES) it(testCase.name, () => underFakeTimers(testCase.run));
+
+  // M-U3 (§4): call `manager.onCameraChange` directly in place of `handleViewportChange`. Expected failure: no settled status.
+  it("U-FL3: when every covering stream of that plan completes, the status settles complete-in-view and residencyStatusText renders that sentence", () =>
+    underFakeTimers(async () => {
+      const onResidencyStatusChange = vi.fn<(event: ResidencyStatusEvent) => void>();
+      await opened({}, { onResidencyStatusChange });
+      sinkFor("sh_1").onTerminal(COMPLETED);
+      await settleMints();
+      expect(startedHandles(), "the terminal's plan started both covering streams").toEqual(["sh_1", "sh_t1", "sh_t2"]);
+
+      sinkFor("sh_t1").onBatch(new Uint8Array([2]), true);
+      sinkFor("sh_t1").onTerminal(COMPLETED);
+      const settledComplete = expect.objectContaining({ settled: "complete" });
+      expect(onResidencyStatusChange, "not settled while a covering tile streams").not.toHaveBeenCalledWith(settledComplete);
+      sinkFor("sh_t2").onBatch(new Uint8Array([3]), true);
+      sinkFor("sh_t2").onTerminal(COMPLETED);
+
+      const events = onResidencyStatusChange.mock.calls.map((c) => c[0]);
+      expect(events.at(-1)).toEqual({ kind: "candidate-within-budget", residentFeatureCount: FEATURES, settled: "complete" });
+      expect(residencyStatusText(reduceEvents(events)!)).toBe(`Showing all ${FEATURES} features in view`);
+    }));
+
+  // M-U1 (§4) fails this test too.
+  it("U-FL5: after a settled plan, reissueUnrestricted(null, f) -- Apply's, Clear's and the Colour-by refill's seam -- ends Completed and one plan of the shown box runs under f", () =>
+    underFakeTimers(async () => {
+      const onResidencyStatusChange = vi.fn<(event: ResidencyStatusEvent) => void>();
+      const { session, apply } = await opened({}, { onResidencyStatusChange });
+      sinkFor("sh_1").onTerminal(COMPLETED);
+      session.onViewportChanged(SHOWN_BOX); // the generation before settles through a pan, at the base as at the head
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS);
+      for (const handle of ["sh_t1", "sh_t2"]) {
+        sinkFor(handle).onBatch(new Uint8Array([2]), true);
+        sinkFor(handle).onTerminal(COMPLETED);
+      }
+      expect(onResidencyStatusChange.mock.calls.at(-1)?.[0], "the plan before the reissue settled").toEqual({
+        kind: "candidate-within-budget",
+        residentFeatureCount: FEATURES,
+        settled: "complete",
+      });
+
+      const f = { predicate: "zone = 'residential'", dialect: "duckdb-expr/0" };
+      routeQueries(["sh_2"]);
+      await openFirstLook(session, "sh_2", f);
+      apply.mockClear();
+      logSessionEventMock.mockClear();
+      sinkFor("sh_2").onTerminal(COMPLETED);
+      await vi.advanceTimersByTimeAsync(VIEWPORT_QUERY_MIN_INTERVAL_MS); // nothing else plans after it
+
+      const covering = coverOf(session, SHOWN_BOX);
+      expect(apply, "one plan").toHaveBeenCalledTimes(1);
+      expect(apply.mock.calls[0][0], "of the shown box").toEqual(covering);
+      const tileQueries = viewportQueryMock.mock.calls.filter((c) => c[1] !== null);
+      expect(tileQueries).toHaveLength(covering.length);
+      for (const call of tileQueries) expect(call[4], "issued under f").toBe(f);
+      expect(viewPlannedLines()).toHaveLength(1);
+    }));
+
+  // M-U5 (§4): route the block through the debounced accept. Expected failure: a reset at the terminal.
+  it("U-FL6: across that terminal the scan events hold no reset until the last covering tile ends, then exactly one", () =>
+    underFakeTimers(async () => {
+      const applyScanEvent = vi.fn<NonNullable<Parameters<typeof startCandidateArmSession>[0]["applyScanEvent"]>>();
+      await opened({}, { applyScanEvent });
+      expect(applyScanEvent.mock.calls.map((c) => c[0].kind), "the first look made the scan live").toEqual(["issued"]);
+      applyScanEvent.mockClear();
+
+      sinkFor("sh_1").onTerminal(COMPLETED);
+      expect(applyScanEvent, "no reset at the first look's terminal").not.toHaveBeenCalled();
+      await settleMints();
+      sinkFor("sh_t1").onBatch(new Uint8Array([2]), true);
+      sinkFor("sh_t1").onTerminal(COMPLETED);
+      expect(applyScanEvent, "no reset while the last covering tile streams").not.toHaveBeenCalled();
+      sinkFor("sh_t2").onBatch(new Uint8Array([3]), true);
+      sinkFor("sh_t2").onTerminal(COMPLETED);
+      expect(applyScanEvent.mock.calls).toEqual([[{ kind: "reset" }]]);
+    }));
 });
