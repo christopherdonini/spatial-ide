@@ -21,9 +21,10 @@
 //!   the workspace built from its wire form, and each [`SaveFailure`] as its one SKP code.
 //!
 //! Nothing in this module holds a handle in a project folder. [`Projects`] holds one on
-//! `open.lock` in the machine store for each identity it saved first, until it is dropped. The
-//! only files this module writes in a project folder are `project.spatial` and the temporary file
-//! that [`store`]'s atomic replace renames over it.
+//! `open.lock` in the machine store for each identity it saved first or reopened
+//! ([`Projects::open_project`]), until it is dropped. The only files this module writes in a
+//! project folder are `project.spatial` and the temporary file that [`store`]'s atomic replace
+//! renames over it.
 
 pub mod file;
 pub mod resolver;
@@ -112,7 +113,8 @@ impl ProjectUri {
     }
 }
 
-/// Saves projects, and remembers which project each opened dataset was saved to in this run.
+/// Saves and reopens projects, and remembers which project each open of a dataset was saved to or
+/// reopened as in this run.
 pub struct Projects {
     /// The machine store's `projects` folder: `<32 hex>/` for each identity.
     root: PathBuf,
@@ -127,7 +129,8 @@ struct SavedProject {
     folder: PathBuf,
     /// The dataset entry's `logical_uri`, kept so every save of this open writes the same one.
     uri: DatasetUri,
-    /// The identity's open lock, taken by the first save. It is held for as long as this entry is,
+    /// The identity's open lock, taken by the first save or by the reopen
+    /// ([`Projects::open_project`]) that made this entry. It is held for as long as this entry is,
     /// which is until [`Projects`] is dropped.
     _lock: store::ProjectLock,
 }
@@ -228,9 +231,11 @@ impl Projects {
     ///
     /// - **A first save** needs `folder`. It mints the identity (ADR-036 §4), refuses a folder that
     ///   already holds `project.spatial`, and writes `folders.json` with the folder as `first`.
-    /// - **A later save** keeps the identity and goes to the folder the first one used; it ignores
-    ///   `folder`. It refuses to replace a project file that records a kept lineage, and one the
-    ///   reader refuses, since either could hold what a rewrite would lose.
+    /// - **A later save**, of an open this [`Projects`] saved first or reopened
+    ///   ([`Projects::open_project`]), keeps the identity and goes to the folder the first save
+    ///   used or the reopen opened from; it ignores `folder`. It refuses to replace a project file
+    ///   that records a kept lineage, and one the reader refuses, since either could hold what a
+    ///   rewrite would lose.
     /// - **Every save** judges the locators ([`resolver::judge`]), checks the document against the
     ///   reader's rules, and builds `locations.json`, and `folders.json` at a first save, each
     ///   refused where its reader would refuse it. A first save then takes the identity's open
@@ -241,9 +246,10 @@ impl Projects {
     ///   Only then does the history take its moves: the open is bound to the project, which moves
     ///   the open's own record under the project's identity if the open has one, and a `saved-here`
     ///   mark is written in the project's record when the steps reach the workspace. A second open
-    ///   of the same file is another open: its steps never go to the first open's record, and its
-    ///   own first save binds it to a project of its own. A history that cannot take the moves does
-    ///   not undo the save; the result says so.
+    ///   of the same file through `open_dataset` is another open: its steps never go to the first
+    ///   open's record, and its own first save binds it to a project of its own. A reopen
+    ///   ([`Projects::open_project`]) in the run that holds the project's record continues that
+    ///   record. A history that cannot take the moves does not undo the save; the result says so.
     pub fn save(
         &self,
         name: &str,
@@ -414,6 +420,487 @@ impl Projects {
             Err(e) => unwritable(e),
         }
     }
+}
+
+// ---------------------------------------------------------------------------------------------
+// The reopen (§2.4; the form's Amendment 36, items 5 and 7): `Projects::open_project`, its result
+// types, and its private helpers.
+// ---------------------------------------------------------------------------------------------
+
+use crate::dataset_ref::{Locator, RefCheck};
+use crate::session_history::{read_lineage, LineageRead};
+use resolver::{check_inside, CheckRefused};
+use spatial_skp::v0::{
+    CloseDatasetRequest, DatasetHandle, OpenDatasetRequest, SessionRef, SKP_VERSION,
+};
+use store::{locations_to_bytes, read_locations, LockRefused, ProjectLock};
+
+/// A machine store document's read bound (the form's Amendment 36, item 5 (a)).
+const MAX_MACHINE_DOCUMENT_BYTES: u64 = 2_097_152;
+/// The folder's lineage file, `.spatial/lineage.jsonl` (ADR-036 §1), by its two segments.
+const LINEAGE_FILE: [&str; 2] = [".spatial", "lineage.jsonl"];
+/// The previous lineage file, kept in the identity's machine folder (ADR-036 Amendment 1, item 2).
+const PREVIOUS_LINEAGE_FILE: &str = "previous-lineage.jsonl";
+
+/// The answer to the question a reopen asked: given with the next call for the same folder.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum Answer {
+    /// The folder is a copy: it gets a new identity, written into its `project.spatial`, and
+    /// machine store files of its own.
+    Copy,
+    /// The folder holds the same project: it is remembered in the identity's `folders.json`.
+    Same,
+}
+
+/// What a reopen replies when it is not refused.
+#[derive(Debug)]
+pub enum Reopen {
+    Opened(Box<Opened>),
+    /// The folder is not known for the identity, and the first folder still holds this identity
+    /// or cannot be read: nothing was written, and the caller asks and calls again with an answer.
+    Question,
+    /// No file was found for the dataset through the machine store, and the caller may re-link it.
+    /// `file_name` is the last name of the recorded path that is missing; `None` when no location
+    /// is recorded for the dataset.
+    NotFound {
+        file_name: Option<String>,
+    },
+}
+
+/// A reopened project.
+#[derive(Debug)]
+pub struct Opened {
+    /// The identity it is open under: a new one after the answer `copy`.
+    pub project: ProjectUri,
+    pub dataset: DatasetHandle,
+    pub session: SessionRef,
+    /// The workspace as the project file holds it, its view included; [`Opened::view`] says
+    /// whether the view applies.
+    pub workspace: Workspace,
+    pub view: ViewState,
+    /// The project file's reference against the reopened dataset ([`DatasetRef::check`]).
+    pub check: RefCheck,
+    pub lineage: LineageRead,
+}
+
+/// Whether the saved view applies to the reopened dataset (V3).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub enum ViewState {
+    /// The saved view's space equals the space the dataset was admitted in, in all three members.
+    Applies,
+    /// It does not: `basis` names both spaces.
+    SavedInAnotherSpace { basis: String },
+}
+
+/// Why a reopen was refused. Each variant states a fact about what was found. After any of them
+/// the reopen holds no lock, and the catalog holds no dataset the reopen opened.
+#[derive(Debug)]
+pub enum OpenFailure {
+    /// The host refused the cancel key, or the engine refused the open: the host's error.
+    Open(SkpError),
+    /// The cancel key was cancelled before the reopen ended.
+    Cancelled,
+    /// The folder's `project.spatial` could not be read.
+    ProjectFileUnreadable(std::io::Error),
+    /// `project.spatial` breaks a rule the reader holds, or the copy's file would.
+    FileRefused(ProjectFileRefused),
+    /// `folders.json` or `locations.json` was refused by its reader, or a document by its writer;
+    /// the file named is not rewritten.
+    MachineRecordRefused(MachineRecordRefused),
+    /// The answer `same` would take the identity past [`store::MAX_KNOWN_FOLDERS`] folders; `count`
+    /// is how many it remembers.
+    KnownFoldersFull { project: ProjectUri, count: usize },
+    /// The identity's open lock is held, in this process or in another.
+    OpenElsewhere(ProjectUri),
+    /// A machine store file could not be read, written or locked.
+    MachineStore {
+        what: &'static str,
+        source: std::io::Error,
+    },
+    /// The project folder could not be resolved at the data step.
+    FolderUnresolvable(PathBuf),
+    /// The `project-relative` locator's target was refused by [`resolver::check_inside`];
+    /// `locator` is the locator's JSON path in the project file.
+    TargetRefused {
+        locator: String,
+        refused: CheckRefused,
+    },
+    /// The copy's `project.spatial` could not be written.
+    ProjectFileUnwritable(SaveError),
+    /// The checked path is not valid Unicode, so it cannot be given to the engine.
+    PathNotUnicode(PathBuf),
+}
+
+impl fmt::Display for OpenFailure {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Open(e) => write!(f, "{}", e.message),
+            Self::Cancelled => write!(f, "the reopen was cancelled"),
+            Self::ProjectFileUnreadable(e) => write!(f, "{PROJECT_FILE_NAME} cannot be read: {e}"),
+            Self::FileRefused(e) => write!(f, "{e}"),
+            Self::MachineRecordRefused(e) => write!(f, "{e}"),
+            Self::KnownFoldersFull { project, count } => write!(
+                f,
+                "{} remembers {count} folders, and no more can be added",
+                project.as_str()
+            ),
+            Self::OpenElsewhere(p) => write!(f, "{} is open elsewhere", p.as_str()),
+            Self::MachineStore { what, source } => write!(f, "{what}: {source}"),
+            Self::FolderUnresolvable(p) => write!(f, "{} cannot be resolved", p.display()),
+            Self::TargetRefused { locator, refused } => {
+                let (segment, fact) = match refused {
+                    CheckRefused::NotCanonical(_) => return write!(f, "{locator}: not canonical"),
+                    CheckRefused::FolderUnresolvable => {
+                        return write!(f, "{locator}: the folder cannot be resolved")
+                    }
+                    CheckRefused::ThroughLink { segment } => (segment, "is a link"),
+                    CheckRefused::Unresolvable { segment } => (segment, "cannot be resolved"),
+                    CheckRefused::NotADirectory { segment } => (segment, "is not a folder"),
+                    CheckRefused::NotARegularFile { segment } => (segment, "is not a regular file"),
+                };
+                write!(f, "{locator}: {segment} {fact}")
+            }
+            Self::ProjectFileUnwritable(e) => write!(f, "{e}"),
+            Self::PathNotUnicode(p) => write!(f, "{} is not a Unicode path", p.display()),
+        }
+    }
+}
+
+impl std::error::Error for OpenFailure {}
+
+/// Where step 2 leaves the identity and `folders.json`.
+enum Place {
+    /// The folder is known: nothing is written.
+    Known,
+    /// `folders.json` is replaced by this list: after a move, the answer `same`, or none there.
+    Remember(KnownFolders),
+    /// The answer `copy`: this new identity.
+    Copy(ProjectUri),
+}
+
+/// What the data step found.
+enum Data {
+    At(PathBuf),
+    NotFound(Option<String>),
+}
+
+impl Projects {
+    /// `open_project` (§2.4): reopen the project saved in `folder`, under `cancel_key`. In order:
+    ///
+    /// 1. `cancel_key` is registered with the host's opens, so that `cancel` reaches this call
+    ///    from here until it returns; the token is checked after each step that reads.
+    ///    `project.spatial` is read up to its ceiling and one byte, and parsed by the strict
+    ///    reader.
+    /// 2. The identity and the folder, with nothing written. The folder is known when its
+    ///    canonical form equals that of an entry of `folders.json`; an entry that does not resolve
+    ///    is compared as written with the folder's absolute form. Otherwise the first folder is
+    ///    looked at: gone, not a folder, holding no `project.spatial` or holding another project's
+    ///    is a move; holding this identity, or a file or folder that cannot be read or a file the
+    ///    reader refuses, asks. With no `answer` the question is the reply. With no `folders.json`
+    ///    the folder is remembered as `first`. `answer` is read only when the question is asked.
+    ///    Then a `relink` is checked by `locations.json`'s writer and refused by name when the
+    ///    writer would refuse it; its bytes are kept for step 6.
+    /// 3. The identity's open lock, the new identity's after the answer `copy`; then this step's
+    ///    writes: `folders.json`, and for a copy its `project.spatial` with the new identity.
+    /// 4. The lineage (step 6 of §2.4, run here): [`read_lineage`] of the folder's
+    ///    `.spatial/lineage.jsonl` and of `previous-lineage.jsonl` in the machine folder of the
+    ///    identity the project file names.
+    /// 5. The data. A `relink`, checked at step 2, is used first. Otherwise a `project-relative`
+    ///    locator goes through
+    ///    [`resolver::check_inside`], and the engine is given the path it returns. Otherwise the
+    ///    machine store's location for the dataset is used; none recorded, or a recorded path
+    ///    that is missing, replies `not_found`. The open is the host's, under the token of step 1
+    ///    and with the claims the project file recorded.
+    /// 6. The check and the view's state; after a `relink` or a copy, `locations.json` with the
+    ///    path opened (a write refused or failed closes the dataset); the open given the project
+    ///    file's dataset identity in the history ([`StepRecorder`]); and the open entered with its
+    ///    lock in this [`Projects`], so that its next save keeps both identities and its folder.
+    ///
+    /// Every refusal after step 3 frees the lock before it is returned. The resolver's check is
+    /// claimed, not what the engine reads after it (§2.5's window).
+    pub fn open_project(
+        &self,
+        folder: &Path,
+        cancel_key: &str,
+        answer: Option<Answer>,
+        relink: Option<&Path>,
+    ) -> Result<Reopen, OpenFailure> {
+        let host = self.recorder.host();
+        let (_end_open_on_drop, cancel) = host.begin_open(cancel_key).map_err(OpenFailure::Open)?;
+        let live = || {
+            if cancel.is_cancelled() {
+                Err(OpenFailure::Cancelled)
+            } else {
+                Ok(())
+            }
+        };
+        let bytes = read_bounded(
+            &folder.join(PROJECT_FILE_NAME),
+            MAX_PROJECT_FILE_BYTES as u64,
+        );
+        let bytes = bytes.map_err(OpenFailure::ProjectFileUnreadable)?;
+        live()?;
+        let mut file = read_project(&bytes).map_err(OpenFailure::FileRefused)?;
+        let project = file.project.clone();
+        let here = std::path::absolute(folder).unwrap_or_else(|_| folder.to_path_buf());
+
+        let dir = record_dir(&self.root, &project);
+        let known = match machine_document(&dir, store::FOLDERS)? {
+            Some(bytes) => {
+                Some(KnownFolders::from_bytes(&bytes).map_err(OpenFailure::MachineRecordRefused)?)
+            }
+            None => None,
+        };
+        let first = |here: &Path| KnownFolders {
+            first: here.to_path_buf(),
+            same: Vec::new(),
+        };
+        let place = match known {
+            None => Place::Remember(first(&here)),
+            Some(known) if is_known(&known, &here) => Place::Known,
+            Some(known) if !asks(&known.first, &project) => Place::Remember(known.moved_to(&here)),
+            Some(known) => match answer {
+                None => return Ok(Reopen::Question),
+                Some(Answer::Same) => Place::Remember(known.with_same(&here).map_err(|e| {
+                    let project = project.clone();
+                    OpenFailure::KnownFoldersFull {
+                        project,
+                        count: e.count,
+                    }
+                })?),
+                Some(Answer::Copy) => Place::Copy(mint_identity()),
+            },
+        };
+        live()?;
+        let refused = OpenFailure::MachineRecordRefused;
+        let (identity, folders, copy) = match place {
+            Place::Known => (project.clone(), None, None),
+            Place::Remember(k) => (project.clone(), Some(k.to_bytes().map_err(refused)?), None),
+            Place::Copy(new) => {
+                let folders = first(&here).to_bytes().map_err(refused)?;
+                file.project = new.clone();
+                let text = write_project(&file).map_err(OpenFailure::FileRefused)?;
+                (new, Some(folders), Some(text))
+            }
+        };
+        let uri = file.dataset.uri().clone();
+        let relinked = match relink {
+            Some(at) => Some(locations_to_bytes(&uri, at).map_err(refused)?),
+            None => None,
+        };
+
+        let lock = ProjectLock::try_lock(&self.root, &identity).map_err(|e| match e {
+            LockRefused::Held => OpenFailure::OpenElsewhere(identity.clone()),
+            LockRefused::Io(source) => OpenFailure::MachineStore {
+                what: store::OPEN_LOCK,
+                source,
+            },
+        })?;
+        let identity_dir = record_dir(&self.root, &identity);
+        let machine = |what| move |source| OpenFailure::MachineStore { what, source };
+        if let Some(bytes) = folders {
+            write_machine_file(&identity_dir, store::FOLDERS, &bytes)
+                .map_err(machine(store::FOLDERS))?;
+        }
+        if let Some(text) = &copy {
+            replace(folder, text.as_bytes()).map_err(OpenFailure::ProjectFileUnwritable)?;
+        }
+
+        let [lineage_dir, lineage_name] = LINEAGE_FILE;
+        let folder_file = folder.join(lineage_dir).join(lineage_name);
+        let lineage = read_lineage(
+            &folder_file,
+            &dir.join(PREVIOUS_LINEAGE_FILE),
+            &file.lineage,
+        );
+        live()?;
+
+        let path = match relink {
+            Some(at) => at.to_path_buf(),
+            None => match data_at(folder, &file.dataset, &dir)? {
+                Data::At(path) => path,
+                Data::NotFound(file_name) => return Ok(Reopen::NotFound { file_name }),
+            },
+        };
+        live()?;
+        let text = path
+            .to_str()
+            .ok_or_else(|| OpenFailure::PathNotUnicode(path.clone()));
+        let admission = file.dataset.admission().clone();
+        let req = OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: text?.to_string(),
+            cancel_key: cancel_key.to_string(),
+            crs_assertion: admission.crs_assertion,
+            identity: admission.identity,
+        };
+        let opened = host.open_under(req, &cancel).map_err(|e| {
+            if cancel.is_cancelled() {
+                OpenFailure::Cancelled
+            } else {
+                OpenFailure::Open(e)
+            }
+        })?;
+        let handle = opened.dataset;
+        let close = || {
+            let (skp, dataset) = (SKP_VERSION.to_string(), handle.clone());
+            drop(host.close_dataset(CloseDatasetRequest { skp, dataset }));
+        };
+        let Some(ds) = host.catalog().get(handle.as_str()) else {
+            return Err(OpenFailure::Open(SkpError::unknown_dataset(
+                handle.as_str(),
+            )));
+        };
+        let check = file.dataset.check(&ds);
+        let view = view_state(&file.workspace.view.crs, &ds);
+        let locations = match (relinked, &copy) {
+            (Some(bytes), _) => Some(Ok(bytes)),
+            (None, Some(_)) => {
+                let at = std::path::absolute(ds.path()).unwrap_or_else(|_| ds.path().to_path_buf());
+                Some(locations_to_bytes(&uri, &at).map_err(refused))
+            }
+            (None, None) => None,
+        };
+        drop(ds);
+        if let Some(bytes) = locations {
+            let written = bytes.and_then(|bytes| {
+                write_machine_file(&identity_dir, store::LOCATIONS, &bytes)
+                    .map_err(machine(store::LOCATIONS))
+            });
+            if let Err(e) = written {
+                close();
+                return Err(e);
+            }
+        }
+        self.recorder
+            .reopened(handle.as_str(), uri.clone(), &identity);
+        let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
+        saved.push(SavedProject {
+            dataset: handle.as_str().to_string(),
+            project: identity.clone(),
+            folder: folder.to_path_buf(),
+            uri,
+            _lock: lock,
+        });
+        Ok(Reopen::Opened(Box::new(Opened {
+            project: identity,
+            dataset: handle,
+            session: opened.session,
+            workspace: file.workspace,
+            view,
+            check,
+            lineage,
+        })))
+    }
+}
+
+/// Whether `here`, an absolute folder, is one `known` holds (the form's Amendment 36, item 5 (d)):
+/// canonical forms are compared, and an entry, or `here`, that does not resolve is compared as
+/// written.
+fn is_known(known: &KnownFolders, here: &Path) -> bool {
+    let this = std::fs::canonicalize(here).ok();
+    let mut entries = std::iter::once(&known.first).chain(&known.same);
+    entries.any(|entry| match (std::fs::canonicalize(entry).ok(), &this) {
+        (Some(entry), Some(this)) => entry == *this,
+        _ => entry == here,
+    })
+}
+
+/// Whether the first folder `first` asks the question for `project` (§2.4 step 2): it holds a
+/// `project.spatial` of this identity, or one the reader refuses, or it or that file cannot be
+/// read. Gone, not a folder, no `project.spatial` there, or another project's: a move.
+fn asks(first: &Path, project: &ProjectUri) -> bool {
+    let gone = |e: &std::io::Error| e.kind() == std::io::ErrorKind::NotFound;
+    match std::fs::metadata(first) {
+        Ok(m) if m.is_dir() => {}
+        Ok(_) => return false,
+        Err(e) => return !gone(&e),
+    }
+    let bytes = read_bounded(
+        &first.join(PROJECT_FILE_NAME),
+        MAX_PROJECT_FILE_BYTES as u64,
+    );
+    match bytes.map(|b| read_project(&b)) {
+        Ok(Ok(there)) => there.project == *project,
+        Ok(Err(_)) => true,
+        Err(e) => !gone(&e),
+    }
+}
+
+/// The data step's path, when no re-link is given: a `project-relative` locator's target as
+/// [`resolver::check_inside`] returns it, else the machine store's location for the dataset.
+fn data_at(folder: &Path, reference: &DatasetRef, dir: &Path) -> Result<Data, OpenFailure> {
+    let mut relative = reference.locators().iter().enumerate();
+    let relative = relative.find_map(|(i, l)| match l {
+        Locator::ProjectRelative(at) => Some((i, at)),
+        Locator::MachineRecorded => None,
+    });
+    if let Some((i, at)) = relative {
+        return check_inside(folder, at)
+            .map(Data::At)
+            .map_err(|refused| match refused {
+                CheckRefused::FolderUnresolvable => OpenFailure::FolderUnresolvable(folder.into()),
+                refused => OpenFailure::TargetRefused {
+                    locator: format!("$.datasets[0].resource.locators[{i}].at"),
+                    refused,
+                },
+            });
+    }
+    let Some(bytes) = machine_document(dir, store::LOCATIONS)? else {
+        return Ok(Data::NotFound(None));
+    };
+    let entries = read_locations(&bytes).map_err(OpenFailure::MachineRecordRefused)?;
+    let Some(at) = entries.into_iter().find(|l| l.dataset == *reference.uri()) else {
+        return Ok(Data::NotFound(None));
+    };
+    match std::fs::metadata(&at.path) {
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            let name = at
+                .path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned());
+            Ok(Data::NotFound(name))
+        }
+        _ => Ok(Data::At(at.path)),
+    }
+}
+
+/// Whether the saved view's space `saved` is the space `ds` was admitted in (V3).
+fn view_state(saved: &Space, ds: &Dataset) -> ViewState {
+    let named = |s: &Space| {
+        let definition = s.definition.as_deref().unwrap_or("no definition");
+        format!("{} ({}, {definition})", s.identifier, s.provenance)
+    };
+    match space_of(ds) {
+        Some(now) if now == *saved => ViewState::Applies,
+        now => {
+            let now = now.map_or("no space".to_string(), |s| named(&s));
+            let basis = format!(
+                "the view was saved in {}, and the data is admitted in {now}",
+                named(saved)
+            );
+            ViewState::SavedInAnotherSpace { basis }
+        }
+    }
+}
+
+/// A machine store document in `dir`, read up to its bound and one byte; `None` when it is absent.
+fn machine_document(dir: &Path, name: &'static str) -> Result<Option<Vec<u8>>, OpenFailure> {
+    match read_bounded(&dir.join(name), MAX_MACHINE_DOCUMENT_BYTES) {
+        Ok(bytes) => Ok(Some(bytes)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(source) => Err(OpenFailure::MachineStore { what: name, source }),
+    }
+}
+
+/// Up to `max` bytes and one more of the file at `path`, so that a reader refuses a longer file by
+/// its size without the rest being read.
+fn read_bounded(path: &Path, max: u64) -> std::io::Result<Vec<u8>> {
+    let mut bytes = Vec::new();
+    std::fs::File::open(path)?
+        .take(max + 1)
+        .read_to_end(&mut bytes)?;
+    Ok(bytes)
 }
 
 /// The resolver's judgment as the reply's closed value; the path of `Carried::ProjectRelative` is

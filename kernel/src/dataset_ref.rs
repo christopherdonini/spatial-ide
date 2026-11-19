@@ -587,8 +587,10 @@ const RESERVED_DEVICE_NAMES: [&str; 32] = [
 /// empty, `.` or `..` segment (which also refuses an empty `at` and a leading `/`), no backslash
 /// or `:`, no control character (U+0000 to U+001F and U+007F to U+009F), no segment ending in a dot
 /// or a space, and no segment that is a reserved device name ([`RESERVED_DEVICE_NAMES`]).
-/// Containment, that the resolved target lies inside the resolved project folder, is not
-/// checked here: piece 1c's resolver checks it. No path type is used, nothing is joined and no
+/// Containment is not checked here. Piece 1c's resolver judges it at save and checks it when the
+/// data is opened: it walks from the project folder one segment at a time and refuses a link, a
+/// missing segment, or a final object that is not a regular file. A change another program makes
+/// after that check is not prevented (ADR-036 §5). No path type is used, nothing is joined and no
 /// file is touched.
 pub(crate) fn in_canonical_form(at: &str, path: &str) -> Result<(), RefParseError> {
     let control = |c: char| matches!(c, '\0'..='\u{1f}' | '\u{7f}'..='\u{9f}');

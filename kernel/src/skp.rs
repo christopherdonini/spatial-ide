@@ -972,7 +972,7 @@ impl OpenRegistry {
 /// RAII counterpart to [`OpenRegistry::end`] — S5 (reviewer, this cut). `begin`/`end` alone rely on
 /// the caller reaching the matching `end` on every path out of the function, panics included; this
 /// makes "every path" true by construction instead of by discipline.
-struct OpenGuard<'a> {
+pub(crate) struct OpenGuard<'a> {
     opens: &'a OpenRegistry,
     key: String,
 }
@@ -1105,7 +1105,19 @@ impl SkpHost {
 
     pub fn open_dataset(&self, req: OpenDatasetRequest) -> Result<OpenDatasetResponse, SkpError> {
         check_version(&req.skp)?;
-        let cancel_key = CancelKey::try_from(req.cancel_key.clone())
+        let (_end_open_on_drop, cancel) = self.begin_open(&req.cancel_key)?;
+        self.open_under(req, &cancel)
+    }
+
+    /// The first half of [`Self::open_dataset`]: `cancel_key` is checked and registered, so that
+    /// `cancel(cancel_key)` reaches the returned token, until the returned guard is dropped. A
+    /// project reopen (`crate::project`) registers its key here at its start, and hands the token to
+    /// [`Self::open_under`] when it reaches its data step.
+    pub(crate) fn begin_open(
+        &self,
+        cancel_key: &str,
+    ) -> Result<(OpenGuard<'_>, CancelToken), SkpError> {
+        let cancel_key = CancelKey::try_from(cancel_key.to_string())
             .map_err(|e| SkpError::protocol("malformed_cancel_key", e))?;
         let cancel = CancelToken::new();
         self.opens.begin(cancel_key.as_str(), cancel.clone())?;
@@ -1113,10 +1125,20 @@ impl SkpHost {
         // `open_cancellable` runs arbitrary engine/DuckDB code, and an unwind out of it must still
         // free this cancel key. Without this, a panic here would leave `cancel_key` permanently
         // `cancel_key_in_use` for the rest of the process's life, since nothing else ever removes it.
-        let _end_open_on_drop = OpenGuard {
+        let end_open_on_drop = OpenGuard {
             opens: &self.opens,
             key: cancel_key.as_str().to_string(),
         };
+        Ok((end_open_on_drop, cancel))
+    }
+
+    /// The second half of [`Self::open_dataset`], under a token [`Self::begin_open`] registered:
+    /// the open, its watch and its admission. `req.skp` and `req.cancel_key` are not read here.
+    pub(crate) fn open_under(
+        &self,
+        req: OpenDatasetRequest,
+        cancel: &CancelToken,
+    ) -> Result<OpenDatasetResponse, SkpError> {
         let handle = DatasetHandle::mint();
         // `NEXT-CUT.md` P1: the wire carries the caller's *claim* (identifier/definition_json,
         // column) and nothing else — `by`/`at` are never read from the request (I4, ADR-004
@@ -1180,7 +1202,7 @@ impl SkpHost {
 
         let outcome =
             self.catalog
-                .open_cancellable(handle.as_str(), &req.path, assertion, identity, &cancel);
+                .open_cancellable(handle.as_str(), &req.path, assertion, identity, cancel);
         if let Err(e) = outcome {
             // The open itself refused before admission was ever reached: disarm, nothing else to
             // clean up (the catalog entry was never inserted).

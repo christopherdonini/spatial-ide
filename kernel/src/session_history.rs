@@ -120,8 +120,9 @@ impl<W: Write> History<W> {
     }
 }
 
-/// What holds a record: one open (by its catalog name) until a save binds that open to a project,
-/// then that project. The name is held in memory only and is never written to disk.
+/// What holds a record: one open (by its catalog name) until a save, or a reopen in the run that
+/// holds the project's record, binds that open to a project, then that project. The name is held
+/// in memory only and is never written to disk.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Holder {
     Open(String),
@@ -132,10 +133,12 @@ enum Holder {
 struct Open {
     /// The catalog name the commands carry. Memory only.
     name: String,
-    /// The open's one dataset identity: minted once, and carried by the history's header, by every
+    /// The open's one dataset identity: minted at its first mention, or for a reopened open the
+    /// project file's ([`StepRecorder::reopened`]), and carried by the history's header, by every
     /// step's `data.dataset` and by the project file's dataset entry.
     uri: DatasetUri,
-    /// The project a save has bound this open to ([`StepRecorder::adopt_project`]).
+    /// The project this open is bound to: by a save ([`StepRecorder::adopt_project`]), or by a
+    /// reopen in the run that holds the project's record ([`StepRecorder::reopened`]).
     bound: Option<ProjectUri>,
 }
 
@@ -151,7 +154,9 @@ impl Open {
 
 /// One record: the history of the steps of one holder, from the holder's first step. An open has a
 /// record of its own until a save binds it to a project, and from then on its steps go to the
-/// project's record. A second open of the same file is another open and has its own record.
+/// project's record. A reopen in the run that holds the project's record is bound at the
+/// reopen and makes no record of its own; any other open of the same file is another open and
+/// has its own record.
 struct Record {
     dir: PathBuf,
     holder: Holder,
@@ -341,12 +346,23 @@ impl StepRecorder {
     /// first step creates the project's record. Later steps continue the project's record. Nothing
     /// happens when the open is already bound. When the move fails the open stays unbound and the
     /// error is returned, so the next save tries again.
+    ///
+    /// An open with no record of its own is not bound when this recorder holds no record for the
+    /// project and `<store root>/<project hex>` is there, or cannot be looked at: another run left
+    /// that folder, and `create` would refuse it at the open's first step. The open stays unbound,
+    /// the error is returned, and the open's steps go to a record of its own (the form's Amendment
+    /// 36, item 5 (g), as ADV-2026-11-19-04 ruled it).
     pub fn adopt_project(&self, open: &str, project: &ProjectUri) -> Result<(), SkpError> {
         let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
         if state.open(open).bound.is_some() {
             return Ok(());
         }
         let own = Holder::Open(open.to_string());
+        let held = Holder::Project(project.clone());
+        let left = || match std::fs::symlink_metadata(self.root.join(project.hex())) {
+            Err(e) => e.kind() != ErrorKind::NotFound,
+            Ok(_) => true,
+        };
         if let Some(at) = state.records.iter().position(|r| r.holder == own) {
             let rec = &mut state.records[at];
             let dir = self.root.join(project.hex());
@@ -360,9 +376,28 @@ impl StepRecorder {
             let _ = std::fs::remove_file(moved.join(HISTORY));
             let _ = std::fs::remove_file(moved.join(LOCATIONS));
             let _ = std::fs::remove_dir(&moved);
+        } else if !state.records.iter().any(|r| r.holder == held) && left() {
+            let left = "another run left a record there";
+            return Err(unwritable("the project's record folder", &left));
         }
         state.open(open).bound = Some(project.clone());
         Ok(())
+    }
+
+    /// A reopen's call, before any step of the open the catalog names `open` (the form's Amendment
+    /// 36, item 5 (f)): the open takes `uri`, the project file's dataset identity, in place of one
+    /// minted for it, so that its steps and its saves carry the file's. It is bound to `project`
+    /// only when this recorder holds the project's record, so that its first step continues that
+    /// record; otherwise it stays unbound until a save binds it.
+    pub(crate) fn reopened(&self, open: &str, uri: DatasetUri, project: &ProjectUri) {
+        let mut state = self.state.lock().unwrap_or_else(|e| e.into_inner());
+        let held = Holder::Project(project.clone());
+        let holds = state.records.iter().any(|r| r.holder == held);
+        let open = state.open(open);
+        open.uri = uri;
+        if holds {
+            open.bound = Some(project.clone());
+        }
     }
 
     /// A save's second move: one `{"mark":{"kind":"saved-here","after":<last step>,"at":…}}` line
