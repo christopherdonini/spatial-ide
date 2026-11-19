@@ -1855,3 +1855,64 @@ fn a_relink_the_writer_refuses_writes_nothing_at_a_first_reopen_or_a_copy() {
 
     assert!(written.is_empty(), "nothing written: {written:?}");
 }
+
+// ---------------------------------------------------------------------------------------------
+// K-O26, L8 and L9 (Amendment 43, item 7 (b)): the lock's release after a session end, and the
+// lineage reader's two refusals
+// ---------------------------------------------------------------------------------------------
+
+use spatial_skp::v0::{HexF64, SaveProjectRequest};
+
+/// The names in `dir`, sorted.
+fn listing(dir: &Path) -> Vec<String> {
+    let entries = std::fs::read_dir(dir).expect("the folder");
+    let names = entries.map(|e| e.expect("an entry").file_name());
+    let mut names: Vec<String> = names.map(|n| n.to_string_lossy().into_owned()).collect();
+    names.sort();
+    names
+}
+
+/// **K-O26** (Amendment 36 item 8; Amendment 43 items 6 and 20). A saved open holds its identity's
+/// lock, so a reopen of its folder by the same `Projects` is refused as open elsewhere (the
+/// control). After `SkpHost::end_generation` on the open, the same reopen gives `opened`. Then
+/// `save_project` for the ended open, given an empty folder, is refused by the end's code, and the
+/// machine store gains no folder.
+///
+/// RECORDED MUTATION: the release not run in `open_project`. Expected failure: the second reopen
+/// is refused as open elsewhere, and this test fails at `opened`.
+#[test]
+fn a_reopen_after_a_session_end_in_the_same_process_takes_the_lock() {
+    let rig = rig("k-o26");
+    let run = rig.run();
+    let data = rig.folder.join("data/parcels.parquet");
+    fixture(&data, f1());
+    let (handle, ds) = run.open(&data, (None, None));
+    let projects = run.projects();
+    let ws = workspace(&ds, None);
+    let saved = projects.save(handle.as_str(), &ds, Some(&rig.folder), ws);
+    let project = saved.expect("saved").project;
+    let got = projects.open_project(&rig.folder, "k", None, None);
+    let held = matches!(got, Err(OpenFailure::OpenElsewhere(ref p)) if *p == project);
+    assert!(held, "the control: {got:?}");
+    run.host.end_generation(handle.as_str());
+    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    assert_eq!(o.project, project);
+
+    let empty = rig.dir.join("empty");
+    std::fs::create_dir(&empty).expect("an empty folder");
+    let store = listing(&rig.machine);
+    let style: serde_json::Value = serde_json::from_str(STYLE_DOC).expect("JSON");
+    let zero = HexF64(0.0).to_hex();
+    let wire = serde_json::json!({
+        "skp": SKP_VERSION, "dataset": handle.as_str(), "folder": empty.display().to_string(),
+        "workspace": {"filter": null, "clauses": [], "style": style,
+            "view": {"centre": [zero, zero], "zoom": zero}}
+    });
+    let req: SaveProjectRequest = serde_json::from_value(wire).expect("the request");
+    let refused = projects.save_project(req).err();
+    let code = refused.as_ref().map(|e| e.code.as_str());
+    assert_eq!(code, Some("engine.source_changed"), "{refused:?}");
+    let gained = listing(&rig.machine) != store;
+    assert!(!gained, "the machine store gains no folder");
+    assert!(!empty.join(PROJECT_FILE_NAME).exists());
+}
