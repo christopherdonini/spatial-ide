@@ -58,12 +58,15 @@ import type { RequestOutcome } from "../streaming/viewportStreamManager";
  * (`viewportQuery`/`dataPlaneAttach`/`startStream`), reused here rather than reimplemented. Its
  * batches are ingested through the SAME `WorkingCanvas.pushTileBatch` seam every tile stream's
  * batches are (tagged under the reserved `INITIAL_TILE_KEY`, never a real tile the grid could ever
- * produce -- `tileKeyToString`'s own `"row:col"` shape never collides with a bare word). The FIRST
- * batch that carries any geometry gives `pushTileBatch` a non-null `fitAnchor`
+ * produce -- `tileKeyToString`'s own `"row:col"` shape never collides with a bare word).
+ * The FIRST batch that carries any geometry gives `pushTileBatch` a non-null `fitAnchor`
  * (`WorkingCanvas.tsx`'s own `fitAnchorRef`, shared with the baseline arm's identical one-shot
- * auto-fit) -- exactly mirroring baseline's own auto-fit timing (`pushBatch`'s
- * `!hasAutoFitRef.current && residentExtentRef.current` check) -- at which point this module calls
- * `establishGridFrame` exactly once, ever, for this session.
+ * auto-fit) and fits the camera to it once -- exactly mirroring baseline's own auto-fit timing
+ * (`pushBatch`'s `!hasAutoFitRef.current && residentExtentRef.current` check). The grid frame waits
+ * for the look to end: the untiled sink's `onTerminal` (`issueUntiledQuery`, below) calls
+ * `establishFrameFromExtent` on the union of every batch the look delivered
+ * (`latestUnionedExtent`), and `manager.establishGridFrame` fixes the frame once for the session
+ * (it returns at once when a frame exists).
  *
  * **When tile-keyed planning starts.** `establishGridFrame` alone
  * gives `TileViewportStreamManager.onCameraChange` a frame to plan against, but planning ALSO needs a
@@ -81,8 +84,9 @@ import type { RequestOutcome } from "../streaming/viewportStreamManager";
  *   window where an earlier look is still held), after a self-cancel (an operator Cancel with a frame,
  *   or `stop()`'s teardown cancel), while a relinquish stands, once the session is stopped or ended,
  *   while a viewport change is pending (that change plans instead), or with no frame or no shown box.
- * With no input, that box is the look's own auto-fit, so the fit view's tiles are planned without a
- * pan.
+ * With no input, and when the look admitted geometry, that box is the look's own auto-fit, so the
+ * fit view's tiles are planned without a pan; when it admitted none, no fit runs and the box is the
+ * view left standing.
  */
 
 /** Reserved tile key for the initial, untiled "first look" query's own batches -- never a real
@@ -1487,6 +1491,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // Not covered (AUTONOMY §31), the same window as S1's: an earlier look's Completed terminal that
         // arrives after a reissue but before the new look's ticket is minted is read as current, and can
         // plan the pre-fit view under the new filter (`untiled-reissue-holds-earlier-look-handle-until-mint`).
+        // That plan sets `hasPlanned`, so the new look's own terminal plans nothing: its fit view is asked
+        // for at the next camera change, and until then the status S1 recomputes there can read settled
+        // for the pre-fit view's cells.
         if (
           wasCurrent && // (i)
           !wasSelfCancelled && // (ii)
