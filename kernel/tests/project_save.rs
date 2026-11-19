@@ -1102,7 +1102,8 @@ fn a_project_saved_first_in_this_process_is_refused_to_another_process() {
     let (said, heard) = mpsc::channel();
     std::thread::spawn(move || {
         let mut lines = BufReader::new(stdout).lines().map_while(Result::ok);
-        let _ = said.send(lines.find(|l| l.starts_with("ko17: ")));
+        // libtest may print the child's line after its own `test <name> ... ` on one line.
+        let _ = said.send(lines.find_map(|l| Some(l.split_once("ko17: ")?.1.to_string())));
     });
     let reply = heard.recv_timeout(Duration::from_secs(60));
     let started = Instant::now();
@@ -1113,7 +1114,7 @@ fn a_project_saved_first_in_this_process_is_refused_to_another_process() {
         }
         std::thread::sleep(Duration::from_millis(50));
     }
-    let held = Ok(Some("ko17: held".to_string()));
+    let held = Ok(Some("held".to_string()));
     assert_eq!(reply, held, "the other process is refused the lock");
     let lock = rig.machine.join(saved.project.hex()).join(OPEN_LOCK);
     let len = std::fs::metadata(lock).expect("open.lock").len();
