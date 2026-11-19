@@ -669,3 +669,66 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — the first look's closing, before its merge request: the gates; the words commits, as ruled; the counts, with two class 8 rows; C1's reading and its runs; what is not covered; what is recorded by reference; the mint-window node; the departures; CI and the red runs; the holds
+
+*Written by the custodian, 2026-11-19, before PR 335's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates** (§9).
+   - The architect at e374eb71: PASS WITH NOTES, `state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-architect.md`.
+   - The reviewer at e374eb71: FAIL on C1, `state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-reviewer.md`.
+   - The reviewer alone, again, at 5c913c14 (ADV-2026-11-19-08 item 9): PASS WITH NOTES, with no Correctness or Evidence finding, `state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-reviewer-attempt-2.md`.
+   - C1 was closed by Amendment 5's reading (item 4).
+2. **The words commits, as ruled.** Each is applied by script from a filed report or ruling. None was gated again.
+   - fcf58897: KNOWN-LIMITATIONS item 67 in the advisor's words (Amendment 4; ADV-2026-11-19-06 item 5).
+   - 5c913c14 (ADV-2026-11-19-08 items 6 to 8): item 67 replaced whole, and item 64's comment gains its sentence. In `candidateArmSession.ts`, the frame sentence, the auto-fit sentence and the not-covered note. The README's E-FL entry.
+     - In `candidateArmSession.ts` the commit changes 21 lines. By script, every one is a comment line (ADV-2026-11-19-08 item 9), so no app-window run followed.
+   - 22624329 (ADV-2026-11-19-16 items 1 and 2): `watchConsole`'s doc line, the re-gate's D1, and item 67's sentence on a tile's load, the re-gate's O6. One comment line and one sentence.
+3. **The counts** (§7; Amendment 4 item 4; Amendment 5 item 4; ADV-2026-11-19-04 item 7). Counted by `git diff --numstat 349cec82e5ecbfab40db3ae9b6811d471d9ea2de...22624329`, added plus removed; for `command-bar.mjs` and `project.mjs`, against F (e1fd84957b7ae042a075e7ccc5628a3de5670eb7), where the counts are the same.
+   - product: `candidateArmSession.ts` 63 of 60; `WorkingCanvas.tsx` 14 of 25;
+   - unit: `candidateArmSession.test.ts` 301 of 320; `WorkingCanvas.wiring.test.tsx` 35 of 110;
+   - e2e:
+     - `open-fills-fit-view.mjs` 255 of 380; `package.json` 1 of 2; `layout.mjs` 20 of 30;
+     - `command-bar.mjs` 71 of 70; `project.mjs` 38 of 40;
+   - docs: `e2e/README.md` 16 of 60; `MANUAL-WALKTHROUGH.md` 21 of 40; `KNOWN-LIMITATIONS.md` 12 of 14.
+   - In all, 847 lines in 12 files, against 1,151 in 12 (§7's 1,041 and Amendment 4's two files).
+   - **Two class 8 rows.** §7 is not edited.
+     - `command-bar.mjs`, 71 against 70, one line over. The cause: the definition of `parseLabel` was cut to fit the ceiling and then put back, with nothing else cut (ADV-2026-11-19-12 item 1).
+     - `candidateArmSession.ts`, 63 against 60, three lines over. It was 46 at F. The words commit 5c913c14 changed only comment lines and brought it to 63 (item 2).
+   - From the merge base 349cec82 to main, no path of the pull request has changed (ADV-2026-11-14-21 item 6 (a)).
+4. **C1's reading and its runs** (Amendment 5; ADV-2026-11-19-09; ADV-2026-11-19-12). The reports:
+   - `state/consults/2026-11-19-open-first-look-fills-fit-view-c1-worker-report.md`;
+   - `state/consults/2026-11-19-open-first-look-fills-fit-view-c1-resumed-worker-report.md`.
+   What they record:
+   - **The failed run at 8a58d91b.** `parseLabel` was not defined. It is the worker's defect in the test code, and it is neither I7 nor F2 (ADV-2026-11-19-12 item 2).
+   - **The unmutated run at e2be4fd5** is the run of Amendment 5 item 5. E-AND passed. The Console's label gave 256 held and 444 dropped after card A's wait, and 256 held and 672 dropped after card B's map settled. So 228 entries were recorded in between, which is not fewer than 220 (ADV-2026-11-19-08 item 6). There was no F2.
+   - The three mutations and the vitest run under M-X2 are as that report gives them.
+5. **Not covered** (ADV-2026-11-19-08 item 5; the architect's O1). `project.mjs` is not changed. Its reading has the same gap at its second step: a duplicate of a suite's first commit is not caught, at F or now.
+6. **Recorded by reference; the form is not edited** (ADV-2026-11-19-08 item 8).
+   - The M-U2g row: the architect's E-R1, and the reviewer's D5 with its M-X.
+   - M-A4-1's earlier failure: the architect's E-R2.
+   - FILL's mutation after Amendment 3: the reviewer saw it fail at the head (its check 8), which answers the architect's O2.
+   - The architect's D5 is not applied. It changes a string in `layout.mjs`, not a comment, and `layout.mjs` stays the file that ran. It is recorded here for the next piece that edits that suite.
+7. **The mint-window node** (ADV-2026-11-19-01 item 1; ADV-2026-11-19-08 item 10). The advisor grades `untiled-reissue-holds-earlier-look-handle-until-mint` at the merge check, from the reviewer's mint-window probe (its check 7 at e374eb71).
+8. **The departures** (class 1, disclosed).
+   - Amendment 5's reuse line is recorded in its filing note (ADV-2026-11-19-09 item 8).
+   - At step S8 after Amendment 3:
+     - the harness's README entry gained two sentences, where the brief said to correct it or leave it;
+     - the timeout wrapped only the hold call.
+     Both are in the step's report, `state/consults/2026-11-19-open-first-look-fills-fit-view-s8-after-amendment-3-worker-report.md`.
+   - The departures recorded in Amendments 1 to 5 stand as recorded.
+9. **CI and the red runs** (ADV-2026-11-18-12 item 6).
+   - At 22624329, by `gh run list` read at 2026-11-19T09:43:34Z: six runs, all success. These are Product CI — shell twice, Ported notices twice, DCO sign-off and the exposure scan.
+   - The red and cancelled runs on the branch:
+     - 44410261339 at 3ab8c8a7, Product CI — shell, failure. Both its jobs failed the typecheck: the tests U-FL1 to U-FL6 name `shownViewportBbox`, which `WorkingCanvasHandle` did not yet have. The tests were merged into the branch before step S5's code, as §7's order has it, and pushed before ADV-2026-11-19-10.
+     - 44432851114 at 2272cce8, Product CI — shell, cancelled at 2026-11-19T00:58:48Z. The workflow's concurrency cancels a branch's older run, and e1fd8495 was pushed at 00:58:43Z.
+10. **The holds** (ADV-2026-11-16-06 item 2 (e)). By the machine log, the piece had 69 holds, from 2026-11-18T19:05:09Z to 2026-11-19T08:32:17Z:
+    - S4 8, S7 6, S8 3, S9 33;
+    - Amendment 4's runs 6, Amendment 5's 5;
+    - the reviewer's gates 8.
+    None stood beside another hold of this project.
+11. **Superseded index.** Nothing in the form is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
