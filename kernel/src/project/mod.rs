@@ -22,9 +22,10 @@
 //!
 //! Nothing in this module holds a handle in a project folder. [`Projects`] holds one on
 //! `open.lock` in the machine store for each identity it saved first or reopened
-//! ([`Projects::open_project`]), until it is dropped. The only files this module writes in a
-//! project folder are `project.spatial` and the temporary file that [`store`]'s atomic replace
-//! renames over it.
+//! ([`Projects::open_project`]), until that open is closed, or, after its session ends, until this
+//! process's next reopen or close ([`Projects::release_ended`]); or until [`Projects`] is dropped.
+//! The only files this module writes in a project folder are `project.spatial` and the temporary
+//! file that [`store`]'s atomic replace renames over it.
 
 pub mod file;
 pub mod resolver;
@@ -130,8 +131,9 @@ struct SavedProject {
     /// The dataset entry's `logical_uri`, kept so every save of this open writes the same one.
     uri: DatasetUri,
     /// The identity's open lock, taken by the first save or by the reopen
-    /// ([`Projects::open_project`]) that made this entry. It is held for as long as this entry is,
-    /// which is until [`Projects`] is dropped.
+    /// ([`Projects::open_project`]) that made this entry. It is held for as long as this entry is:
+    /// until [`Projects::release_ended`] finds its open closed or its session ended, or until
+    /// [`Projects`] is dropped.
     _lock: store::ProjectLock,
 }
 
@@ -188,6 +190,9 @@ pub enum SaveFailure {
     /// `locations.json` or `folders.json` could not be written in its format; the refusal names
     /// the file.
     MachineRecordRefused(MachineRecordRefused),
+    /// The catalog no longer holds the open, or its session has ended: the host's own error,
+    /// found under the `saved` mutex.
+    Open(SkpError),
 }
 
 impl fmt::Display for SaveFailure {
@@ -210,6 +215,7 @@ impl fmt::Display for SaveFailure {
             Self::ProjectFileUnwritable(e) => write!(f, "{e}"),
             Self::MachineStore { what, source } => write!(f, "{what}: {source}"),
             Self::MachineRecordRefused(e) => write!(f, "{e}"),
+            Self::Open(e) => write!(f, "{}", e.message),
         }
     }
 }
@@ -227,8 +233,28 @@ impl Projects {
         }
     }
 
+    /// Drop the entry, and with it the identity's open lock, of every open this [`Projects`] saved
+    /// first or reopened that the catalog no longer holds or whose session has ended
+    /// (`require_live`). The shell's `close_dataset` calls it after the host has closed the
+    /// dataset, and [`Projects::open_project`] calls it before it takes a lock. It takes the
+    /// `saved` mutex before the catalog and the generations, as [`Projects::save`] does, so a save
+    /// in progress ends before its entry is dropped. A `record_step` that passed its live check
+    /// before the session ended can still write after this frees the lock, and after another
+    /// process has taken it.
+    pub fn release_ended(&self) {
+        let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
+        let host = self.recorder.host();
+        let (catalog, generations) = (host.catalog(), host.generations());
+        let open =
+            |name: &str| catalog.get(name).is_some() && require_live(&generations, name).is_ok();
+        saved.retain(|s| open(&s.dataset));
+    }
+
     /// Save `workspace` as the project of the dataset `ds`, which the catalog names `name`.
     ///
+    /// - **The open is checked first**, under the `saved` mutex that [`Projects::release_ended`]
+    ///   also takes: the save is refused with the host's own error ([`SaveFailure::Open`]) when the
+    ///   catalog no longer holds the open or its session has ended.
     /// - **A first save** needs `folder`. It mints the identity (ADR-036 §4), refuses a folder that
     ///   already holds `project.spatial`, and writes `folders.json` with the folder as `first`.
     /// - **A later save**, of an open this [`Projects`] saved first or reopened
@@ -241,8 +267,8 @@ impl Projects {
     ///   refused where its reader would refuse it. A first save then takes the identity's open
     ///   lock ([`store::ProjectLock`]). The save then writes `locations.json`, and `folders.json`
     ///   at a first save, and replaces `project.spatial` whole or not at all. A first save that
-    ///   replaces it keeps the lock in [`Projects`] until that is dropped; one refused after the
-    ///   lock frees it.
+    ///   replaces it keeps the lock in [`Projects`] until [`Projects::release_ended`] releases it;
+    ///   one refused after the lock frees it.
     ///   Only then does the history take its moves: the open is bound to the project, which moves
     ///   the open's own record under the project's identity if the open has one, and a `saved-here`
     ///   mark is written in the project's record when the steps reach the workspace. A second open
@@ -257,7 +283,17 @@ impl Projects {
         folder: Option<&Path>,
         workspace: Workspace,
     ) -> Result<Saved, SaveFailure> {
+        // The lock order: the `saved` mutex first, then the host's catalog and generations, each
+        // taken and released inside it. `release_ended` keeps the same order, and nothing takes the
+        // `saved` mutex while it holds the catalog or the generations.
         let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
+        let host = self.recorder.host();
+        let held = host
+            .catalog()
+            .get(name)
+            .ok_or_else(|| SkpError::unknown_dataset(name));
+        let live = held.and_then(|_| require_live(&host.generations(), name));
+        live.map_err(SaveFailure::Open)?;
         let known = saved.iter().find(|s| s.dataset == name);
         let known = known.map(|k| (k.project.clone(), k.folder.clone(), k.uri.clone()));
         let first = known.is_none();
@@ -600,8 +636,9 @@ impl Projects {
     ///    the folder is remembered as `first`. `answer` is read only when the question is asked.
     ///    Then a `relink` is checked by `locations.json`'s writer and refused by name when the
     ///    writer would refuse it; its bytes are kept for step 6.
-    /// 3. The identity's open lock, the new identity's after the answer `copy`; then this step's
-    ///    writes: `folders.json`, and for a copy its `project.spatial` with the new identity.
+    /// 3. [`Projects::release_ended`], then the identity's open lock, the new identity's after the
+    ///    answer `copy`; then this step's writes: `folders.json`, and for a copy its
+    ///    `project.spatial` with the new identity.
     /// 4. The lineage (step 6 of §2.4, run here): [`read_lineage`] of the folder's
     ///    `.spatial/lineage.jsonl` and of `previous-lineage.jsonl` in the machine folder of the
     ///    identity the project file names.
@@ -689,6 +726,7 @@ impl Projects {
             None => None,
         };
 
+        self.release_ended();
         let lock = ProjectLock::try_lock(&self.root, &identity).map_err(|e| match e {
             LockRefused::Held => OpenFailure::OpenElsewhere(identity.clone()),
             LockRefused::Io(source) => OpenFailure::MachineStore {
@@ -980,6 +1018,7 @@ fn skp_error_of(e: SaveFailure) -> SkpError {
         SaveFailure::ProjectFileUnwritable(_) => SkpError::project_file_unwritable(&detail),
         SaveFailure::MachineStore { .. } => SkpError::project_file_unwritable(&detail),
         SaveFailure::MachineRecordRefused(r) => SkpError::project_file_refused(r.file, &r.rule),
+        SaveFailure::Open(e) => e,
     }
 }
 

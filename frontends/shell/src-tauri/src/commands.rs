@@ -112,6 +112,9 @@ pub fn cancel(
 /// unconditionally (regardless of whether the close itself succeeded), so the poll's last tick(s)
 /// can still observe the dataset's own teardown (e.g. leases dropping as its tickets are cancelled)
 /// rather than being cut off the moment `close_dataset` is called.
+///
+/// After the host's close, whatever its result, [`Projects::release_ended`] frees the project lock
+/// of each open that the catalog no longer holds or whose session has ended.
 #[cfg_attr(
     not(any(debug_assertions, feature = "measure-build")),
     allow(unused_variables)
@@ -120,11 +123,15 @@ pub fn cancel(
 pub fn close_dataset(
     app: tauri::AppHandle,
     state: State<'_, Arc<SkpHost>>,
+    projects: State<'_, Option<Arc<Projects>>>,
     request: CloseDatasetRequest,
 ) -> Result<CloseDatasetResponse, SkpError> {
     #[cfg(any(debug_assertions, feature = "measure-build"))]
     let dataset_for_stop = request.dataset.as_str().to_string();
     let result = state.close_dataset(request);
+    if let Some(projects) = projects.inner() {
+        projects.release_ended();
+    }
     #[cfg(any(debug_assertions, feature = "measure-build"))]
     if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
         tasks.stop(&dataset_for_stop);
@@ -155,9 +162,8 @@ pub async fn record_step(
 /// files are written, and the session history takes its moves (`kernel/src/project/mod.rs`) — real
 /// IO that no task on the async runtime or the UI thread may wait on. `Projects` is `None` when
 /// the per-user data directory could not be resolved at startup; the save is then refused by name,
-/// never dropped. `close_dataset` does not touch it: `Projects` has no call that forgets a dataset,
-/// and `open_dataset` mints a new handle at each open, so a closed dataset's entry is never matched
-/// again.
+/// never dropped. `close_dataset` frees the open's project lock: after the host has closed the
+/// dataset, it calls [`Projects::release_ended`].
 #[tauri::command]
 pub async fn save_project(
     state: State<'_, Option<Arc<Projects>>>,
