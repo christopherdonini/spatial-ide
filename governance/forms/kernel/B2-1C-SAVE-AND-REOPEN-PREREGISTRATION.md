@@ -3473,3 +3473,52 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 44 — P3b-1's stop at item 20's P-2 read, ruled (ADV-2026-11-19-24): the catalog and live checks under the `saved` mutex, `SaveFailure::Open`, K-O28, the lock order, and P3b-1's ceilings restated (class 9)
+
+*Written by the custodian from ADV-2026-11-19-24's items, on main before P3b-1's code (its item 3). References only. Nothing below is a quotation.*
+
+1. **The stop.** P3b-1's worker-high stopped at item 20's P-2 read, before any code.
+   - Inside one request, a `release_ended` that runs between the command's checks and `Projects::save` taking the `saved` mutex sends a save of a released open down the first-save branch.
+   - The advisor ruled it P-2's stop, rightly taken (ADV-2026-11-19-24 item 1).
+   - The worker's report is filed at `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-1-worker-stop-report.md`.
+2. **The remedy, (a)** (item 2).
+   - Under the `saved` mutex, before it decides whether the save is a first save, `Projects::save` checks that the catalog still holds the open and that its session is live.
+   - A release before the save gets the save refused, as the command would refuse it. A release after the save waits for it.
+   - What is left is item 6's named window.
+3. **How it is built** (item 3).
+   - (a) **The refusal** carries the host's own error unchanged, through one new variant of the `pub` type `SaveFailure`: working name `SaveFailure::Open`, built as `OpenFailure::Open` is. `skp_error_of` passes it through. Item 12's table gains a row:
+     - producer: `SaveFailure::Open` (P3b-1);
+     - consumer: `skp_error_of` in `save_project`;
+     - the seam's tests: K-O28, and item 20's added assertion of K-O26.
+   - (b) **The command's own checks** before the mutex stay.
+   - (c) **The lock order** is stated in a comment where the mutex is taken: the `saved` mutex first, then the host's catalog and generations. `release_ended` takes them in the same order.
+     - Before code, the worker lists by search every place that takes the `saved` mutex, and what it holds at that moment.
+     - A place that takes them in the other order is stop 12, and goes to the advisor.
+   - (d) **The doc of `Projects::save`** gains one sentence for the check, in the worker's words. Both gates read it.
+4. **K-O28**, named by the worker, in `kernel/tests/project_save.rs` or `kernel/tests/project_reopen.rs` (item 4).
+   - Two cases, each calling `Projects::save` directly after `release_ended`, with an empty folder given: an open that was closed, and an open whose session ended.
+   - Each is refused with the host's refusal for it; the machine store's listing is unchanged; and the folder holds no `project.spatial`.
+   - Its mutation: the two checks under the mutex removed. Predicted: each case saves as a first save, and the test fails at its refusal assertion.
+   - Item 20's added assertion of K-O26 stays, through the command.
+5. **P3b-1's ceilings** (item 5), in both numstat columns:
+
+   | Group | Ceiling |
+   |---|---|
+   | kernel product | 85 |
+   | kernel tests | 220 |
+   | src-tauri | 15 |
+   | **Total** | **320** |
+
+   Item 20's rows for P3b-1 are superseded; P3b-2's stand.
+6. **The gates.** Their first question at P3b-1's head is the lock order, and both gates read it (item 6). ADV-2026-11-19-23 item 7's question stays.
+7. **P3b-1's `pub` items** are item 7 (c)'s three, and `SaveFailure::Open`.
+8. **Superseded index:**
+   - item 20's P3b-1 ceilings, by item 5 here;
+   - item 7 (c)'s `pub` list, by item 7 here;
+   - item 15 gains stop 12, by item 3 (c) here.
+   - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
