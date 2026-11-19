@@ -19,6 +19,7 @@
 //! - **T11 and T14** (the form's Amendment 30, item 6 (c)), appended last: the reader of
 //!   `locations.json` reads back what a save writes, and a save whose folder path `folders.json`
 //!   cannot hold is refused before it writes anything.
+//! - **K-O17 and K-O24** (the form's Amendment 36, item 6 (b)), appended after them: the lock.
 
 mod watch_support;
 
@@ -972,8 +973,8 @@ fn the_first_save_records_its_folder_as_first_in_folders_json() {
     );
     assert_eq!(
         file_names(&record),
-        ["folders.json", "locations.json"],
-        "no temp file is left"
+        ["folders.json", "locations.json", "open.lock"],
+        "the two documents and the lock, and no temp file"
     );
 }
 
@@ -1043,4 +1044,126 @@ fn a_save_whose_folder_path_folders_json_cannot_hold_is_refused_by_name_and_writ
         identities.unwrap_or_default().is_empty(),
         "no identity folder"
     );
+}
+
+// ---------------------------------------------------------------------------------------------
+// K-O17 and K-O24 (Amendment 36, item 6 (b)): the identity's open lock at a first save
+// ---------------------------------------------------------------------------------------------
+
+use std::io::{BufRead, BufReader};
+use std::process::{Command, Stdio};
+use std::time::Instant;
+
+use spatial_kernel::project::store::{LockRefused, ProjectLock, OPEN_LOCK};
+use spatial_kernel::project::ProjectUri;
+
+const KO17: &str = "a_project_saved_first_in_this_process_is_refused_to_another_process";
+const KO17_ROOT: &str = "SPATIAL_IDE_KO17_CHILD_ROOT";
+const KO17_PROJECT: &str = "SPATIAL_IDE_KO17_CHILD_PROJECT";
+
+/// **K-O17**: after a real first save, a child copy of this test binary (`project_save_crash.rs`'s
+/// pattern) tries the saved identity's lock and is refused as `LockRefused::Held`, while this
+/// process's `Projects` is alive; `open.lock` stays empty. Each wait on the child is bounded at
+/// 60 s.
+///
+/// RECORDED MUTATION: no lock taken at a first save. Expected failure: the child takes the lock,
+/// and this test fails at its assertion on the child's reply.
+#[test]
+fn a_project_saved_first_in_this_process_is_refused_to_another_process() {
+    if let Ok(root) = std::env::var(KO17_ROOT) {
+        let project = std::env::var(KO17_PROJECT).expect("the identity");
+        let project: ProjectUri = project.parse().expect("a project identity");
+        let got = match ProjectLock::try_lock(Path::new(&root), &project) {
+            Ok(_) => "taken".to_string(),
+            Err(LockRefused::Held) => "held".to_string(),
+            Err(LockRefused::Io(e)) => format!("io: {e}"),
+        };
+        println!("ko17: {got}");
+        return;
+    }
+    let rig = rig("ko17");
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    let ws = workspace(&ds, None, -4.5);
+    let saved = rig
+        .projects
+        .save(handle.as_str(), &ds, Some(&rig.folder), ws)
+        .expect("saved");
+
+    let exe = std::env::current_exe().expect("the test binary");
+    let mut child = Command::new(exe)
+        .args(["--exact", KO17, "--nocapture", "--test-threads=1"])
+        .env(KO17_ROOT, &rig.machine)
+        .env(KO17_PROJECT, saved.project.as_str())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("the child");
+    let stdout = child.stdout.take().expect("the child's stdout");
+    let (said, heard) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut lines = BufReader::new(stdout).lines().map_while(Result::ok);
+        // libtest may print the child's line after its own `test <name> ... ` on one line.
+        let _ = said.send(lines.find_map(|l| Some(l.split_once("ko17: ")?.1.to_string())));
+    });
+    let reply = heard.recv_timeout(Duration::from_secs(60));
+    let started = Instant::now();
+    while child.try_wait().expect("wait").is_none() {
+        if started.elapsed() > Duration::from_secs(60) {
+            child.kill().expect("kill the child this test started");
+            panic!("the child did not end within 60 s");
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    let held = Ok(Some("held".to_string()));
+    assert_eq!(reply, held, "the other process is refused the lock");
+    let lock = rig.machine.join(saved.project.hex()).join(OPEN_LOCK);
+    let len = std::fs::metadata(lock).expect("open.lock").len();
+    assert_eq!(len, 0, "open.lock is never written");
+}
+
+/// **K-O24**: a first save into a folder this test made refuse a new file is refused when it
+/// stages the project file, which comes after the lock, and `ProjectLock::try_lock` on the
+/// identity then succeeds: the refused save freed its lock. Off Windows the folder is made read
+/// only. On Windows, where a folder marked read only still takes a new file, `icacls` adds an
+/// entry denying Everyone (`S-1-1-0`) the right to add a file to it, and removes that entry after
+/// the save.
+///
+/// RECORDED MUTATION: the lock kept with the saved entry on a failed save. Expected failure: the
+/// lock is refused as held, and this test fails at its last assertion.
+#[test]
+fn a_first_save_refused_after_the_lock_leaves_it_free() {
+    let rig = rig("ko24");
+    let path = rig.dir.join("elsewhere").join("parcels.parquet");
+    f1(&path);
+    let (handle, ds) = rig.open(&path);
+    let folder = rig.folder.as_path();
+    let before = std::fs::metadata(folder).expect("folder").permissions();
+    let mut read_only = before.clone();
+    read_only.set_readonly(true);
+    let windows = std::env::consts::OS == "windows";
+    let icacls = |args: [&str; 2]| {
+        let status = Command::new("icacls").arg(folder).args(args).status();
+        assert!(status.is_ok_and(|s| s.success()), "icacls {args:?}");
+    };
+    if windows {
+        icacls(["/deny", "*S-1-1-0:(WD)"]);
+    } else {
+        std::fs::set_permissions(folder, read_only).expect("the folder made read only");
+    }
+    let ws = workspace(&ds, None, -4.5);
+    let result = rig.projects.save(handle.as_str(), &ds, Some(folder), ws);
+    if windows {
+        icacls(["/remove:d", "*S-1-1-0"]);
+    } else {
+        std::fs::set_permissions(folder, before).expect("the folder's permissions restored");
+    }
+    let refused = result.expect_err("a read-only folder takes no project file");
+    let staged = matches!(refused, SaveFailure::ProjectFileUnwritable(_));
+    assert!(staged, "refused at the project file: {refused}");
+    let ids = file_names(&rig.machine);
+    assert_eq!(ids.len(), 1, "one identity folder: {ids:?}");
+    let uri = format!("spatial://project/{}", ids[0]);
+    let project: ProjectUri = uri.parse().expect("an identity");
+    let lock = ProjectLock::try_lock(&rig.machine, &project);
+    assert!(lock.is_ok(), "the refused save freed the lock: {lock:?}");
 }
