@@ -40,6 +40,9 @@ const SETTLE_MS = 250; // a React commit after a key press; not a timing claim
 // e2e-local windows (shell-map-refill-after-resize section 7), harness bounds and not timing claims.
 const RESIZEQ_WINDOW_MS = 3_000;
 const FILL_WINDOW_MS = 10_000;
+// FILL's declared drag (open-first-look-fills-fit-view Amendment 3, item 1): from the canvas centre, 160 CSS px to the left in 16 steps. Not a search.
+const FILL_PAN_PX = 160;
+const FILL_PAN_STEPS = 16;
 const BURST_MOVES = 24; // at least 20 pointer moves
 const BURST_STEP_PX = 4;
 
@@ -433,6 +436,13 @@ async function stepFill(page, consoleHandle) {
   await settleFully(page, consoleHandle, "FILL: after the wheel notch");
   const view = lastViewState(consoleHandle);
   if (zoom0 === undefined || view === null || view.zoom === zoom0) throw new Error("FILL: a wheel notch at the canvas centre did not change the zoom: invalidator I3, STOP and report");
+  // The open's own plan asked for the fit view's cells, so the view moves east off them before the toggle: one declared drag after the notch.
+  // Its effect is read back from the view-state lines, as the notch's is, and the drag's views count as asks below.
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.down();
+  await page.mouse.move(centre.x - FILL_PAN_PX, centre.y, { steps: FILL_PAN_STEPS });
+  await page.mouse.up();
+  await settleFully(page, consoleHandle, "FILL: after the drag");
   const size = await canvasSize(page);
   const growth = await inspectorGrowthPx(page);
   const status = await page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null);
