@@ -375,6 +375,7 @@ const stepKey = (request) => {
 const waitCommitted = (page, committed) => waitFor(() => readRecordStepRows(page), (r) => { const n = Math.min(r.length, committed.length); return n > 0 && r.at(-1).outcome === "ok" && JSON.stringify(r.slice(-n).map((row) => stepKey(row.request))) === JSON.stringify(committed.slice(-n)); }, 30_000);
 /** The Console's label (open-first-look-fills-fit-view Amendment 5): `Console — <held> actions (<dropped> dropped)`; held + dropped is every entry recorded since the page loaded, and the entry at position k of one reading is number dropped + k. */
 const LABEL = /Console — (\d+) actions?(?: \((\d+) dropped\))?/;
+const parseLabel = (text) => { const m = LABEL.exec(text); return m ? { held: Number(m[1]), dropped: Number(m[2] ?? 0) } : null; };
 const consoleLabel = (page) => page.evaluate(async () => { await Promise.race([new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))), new Promise((r) => setTimeout(r, 500))]); return document.querySelector(".console-disclosure")?.textContent ?? ""; });
 /** One reading: opens the Console if closed (and returns null); numbers every rendered entry; returns null unless the entries and the closed groups' counts sum to held; clicks each closed group holding an entry numbered at or above the mark. */
 const readConsole = (page, mark) => page.evaluate(([label, mark]) => {
