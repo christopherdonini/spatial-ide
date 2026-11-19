@@ -1880,6 +1880,11 @@ fn listing(dir: &Path) -> Vec<String> {
 ///
 /// RECORDED MUTATION: the release not run in `open_project`. Expected failure: the second reopen
 /// is refused as open elsewhere, and this test fails at `opened`.
+///
+/// RECORDED MUTATION 2 (Amendment 46 item 1 (b)): `release_ended` drops every entry. Expected
+/// failure: the control's reopen, through the `Projects` that holds the lock while the open is
+/// live, frees that lock and replies `opened`, and this test fails at the assertion named the
+/// control.
 #[test]
 fn a_reopen_after_a_session_end_in_the_same_process_takes_the_lock() {
     let rig = rig("k-o26");
