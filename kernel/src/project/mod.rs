@@ -238,10 +238,12 @@ impl Projects {
     /// (`require_live`). The shell's `close_dataset` starts it on another thread after the host
     /// has closed the dataset and does not wait for it, and [`Projects::open_project`] calls it
     /// before it takes a lock. It takes the `saved` mutex before the catalog and the generations,
-    /// as [`Projects::save`] does, so a save in progress ends before its entry is dropped: until
-    /// then the lock is held, after `close_dataset` has replied. A `record_step` that passed its
-    /// live check before the session ended can still write after this frees the lock, and after
-    /// another process has taken it.
+    /// as [`Projects::save`] does, so a save in progress ends before its entry is dropped. After
+    /// `close_dataset` has replied, the lock is therefore still held until this call has run, and
+    /// it waits for whatever holds that mutex: a save, a reopen as it keeps its entry, or another
+    /// call of this function. A `record_step` that passed its checks before the open was closed or
+    /// its session ended can still write after this frees the lock, and after another process has
+    /// taken it.
     pub fn release_ended(&self) {
         let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
         let host = self.recorder.host();
