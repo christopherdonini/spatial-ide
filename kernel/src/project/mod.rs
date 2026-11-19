@@ -235,12 +235,13 @@ impl Projects {
 
     /// Drop the entry, and with it the identity's open lock, of every open this [`Projects`] saved
     /// first or reopened that the catalog no longer holds or whose session has ended
-    /// (`require_live`). The shell's `close_dataset` calls it after the host has closed the
-    /// dataset, and [`Projects::open_project`] calls it before it takes a lock. It takes the
-    /// `saved` mutex before the catalog and the generations, as [`Projects::save`] does, so a save
-    /// in progress ends before its entry is dropped. A `record_step` that passed its live check
-    /// before the session ended can still write after this frees the lock, and after another
-    /// process has taken it.
+    /// (`require_live`). The shell's `close_dataset` starts it on another thread after the host
+    /// has closed the dataset and does not wait for it, and [`Projects::open_project`] calls it
+    /// before it takes a lock. It takes the `saved` mutex before the catalog and the generations,
+    /// as [`Projects::save`] does, so a save in progress ends before its entry is dropped: until
+    /// then the lock is held, after `close_dataset` has replied. A `record_step` that passed its
+    /// live check before the session ended can still write after this frees the lock, and after
+    /// another process has taken it.
     pub fn release_ended(&self) {
         let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
         let host = self.recorder.host();

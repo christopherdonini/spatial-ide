@@ -11,10 +11,12 @@
 //! - **Binding-local** (`binding_*`) — named so they cannot be mistaken for SKP, excluded from the
 //!   command catalog and from any future conformance suite (SKP-V0.md §4 item 1).
 //!
-//! **This file contains no logic** beyond decode → call one `SkpHost`/state method → serialize —
-//! docs/02's "frontends: clients only, no logic" applied to the Rust half of a client. `lib.rs`
-//! lists every command below in its `tauri::generate_handler!` call; adding one here without adding
-//! it there is a command JS can never reach, which is the reason there is exactly one list.
+//! **This file contains no logic** beyond decode → call one `SkpHost`/state method → serialize
+//! (`close_dataset` alone starts a second call, [`Projects::release_ended`], after the host's
+//! close) — docs/02's "frontends: clients only, no logic" applied to the Rust half of a client.
+//! `lib.rs` lists every command below in its `tauri::generate_handler!` call; adding one here
+//! without adding it there is a command JS can never reach, which is the reason there is exactly
+//! one list.
 
 use std::sync::{Arc, Mutex};
 
@@ -113,8 +115,13 @@ pub fn cancel(
 /// can still observe the dataset's own teardown (e.g. leases dropping as its tickets are cancelled)
 /// rather than being cut off the moment `close_dataset` is called.
 ///
-/// After the host's close, whatever its result, [`Projects::release_ended`] frees the project lock
-/// of each open that the catalog no longer holds or whose session has ended.
+/// After the host's close, whatever its result, [`Projects::release_ended`] is started on a thread
+/// of its own, which this command does not wait for: it frees the project lock of each open that
+/// the catalog no longer holds or whose session has ended, and it may first wait for a save in
+/// flight. So when this command replies, the lock can still be held, for as long as that save
+/// takes. A reopen in this process is not affected, since `open_project` runs `release_ended`
+/// itself before it takes a lock; a reopen from another process in that time is refused as already
+/// open.
 #[cfg_attr(
     not(any(debug_assertions, feature = "measure-build")),
     allow(unused_variables)
@@ -129,8 +136,8 @@ pub fn close_dataset(
     #[cfg(any(debug_assertions, feature = "measure-build"))]
     let dataset_for_stop = request.dataset.as_str().to_string();
     let result = state.close_dataset(request);
-    if let Some(projects) = projects.inner() {
-        projects.release_ended();
+    if let Some(projects) = projects.inner().clone() {
+        std::thread::spawn(move || projects.release_ended());
     }
     #[cfg(any(debug_assertions, feature = "measure-build"))]
     if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
@@ -163,7 +170,7 @@ pub async fn record_step(
 /// IO that no task on the async runtime or the UI thread may wait on. `Projects` is `None` when
 /// the per-user data directory could not be resolved at startup; the save is then refused by name,
 /// never dropped. `close_dataset` frees the open's project lock: after the host has closed the
-/// dataset, it calls [`Projects::release_ended`].
+/// dataset, it has [`Projects::release_ended`] run on another thread and does not wait for it.
 #[tauri::command]
 pub async fn save_project(
     state: State<'_, Option<Arc<Projects>>>,

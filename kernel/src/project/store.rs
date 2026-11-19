@@ -224,10 +224,11 @@ fn remove_stale_temps(folder: &Path) {
 ///
 /// Pre-committed producer, with [`OPEN_LOCK`], [`ProjectLock::try_lock`] and [`LockRefused`] (the
 /// form's Amendment 30, item 6 (d)). Its consumers: `open_project`'s step 3 and `Projects::save` at
-/// a first save (P3a), and the binding's lock state, dropped at `close_dataset` and by the
-/// session-end forwarder (P3b). The seam's end-to-end tests are that row's: K-O4, K-O5, two named
-/// there by working name, E-SECOND and E-CRASH-UNLOCK. Its own test is T6, in
-/// `kernel/tests/project_lock_crash.rs`.
+/// a first save (P3a), and `Projects::release_ended` (P3b-1), which drops the lock of an open that
+/// is closed or whose session has ended; the binding has it run after the host's close of a
+/// dataset, and `open_project` calls it before it takes a lock. The seam's end-to-end tests are
+/// that row's: K-O4, K-O5, two named there by working name, E-SECOND and E-CRASH-UNLOCK. Its own
+/// test is T6, in `kernel/tests/project_lock_crash.rs`.
 #[derive(Debug)]
 pub struct ProjectLock {
     file: File,
