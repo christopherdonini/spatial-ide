@@ -1227,7 +1227,7 @@ fn a_project_saved_first_in_this_process_is_refused_to_another_process_until_its
     let folder = Some(rig.folder.as_path());
     let (handle, ds) = rig.open_inside("data/parcels.parquet");
     let ws = workspace(&ds, None, -4.5);
-    let saved = rig.projects.save(handle.as_str(), &ds, Some(folder), ws);
+    let saved = rig.projects.save(handle.as_str(), &ds, folder, ws);
     let project = saved.expect("saved").project;
     let first = child_tries_lock(&rig.machine, &project);
     assert_eq!(first.as_deref(), Some("held"), "the control");
