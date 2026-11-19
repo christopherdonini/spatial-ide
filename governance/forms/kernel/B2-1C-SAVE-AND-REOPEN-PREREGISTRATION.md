@@ -2977,3 +2977,65 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 42 — P3a-2's closing, before its merge request: the gates; the words commit; K-O25 named; K-O25 exempted from the catalog bullet (class 1); Amendment 41 item 3 (b) corrected (class 3); E1; the four mutation rows (class 1); the F4 row's word (class 1); ADR-036 Amendment 2 item 3 left to P3b; the counts (class 8); the red run; the reviewer's departure (class 1); the holds
+
+*Written by the custodian, 2026-11-19, after both gates' results were seen, from the advisor's ruling ADV-2026-11-19-19, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-19-pr-337s-closing-questions-draft-a-a-class-3-correction-k-o25-exempted-from-the-catalog-bullet-by-name-the-adr-item-to-p3b-the-four-mutation-rows-class-1.md`. References and hashes only. Items 4 to 6 place the architect's Drafts B, A and C here, as that ruling asks, by reference: they are under the Drafts of the filed report of the architect's attempt 2, `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect-attempt-2.md` (sha256 0b50528f9edee3cc734e78faef485840f52e7a210102b2a2e09f34c4e3a2fcde). Their line cites are to c351ddb8, a branch commit, so they stay in that report and are not copied. Item 7 sets the form's words beside the reviewer's, each checked by script against its source. Nothing else is quoted.*
+
+1. **The gates**, at c351ddb8055c89fde6b6bb8e319c6347a581077d (Amendment 41 item 10).
+   - The reviewer, whole: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-reviewer.md`, PASS WITH NOTES, gate-log 790. It has no Correctness or Evidence finding.
+   - The architect's attempt 2, limited to E1 and to the fix, by reading: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect-attempt-2.md`, PASS WITH NOTES, gate-log 791.
+   - The architect's attempt 1, at b5c351564dd4798fdd341e783b9d71b0054242e9: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect.md`, FAIL on E1. Item 6 closes E1.
+2. **The words commit**, 2d88811c445141f4a56847112ef8ebcbfdf94d64, made by the custodian's script, comment lines only (Amendment 41 items 8 and 10; ADV-2026-11-19-14 item 4; ADV-2026-11-19-15 item 2; ADV-2026-11-19-19 item 5).
+   - It applies the architect's Drafts 1 to 7 from its attempt 1 report, which the reviewer adopted as its D1 to D7, and the reviewer's D8 (the comment above K-O19) and D9 (the doc of `Open::uri`).
+   - `git diff --numstat` from c351ddb8: `kernel/src/project/mod.rs` 13 added and 8 deleted, `kernel/src/session_history.rs` 10 added and 5 deleted, `kernel/tests/project_reopen.rs` 8 added and 5 deleted, 49 lines in 3 files.
+   - CI at it: 12 runs, all success, by the custodian's watcher, read at 2026-11-19T11:30:35Z.
+   - The architect's D6 is met: the node's PLAN summary names P3a-2's producers, and PR 337's body names them, set by the custodian and read back equal at 2026-11-19T11:49:38Z (Amendment 36 item 8).
+3. **K-O25** (the reviewer's D10; Amendment 41 item 4). The test that item declared, named by the worker, is `a_relink_the_writer_refuses_writes_nothing_at_a_first_reopen_or_a_copy`, in `kernel/tests/project_reopen.rs`, from commit 6837444160ca66b5f058873b7d950c34a773bc95. Its declared mutation failed it in the reviewer's hold 3, at its assertion that nothing was written (the reviewer's check 7 (c)).
+4. **K-O25 and the catalog bullet, class 1** (ADV-2026-11-19-19 item 2; the architect's N2; the reviewer's A4). The general bullet of Amendment 36 item 7 (b), on every case that opens nothing, binds K-O25, a row declared later in the same part. That ruling exempts K-O25 from it by name. The reason is the architect's Draft B (N2), in that report.
+   P3b's declaring amendment carries the question as a row to consider (ADV-2026-11-19-19 item 2).
+5. **Amendment 41 item 3 (b), corrected, class 3** (ADV-2026-11-19-19 item 1; the architect's N1; the reviewer's A1). Item 3 (b)'s list was incomplete. The correction is the architect's Draft A (N1), in that report.
+   Amendment 41 is not edited.
+6. **E1** (Amendment 41 items 1 and 2; the architect's N3). The architect's Draft C (N3), in that report, records how E1 closed.
+7. **The four mutation rows, class 1** (ADV-2026-11-19-19 item 4; the reviewer's A3). For each row of Amendment 36 item 7 (b)'s table, the form's Mutation words beside what the reviewer's table script did:
+
+   | Row | The form's words | What was done, by the reviewer's A3 |
+   |---|---|---|
+   | K-O2 | only `byte_size` compared | removes only the mtime comparison in `engine/src/descriptor.rs` |
+   | K-O10 (b) | the same, that is K-O10's: a refused file replaced by a fresh one | reads a refused locations.json as holding no entry |
+   | K-O14 | the error arm keeps the guard | leaks the lock by `mem::forget` |
+   | K-O4 (a) | (a) no lock | locks under a fresh random root |
+
+   - The reviewer's lines that they fail: "All four fail." (its A3), and "All rows fail (cargo rc 101) except K-O19" (its check 7 (a)).
+   - The reviewer's report does not say that any of the four tests a different property from its row's.
+8. **The F4 row's word, class 1** (Amendment 41 item 9; ADV-2026-11-19-15 item 4). The F4 row's word differs from what is built. K-O2 and K-O8 stand as built, on the producer's word, by commit 0c539ed2a8a6b3a3990e9688d6e808232ea79b63 (Amendment 39 item 7). The ruling on P3b's declaring amendment decides whether the row is corrected or the wire maps the word.
+9. **ADR-036 Amendment 2 item 3, left to P3b** (ADV-2026-11-19-19 item 3; the reviewer's A2).
+   - The item does not yet say that a reopened open takes the project file's dataset identity.
+   - No caller reaches that until P3b. P3b's PR appends the ADR's words for it, which the advisor gives with its ruling on P3b's declaring amendment.
+   - This PR adds the ADR's Amendment 3 only (ADV-2026-11-19-04 P-3) and leaves Amendment 2 as it is.
+10. **The counts, class 8** (Amendment 36 item 4; Amendment 41 item 7; the reviewer's D11). By §2.11's command from the merge base 18f14b62d222038f29214c53c0f11bf2f9d6a1e4, both columns:
+
+   | File | At c351ddb8 (the reviewer's D11) | At 2d88811c | Ceiling |
+   |---|---|---|---|
+   | `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md` | 8 | 8 | none in item 4 |
+   | `kernel/src/dataset_ref.rs` | 6 | 6 | 10 |
+   | `kernel/src/project/mod.rs` | 488 | 509 | 520 |
+   | `kernel/src/session_history.rs` | 30 | 45 | 50 |
+   | `kernel/src/skp.rs` | 30 | 30 | 60 |
+   | `kernel/tests/project_lock_crash.rs` | 151 | 151 | 70 |
+   | `kernel/tests/project_reopen.rs` | 1457 | 1460 | 520 |
+   | kernel product | 554 | 590 | 640 |
+   | kernel tests | 1608 | 1611 | 590 |
+   | in all | 2170 in 7 files | 2209 in 7 files | 1,230 in 6 files |
+
+   - Over their ceilings, class 8: `kernel/tests/project_lock_crash.rs` 151 of 70, `kernel/tests/project_reopen.rs` 1460 of 520, the kernel tests 1611 of 590, the total 2209 of 1,230, and 7 files of 6 (by the reviewer's D11, the ADR has no ceiling row in item 4, and Amendment 36 item 10 brings it in).
+   - Step 2's groups (Amendment 36 item 2 for the use before P3a; Amendment 38 item 3 for P3a-1), at 2d88811c: kernel product 792 + 71 + 590 = 1,453 of 1,400 (53 over); kernel tests 883 + 127 + 1611 = 2,621 of 1,300 (1,321 over); protocol 5 of 320, which P3a does not touch. At c351ddb8 the reviewer gave the kernel product total as 1417 of 1,400.
+   - §2.11 and §7 are not edited.
+11. **The red run** (ADV-2026-11-19-10 item 4). Run 44474730131, Product CI — Rust workspace, failure, at ff31b05c58d27b40e60a98ea000ff85727e1bec4. Its cause: the tests' commit was pushed before the code it tests, so the build failed (ADV-2026-11-19-10 item 1). By gh run list, read at 2026-11-19T11:59:22Z, the branch has 46 runs, and no other is red or cancelled.
+12. **The reviewer's departure, class 1** (its report, under its holds). The lines of its holds 2 and 4 ran a second command after `;` rather than `&&`. Both holds printed MACHINE_HOLD, so the command ran inside them.
+13. **The holds.** From the machine log, by the custodian's script, P3a-2 has 21 holds: 17 by its workers and 4 by the reviewer, from 2026-11-19T06:23:35Z to 10:56:29Z. None stood beside another hold of this project.
+14. **Next.** PR 337 goes out of draft, and its merge request goes to the advisor, with the step's totals beside their ceilings (ADV-2026-11-19-19 item 6). No path of PR 337 changed on main after its merge base (ADV-2026-11-19-20 item 7).
+
+Read the last amendment first.
+
+Nothing above is edited.
