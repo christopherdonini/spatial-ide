@@ -489,7 +489,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
     let request =
         |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
             serde_json::json!({
-                "skp": "skp/0.13", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "skp": "skp/0.14", "dataset": "ds_00112233445566778899aabbccddeeff",
                 "folder": folder,
                 "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
             })
@@ -643,7 +643,7 @@ fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_const
         wires.push(lineage(json!(fact), Value::Null));
     }
     for fact in ["absent", "used", "not-the-recorded-one"] {
-        wires.push(lineage(Value::Null, json!(fact)));
+        wires.push(lineage(json!("absent"), json!(fact)));
     }
     for why in refusals {
         wires.push(lineage(
