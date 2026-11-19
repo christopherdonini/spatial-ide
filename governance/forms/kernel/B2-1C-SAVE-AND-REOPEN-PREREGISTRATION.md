@@ -2891,3 +2891,27 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 39 — P3a-2's stop 4 on K-O19, written after the result was seen (class 1): its declared mutation did not fail its test; K-O18's mutation is recorded for K-O19; the refusal by `create` of a record folder that exists is not covered; one worker step; the two docs corrected in this part
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-11, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-11-p3a-2-stop-on-k-o19-no-architect-draft-k-o18s-mutation-recorded-for-k-o19-creates-refusal-not-covered-the-two-docs-corrected.md`. It is written after the result was seen. References and hashes only; nothing below is a quotation. The worker-high's report: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-worker-high-report.md`.*
+
+1. **The result** (Amendment 36 item 12, stop 4). At 270d3ac2c17c6551f7783c1feba1bfc5ad140178, K-O19's declared mutation (Amendment 36's table, K-O19's row) was applied and did not fail its test. The other 34 mutations of the table failed theirs. The cause is in ADV-2026-11-19-04, which ruled P-2 option (i) and left the row's mutation as written for option (ii): under option (i) the open stays unbound, its first step makes a record folder that does not yet exist, and `create_dir` and `create_dir_all` act the same there (ADV-2026-11-19-11 item 1). K-O19's row is not edited.
+2. **K-O19 stays as built** (ADV-2026-11-19-11 item 2 (b)). It shows option (i)'s outcome one step later than K-O18 does. Its recorded mutation becomes K-O18's, as K-O18's row in Amendment 36's table declares it. That mutation is declared after the result, and it is not a mutation of K-O19's own. Predicted: K-O19 fails, at its step or at an assertion after it. The worker records the line.
+3. **Not covered** (ADV-2026-11-19-11 item 2 (c) and (d)). The refusal by `create` of a record folder that exists (`create_dir`) has no test: under option (i), K-O19 does not reach it. The architect's gate answers by reading whether any path reaches `create` for a project's record folder that exists, in one process or in two. If ordinary use reaches one, it goes to the advisor before the merge request.
+4. **One worker step** (ADV-2026-11-19-11 item 3). K-O18's mutation applied, K-O19 run alone, the failing line recorded, the revert shown with the diff empty. Then the `RECORDED MUTATION` comment above K-O19 changed to name that mutation and the failure seen: one commit, comment lines only. The step does not need the strongest model. Its push carries nothing expected to fail CI (ADV-2026-11-19-10 item 2).
+5. **The two docs** (ADV-2026-11-19-11 item 4). The doc of `SavedProject._lock` and the doc of `save` on the folder it goes to are corrected in this part, as comment lines only. The two gates draft the words, and they go in the words commit after the gates, with no re-gate. Where the two gates give different words for one place, it goes to the advisor. The module doc's second paragraph of `kernel/src/project/mod.rs`, as changed at 270d3ac2, stands in place of the words ADV-2026-11-19-07 item 2 ruled if both gates find every clause of it true at the head. An untrue clause goes to the advisor.
+6. **The order** (ADV-2026-11-19-11 item 5). This amendment on main; item 4's step; the PR; both gates, the reviewer with clippy and the mutations by the round-25 rule; the words commit; the closing; the merge request.
+7. **For the gates' briefs** (ADV-2026-11-19-11 item 6).
+   - Commit 0c539ed2 changed the word K-O2 and K-O8 expect, after their base commit and before the code. Both gates check that word against the form's rows and against the descriptor. An expectation the form does not support goes to the advisor.
+   - The symbol named in that commit's message is recorded in the closing. Nothing is amended.
+   - The `pub` items with no product caller yet, disclosed against §8 item 9, are read by both gates.
+   - The reviewer confirms that the clippy warning in `kernel/src/skp.rs` is at the base.
+8. **The counts** (ADV-2026-11-19-11 item 7; ADV-2026-11-19-04 item 7). Class 8 is recorded at the closing, at the counts.
+   - The merge request gives each ceiling for P3a-2 beside its count. It says whether the step's total ceiling is passed at that head, and it gives the step's total as now forecast with P3b.
+   - The architect's gate says, by reading, why the tests are near three times their ceiling, and whether any test or helper is not asked for by the form's rows.
+9. **A red run** (ADV-2026-11-19-10 item 4). Run 44474730131, the Rust workspace at ff31b05c, failed at the build step on all three platforms, because the tests' commit was pushed before its code. The closing records it with that cause.
+
+Read the last amendment first.
+
+Nothing above is edited.
