@@ -618,26 +618,24 @@ fn a_copy_answer_whose_data_is_not_found_writes_nothing_and_its_second_call_keep
 /// `basis`, and (b)'s `file_name` (with W-4's three cases).
 #[test]
 fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_control_character() {
-    let rig = rig("w-7a");
-    rig.inside();
+    let a = rig("w-7a");
+    a.inside();
     let identifier = format!("\"identifier\":\"\\u0001{}\"", "E".repeat(4_095));
-    rig.edit("\"identifier\":\"EPSG:2056\"", &identifier);
-    let reply = rig.reopen(&rig.folder, Value::Null, None).expect("opened");
+    a.edit("\"identifier\":\"EPSG:2056\"", &identifier);
+    let reply = a.reopen(&a.folder, Value::Null, None).expect("opened");
     let view = &reply["opened"]["view"];
     assert_eq!(view["state"], "saved-in-another-space", "{reply}");
     let basis = view["basis"].as_str().expect("a basis");
     assert!(!basis.chars().any(char::is_control), "{basis:?}");
     assert!(basis.len() < 1_024, "basis is {} bytes", basis.len());
 
-    let rig = rig("w-7b");
-    let (project, data) = rig.outside();
-    let file = read_project(&std::fs::read(rig.file()).expect("the file")).expect("read");
+    let b = rig("w-7b");
+    let (project, data) = b.outside();
+    let file = read_project(&std::fs::read(b.file()).expect("the file")).expect("read");
     let long = data.with_file_name(format!("{}.parquet", "\u{20ac}".repeat(90)));
     let bytes = locations_to_bytes(file.dataset.uri(), &long).expect("a recorded path");
-    std::fs::write(rig.machine_file(&project, LOCATIONS), bytes).expect("written");
-    let reply = rig
-        .reopen(&rig.folder, Value::Null, None)
-        .expect("not found");
+    std::fs::write(b.machine_file(&project, LOCATIONS), bytes).expect("written");
+    let reply = b.reopen(&b.folder, Value::Null, None).expect("not found");
     let name = reply["not_found"]["file_name"].as_str().expect("a name");
     assert!(
         name.len() <= 262 && name.ends_with(" [cut]"),
