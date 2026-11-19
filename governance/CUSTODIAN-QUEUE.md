@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d79dffbe5db931674db8567f826befde7df34c23236c46ff98d73c33441d605f`) at `2026-11-19T12:40:31.990Z`.
+Generated from `PLAN.yaml` (sha256 `0574a04340cad3ddc57f4c7749c2292be2523e8cf139cf747a969e3519fbcd2b`) at `2026-11-19T13:04:10.704Z`.
 
 ## 1. Next
 
@@ -54,7 +54,6 @@ Generated from `PLAN.yaml` (sha256 `d79dffbe5db931674db8567f826befde7df34c23236c
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **selection-export-unknown-attempt** — The selection suite's export steps end unknown-attempt on main since 2026-11-18: settle which place answered and whether a person can reach it; then the suite waits for the dialog, or the defect goes to the advisor (ADV-2026-11-18-05 item 2) — evidence: branch `cut/selection-export-unknown-attempt`
 - **stop-failure-alarm** — The stop alarm: a StopFailure hook tells the human by Telegram when a turn of the custodian ends on an error from the service, and the Notification hook also forwards quota_auto_resume_fired (the human's approval of ADV-2026-11-18-06; ADV-2026-11-18-22) — evidence: branch `cut/stop-failure-alarm`
 
 ## 6. Proposed / unscheduled
