@@ -1916,3 +1916,51 @@ fn a_reopen_after_a_session_end_in_the_same_process_takes_the_lock() {
     assert!(!gained, "the machine store gains no folder");
     assert!(!empty.join(PROJECT_FILE_NAME).exists());
 }
+
+/// **L8** (Amendment 43 item 7 (b)). A folder at `.spatial/lineage.jsonl` beside a kept member is
+/// refused as unreadable, and no lineage is read.
+///
+/// RECORDED MUTATION: `lineage_file`'s `unreadable` back to `Damaged { line: 0 }`. Expected
+/// failure: the file is refused as damaged, and this test fails at its `Unreadable` match.
+#[test]
+fn an_unreadable_lineage_file_is_named_unreadable() {
+    let dir = scratch("l8");
+    let file = dir.join(".spatial/lineage.jsonl");
+    std::fs::create_dir_all(&file).expect("a folder at the lineage file's name");
+    let got = read_lineage(&file, &dir.join("previous.jsonl"), &member(&saved()));
+    let refused = match &got.folder_file {
+        FolderLineage::Refused(refused) => Some(refused),
+        _ => None,
+    };
+    let unreadable = matches!(refused, Some(LineageRefused::Unreadable { .. }));
+    assert!(unreadable, "{got:?}");
+    assert_eq!(got.lineage, None);
+}
+
+/// **L9** (Amendment 43 item 7 (b)). Beside a kept member, a link at the lineage file's name is
+/// refused as a link and is not followed: off Windows a symlink to a file that holds the member's
+/// lineage, on Windows a junction (`link_to`). The link is kept, and no lineage is read.
+///
+/// RECORDED MUTATION: the link test in `lineage_file` removed. Expected failure: off Windows the
+/// link is followed and the file reads as the project's lineage; on Windows the junction is opened
+/// and refused as `Unreadable`.
+#[test]
+fn a_link_at_the_lineage_name_beside_a_kept_member_is_refused_and_never_followed() {
+    let dir = scratch("l9");
+    let lines = saved();
+    let (link, target) = (dir.join("folder.jsonl"), dir.join("target"));
+    if cfg!(windows) {
+        std::fs::create_dir(&target).expect("the junction's folder");
+    } else {
+        std::fs::write(&target, bytes(&lines)).expect("a file matching the member");
+    }
+    link_to(&link, &target);
+    let got = read_lineage(&link, &dir.join("previous.jsonl"), &member(&lines));
+    let want = LineageRead {
+        folder_file: FolderLineage::Refused(LineageRefused::ThroughLink),
+        previous_file: Some(PreviousLineage::Absent),
+        lineage: None,
+    };
+    assert_eq!(got, want);
+    assert!(std::fs::symlink_metadata(&link).is_ok(), "the link is kept");
+}
