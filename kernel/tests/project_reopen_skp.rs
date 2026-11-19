@@ -610,15 +610,23 @@ fn a_copy_answer_whose_data_is_not_found_writes_nothing_and_its_second_call_keep
     assert_eq!(o["lineage"]["previous_file"], "used", "{reply}");
 }
 
-/// **W-7** (ADV-2026-11-19-32 item 6). (a) The saved view's space identifier, edited to fill the
-/// string ceiling with a control character written as an escape: `opened`, the view
-/// `saved-in-another-space`, and a `basis` under 1,024 bytes with no control character. (b) A
-/// recorded data path whose last name is 278 bytes (90 characters of 3 bytes each and
-/// `.parquet`), the file missing: `not_found`, with a `file_name` of at most 262 bytes that ends
+/// **W-7** (ADV-2026-11-19-32 item 6; changed under ADV-2026-11-19-34 item 3). (a) The saved
+/// view's space identifier, edited to fill the string ceiling with a control character written as
+/// an escape: `opened`, the view `saved-in-another-space`, and a `basis` under 1,024 bytes with no
+/// control character. Runs on every platform. (b1) A recorded data path whose last name is 278
+/// bytes (90 characters of 3 bytes each and `.parquet`), the file missing: `not_found`, with a
+/// `file_name` of at most 262 bytes that ends with the cut's mark. Compiled everywhere but Linux:
+/// Linux holds at most 255 bytes in one name, so there the metadata lookup in `data_at` does not
+/// answer "not found" for it, the path goes to the engine, and the reply is an `engine.source`
+/// refusal, not `not_found`; so on Linux the cut of `file_name` is shown by no test. (b2) On every
+/// platform: a recorded data path whose last name is short and holds U+0085 (a control character
+/// that Windows, macOS and Linux all accept in a file name: Linux forbids only `/` and NUL, NTFS
+/// only characters below U+0020 and its reserved ones, APFS likewise), the file missing:
+/// `not_found`, with a `file_name` holding no control character, holding U+FFFD, and not ending
 /// with the cut's mark.
 ///
 /// RECORDED MUTATION: W-4's (c), the bounding helper returns its input. Expected failure: (a)'s
-/// `basis`, and (b)'s `file_name` (with W-4's three cases).
+/// `basis`, (b1)'s `file_name` (Windows and macOS) and (b2)'s `file_name` (with W-4's three cases).
 #[test]
 fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_control_character() {
     let a = rig("w-7a");
@@ -632,17 +640,43 @@ fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_co
     assert!(!basis.chars().any(char::is_control), "{basis:?}");
     assert!(basis.len() < 1_024, "basis is {} bytes", basis.len());
 
-    let b = rig("w-7b");
-    let (project, data) = b.outside();
-    let file = read_project(&std::fs::read(b.file()).expect("the file")).expect("read");
-    let long = data.with_file_name(format!("{}.parquet", "\u{20ac}".repeat(90)));
-    let bytes = locations_to_bytes(file.dataset.uri(), &long).expect("a recorded path");
-    std::fs::write(b.machine_file(&project, LOCATIONS), bytes).expect("written");
-    let reply = b.reopen(&b.folder, Value::Null, None).expect("not found");
+    let a = rig("w-7a");
+    a.inside();
+    let identifier = format!("\"identifier\": \"\\u0001{}\"", "E".repeat(4_095));
+    a.edit("\"identifier\": \"EPSG:2056\"", &identifier);
+    let reply = a.reopen(&a.folder, Value::Null, None).expect("opened");
+    let view = &reply["opened"]["view"];
+    assert_eq!(view["state"], "saved-in-another-space", "{reply}");
+    let basis = view["basis"].as_str().expect("a basis");
+    assert!(!basis.chars().any(char::is_control), "{basis:?}");
+    assert!(basis.len() < 1_024, "basis is {} bytes", basis.len());
+
+    #[cfg(not(target_os = "linux"))]
+    {
+        let b = rig("w-7b");
+        let (project, data) = b.outside();
+        let file = read_project(&std::fs::read(b.file()).expect("the file")).expect("read");
+        let long = data.with_file_name(format!("{}.parquet", "€".repeat(90)));
+        let bytes = locations_to_bytes(file.dataset.uri(), &long).expect("a recorded path");
+        std::fs::write(b.machine_file(&project, LOCATIONS), bytes).expect("written");
+        let reply = b.reopen(&b.folder, Value::Null, None).expect("not found");
+        let name = reply["not_found"]["file_name"].as_str().expect("a name");
+        assert!(
+            name.len() <= 262 && name.ends_with(" [cut]"),
+            "{} bytes: {name}",
+            name.len()
+        );
+    }
+
+    let c = rig("w-7c");
+    let (project, data) = c.outside();
+    let file = read_project(&std::fs::read(c.file()).expect("the file")).expect("read");
+    let odd = data.with_file_name("parcels.parquet");
+    let bytes = locations_to_bytes(file.dataset.uri(), &odd).expect("a recorded path");
+    std::fs::write(c.machine_file(&project, LOCATIONS), bytes).expect("written");
+    let reply = c.reopen(&c.folder, Value::Null, None).expect("not found");
     let name = reply["not_found"]["file_name"].as_str().expect("a name");
-    assert!(
-        name.len() <= 262 && name.ends_with(" [cut]"),
-        "{} bytes: {name}",
-        name.len()
-    );
+    assert!(!name.chars().any(char::is_control), "{name:?}");
+    assert!(name.contains('�'), "{name:?}");
+    assert!(!name.ends_with(" [cut]"), "{name:?}");
 }
