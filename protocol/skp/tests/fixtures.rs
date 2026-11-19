@@ -631,13 +631,14 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.13` (`save_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
-/// test was `skp_version_is_skp_0_12` before that piece, `skp_version_is_skp_0_11` before piece 1b
-/// and `skp_version_is_skp_0_10` before the lines cut, PL-5).
-/// Mutation: the literal back to `"skp/0.12"`. Expected failure: this test fails by name.
+/// `skp/0.14` (`open_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
+/// test was `skp_version_is_skp_0_13` before that part, `skp_version_is_skp_0_12` before piece 1c,
+/// `skp_version_is_skp_0_11` before piece 1b and `skp_version_is_skp_0_10` before the lines cut,
+/// PL-5).
+/// Mutation: the literal back to `"skp/0.13"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_13() {
-    assert_eq!(SKP_VERSION, "skp/0.13");
+fn skp_version_is_skp_0_14() {
+    assert_eq!(SKP_VERSION, "skp/0.14");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row
