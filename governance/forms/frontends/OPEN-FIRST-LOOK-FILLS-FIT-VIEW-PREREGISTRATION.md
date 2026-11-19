@@ -626,3 +626,46 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5 — C1: `command-bar.mjs` E-AND after card B counts the `record_step` rows recorded since a mark taken from the Console's label, and fails where it cannot tell (class 9)
+
+*Drafted by the architect (claude-opus-5-5), read only, at main 65a72f7243d205e519f194de1b9175dd669286fd and at H = e374eb711caaeae4dd898e8ddb49a35d4d80c619, for the advisor's ruling (ADV-2026-11-19-08 item 3); appended by the custodian's script after it. Code is cited `<path>:<line> at H`. Reuse index: the custodian's line, byte-copied, the output of `node tools/reuse.mjs console ring dropped entries sequence e2e record step count` in the reuse clone, run after the architect's hand-back because its brief carried none (a disclosed departure, class 1, ADV-2026-11-19-09 item 8): `No prior art recorded for "console ring dropped entries sequence e2e record step count". Research it before planning an implementation.`. It changes no product file, no test of §4 and no prediction of §5. "(mine)" marks the architect's choices.*
+
+1. **The finding.** The reviewer's gate report at H (`state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-reviewer.md`), C1 and check 8's M-X2 line; ADV-2026-11-19-08 items 1 and 2. §11 item 11 is not engaged (ADV-2026-11-19-08 item 4).
+2. **What the code gives.**
+   - Label: `frontends/shell/src/console/ConsolePanel.tsx:64-68 at H`. Held + dropped = entries recorded since the page loaded: `frontends/shell/src/console/recorder.ts:205-213`, `:282-288`, `:339 at H`.
+   - Label and rendered entries come from one update: `ConsolePanel.tsx:48-52 at H`.
+   - Order and groups: `recorder.ts:300-302`, `frontends/shell/src/console/consoleViewModel.ts:177-189`, `ConsolePanel.tsx:106-131 at H`.
+   - Hence (mine): in one reading, counting a closed group as its `×N`, the entry at position k is entry number dropped + k.
+3. **The reading after card B** (class 9, declared before its code; mine).
+   - (a) Mark: after card A's wait (`frontends/shell/e2e/command-bar.mjs:433-434 at H`, unchanged), one read of the label; mark = held + dropped. An unparsable label fails with F1.
+   - (b) Readings: one `page.evaluate` every 200 ms. They start once card B's cards read as applied (after `command-bar.mjs:437 at H`), go on while the step waits for the map to settle and makes its map checks (`:438-441 at H`), and end at (e)'s decision or at F3. The draft started them after `:439-441 at H`; the earlier start is the advisor's change (item 12). Each one: opens the Console if it is closed, and discards that reading; numbers each rendered entry by item 2; discards the reading if the entries and `×N` counts do not sum to held; returns each rendered `record_step` row's number, `stepKey` (`:368-373 at H`) and outcome; in the same call, clicks each closed group that holds an entry numbered at or above the mark.
+   - (c) An entry is seen once a reading has rendered it. A row's outcome is the latest one read.
+   - (d) An entry numbered at or above the mark that is unseen and below the reading's dropped count fails the step with F2. The step never passes on what the Console still holds.
+   - (e) At the first reading after the check at `command-bar.mjs:441 at H` in which every entry from the mark up to the reading's total has been seen, and the newest `record_step` row at or above the mark is `ok`: the rows at or above the mark must be exactly one, keyed `filter:` + `ZONE_AB`, at `ok`. Otherwise F4.
+   - (f) If no such reading comes within 30 s of that check: F3.
+   - (g) Unchanged: card A's wait (`waitCommitted`, `:375 at H`), `readRecordStepRows` and `project.mjs` (ADV-2026-11-19-08 item 5). Replaced: `:442-444 at H`.
+   - (h) Texts (test strings):
+     - F1 `E-AND: the Console's label could not be read after card A's wait (<text>)`
+     - F2 `E-AND: cannot tell how many record_step rows card B's commit added: entry <n>, recorded after the mark at <mark>, was dropped before it was read (label after card A's wait: <held> actions, <dropped> dropped; now: <held> actions, <dropped> dropped)`
+     - F3 `E-AND: within 30000ms of card B's map settling no reading had read every entry since the mark with a record_step row since it at ok (<last reading>)`
+     - F4 `E-AND: card B's commit added <n> record_step rows, expected exactly one, at ok, carrying the combined text: <[[key, outcome], ...]>`
+     - In the PASS text (`:451 at H`), `one more record_step row reached ok` becomes `card B's commit added exactly one record_step row, at ok (Console after card A's wait: <held> actions, <dropped> dropped; after card B's map settled: <held> actions, <dropped> dropped)`. The second pair is the reading of (e).
+   - (i) Why order needs no timing (by reading): the mark is read before `sendCondition` for B (`:435 at H`). The queue sends one step at a time, and the next step is recorded in the same task that resolves the one before (`frontends/shell/src/workspace/stepRecorder.ts:52-60`, `frontends/shell/src/skp/client.ts:57-60 at H`).
+4. **Ceiling.** `command-bar.mjs`: 70 added plus removed, `git diff --numstat` against F, the E-AND-b header line included (the advisor's figure, item 12; the draft's was 60); this supersedes Amendment 4 item 4's 30 for this file. `project.mjs`: 40, not edited. No other path but the words commit's two (ADV-2026-11-19-08 items 8 and 9).
+5. **Unmutated run.** E-AND passes with 3(h)'s PASS text. It decides if every entry recorded since the mark is rendered by some reading before 256 newer entries are recorded. The readings run during the load (3 (b)), so that asks for fewer than 256 entries in about two reading intervals (400 ms). The draft's reader started after the settle and had at most 36 entries of room, by ADV-2026-11-19-08 item 6's floor of 220. Prediction: it decides; not measured. F2 here is I7: it goes to the advisor with the four numbers, with no second run.
+6. **Mutations** (as Amendment 4 item 7; a `verify-mutation` run is a check of a mutation's text, not its observation).
+   - M-A4-1 (`App.tsx:1060 at H` deleted): fails at card A's wait, the unchanged line `E-AND: the newest record_step rows did not end with card A's step at ok before card B (<rows>)` (`command-bar.mjs:434 at H`).
+   - M-A4-3 (the `App.tsx:1060 at H` step enqueued twice): card A's wait passes (the architect's gate at H, O1). Then F4 with n = 2, both rows `filter:` + `ZONE_AB`, at `ok`.
+   - M-X2 (the reviewer's line, as applied in its gate report at H, C1): F4 with n = 2, `["filter:\"zone\" = 'residential'","ok"]` then `["filter:(\"zone\" = 'residential') AND (\"zone\" <> 'residential')","ok"]`.
+   - F2 in place of F4 still fails, but it is not the predicted line: recorded as such, with the four numbers.
+7. **Unit layer** (by reading; no run required (mine)). `frontends/shell/src/App.command.test.tsx` RC3 (`:505`, `:512 at H`), RC5 (`:543`, `:548 at H`) and RC16 (`:644 at H`) pin the recorded steps of card changes. Under M-X2, RC3 fails at `:512` and RC5 at `:543`; RC16 passes.
+8. **Worker's steps.** (a) Item 3's edits and the E-AND-b header line (the architect's draft, section 4), as one commit; the other words of ADV-2026-11-19-08 items 6 to 8 are a second commit, by the custodian's script, after (c). (b) `command-bar.mjs` run whole once, unmutated, in its own shared hold, with the S9 debug exe and its sha256 checked. (c) Item 6's three mutations. (d) Each run's lines byte-copied, with the commit ids. (e) One focused vitest run of `frontends/shell/src/App.command.test.tsx` under M-X2, reverted after it with the porcelain empty: RC3 and RC5 are predicted to fail and RC16 to pass (item 7).
+9. **Not covered** (mine): a duplicate of card A's commit (the architect's gate O1; ADV-2026-11-19-08 item 5).
+10. **Budget.** `budget_minutes` from 500 to 560, my estimate. §7's table is not edited.
+11. **Superseded index.** Amendment 4 item 4, for `command-bar.mjs` after card B: the tail reading and the ceiling of 30, by items 3 and 4 here. Amendment 4 item 7 is not edited; its lines stand as the predictions for H.
+12. **As the advisor ruled it (ADV-2026-11-19-09).** Items 3 (b), (e) and (f), the PASS line of 3 (h), and items 4, 5 and 8 carry the advisor's changes: the readings start once card B's cards are applied and run during the load, and the decision is still taken only after the map checks, when every entry since the mark has been read; the ceiling is 70; the words are a second commit; one vitest run under M-X2 is added. Confirmed as drafted: item 6's predictions, F2 in the unmutated run as I7 with no second run, item 9, and item 10's budget. The reuse slot in the first paragraph takes the custodian's line, byte-copied and marked.
+
+Read the last amendment first.
+
+Nothing above is edited.
