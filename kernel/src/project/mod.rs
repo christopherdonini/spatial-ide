@@ -12,14 +12,18 @@
 //!   `project.spatial`.
 //! - [`resolver`]: [`resolver::judge`], which decides at save which locators the file carries.
 //! - [`Projects::save`]: the save, in order: the checks that can refuse it, the judgment, the
-//!   document, the machine store's files, the atomic replace of `project.spatial`, and last the
-//!   history's two moves (binding the open to the project, which moves the open's own record under
-//!   the project if it has one, and the `saved-here` mark in the project's record).
+//!   document, the machine store's documents built, at a first save the identity's open lock
+//!   ([`store::ProjectLock`]), the machine store's documents written, the atomic replace of
+//!   `project.spatial`, and last the history's two moves (binding the open to the project, which
+//!   moves the open's own record under the project if it has one, and the `saved-here` mark in the
+//!   project's record).
 //! - [`Projects::save_project`]: the same save as an SKP command (SKP-V0 §11): the request's checks,
 //!   the workspace built from its wire form, and each [`SaveFailure`] as its one SKP code.
 //!
-//! Nothing here holds a handle. The only files written in a project folder are `project.spatial`
-//! and the temporary file that [`store`]'s atomic replace renames over it.
+//! No handle is held in a project folder. [`Projects`] holds one on `open.lock` in the machine
+//! store for each identity it saved first, until it is dropped. The only files written in a
+//! project folder are `project.spatial` and the temporary file that [`store`]'s atomic replace
+//! renames over it.
 
 pub mod file;
 pub mod resolver;
@@ -230,9 +234,10 @@ impl Projects {
     /// - **Every save** judges the locators ([`resolver::judge`]), checks the document against the
     ///   reader's rules, and builds `locations.json`, and `folders.json` at a first save, each
     ///   refused where its reader would refuse it. A first save then takes the identity's open
-    ///   lock ([`store::ProjectLock`]), which [`Projects`] holds until it is dropped. The save then
-    ///   writes `locations.json`, and `folders.json` at a first save, and replaces
-    ///   `project.spatial` whole or not at all.
+    ///   lock ([`store::ProjectLock`]). The save then writes `locations.json`, and `folders.json`
+    ///   at a first save, and replaces `project.spatial` whole or not at all. A first save that
+    ///   replaces it keeps the lock in [`Projects`] until that is dropped; one refused after the
+    ///   lock frees it.
     ///   Only then does the history take its moves: the open is bound to the project, which moves
     ///   the open's own record under the project's identity if the open has one, and a `saved-here`
     ///   mark is written in the project's record when the steps reach the workspace. A second open
