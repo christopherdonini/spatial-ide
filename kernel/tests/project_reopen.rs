@@ -395,3 +395,105 @@ fn the_session_history_reader_still_refuses_a_withheld_line_and_a_lineage_header
         failure.rule
     );
 }
+
+// ---------------------------------------------------------------------------------------------
+// L5 to L7 (the form's Amendment 36, item 7 (b)): the reader as P2 merged it
+// ---------------------------------------------------------------------------------------------
+
+/// A link at `link` to the folder `target`: a junction on Windows, which needs no privilege, and a
+/// symlink elsewhere (`project_save.rs`'s `make_link`).
+fn link_to(link: &Path, target: &Path) {
+    #[cfg(windows)]
+    {
+        // `cmd` reads a `/` in a path as a switch, so both paths are given with `\`.
+        let back = |p: &Path| p.display().to_string().replace('/', "\\");
+        let made = std::process::Command::new("cmd")
+            .args(["/C", "mklink", "/J"])
+            .arg(back(link))
+            .arg(back(target))
+            .output()
+            .expect("cmd");
+        assert!(made.status.success(), "mklink /J: {made:?}");
+    }
+    #[cfg(not(windows))]
+    std::os::unix::fs::symlink(target, link).expect("symlink");
+}
+
+/// **L5** (ADV-2026-11-18-23 item 2 (a)). A previous lineage file whose bytes have the member's
+/// `sha256`, but whose step count is not the member's `steps`, is named `NotTheRecordedOne`, and
+/// no lineage is used.
+///
+/// RECORDED MUTATION: the count comparison in `read_lineage`'s arm 2 removed. Expected failure: the
+/// previous file reads as `Used`, with its lines.
+#[test]
+fn a_previous_lineage_whose_hash_matches_but_whose_step_count_does_not_is_named_and_not_used() {
+    let lines = saved();
+    let Lineage::Kept { sha256, steps } = member(&lines) else {
+        unreachable!("member records a lineage")
+    };
+    let m = Lineage::Kept {
+        sha256,
+        steps: steps + 1,
+    };
+    let got = read(&scratch("l5"), None, Some(&bytes(&lines)), &m);
+    let want = LineageRead {
+        folder_file: FolderLineage::Absent,
+        previous_file: Some(PreviousLineage::NotTheRecordedOne),
+        lineage: None,
+    };
+    assert_eq!(got, want);
+}
+
+/// **L6** (Amendment 34 item 9). A lineage file with two broken lines, a withheld line whose
+/// `parent` is not the line before it at line 3 and a mark line at line 5, is refused as `Damaged`
+/// at line 3, the first in file order, and no lineage is read.
+///
+/// RECORDED MUTATION: the reader goes past the first failure and names the last. Expected failure:
+/// the file is named at line 5.
+#[test]
+fn a_lineage_file_with_two_broken_lines_is_named_by_the_first() {
+    let mark = format!(
+        r#"{{"mark":{{"kind":"saved-here","after":"{}","at":"2026-10-14T10:00:05Z"}}}}"#,
+        sid(3)
+    );
+    let lines = vec![
+        header(),
+        step(1, None, "data", FILTER),
+        withheld(2, Some(9)),
+        step(3, Some(2), "style", OPACITY),
+        mark,
+    ];
+    let (dir, m) = (scratch("l6"), member(&saved()));
+    let got = read(&dir, Some(&bytes(&lines)), None, &m);
+    match &got.folder_file {
+        FolderLineage::Refused(LineageRefused::Damaged { line, rule }) => {
+            assert_eq!(*line, 3, "{rule}");
+        }
+        other => panic!("refused at a line: {other:?}"),
+    }
+    assert_eq!(got.lineage, None);
+}
+
+/// **L7** (ADV-2026-11-18-23 item 2 (c)). For a `not-kept` member, a link at the lineage file's
+/// name whose target is gone (a junction on Windows, a symlink elsewhere) is named `NotRead`. It
+/// is not followed: the link is still there, and nothing is made at its target.
+///
+/// RECORDED MUTATION: `symlink_metadata` replaced by `metadata` in `read_lineage`'s not-kept arm.
+/// Expected failure: the link is followed to nothing, and the folder's file reads as `Absent`.
+#[test]
+fn a_link_at_the_lineage_name_beside_a_not_kept_member_is_named_and_never_followed() {
+    let dir = scratch("l7");
+    let (link, target) = (dir.join("folder.jsonl"), dir.join("gone"));
+    std::fs::create_dir(&target).expect("the link's target, removed below");
+    link_to(&link, &target);
+    std::fs::remove_dir(&target).expect("the target removed");
+    let got = read_lineage(&link, &dir.join("previous.jsonl"), &Lineage::NotKept);
+    let want = LineageRead {
+        folder_file: FolderLineage::NotRead,
+        previous_file: None,
+        lineage: None,
+    };
+    assert_eq!(got, want);
+    assert!(std::fs::symlink_metadata(&link).is_ok(), "the link is kept");
+    assert!(!target.exists(), "nothing is made at the target");
+}
