@@ -3707,3 +3707,63 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 49 — P3b-2 before its code: its base, ADV-2026-11-19-30's two doc pairs (class 9), the binding off the main thread, the gates' notes carried, K-O27's file and O3's variant, the two workers in order, and `skp.rs`'s two clauses
+
+*Written by the custodian, 2026-11-19, from ADV-2026-11-19-28 item 2 (e), ADV-2026-11-19-29 item 9 and ADV-2026-11-19-30 items 2 to 5, on main before P3b-2's code. References only. Nothing below is a quotation. Every text a worker copies is in a ruling's own fences, and the worker copies it from the filed ruling byte for byte, never from this amendment.*
+
+1. **The base.** P3b-1 merged by PR 339 (Amendment 48; the advisor's verdict is filed under `state/consults/merge-checks/`). P3b-2 is cut from main once this amendment is on main, where Amendment 43 item 8 puts it: branch `cut/b2-piece-1c-p3b-2`, worktree `C:/dev/wt/1c-p3b-2`, build folder `D:/wt-targets/1c-p3b-2`, and test data folder `D:/wt-data/1c-p3b-2`. Its rules are Amendment 43 items 5, 8 to 13 and 15 to 17, item 20 as ruled, Amendment 45, and this amendment, the last of them standing where they differ.
+
+2. **ADV-2026-11-19-30's two doc pairs** (its items 2 to 4), class 9, comment lines only, in two files already in P3b-2's list.
+   - (a) In `kernel/src/project/mod.rs`, the doc of `Projects::release_ended`: the ruling's item 2 Old becomes its item 2 New.
+   - (b) In `frontends/shell/src-tauri/src/commands.rs`, the doc of `close_dataset`: the ruling's item 3 Old becomes its item 3 New.
+   - (c) The worker applies both by script from the filed ruling under `state/directives/`, wraps lines at the file's width and changes no other word. Each Old is found once at the base (the custodian's script found each once at this amendment's base, comment markers and wrapping set aside); if it is not, that is a stop.
+   - (d) They count inside P3b-2's ceilings, kernel product and src-tauri. An overrun is reported as counted (ADV-2026-11-19-12 item 6).
+   - (e) Both gates read each clause against the code at their head. An untrue clause goes to the advisor.
+   - (f) **Stop 12:** P3b-2 changes the code either sentence describes: the body of `release_ended` or the order of its callers, or the hand-off in `close_dataset`. The worker stops and reports; the sentence goes to the advisor before the gates (the ruling's item 4).
+
+3. **The binding off the main thread** (ADV-2026-11-19-28 item 2 (e); ADV-2026-11-19-29 item 9). The reopen can wait on the `saved` mutex, so the `open_project` binding runs the command off the main thread, as the `save_project` binding does. Amendment 43 item 5 (e)'s `spawn_blocking` is that. A join failure is `skp.open_project_panicked` (Amendment 45 item 3). Both gates read it.
+
+4. **The gates' notes carried** (Amendment 47 item 10; ADV-2026-11-19-29 item 9).
+   - (a) **For P3b-2:** the reviewer's note N4 at PR 339's first gate. `open_project` pushes its saved entry after `open_under`, so a `close_dataset` of the new handle that lands between the two leaves that entry and its lock until the next release. It is timing inside one request: named, not covered, in P3b-2's closing. No code or doc change is declared for it.
+   - (b) **For P4's form, not P3b-2's,** both already in the node's plan summary: E-SECOND does not assume the lock is free at a close's reply, and polls for it, bounded (the architect's N-4, first point, and the reviewer's matching note); and ADV-2026-11-19-30 item 5, the architect's N-4 second point: a reopen, in the same window, of the project open there is refused as already open, and P4's form says which order it wants.
+   - (c) The sentence of `commands.rs`'s module doc that Amendment 47 item 9 notices stays for the later docs correction. P3b-2's addition to that module doc (Amendment 43 item 8 (a)) does not edit it; if the addition cannot be made without editing it, the worker says so in its report.
+
+5. **K-O27's file and O3's variant** (item 20's P-5, as ruled).
+   - (a) P-5 moved the check, K-O27 and the code from item 7 to item 8. K-O27's row is appended to `kernel/tests/project_save.rs`, where item 7 (a) placed it, or to `kernel/tests/project_save_skp.rs` if its assertion of the wire code needs that file's rig; one of the two, and the report says which.
+   - (b) The refusal of its own needs one new variant of `SaveFailure`, named by the worker, whose text is ADV-2026-11-19-26's line for `skp.project_file_names_another_project`. It joins item 12's producers: the variant is consumed by `skp_error_of`'s map, and its seam's test is K-O27. Any other new `pub` item stays stop 2.
+
+6. **The two workers, in this order** (Amendment 43 item 16; ADV-2026-11-18-02 item 2).
+   - (a) **First, the standard worker:**
+     - item 5's wire types and constructors in `protocol/skp/src/v0/`, with each message copied from ADV-2026-11-19-26's first fence, and `mod.rs`'s `skp/0.14` paragraph;
+     - SKP-V0.md: §4 item 5's list, §8's entry, the new §12, and §11's entry for O3's code;
+     - the docs that widen of Amendment 45 item 7 in `protocol/`;
+     - the reply and error fixtures, `fixtures.rs`, the conformance rows, `main.rs`'s two mappings and the README paragraph;
+     - every literal site, recounted at its base;
+     - F-W1, F-W2 and F-W3, with their mutations.
+   - (b) **Then worker-high on the strongest model,** for concurrency and security: the binding off the main thread and the lock it can wait for; the no-path rule and P-9's bound. It builds:
+     - item 5 (c) and (d)'s map, as `Projects::open_project_command`;
+     - Amendment 45 item 2's helper;
+     - O3's check, with item 5 (b)'s variant and K-O27;
+     - O5's arm;
+     - the store's A1 places, and `OpenFailure`'s arms made equal to the fence;
+     - `kernel/tests/project_reopen_skp.rs` with W-1 to W-6, W-4's three added cases among them;
+     - the binding and its handler entry;
+     - ADR-036 Amendment 4;
+     - item 2's two pairs.
+   - (c) Each worker's tests commit is its own commit before its code, and is pushed together with the code commit that makes it pass (ADV-2026-11-19-10 item 2).
+   - (d) **The ceilings, split for the two briefs** (the custodian's split; the part's ceilings stand as Amendment 45 item 8 gives them):
+     - the first worker: protocol 455, fixtures 390, and literal 190 in at most 22 files;
+     - the second: kernel product 285, kernel tests 590, src-tauri 35 and records 10.
+
+7. **`kernel/src/skp.rs`'s two clauses** (Amendment 45 item 3, its last point). Neither worker edits `skp.rs`. The architect's gate gives the words for the two untrue clauses of `OpenRegistry`'s doc. They are applied after the gates by script, comment lines only, and the reviewer reads the changed lines. This is the custodian's reading of ADV-2026-11-19-26 item 2's note on row 3; the advisor may rule another.
+
+8. **Superseded index:**
+   - Amendment 43 item 8 (a)'s files gain K-O27's one file (item 5 (a) here);
+   - item 12's producers gain O3's variant (item 5 (b) here);
+   - item 15's stops gain stop 12 (item 2 (f) here).
+   - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
