@@ -593,13 +593,15 @@ impl Projects {
     ///    is a move; holding this identity, or a file or folder that cannot be read or a file the
     ///    reader refuses, asks. With no `answer` the question is the reply. With no `folders.json`
     ///    the folder is remembered as `first`. `answer` is read only when the question is asked.
+    ///    Then a `relink` is checked by `locations.json`'s writer and refused by name when the
+    ///    writer would refuse it; its bytes are kept for step 6.
     /// 3. The identity's open lock, the new identity's after the answer `copy`; then this step's
     ///    writes: `folders.json`, and for a copy its `project.spatial` with the new identity.
     /// 4. The lineage (step 6 of §2.4, run here): [`read_lineage`] of the folder's
     ///    `.spatial/lineage.jsonl` and of `previous-lineage.jsonl` in the machine folder of the
     ///    identity the project file names.
-    /// 5. The data. A `relink` is used first, refused by name when `locations.json`'s writer
-    ///    would refuse it. Otherwise a `project-relative` locator goes through
+    /// 5. The data. A `relink`, checked at step 2, is used first. Otherwise a `project-relative`
+    ///    locator goes through
     ///    [`resolver::check_inside`], and the engine is given the path it returns. Otherwise the
     ///    machine store's location for the dataset is used; none recorded, or a recorded path
     ///    that is missing, replies `not_found`. The open is the host's, under the token of step 1
@@ -676,6 +678,11 @@ impl Projects {
                 (new, Some(folders), Some(text))
             }
         };
+        let uri = file.dataset.uri().clone();
+        let relinked = match relink {
+            Some(at) => Some(locations_to_bytes(&uri, at).map_err(refused)?),
+            None => None,
+        };
 
         let lock = ProjectLock::try_lock(&self.root, &identity).map_err(|e| match e {
             LockRefused::Held => OpenFailure::OpenElsewhere(identity.clone()),
@@ -703,11 +710,6 @@ impl Projects {
         );
         live()?;
 
-        let uri = file.dataset.uri().clone();
-        let relinked = match relink {
-            Some(at) => Some(locations_to_bytes(&uri, at).map_err(refused)?),
-            None => None,
-        };
         let path = match relink {
             Some(at) => at.to_path_buf(),
             None => match data_at(folder, &file.dataset, &dir)? {
