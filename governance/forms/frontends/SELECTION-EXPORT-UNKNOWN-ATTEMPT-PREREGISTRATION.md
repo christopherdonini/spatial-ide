@@ -59,3 +59,38 @@ The closing amendment records step 1's answers, (e)'s versions if the logs name 
 Read the last amendment first.
 
 Nothing above is edited.
+
+#### Amendment 2 (2026-11-19), class 1: PR 336's hold on the path drift; main taken in at N by the merge commit M; the run at M; the reviewer's third attempt; the counts; CI at M; the holds. Written after the third attempt's report was filed.
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-20 item 6, under the delegation of 2026-11-13. References and hashes only. Nothing below is a quotation.*
+
+1. **The hold.** The advisor's merge check on 40173dfe ended HOLD, on the path drift: `state/consults/merge-checks/PR-336-40173dfe3a07.md`. What settles it is the advisor's ruling ADV-2026-11-19-20, `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-20-pr-336-hold-on-the-path-drift-the-branch-takes-main-in-by-one-merge-commit-shown-by-script-one-run-at-m-the-reviewers-third-attempt-pr-337s-paths-listed.md`.
+2. **N and M** (ADV-2026-11-19-20 items 2 and 3). The branch took main in at N = 7c3ccbcfc8f71d6535a3f7134f034874ecb29167 by one merge commit made by git, M = 3bbe2ab0831233e5bebc8d5fc6951003aba6b1a6, signed off, its message naming N. By the reviewer's script at M (its check 2):
+   - M has two parents, 40173dfe then N;
+   - `selection.mjs` at M is byte-equal to 40173dfe;
+   - the README at M is N's file with one line replaced by the selection entry's line from 40173dfe, which is line 760 of the README at M and line 756 at 40173dfe (the reviewer's D2);
+   - `git diff --name-only N M` names those two files only;
+   - M's tree is the tree git computes for the merge of its two parents, so the merge has no hand edit.
+3. **What main brought** (the reviewer's check 3 and its D1). From the old merge base f5584f28 to N, main changed 77 paths, 11 of them under `frontends/`: the first look's product change in the canvas and the residency session, with their tests; four other e2e scripts; the walkthrough; one script line in the shell's package manifest; and README hunks outside the selection entry.
+   - Those hunks are the residency harness section (two insertions), the layout entry's line and the E-FL entry. Amendment 1 item 8 named PR 335's commits as touching the E-FL entry only. By the reviewer's check 3, e1fd8495 also changed the residency harness section and the layout entry's line. Amendment 1 is not edited.
+   - None of these hunks is in the selection entry. No file that the source comment or the README line cites changed from 40173dfe to M.
+   - The reviewer found every clause of the comment above `waitForExportDialog`, of the README's selection line and of `executeExport`'s doc true at M.
+4. **The run at M** (ADV-2026-11-19-20 item 4), by a tester: `state/consults/2026-11-19-selection-export-unknown-attempt-run-at-m-tester-report.md`.
+   - The selection suite ran once on an app built at M, on 2026-11-19 from 11:37:53Z to 11:48:48Z: 18 PASS, 0 FAIL, 1 SKIP, rc 0.
+   - No export step ended unknown-attempt, and every step's result is the series' at 9a4c5833.
+   - The reviewer tied the exe to M by its hash, size and time (its check 4).
+   - The reviewer observed one field that the suite records and does not assert: it changed from the series, in E-STATUS-HEIGHT. This fits the first look's change, and the selection entry claims nothing about it.
+   - Amendment 1 item 6 stands. One pass does not show the window closed.
+5. **The third attempt** (ADV-2026-11-19-20 item 5): PASS WITH NOTES at M, `state/consults/gates/2026-11-19-selection-export-unknown-attempt-gate-reviewer-attempt-3.md`, gate-log 792.
+   - It has no Correctness or Evidence finding.
+   - Its D1 is item 3 here, and its D2 is item 2.
+   - It ran reads and one byte-compare script, and named its reason before reading the exe's hash and times.
+6. **The counts** (Scope: at most 40 added and 10 removed, in 2 files). By `git diff --numstat N...M`: `README.md` 1 added and 1 removed; `selection.mjs` 14 added and 1 removed; in all, 15 added and 2 removed in 2 files. Both files are inside the budget.
+   - Paths changed on main since N (ADV-2026-11-14-21 item 6 (a)): none of the piece's two. By script at origin/main 25cf5a3f, read at 2026-11-19T12:40:29Z.
+7. **CI at M** (ADV-2026-11-18-12 item 6). By gh run list, read at 2026-11-19T12:40:31Z, there are 9 runs at M, all success: 44514845319 (Exposure scan); 44514845323 (Ported notices); 44514845351 (DCO sign-off); 44514845383 (Product CI — shell); 44514839754 (Ported notices); 44514839767 (Rust fmt); 44514839822 (Governance CI — plan, queue, site); 44514839810 (Product CI — shell); 44514839764 (Product CI — Rust workspace). The branch has 21 runs, and none is red or cancelled.
+8. **The holds** (ADV-2026-11-16-06 item 2 (e)). By the machine log, by the custodian's script, the run at M had 2 holds, the build and the suite, from 2026-11-19T11:34:04Z to 11:48:55Z. None stood beside another hold of this project. With Amendment 1 item 11's 3, the piece had 5. The third attempt took no hold.
+9. **Superseded index.** Nothing in the form is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
