@@ -393,7 +393,7 @@ const readConsole = (page, mark) => page.evaluate(([label, mark]) => {
   closed.forEach((el) => el.click());
   return { held, dropped, seen, steps };
 }, [LABEL.source, mark]);
-/** Readings every 200 ms from the mark until stopped. An entry is seen once a reading has rendered it; one unseen and already dropped is F2; the verdict is set at the first reading after `checked` that has seen every entry since the mark with the newest record_step row at ok. */
+/** Readings every 200 ms from this call until stopped, each numbering the entries from the mark. An entry is seen once a reading has rendered it; one unseen and already dropped is F2; the verdict is set at the first reading handled after `checked` that has seen every entry since the mark with the newest record_step row at ok. */
 function watchConsole(page, mark, label0) {
   const w = { seen: new Set(), steps: new Map(), last: null, checked: false, verdict: null, error: null, stopped: false, stop: () => { w.stopped = true; } };
   (async () => {
