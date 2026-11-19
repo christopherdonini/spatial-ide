@@ -985,7 +985,8 @@ fn a_saved_project_whose_member_records_a_lineage_reopens_with_its_lineage_named
     assert_eq!(o.lineage.lineage, None);
 }
 
-/// **K-O2** (F4). The data's modification time moved 60 s later: `modified_ns` is named.
+/// **K-O2** (F4). The data's modification time moved 60 s later: `mtime` is named, in the
+/// descriptor's own vocabulary.
 ///
 /// RECORDED MUTATION: only `byte_size` compared. Expected failure: no change detected.
 #[test]
@@ -996,7 +997,7 @@ fn a_changed_file_is_reopened_with_each_differing_component_named() {
     let data = rig.folder.join("data/parcels.parquet");
     later_by_60_s(&data, &data);
     let o = opened(reopen(&rig, &run, &project));
-    let (observed, admission) = (vec!["modified_ns"], vec![]);
+    let (observed, admission) = (vec!["mtime"], vec![]);
     assert_eq!(
         o.check,
         RefCheck::Differs {
@@ -1277,7 +1278,7 @@ fn a_relinked_file_is_checked_against_the_observation_and_each_difference_named(
     assert!(named, "{got:?}");
     assert_eq!(std::fs::read(&locations).expect("kept"), before);
     let got = reopen_at(&rig, &run, &project, &rig.folder, None, Some(&relinked));
-    let (observed, admission) = (vec!["modified_ns"], vec![]);
+    let (observed, admission) = (vec!["mtime"], vec![]);
     assert_eq!(
         opened(got).check,
         RefCheck::Differs {
