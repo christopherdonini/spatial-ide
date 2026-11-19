@@ -2937,3 +2937,43 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 41 — P3a-2: Amendment 40's run and its result; what closes the architect's E1; the re-link's check by the writer moved before the lock (class 9), with one new test row and its mutation, declared before its code; five more doc places join the words commit; the F4 row's word left to P3b; the order
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-15, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-15-pr-337s-architect-gate-o1-fixed-in-p3a-2-e1-closed-by-the-run-the-reviewers-rerun-and-an-attempt-2-five-doc-places-join-the-words-commit-o2-to-p3bs-amendment.md`. Item 1 is written after its result was seen. Items 3 to 8 are declared before their code. References and hashes only. The architect's report: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect.md`.*
+
+1. **Amendment 40 item 3's run, its result.** The worker's report: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-k-o19-own-mutation-worker-report.md`.
+   - **K-O19 failed at its step**, as predicted. Its mark assertion passed. The failure was inside `Run::opacity_step`, called from K-O19's step, and it was `create`'s refusal of the record folder that exists. So Amendment 40 item 5's sentence may be said in the closing, and no more than it.
+   - **K-O18 failed inside its loop**, as predicted: the mark was no longer the unwritable one. The report reads the first save as passing; that reading is the worker's, and the lines it printed do not show it.
+   - The mutation was reverted with the diff empty. Nothing was committed: PR 337's head stayed at b5c351564dd4798fdd341e783b9d71b0054242e9.
+2. **What closes E1** (ADV-2026-11-19-15 item 1). Three things together:
+   - item 1's run;
+   - the reviewer's own re-run of Amendment 40 item 3's mutation in its gate;
+   - the architect's attempt 2, limited to E1 and to item 3's fix, by reading, after the reviewer's gate.
+3. **The fix, class 9** (ADV-2026-11-19-15 item 3 (a) and (b)). This is the architect's O1, against Amendment 36 item 5 (e).
+   - (a) The re-link's check by the writer runs before the lock is taken: with step 2, where nothing is written. Its bytes are kept for step 6's write. Nothing else changes order.
+   - (b) Declared with it: a re-link the writer refuses is now refused before a held lock is reported, and before a machine-store failure of step 3.
+4. **The test** (ADV-2026-11-19-15 item 3 (c) and (d)). One new row in `kernel/tests/project_reopen.rs`, named by the worker, with two cases:
+   - a first reopen on this machine, with no `folders.json`, and a re-link the writer refuses: it is refused by name, and afterwards the machine store holds no folder for the identity;
+   - the answer `copy` with such a re-link: it is refused by name, `project.spatial` is byte for byte as before, and no folder exists for a new identity.
+   Its mutation puts the check back after step 3's writes. Predicted: the test fails at its assertion that nothing was written, in both cases.
+5. **The order of the work** (ADV-2026-11-19-15 item 3 (e) to (g); ADV-2026-11-19-10 item 2).
+   - The test's commit comes first. The worker's local run shows that it fails at b5c35156.
+   - Then the fix's commit, which also brings `open_project`'s doc: in its steps 2 and 5, where the check now runs. Both gates read that doc.
+   - Both commits are pushed together.
+   - An existing test that fails after the fix stops the worker and goes to the advisor. No existing test is edited.
+6. **The model.** Worker-high, on the strongest model (ADV-2026-11-18-02 item 2): persistence, and the order of an open's writes.
+7. **The counts** (ADV-2026-11-19-15 item 3 (h)). Recorded at the closing as they stand, class 8.
+8. **Five more doc places** (ADV-2026-11-19-15 item 2). The architect's Drafts 3 to 7 join the words commit after the gates, with Amendment 39 item 5's two places: comment lines only, as the drafts give them. The reviewer's gate checks each clause. Where the reviewer gives different words for a place, it goes to the advisor.
+9. **The F4 row's word** (ADV-2026-11-19-15 item 4). Not decided here. K-O2 and K-O8 stand as built, on the producer's word. The closing records, class 1, that the F4 row's word differs from what is built. The ruling on P3b's declaring amendment decides whether the row is corrected or the wire maps the word.
+10. **The order for PR 337** (ADV-2026-11-19-15 item 7):
+    - this amendment on main;
+    - item 5's worker;
+    - the reviewer's gate, whole, at the head with the fix: clippy, the mutations by the round-25 rule (Amendment 40 item 3's and item 4's among them), the seven doc drafts, and the words for the comment above K-O19 (Amendment 40 item 4);
+    - the architect's attempt 2;
+    - the words commit;
+    - the closing and the merge request.
+
+Read the last amendment first.
+
+Nothing above is edited.
