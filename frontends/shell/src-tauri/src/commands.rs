@@ -5,7 +5,7 @@
 //! them apart at a glance:
 //!
 //! - **SKP v0** (`open_dataset`, `describe`, `viewport_query`, `cancel`, `close_dataset` and, from
-//!   `skp/0.12`, `record_step` and, from `skp/0.13`, `save_project`) — each takes the exact request struct `protocol/skp` defines and returns the exact response or
+//!   `skp/0.12`, `record_step` and, from `skp/0.13`, `save_project`, and, from `skp/0.14`, `open_project`) — each takes the exact request struct `protocol/skp` defines and returns the exact response or
 //!   `SkpError`. No renaming, no remapping: the same type is the fixture-verified wire shape and
 //!   the Tauri command's own argument/return type, so there is nothing here to drift.
 //! - **Binding-local** (`binding_*`) — named so they cannot be mistaken for SKP, excluded from the
@@ -26,9 +26,9 @@ use spatial_kernel::session_history::StepRecorder;
 use spatial_kernel::skp::SkpHost;
 use spatial_skp::v0::{
     CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, DescribeRequest,
-    DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, RecordStepRequest,
-    RecordStepResponse, SaveProjectRequest, SaveProjectResponse, SkpError, ViewportQueryRequest,
-    ViewportQueryResponse,
+    DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, OpenProjectRequest,
+    OpenProjectResponse, RecordStepRequest, RecordStepResponse, SaveProjectRequest,
+    SaveProjectResponse, SkpError, ViewportQueryRequest, ViewportQueryResponse,
 };
 use tauri::{Emitter, Manager, State};
 // Entry-40 pass: `AppHandle::try_state` (used by `open_dataset`/`close_dataset` below) is a
@@ -119,10 +119,11 @@ pub fn cancel(
 /// does not wait for it. That call frees the project lock of each open that the catalog no longer
 /// holds or whose session has ended. It may first wait for a save in flight, or for anything else
 /// that holds the same mutex in [`Projects`]. So when this command replies, the lock can still be
-/// held, until that thread has run the call. If the thread cannot be started, the error is logged
-/// and nothing is freed then: the lock is freed by a later close or reopen in this process. A
-/// reopen in this process is not affected, since `open_project` runs `release_ended` itself before
-/// it takes a lock; a reopen from another process in that time is refused as already open.
+/// held, until that thread has run the call. If the thread cannot be started, the error is written
+/// to standard error alone, not to the session log, and a release build on Windows has no console
+/// to show it; nothing is freed then: the lock is freed by a later close or reopen in this process.
+/// A reopen in this process is not affected, since `open_project` runs `release_ended` itself
+/// before it takes a lock; a reopen from another process in that time is refused as already open.
 #[cfg_attr(
     not(any(debug_assertions, feature = "measure-build")),
     allow(unused_variables)
@@ -188,6 +189,36 @@ pub async fn save_project(
     tokio::task::spawn_blocking(move || projects.save_project(request))
         .await
         .unwrap_or_else(|e| Err(SkpError::protocol("save_project_panicked", e.to_string())))
+}
+
+/// **Runs on `spawn_blocking`**, as `save_project` does: the reopen reads and writes files, opens
+/// the data, and can wait on the mutex in [`Projects`] that a save or a release holds. On `opened`
+/// it starts the pool-lease poll as `open_dataset` does, under the same `cfg`.
+#[cfg_attr(
+    not(any(debug_assertions, feature = "measure-build")),
+    allow(unused_variables)
+)]
+#[tauri::command]
+pub async fn open_project(
+    app: tauri::AppHandle,
+    state: State<'_, Option<Arc<Projects>>>,
+    request: OpenProjectRequest,
+) -> Result<OpenProjectResponse, SkpError> {
+    let Some(projects) = state.inner().clone() else {
+        return Err(SkpError::project_machine_store_failed(
+            "no per-user data directory is available",
+        ));
+    };
+    let result = tokio::task::spawn_blocking(move || projects.open_project_command(request))
+        .await
+        .unwrap_or_else(|e| Err(SkpError::protocol("open_project_panicked", e.to_string())));
+    #[cfg(any(debug_assertions, feature = "measure-build"))]
+    if let Ok(OpenProjectResponse::Opened(opened)) = &result {
+        if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
+            tasks.start(app.clone(), opened.dataset.as_str().to_string());
+        }
+    }
+    result
 }
 
 // -------------------------------------------------------------------------------------------

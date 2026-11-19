@@ -829,7 +829,9 @@ pub struct OpenedProject {
 }
 
 /// Whether the saved view applies to the reopened data. `basis` names the space the view was saved
-/// in and the space the data is admitted in, by identifiers, and holds no path.
+/// in and the space the data is admitted in, by identifiers, and holds no path. In each identifier,
+/// every control character is replaced by U+FFFD, and one then over 256 bytes is cut on a
+/// character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "state", rename_all = "kebab-case", deny_unknown_fields)]
 pub enum ReopenView {
@@ -932,7 +934,9 @@ pub enum ReopenQuestionKind {
 }
 
 /// No file was found for the dataset. `file_name` is the last name of the missing file, never a
-/// path, and `null` when no location is recorded for the dataset. The client may call again with a
+/// path, and `null` when no location is recorded for the dataset. Every control character in it is
+/// replaced by U+FFFD, and a name then over 256 bytes is cut on a character boundary within them
+/// and marked with ` [cut]`, so that it is at most 262 bytes. The client may call again with a
 /// `relink`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]

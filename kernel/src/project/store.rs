@@ -309,18 +309,21 @@ fn refused_folders(rule: impl Into<String>) -> MachineRecordRefused {
 }
 
 /// `p` as a machine store reader takes a path: absolute, valid Unicode and at most `max` bytes.
-/// Anything else is refused, naming `file`, so that a path is never written altered.
+/// Anything else is refused, naming `file`, so that a path is never written altered. The rule
+/// names the path by `noun` and never prints it.
 fn stored_path<'a>(
     p: &'a Path,
     file: &'static str,
+    noun: &str,
     max: usize,
 ) -> Result<&'a str, MachineRecordRefused> {
     let rule = match p.to_str() {
         Some(s) if p.is_absolute() && s.len() <= max => return Ok(s),
         Some(s) if p.is_absolute() => {
-            format!("a path of {} bytes, over the ceiling of {max}", s.len())
+            format!("{noun} is {} bytes, over the ceiling of {max}", s.len())
         }
-        _ => format!("{} is not an absolute UTF-8 path", p.display()),
+        Some(_) => format!("{noun} is not absolute"),
+        None => format!("{noun} is not valid Unicode"),
     };
     Err(MachineRecordRefused { file, rule })
 }
@@ -332,7 +335,7 @@ impl KnownFolders {
     /// reader's string bound, and a document over the reader's byte bound.
     pub fn to_bytes(&self) -> Result<Vec<u8>, MachineRecordRefused> {
         let max = FOLDERS_LIMITS.max_string_bytes;
-        let path = |p: &Path| stored_path(p, FOLDERS, max).map(Json::str);
+        let path = |p: &Path| stored_path(p, FOLDERS, "a folder's path", max).map(Json::str);
         let same: Result<Vec<Json>, _> = self.same.iter().map(|p| path(p)).collect();
         let folders = Json::obj([
             ("format", Json::str("spatial-folders")),
@@ -460,7 +463,10 @@ pub fn locations_to_bytes(uri: &DatasetUri, at: &Path) -> Result<Vec<u8>, Machin
     let max = LOCATIONS_LIMITS.max_string_bytes;
     let entry = Json::obj([
         ("dataset", Json::str(uri.as_str())),
-        ("path", Json::str(stored_path(at, LOCATIONS, max)?)),
+        (
+            "path",
+            Json::str(stored_path(at, LOCATIONS, "the dataset's path", max)?),
+        ),
     ]);
     let locations = Json::obj([
         ("format", Json::str("spatial-locations")),

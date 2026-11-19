@@ -180,6 +180,12 @@ pub enum SaveFailure {
     FileRefused(ProjectFileRefused),
     /// The project file there now records a lineage, which this version does not keep.
     LineageNotKept,
+    /// At a later save, the project file in the open's folder names another project: `project` is
+    /// the open's identity and `found` the one the file names. The file is kept as it is.
+    FileNamesAnotherProject {
+        project: ProjectUri,
+        found: ProjectUri,
+    },
     /// The project file, or the existing one, could not be written or read.
     ProjectFileUnwritable(SaveError),
     /// A machine store file could not be written.
@@ -212,6 +218,11 @@ impl fmt::Display for SaveFailure {
                 f,
                 "{PROJECT_FILE_NAME} records a lineage, which this version of the application does not keep"
             ),
+            Self::FileNamesAnotherProject { found, .. } => write!(
+                f,
+                "the folder's {PROJECT_FILE_NAME} names another project, {}, and was not replaced",
+                found.as_str()
+            ),
             Self::ProjectFileUnwritable(e) => write!(f, "{e}"),
             Self::MachineStore { what, source } => write!(f, "{what}: {source}"),
             Self::MachineRecordRefused(e) => write!(f, "{e}"),
@@ -239,11 +250,12 @@ impl Projects {
     /// has closed the dataset and does not wait for it, and [`Projects::open_project`] calls it
     /// before it takes a lock. It takes the `saved` mutex before the catalog and the generations,
     /// as [`Projects::save`] does, so a save in progress ends before its entry is dropped. After
-    /// `close_dataset` has replied, the lock is therefore still held until this call has run, and
-    /// it waits for whatever holds that mutex: a save, a reopen as it keeps its entry, or another
-    /// call of this function. A `record_step` that passed its checks before the open was closed or
-    /// its session ended can still write after this frees the lock, and after another process has
-    /// taken it.
+    /// `close_dataset` has replied, the lock can therefore still be held until a call of this
+    /// function that began after the host's close has run: the one `close_dataset` started, or
+    /// another close's or a reopen's if that comes first. Each call waits for whatever holds that
+    /// mutex: a save, a reopen as it keeps its entry, or another call of this function. A
+    /// `record_step` that passed its checks before the open was closed or its session ended can
+    /// still write after this frees the lock, and after another process has taken it.
     pub fn release_ended(&self) {
         let mut saved = self.saved.lock().unwrap_or_else(|e| e.into_inner());
         let host = self.recorder.host();
@@ -263,8 +275,8 @@ impl Projects {
     /// - **A later save**, of an open this [`Projects`] saved first or reopened
     ///   ([`Projects::open_project`]), keeps the identity and goes to the folder the first save
     ///   used or the reopen opened from; it ignores `folder`. It refuses to replace a project file
-    ///   that records a kept lineage, and one the reader refuses, since either could hold what a
-    ///   rewrite would lose.
+    ///   that names another project, one that records a kept lineage, and one the reader refuses,
+    ///   since each could hold what a rewrite would lose.
     /// - **Every save** judges the locators ([`resolver::judge`]), checks the document against the
     ///   reader's rules, and builds `locations.json`, and `folders.json` at a first save, each
     ///   refused where its reader would refuse it. A first save then takes the identity's open
@@ -325,6 +337,10 @@ impl Projects {
             }
         } else if let Some(there) = read_existing(&target)? {
             match read_project(&there) {
+                Ok(f) if f.project != project => {
+                    let found = f.project;
+                    return Err(SaveFailure::FileNamesAnotherProject { project, found });
+                }
                 Ok(f) if f.lineage != Lineage::NotKept => return Err(SaveFailure::LineageNotKept),
                 Ok(_) => {}
                 Err(e) => return Err(SaveFailure::FileRefused(e)),
@@ -467,10 +483,17 @@ impl Projects {
 // ---------------------------------------------------------------------------------------------
 
 use crate::dataset_ref::{Locator, RefCheck};
-use crate::session_history::{read_lineage, LineageRead};
+use crate::session_history::{
+    read_lineage, FolderLineage, LineageRead, LineageRefused, PreviousLineage,
+};
 use resolver::{check_inside, CheckRefused};
+use spatial_engine::EngineError;
 use spatial_skp::v0::{
-    CloseDatasetRequest, DatasetHandle, OpenDatasetRequest, SessionRef, SKP_VERSION,
+    AdmissionChange, CloseDatasetRequest, DatasetHandle, Filter, FilterClause, FolderLineageFact,
+    HexF64, LineageRefusal, ObservedChange, OpenDatasetRequest, OpenProjectRequest,
+    OpenProjectResponse, OpenedProject, PreviousLineageFact, ProjectView, ReopenAnswer,
+    ReopenCheck, ReopenLineage, ReopenNotFound, ReopenQuestion, ReopenQuestionKind, ReopenView,
+    SessionRef, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION,
 };
 use store::{locations_to_bytes, read_locations, LockRefused, ProjectLock};
 
@@ -537,7 +560,8 @@ pub enum ViewState {
 pub enum OpenFailure {
     /// The host refused the cancel key, or the engine refused the open: the host's error.
     Open(SkpError),
-    /// The cancel key was cancelled before the reopen ended.
+    /// The cancel key was cancelled before the engine's open returned; a cancel after it is not
+    /// seen, and the reopen replies `Opened`.
     Cancelled,
     /// The folder's `project.spatial` could not be read.
     ProjectFileUnreadable(std::io::Error),
@@ -576,15 +600,18 @@ impl fmt::Display for OpenFailure {
             Self::Open(e) => write!(f, "{}", e.message),
             Self::Cancelled => write!(f, "the reopen was cancelled"),
             Self::ProjectFileUnreadable(e) => write!(f, "{PROJECT_FILE_NAME} cannot be read: {e}"),
-            Self::FileRefused(e) => write!(f, "{e}"),
+            Self::FileRefused(e) => write!(f, "the project file's reader refuses it: {e}"),
             Self::MachineRecordRefused(e) => write!(f, "{e}"),
             Self::KnownFoldersFull { project, count } => write!(
                 f,
                 "{} remembers {count} folders, and no more can be added",
                 project.as_str()
             ),
-            Self::OpenElsewhere(p) => write!(f, "{} is open elsewhere", p.as_str()),
-            Self::MachineStore { what, source } => write!(f, "{what}: {source}"),
+            Self::OpenElsewhere(p) => write!(f, "{} is already open", p.as_str()),
+            Self::MachineStore { what, source } => write!(
+                f,
+                "this machine's store for the project could not be used: {what}: {source}"
+            ),
             Self::FolderUnresolvable(p) => write!(f, "{} cannot be resolved", p.display()),
             Self::TargetRefused { locator, refused } => {
                 let (segment, fact) = match refused {
@@ -600,7 +627,7 @@ impl fmt::Display for OpenFailure {
                 write!(f, "{locator}: {segment} {fact}")
             }
             Self::ProjectFileUnwritable(e) => write!(f, "{e}"),
-            Self::PathNotUnicode(p) => write!(f, "{} is not a Unicode path", p.display()),
+            Self::PathNotUnicode(_) => write!(f, "the data's path is not valid Unicode"),
         }
     }
 }
@@ -638,14 +665,21 @@ impl Projects {
     ///    reader refuses, asks. With no `answer` the question is the reply. With no `folders.json`
     ///    the folder is remembered as `first`. `answer` is read only when the question is asked.
     ///    Then a `relink` is checked by `locations.json`'s writer and refused by name when the
-    ///    writer would refuse it; its bytes are kept for step 6.
+    ///    writer would refuse it; its bytes are kept for step 6. After the answer `copy` with no
+    ///    `relink`, step 5's lookup of the data runs here, before the lock, so that a `not_found`
+    ///    reply writes nothing. `folders.json` is read here, before the lock: another process can
+    ///    replace it between this read and step 3's write.
     /// 3. [`Projects::release_ended`], then the identity's open lock, the new identity's after the
     ///    answer `copy`; then this step's writes: `folders.json`, and for a copy its
-    ///    `project.spatial` with the new identity.
+    ///    `project.spatial` with the new identity. A copy whose `project.spatial` cannot be
+    ///    replaced is refused, and leaves the new identity's machine folder with its `folders.json`
+    ///    and `open.lock`.
     /// 4. The lineage (step 6 of §2.4, run here): [`read_lineage`] of the folder's
     ///    `.spatial/lineage.jsonl` and of `previous-lineage.jsonl` in the machine folder of the
-    ///    identity the project file names.
-    /// 5. The data. A `relink`, checked at step 2, is used first. Otherwise a `project-relative`
+    ///    identity `project.spatial` named when step 1 read it, which after the answer `copy` is
+    ///    the original identity, not the new one.
+    /// 5. The data. A `relink`, checked at step 2, is used first, then the path step 2 found for
+    ///    a copy. Otherwise a `project-relative`
     ///    locator goes through
     ///    [`resolver::check_inside`], and the engine is given the path it returns. Otherwise the
     ///    machine store's location for the dataset is used; none recorded, or a recorded path
@@ -728,6 +762,14 @@ impl Projects {
             Some(at) => Some(locations_to_bytes(&uri, at).map_err(refused)?),
             None => None,
         };
+        // O5 (packet P-6 (ii)): a copy's data is looked up before its lock and its writes.
+        let found = match (&copy, relink) {
+            (Some(_), None) => match data_at(folder, &file.dataset, &dir)? {
+                Data::NotFound(file_name) => return Ok(Reopen::NotFound { file_name }),
+                found => Some(found),
+            },
+            _ => None,
+        };
 
         self.release_ended();
         let lock = ProjectLock::try_lock(&self.root, &identity).map_err(|e| match e {
@@ -758,7 +800,7 @@ impl Projects {
 
         let path = match relink {
             Some(at) => at.to_path_buf(),
-            None => match data_at(folder, &file.dataset, &dir)? {
+            None => match found.map_or_else(|| data_at(folder, &file.dataset, &dir), Ok)? {
                 Data::At(path) => path,
                 Data::NotFound(file_name) => return Ok(Reopen::NotFound { file_name }),
             },
@@ -787,6 +829,10 @@ impl Projects {
             let (skp, dataset) = (SKP_VERSION.to_string(), handle.clone());
             drop(host.close_dataset(CloseDatasetRequest { skp, dataset }));
         };
+        // ADV-2026-11-19-26 item 3, row 5: this `skp.unknown_dataset`'s message offers "or never
+        // opened this session", which cannot be the case here: it needs a close, inside this call,
+        // of the handle `open_under` just returned, which the client has not received. Named, and
+        // not changed.
         let Some(ds) = host.catalog().get(handle.as_str()) else {
             return Err(OpenFailure::Open(SkpError::unknown_dataset(
                 handle.as_str(),
@@ -832,6 +878,177 @@ impl Projects {
             check,
             lineage,
         })))
+    }
+
+    /// `open_project` (SKP-V0 §12), built as [`Projects::save_project`] is: the version, then
+    /// [`Projects::open_project`], each [`OpenFailure`] mapped to its SKP code by
+    /// [`open_error_of`], and the reply built from what the reopen returned. No reply carries a
+    /// path; `not_found`'s `file_name` passes through [`bounded`]. It can wait on the `saved` mutex
+    /// ([`Projects::release_ended`] and the entry it keeps), so a host calls it off its main thread.
+    pub fn open_project_command(
+        &self,
+        req: OpenProjectRequest,
+    ) -> Result<OpenProjectResponse, SkpError> {
+        check_version(&req.skp)?;
+        let answer = req.answer.map(|a| match a {
+            ReopenAnswer::Copy => Answer::Copy,
+            ReopenAnswer::Same => Answer::Same,
+        });
+        let relink = req.relink.as_deref().map(Path::new);
+        let folder = Path::new(&req.folder);
+        let reopened = self.open_project(folder, &req.cancel_key, answer, relink);
+        Ok(match reopened.map_err(|e| open_error_of(e, &req.folder))? {
+            Reopen::Question => OpenProjectResponse::Question(ReopenQuestion {
+                kind: ReopenQuestionKind::CopyOrSame,
+            }),
+            Reopen::NotFound { file_name } => OpenProjectResponse::NotFound(ReopenNotFound {
+                file_name: file_name.map(|n| bounded(&n)),
+            }),
+            Reopen::Opened(o) => OpenProjectResponse::Opened(Box::new(opened_of(*o))),
+        })
+    }
+}
+
+/// Each way a reopen is refused, as its SKP code (SKP-V0 §12). One exhaustive `match` with no
+/// wildcard arm: a new [`OpenFailure`] or [`CheckRefused`] is a compile error here until it has a
+/// code. An engine refusal through `Open` keeps the engine's message; any other refusal names no
+/// path but the request's `folder` as sent. A reader's `path` and `rule` and a locator's `segment`
+/// pass through [`bounded`].
+fn open_error_of(e: OpenFailure, folder: &str) -> SkpError {
+    match e {
+        OpenFailure::Open(e) => e,
+        OpenFailure::Cancelled => crate::skp::error_of(&EngineError::Cancelled),
+        OpenFailure::ProjectFileUnreadable(e) => SkpError::project_file_unreadable(&e.to_string()),
+        OpenFailure::FileRefused(r) => {
+            SkpError::project_file_refused(&bounded(&r.path), &bounded(&r.rule))
+        }
+        OpenFailure::MachineRecordRefused(r) => {
+            SkpError::project_machine_record_refused(r.file, &bounded(&r.rule))
+        }
+        OpenFailure::KnownFoldersFull { project, count } => {
+            SkpError::project_known_folders_full(project.as_str(), count)
+        }
+        OpenFailure::OpenElsewhere(p) => SkpError::project_open_elsewhere(p.as_str()),
+        OpenFailure::MachineStore { what, source } => {
+            SkpError::project_machine_store_failed(&format!("{what}: {source}"))
+        }
+        OpenFailure::FolderUnresolvable(_) => SkpError::project_target_folder_unresolvable(folder),
+        OpenFailure::TargetRefused { locator, refused } => match refused {
+            CheckRefused::NotCanonical(_) => SkpError::project_target_not_canonical(&locator),
+            CheckRefused::FolderUnresolvable => {
+                SkpError::project_target_locator_folder_unresolvable(&locator)
+            }
+            CheckRefused::ThroughLink { segment } => {
+                SkpError::project_target_through_link(&locator, &bounded(&segment))
+            }
+            CheckRefused::Unresolvable { segment } => {
+                SkpError::project_target_segment_unresolvable(&locator, &bounded(&segment))
+            }
+            CheckRefused::NotADirectory { segment } => {
+                SkpError::project_target_not_a_folder(&locator, &bounded(&segment))
+            }
+            CheckRefused::NotARegularFile { segment } => {
+                SkpError::project_target_not_a_regular_file(&locator, &bounded(&segment))
+            }
+        },
+        OpenFailure::ProjectFileUnwritable(e) => SkpError::project_file_unwritable(&e.to_string()),
+        OpenFailure::PathNotUnicode(_) => SkpError::project_target_path_not_unicode(),
+    }
+}
+
+/// The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the
+/// view's state; the check's names; and the two lineage facts, with no line and no rule text.
+fn opened_of(o: Opened) -> OpenedProject {
+    let w = o.workspace;
+    // The reader accepted the style only in ADR-017 §5a's canonical form, so it is written again
+    // and read as JSON without a refusal.
+    let style = spatial_renderer::canonical::to_canonical_string(&w.style.to_canonical_json());
+    let style = style.expect("a style the reader accepted is canonical");
+    let filter = w.filter.map(|predicate| Filter {
+        predicate,
+        dialect: FILTER_DIALECT_DUCKDB_EXPR_0.to_string(),
+    });
+    let clauses = w.clauses.into_iter();
+    let clauses = clauses.map(|c| FilterClause {
+        text: c.text,
+        enabled: c.enabled,
+    });
+    let [x, y] = w.view.centre;
+    let workspace = ProjectWorkspace {
+        filter,
+        clauses: clauses.collect(),
+        style: serde_json::from_str(&style).expect("canonical JSON is JSON"),
+        view: ProjectView {
+            centre: [HexF64(x), HexF64(y)],
+            zoom: HexF64(w.view.zoom),
+        },
+    };
+    let view = match o.view {
+        ViewState::Applies => ReopenView::Applies {},
+        ViewState::SavedInAnotherSpace { basis } => ReopenView::SavedInAnotherSpace { basis },
+    };
+    let (observed, admission) = match o.check {
+        RefCheck::NoChangeDetected => (Vec::new(), Vec::new()),
+        RefCheck::Differs {
+            observed,
+            admission,
+        } => (observed, admission),
+    };
+    // The words are `differing_components`'s and `DatasetRef::check`'s own closed sets.
+    let observed = observed.into_iter().map(|w| match w {
+        "size" => ObservedChange::Size,
+        "mtime" => ObservedChange::Mtime,
+        "footer-length" => ObservedChange::FooterLength,
+        "footer-hash" => ObservedChange::FooterHash,
+        other => unreachable!("an observation component the wire has no word for: {other}"),
+    });
+    let admission = admission.into_iter().map(|w| match w {
+        "crs" => AdmissionChange::Crs,
+        "identity" => AdmissionChange::Identity,
+        other => unreachable!("an admission claim the wire has no word for: {other}"),
+    });
+    let check = ReopenCheck {
+        observed: observed.collect(),
+        admission: admission.collect(),
+    };
+    let folder_file = match o.lineage.folder_file {
+        FolderLineage::Absent => FolderLineageFact::Absent,
+        FolderLineage::NotRead => FolderLineageFact::NotRead,
+        FolderLineage::Recorded => FolderLineageFact::Recorded,
+        FolderLineage::RecordedWithLinesAfter => FolderLineageFact::RecordedWithLinesAfter,
+        FolderLineage::NotTheRecordedOne => FolderLineageFact::NotTheRecordedOne,
+        FolderLineage::Refused(r) => FolderLineageFact::Refused(lineage_refusal_of(r)),
+    };
+    let previous_file = o.lineage.previous_file.map(|p| match p {
+        PreviousLineage::Absent => PreviousLineageFact::Absent,
+        PreviousLineage::Used => PreviousLineageFact::Used,
+        PreviousLineage::NotTheRecordedOne => PreviousLineageFact::NotTheRecordedOne,
+        PreviousLineage::Refused(r) => PreviousLineageFact::Refused(lineage_refusal_of(r)),
+    });
+    OpenedProject {
+        project: o.project.as_str().to_string(),
+        dataset: o.dataset,
+        session: o.session,
+        workspace,
+        view,
+        check,
+        lineage: ReopenLineage {
+            folder_file,
+            previous_file,
+        },
+    }
+}
+
+/// A lineage file's refusal on the wire: its line numbers, and no rule or reason text.
+fn lineage_refusal_of(r: LineageRefused) -> LineageRefusal {
+    match r {
+        LineageRefused::OverBound { line, limit } => LineageRefusal::OverBound {
+            line: line.map(|n| n as u64),
+            limit,
+        },
+        LineageRefused::Damaged { line, .. } => LineageRefusal::Damaged { line: line as u64 },
+        LineageRefused::Unreadable { .. } => LineageRefusal::Unreadable {},
+        LineageRefused::ThroughLink => LineageRefusal::ThroughLink {},
     }
 }
 
@@ -906,11 +1123,17 @@ fn data_at(folder: &Path, reference: &DatasetRef, dir: &Path) -> Result<Data, Op
     }
 }
 
-/// Whether the saved view's space `saved` is the space `ds` was admitted in (V3).
+/// Whether the saved view's space `saved` is the space `ds` was admitted in (V3). Each space's
+/// identifier in `basis` passes through [`bounded`]; its provenance is a closed word and its
+/// definition a hash, as the reader holds the saved space's and [`space_of`] builds the other's.
 fn view_state(saved: &Space, ds: &Dataset) -> ViewState {
     let named = |s: &Space| {
         let definition = s.definition.as_deref().unwrap_or("no definition");
-        format!("{} ({}, {definition})", s.identifier, s.provenance)
+        format!(
+            "{} ({}, {definition})",
+            bounded(&s.identifier),
+            s.provenance
+        )
     };
     match space_of(ds) {
         Some(now) if now == *saved => ViewState::Applies,
@@ -1006,7 +1229,8 @@ fn workspace_of(ds: &Dataset, w: ProjectWorkspace) -> Result<Workspace, SkpError
 
 /// Each way a save is refused, as its SKP code (SKP-V0 §11.4). One exhaustive `match` with no
 /// wildcard arm: a new `SaveFailure` is a compile error here until it has a code. Where the kernel
-/// and the protocol state the same fact, the message is the same text.
+/// and the protocol state the same fact, the message is the same text. A reader's `path` and
+/// `rule` pass through [`bounded`].
 fn skp_error_of(e: SaveFailure) -> SkpError {
     let detail = e.to_string();
     match e {
@@ -1015,14 +1239,38 @@ fn skp_error_of(e: SaveFailure) -> SkpError {
         SaveFailure::FolderHoldsProject(folder) => {
             SkpError::project_folder_holds_project(&folder.display().to_string())
         }
-        SaveFailure::Bind(_) => SkpError::project_file_refused("$.datasets[0]", &detail),
-        SaveFailure::FileRefused(r) => SkpError::project_file_refused(&r.path, &r.rule),
+        SaveFailure::Bind(_) => SkpError::project_file_refused("$.datasets[0]", &bounded(&detail)),
+        SaveFailure::FileRefused(r) => {
+            SkpError::project_file_refused(&bounded(&r.path), &bounded(&r.rule))
+        }
         SaveFailure::LineageNotKept => SkpError::project_lineage_not_kept_by_this_version(),
+        SaveFailure::FileNamesAnotherProject { project, found } => {
+            SkpError::project_file_names_another_project(project.as_str(), found.as_str())
+        }
         SaveFailure::ProjectFileUnwritable(_) => SkpError::project_file_unwritable(&detail),
         SaveFailure::MachineStore { .. } => SkpError::project_file_unwritable(&detail),
-        SaveFailure::MachineRecordRefused(r) => SkpError::project_file_refused(r.file, &r.rule),
+        SaveFailure::MachineRecordRefused(r) => {
+            SkpError::project_machine_record_refused(r.file, &bounded(&r.rule))
+        }
         SaveFailure::Open(e) => e,
     }
+}
+
+/// A text taken from a file the kernel did not write, as it may reach the wire: every control
+/// character replaced by U+FFFD, then, past 256 bytes, cut at the last character boundary within
+/// them and marked with ` [cut]`, so that it is at most 262 bytes.
+fn bounded(text: &str) -> String {
+    const MAX: usize = 256;
+    let mut out: String = text
+        .chars()
+        .map(|c| if c.is_control() { '\u{fffd}' } else { c })
+        .collect();
+    if out.len() > MAX {
+        let cut = (0..=MAX).rev().find(|&i| out.is_char_boundary(i));
+        out.truncate(cut.unwrap_or(0));
+        out.push_str(" [cut]");
+    }
+    out
 }
 
 /// The member of `workspace` that the recorded steps do not reach, if any (OPEN-9 (A)). The filter

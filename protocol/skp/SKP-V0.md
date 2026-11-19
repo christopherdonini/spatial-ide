@@ -1419,10 +1419,10 @@ refused   = { reason: "over-bound", line: n | null, limit } | { reason: "damaged
 
 - **`folder`** is the project folder, an absolute UTF-8 path. **`cancel_key`** is client-minted (§3). **`answer`** and **`relink`** are always present, `null` for none; any other `answer` is refused at deserialize, as is every unknown word of this section.
 - **`project`** is the identity of the project that is open: the file's, or a new one after the answer `copy`. `dataset` and `session` are what `open_dataset` returns for the data.
-- **`workspace`** is the project file's, in §11.2's shape, `view` included. **`view`** says whether that saved view applies: `applies` when the space it was saved in equals the space the data is admitted in. Otherwise `basis` names both spaces by identifiers and hashes, and no path.
+- **`workspace`** is the project file's, in §11.2's shape, `view` included. **`view`** says whether that saved view applies: `applies` when the space it was saved in equals the space the data is admitted in. Otherwise `basis` names both spaces by identifiers and hashes, and no path. In each identifier in it, every control character is replaced by U+FFFD, and an identifier then over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes.
 - **`check`** states facts and no consequence. `observed` holds the words of the engine's own comparison (`size`, `mtime`, `footer-length`, `footer-hash`) and `admission` holds `crs` and `identity`. Both lists are empty exactly when no compared component differed, which does not say that the file is the same one. Names cross, never a recorded or a present value.
 - **`lineage`** holds two facts about the lineage files and no line of either. `folder_file` is the folder's file against the lineage the project file records; `previous_file` is the one kept on this machine, `null` when there was none to look for. `refused` carries the reason and, where there is one, the line number, and never the rule's text. Where two lines break rules, the first in the file's order is named.
-- **`file_name`** is the last name of the missing file, never a path, and `null` when no location is recorded for the dataset.
+- **`file_name`** is the last name of the missing file, never a path, and `null` when no location is recorded for the dataset. Every control character in it is replaced by U+FFFD, and a name then over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes.
 
 ### 12.3 The contract
 
