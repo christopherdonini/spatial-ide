@@ -1794,3 +1794,61 @@ fn on_windows_a_folder_spelled_with_another_case_is_the_known_folder() {
     opened(reopen_at(&rig, &run, &project, &upper, None, None));
     assert_eq!(std::fs::read(&folders).expect("kept"), before);
 }
+
+/// **K-O25** (Amendment 41 item 4). A re-link the writer refuses (a relative path, as K-O8's) is
+/// refused naming `locations.json`, with nothing written. Answered `copy` from a copy of the
+/// folder: the copy's `project.spatial` is byte for byte as before, and the machine store gains no
+/// folder for a new identity. At a first reopen on this machine (the identity's machine folder
+/// removed, so no `folders.json`): the machine store holds no folder for the identity. The copy
+/// runs first, since it needs the save's `folders.json` to ask. Both call `open_project` directly:
+/// `reopen_at`'s lock check would make the identity's folder. Each case's refusal is asserted
+/// first; the cases' "nothing written" verdicts are asserted together.
+///
+/// RECORDED MUTATION: the re-link's check by the writer put back after step 3's writes, its bytes
+/// still kept. Expected failure: the assertion that nothing was written, naming both cases.
+#[test]
+fn a_relink_the_writer_refuses_writes_nothing_at_a_first_reopen_or_a_copy() {
+    let rig = rig("k-o25");
+    let run = rig.run();
+    let project = saved_inside(&rig, &run);
+    let relative = Path::new("elsewhere/parcels.parquet");
+    let named = |got: &Result<Reopen, OpenFailure>| match got {
+        Err(OpenFailure::MachineRecordRefused(r)) => r.file == LOCATIONS,
+        _ => false,
+    };
+    let folders_in_store = || {
+        let entries = std::fs::read_dir(&rig.machine).expect("the machine store");
+        let mut all: Vec<PathBuf> = entries.map(|e| e.expect("an entry").path()).collect();
+        all.sort();
+        all
+    };
+    let mut written = Vec::new();
+
+    let copy = rig.dir.join("copy");
+    copy_project(&rig.folder, &copy);
+    let copy_file = copy.join(PROJECT_FILE_NAME);
+    let file_before = std::fs::read(&copy_file).expect("the copy's");
+    let store_before = folders_in_store();
+    let got = run
+        .projects()
+        .open_project(&copy, "k", Some(Answer::Copy), Some(relative));
+    assert!(named(&got), "copy: {got:?}");
+    if std::fs::read(&copy_file).expect("the copy's") != file_before {
+        written.push("copy: the copy's project.spatial");
+    }
+    if folders_in_store() != store_before {
+        written.push("copy: a machine folder for a new identity");
+    }
+
+    let identity_dir = rig.machine.join(project.hex());
+    std::fs::remove_dir_all(&identity_dir).expect("the identity's machine folder removed");
+    let got = run
+        .projects()
+        .open_project(&rig.folder, "k", None, Some(relative));
+    assert!(named(&got), "first reopen: {got:?}");
+    if identity_dir.exists() {
+        written.push("first reopen: the identity's machine folder");
+    }
+
+    assert!(written.is_empty(), "nothing written: {written:?}");
+}
