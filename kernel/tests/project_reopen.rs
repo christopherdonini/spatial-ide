@@ -1855,3 +1855,117 @@ fn a_relink_the_writer_refuses_writes_nothing_at_a_first_reopen_or_a_copy() {
 
     assert!(written.is_empty(), "nothing written: {written:?}");
 }
+
+// ---------------------------------------------------------------------------------------------
+// K-O26, L8 and L9 (Amendment 43, item 7 (b)): the lock's release after a session end, and the
+// lineage reader's two refusals
+// ---------------------------------------------------------------------------------------------
+
+use spatial_skp::v0::{HexF64, SaveProjectRequest};
+
+/// The names in `dir`, sorted.
+fn listing(dir: &Path) -> Vec<String> {
+    let entries = std::fs::read_dir(dir).expect("the folder");
+    let names = entries.map(|e| e.expect("an entry").file_name());
+    let mut names: Vec<String> = names.map(|n| n.to_string_lossy().into_owned()).collect();
+    names.sort();
+    names
+}
+
+/// **K-O26** (Amendment 36 item 8; Amendment 43 items 6 and 20). A saved open holds its identity's
+/// lock, so a reopen of its folder by the same `Projects` is refused as open elsewhere (the
+/// control). After `SkpHost::end_generation` on the open, the same reopen gives `opened`. Then
+/// `save_project` for the ended open, given an empty folder, is refused by the end's code, and the
+/// machine store gains no folder.
+///
+/// RECORDED MUTATION: the release not run in `open_project`. Expected failure: the second reopen
+/// is refused as open elsewhere, and this test fails at `opened`.
+///
+/// RECORDED MUTATION 2 (Amendment 46 item 1 (b)): `release_ended` drops every entry. Expected
+/// failure: the control's reopen, through the `Projects` that holds the lock while the open is
+/// live, frees that lock and replies `opened`, and this test fails at the assertion named the
+/// control.
+#[test]
+fn a_reopen_after_a_session_end_in_the_same_process_takes_the_lock() {
+    let rig = rig("k-o26");
+    let run = rig.run();
+    let data = rig.folder.join("data/parcels.parquet");
+    fixture(&data, f1());
+    let (handle, ds) = run.open(&data, (None, None));
+    let projects = run.projects();
+    let ws = workspace(&ds, None);
+    let saved = projects.save(handle.as_str(), &ds, Some(&rig.folder), ws);
+    let project = saved.expect("saved").project;
+    let got = projects.open_project(&rig.folder, "k", None, None);
+    let held = matches!(got, Err(OpenFailure::OpenElsewhere(ref p)) if *p == project);
+    assert!(held, "the control: {got:?}");
+    run.host.end_generation(handle.as_str());
+    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    assert_eq!(o.project, project);
+
+    let empty = rig.dir.join("empty");
+    std::fs::create_dir(&empty).expect("an empty folder");
+    let store = listing(&rig.machine);
+    let style: serde_json::Value = serde_json::from_str(STYLE_DOC).expect("JSON");
+    let zero = HexF64(0.0).to_hex();
+    let wire = serde_json::json!({
+        "skp": SKP_VERSION, "dataset": handle.as_str(), "folder": empty.display().to_string(),
+        "workspace": {"filter": null, "clauses": [], "style": style,
+            "view": {"centre": [zero, zero], "zoom": zero}}
+    });
+    let req: SaveProjectRequest = serde_json::from_value(wire).expect("the request");
+    let refused = projects.save_project(req).err();
+    let code = refused.as_ref().map(|e| e.code.as_str());
+    assert_eq!(code, Some("engine.source_changed"), "{refused:?}");
+    let gained = listing(&rig.machine) != store;
+    assert!(!gained, "the machine store gains no folder");
+    assert!(!empty.join(PROJECT_FILE_NAME).exists());
+}
+
+/// **L8** (Amendment 43 item 7 (b)). A folder at `.spatial/lineage.jsonl` beside a kept member is
+/// refused as unreadable, and no lineage is read.
+///
+/// RECORDED MUTATION: `lineage_file`'s `unreadable` back to `Damaged { line: 0 }`. Expected
+/// failure: the file is refused as damaged, and this test fails at its `Unreadable` match.
+#[test]
+fn an_unreadable_lineage_file_is_named_unreadable() {
+    let dir = scratch("l8");
+    let file = dir.join(".spatial/lineage.jsonl");
+    std::fs::create_dir_all(&file).expect("a folder at the lineage file's name");
+    let got = read_lineage(&file, &dir.join("previous.jsonl"), &member(&saved()));
+    let refused = match &got.folder_file {
+        FolderLineage::Refused(refused) => Some(refused),
+        _ => None,
+    };
+    let unreadable = matches!(refused, Some(LineageRefused::Unreadable { .. }));
+    assert!(unreadable, "{got:?}");
+    assert_eq!(got.lineage, None);
+}
+
+/// **L9** (Amendment 43 item 7 (b)). Beside a kept member, a link at the lineage file's name is
+/// refused as a link and is not followed: off Windows a symlink to a file that holds the member's
+/// lineage, on Windows a junction (`link_to`). The link is kept, and no lineage is read.
+///
+/// RECORDED MUTATION: the link test in `lineage_file` removed. Expected failure: off Windows the
+/// link is followed and the file reads as the project's lineage; on Windows the junction is opened
+/// and refused as `Unreadable`.
+#[test]
+fn a_link_at_the_lineage_name_beside_a_kept_member_is_refused_and_never_followed() {
+    let dir = scratch("l9");
+    let lines = saved();
+    let (link, target) = (dir.join("folder.jsonl"), dir.join("target"));
+    if cfg!(windows) {
+        std::fs::create_dir(&target).expect("the junction's folder");
+    } else {
+        std::fs::write(&target, bytes(&lines)).expect("a file matching the member");
+    }
+    link_to(&link, &target);
+    let got = read_lineage(&link, &dir.join("previous.jsonl"), &member(&lines));
+    let want = LineageRead {
+        folder_file: FolderLineage::Refused(LineageRefused::ThroughLink),
+        previous_file: Some(PreviousLineage::Absent),
+        lineage: None,
+    };
+    assert_eq!(got, want);
+    assert!(std::fs::symlink_metadata(&link).is_ok(), "the link is kept");
+}

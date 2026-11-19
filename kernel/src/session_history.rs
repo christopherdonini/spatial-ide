@@ -1670,8 +1670,12 @@ pub enum PreviousLineage {
 pub enum LineageRefused {
     /// Over the file's bound when `line` is `None`, else over that line's ceiling.
     OverBound { line: Option<usize>, limit: u64 },
-    /// Against another rule, at the 1-based `line`; 0 when the file could not be read.
+    /// Against another rule, at the 1-based `line`.
     Damaged { line: usize, rule: String },
+    /// The file could not be opened or read; `reason` is the operating system's error, as text.
+    Unreadable { reason: String },
+    /// A link is at the file's name; it is not followed.
+    ThroughLink,
 }
 
 impl std::fmt::Display for LineageRefused {
@@ -1682,8 +1686,9 @@ impl std::fmt::Display for LineageRefused {
                 line: Some(n),
                 limit,
             } => write!(f, "its line {n} passes {limit} bytes"),
-            Self::Damaged { line: 0, rule } => write!(f, "it could not be read: {rule}"),
             Self::Damaged { line, rule } => write!(f, "its line {line} fails a rule: {rule}"),
+            Self::Unreadable { reason } => write!(f, "it could not be read: {reason}"),
+            Self::ThroughLink => write!(f, "it is a link, which is not followed"),
         }
     }
 }
@@ -1772,13 +1777,17 @@ pub fn read_lineage(folder_file: &Path, previous_file: &Path, member: &Lineage) 
 }
 
 /// One lineage file checked whole (ADR-036 §8; Amendment 1 items 2 and 6): `None` when it is
-/// absent, else its lines. Its size is checked by metadata before the bounded read, and every
-/// line is framed and read in its shape and chain; the first failure refuses the whole file.
+/// absent, else its lines. A link at `path` is refused before any open, by the link test of
+/// [`crate::project::resolver::check_inside`]. Its size is checked by metadata before the bounded
+/// read, and every line is framed and read in its shape and chain; the first failure refuses the
+/// whole file.
 fn lineage_file(path: &Path) -> Result<Option<Vec<String>>, LineageRefused> {
-    let unreadable = |e: std::io::Error| LineageRefused::Damaged {
-        line: 0,
-        rule: e.to_string(),
+    let unreadable = |e: std::io::Error| LineageRefused::Unreadable {
+        reason: e.to_string(),
     };
+    if std::fs::symlink_metadata(path).is_ok_and(|m| m.is_symlink()) {
+        return Err(LineageRefused::ThroughLink);
+    }
     let file = match File::open(path) {
         Err(e) if e.kind() == ErrorKind::NotFound => return Ok(None),
         file => file.map_err(unreadable)?,

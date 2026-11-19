@@ -11,7 +11,8 @@
 //! enumerates, from the code rather than from memory, every artifact this tree can write to disk or
 //! hand to an operator to read later, and proves each family below carries neither the word nor a
 //! value; the machine store's `locations.json` and `folders.json`, which `Projects::save` writes,
-//! are named below and are not scanned.
+//! and its `open.lock`, which `store::ProjectLock::try_lock` creates empty and never writes, are
+//! named below and are not scanned.
 //!
 //! ## What this tree can produce, enumerated by its own writers
 //!
@@ -61,7 +62,8 @@
 //! root `Cargo.toml`'s `exclude` list names that crate). Three more writers are outside the
 //! families above: the session record's `locations.json` (`kernel/src/session_history.rs`), which
 //! `G2` reads, and the machine store's `locations.json` and `folders.json`
-//! (`kernel/src/project/mod.rs`'s `write_machine_file`), which no test here scans.
+//! (`kernel/src/project/mod.rs`'s `write_machine_file`), which no test here scans. `open.lock`
+//! (`kernel/src/project/store.rs`, `ProjectLock::try_lock`) is created empty and never written.
 
 mod watch_support;
 

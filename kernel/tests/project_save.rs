@@ -1167,3 +1167,117 @@ fn a_first_save_refused_after_the_lock_leaves_it_free() {
     let lock = ProjectLock::try_lock(&rig.machine, &project);
     assert!(lock.is_ok(), "the refused save freed the lock: {lock:?}");
 }
+
+// ---------------------------------------------------------------------------------------------
+// K-O17 (b) and K-O28 (Amendments 43 and 44): the lock freed when an open is closed, and a save
+// after that
+// ---------------------------------------------------------------------------------------------
+
+use spatial_skp::v0::CloseDatasetRequest;
+
+/// What a child copy of this test binary, run as K-O17's child, says of `project`'s lock in the
+/// machine store at `root`. Each wait on the child is bounded at 60 s.
+fn child_tries_lock(root: &Path, project: &ProjectUri) -> Option<String> {
+    let exe = std::env::current_exe().expect("the test binary");
+    let mut child = Command::new(exe)
+        .args(["--exact", KO17, "--nocapture", "--test-threads=1"])
+        .env(KO17_ROOT, root)
+        .env(KO17_PROJECT, project.as_str())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::null())
+        .spawn()
+        .expect("the child");
+    let stdout = child.stdout.take().expect("the child's stdout");
+    let (said, heard) = mpsc::channel();
+    std::thread::spawn(move || {
+        let mut lines = BufReader::new(stdout).lines().map_while(Result::ok);
+        let _ = said.send(lines.find_map(|l| Some(l.split_once("ko17: ")?.1.to_string())));
+    });
+    let reply = heard.recv_timeout(Duration::from_secs(60));
+    let started = Instant::now();
+    while child.try_wait().expect("wait").is_none() {
+        if started.elapsed() > Duration::from_secs(60) {
+            child.kill().expect("kill the child this test started");
+            panic!("the child did not end within 60 s");
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    reply.expect("the child replied within 60 s")
+}
+
+/// `SkpHost::close_dataset` on `handle`.
+fn close(rig: &Rig, handle: &DatasetHandle) {
+    let req = CloseDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: handle.clone(),
+    };
+    rig.host.close_dataset(req).expect("closed");
+}
+
+/// **K-O17 (b)** (Amendment 43 item 7 (b)). After a real first save, a child copy of this test
+/// binary (K-O17's child) is refused the identity's lock. After `SkpHost::close_dataset` and then
+/// `Projects::release_ended`, the order the binding's `close_dataset` keeps, a second child takes
+/// it.
+///
+/// RECORDED MUTATION: `release_ended` keeps entries the catalog no longer holds. Expected failure:
+/// the second child is refused as held, and this test fails at its second reply.
+#[test]
+fn a_project_saved_first_in_this_process_is_refused_to_another_process_until_its_dataset_closes() {
+    let rig = rig("ko17b");
+    let folder = Some(rig.folder.as_path());
+    let (handle, ds) = rig.open_inside("data/parcels.parquet");
+    let ws = workspace(&ds, None, -4.5);
+    let saved = rig.projects.save(handle.as_str(), &ds, folder, ws);
+    let project = saved.expect("saved").project;
+    let first = child_tries_lock(&rig.machine, &project);
+    assert_eq!(first.as_deref(), Some("held"), "the control");
+    close(&rig, &handle);
+    rig.projects.release_ended();
+    let second = child_tries_lock(&rig.machine, &project);
+    assert_eq!(second.as_deref(), Some("taken"), "the lock is free");
+}
+
+/// **K-O28** (Amendment 44 item 4). After a first save, the open is closed
+/// (`SkpHost::close_dataset`) or its session is ended (`SkpHost::end_generation`), and
+/// `Projects::release_ended` frees its entry. `Projects::save` for that open, given an empty
+/// folder, is then refused with the host's own refusal, which `record_step` gives for that open;
+/// the machine store's listing is unchanged, and the folder holds no `project.spatial`.
+///
+/// RECORDED MUTATION: the two checks under the `saved` mutex removed. Expected failure: each case
+/// saves as a first save, and this test fails at its refusal assertion.
+#[test]
+fn a_save_after_the_release_of_a_closed_or_ended_open_is_refused_and_writes_nothing() {
+    let rig = rig("k-o28");
+    for case in ["closed", "ended"] {
+        let path = rig.dir.join(case).join("parcels.parquet");
+        f1(&path);
+        let (handle, ds) = rig.open(&path);
+        let at = |name: &str| rig.dir.join(case).join(name);
+        let (first, empty) = (at("first"), at("empty"));
+        std::fs::create_dir(&first).expect("the first save's folder");
+        let ws = || workspace(&ds, None, -4.5);
+        let saved = rig.projects.save(handle.as_str(), &ds, Some(&first), ws());
+        saved.expect("the first save");
+        if case == "closed" {
+            close(&rig, &handle);
+        } else {
+            rig.host.end_generation(handle.as_str());
+        }
+        rig.projects.release_ended();
+        let store = file_names(&rig.machine);
+        std::fs::create_dir(&empty).expect("an empty folder");
+        let value = 0.5;
+        let req = RecordStepRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: handle.clone(),
+            intent: StepIntent::StyleSet(StyleSetParams::FillOpacity { value }),
+        };
+        let host_says = rig.recorder.record_step(req).err();
+        let got = rig.projects.save(handle.as_str(), &ds, Some(&empty), ws());
+        let refused = matches!(&got, Err(SaveFailure::Open(e)) if Some(e) == host_says.as_ref());
+        assert!(refused, "{case}: {host_says:?}, {got:?}");
+        assert_eq!(file_names(&rig.machine), store, "{case}: the machine store");
+        let written = empty.join(PROJECT_FILE_NAME).exists();
+        assert!(!written, "{case}: no project file");
+    }
+}
