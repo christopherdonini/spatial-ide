@@ -376,6 +376,7 @@ pub async fn binding_pick_project_folder(app: tauri::AppHandle) -> Result<Option
 /// frontend now offers a Cancel button only once its first progress event has proven the token is
 /// registered (`PublishPanel.tsx::cancelControlVisible`).
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn binding_publish_prepare(
     app: tauri::AppHandle,
     host: State<'_, Arc<SkpHost>>,
@@ -628,6 +629,7 @@ pub fn binding_publish_cancel(
 /// exactly the limitation described above.]*
 #[cfg(debug_assertions)]
 #[tauri::command]
+#[allow(clippy::too_many_arguments)]
 pub async fn binding_publish_prepare_e2e_destination(
     app: tauri::AppHandle,
     host: State<'_, Arc<SkpHost>>,
