@@ -1660,11 +1660,14 @@ fn a_save_after_a_reopen_with_no_step_whose_project_record_another_run_left_leav
 /// **K-O19** (R3 (b), under P-2 (i)). After that save, the first step is recorded under a record
 /// of the open's own, and the leftover is unchanged.
 ///
-/// RECORDED MUTATION (Amendment 39, declared after the result was seen; K-O18's mutation, not one
-/// of K-O19's own): item 5 (g)'s arm never taken, so `adopt_project` binds the open with no move
-/// over another run's folder.
-/// Seen failing at kernel/tests/project_reopen.rs:1673: assertion failed:
-/// withheld_unwritable(&saved.expect("saved").history_mark).
+/// RECORDED MUTATION (Amendment 40 item 3; K-O19's own): in `adopt_project`'s arm for a record
+/// folder another run left, the open is bound to the project before the refusal is returned.
+/// Seen failing at the step, after the save's `assert!` held: `Run::opacity_step`'s
+/// `expect("recorded")`, since `create` refuses the record folder the other run left.
+/// K-O18's mutation (Amendment 39, declared after the result was seen): item 5 (g)'s arm never
+/// taken, so `adopt_project` binds the open with no move over another run's folder. Seen failing
+/// at the `assert!` right after the save, before the step:
+/// `withheld_unwritable(&saved.expect("saved").history_mark)`.
 /// The declared mutation, `create`'s `create_dir` replaced by `create_dir_all`, did not fail this
 /// test: under P-2 option (i) the first step never meets an existing folder (Amendment 39 item 1).
 #[test]

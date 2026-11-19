@@ -113,7 +113,8 @@ impl ProjectUri {
     }
 }
 
-/// Saves projects, and remembers which project each opened dataset was saved to in this run.
+/// Saves and reopens projects, and remembers which project each open of a dataset was saved to or
+/// reopened as in this run.
 pub struct Projects {
     /// The machine store's `projects` folder: `<32 hex>/` for each identity.
     root: PathBuf,
@@ -128,7 +129,8 @@ struct SavedProject {
     folder: PathBuf,
     /// The dataset entry's `logical_uri`, kept so every save of this open writes the same one.
     uri: DatasetUri,
-    /// The identity's open lock, taken by the first save. It is held for as long as this entry is,
+    /// The identity's open lock, taken by the first save or by the reopen
+    /// ([`Projects::open_project`]) that made this entry. It is held for as long as this entry is,
     /// which is until [`Projects`] is dropped.
     _lock: store::ProjectLock,
 }
@@ -229,9 +231,11 @@ impl Projects {
     ///
     /// - **A first save** needs `folder`. It mints the identity (ADR-036 §4), refuses a folder that
     ///   already holds `project.spatial`, and writes `folders.json` with the folder as `first`.
-    /// - **A later save** keeps the identity and goes to the folder the first one used; it ignores
-    ///   `folder`. It refuses to replace a project file that records a kept lineage, and one the
-    ///   reader refuses, since either could hold what a rewrite would lose.
+    /// - **A later save**, of an open this [`Projects`] saved first or reopened
+    ///   ([`Projects::open_project`]), keeps the identity and goes to the folder the first save
+    ///   used or the reopen opened from; it ignores `folder`. It refuses to replace a project file
+    ///   that records a kept lineage, and one the reader refuses, since either could hold what a
+    ///   rewrite would lose.
     /// - **Every save** judges the locators ([`resolver::judge`]), checks the document against the
     ///   reader's rules, and builds `locations.json`, and `folders.json` at a first save, each
     ///   refused where its reader would refuse it. A first save then takes the identity's open
@@ -242,9 +246,10 @@ impl Projects {
     ///   Only then does the history take its moves: the open is bound to the project, which moves
     ///   the open's own record under the project's identity if the open has one, and a `saved-here`
     ///   mark is written in the project's record when the steps reach the workspace. A second open
-    ///   of the same file is another open: its steps never go to the first open's record, and its
-    ///   own first save binds it to a project of its own. A history that cannot take the moves does
-    ///   not undo the save; the result says so.
+    ///   of the same file through `open_dataset` is another open: its steps never go to the first
+    ///   open's record, and its own first save binds it to a project of its own. A reopen
+    ///   ([`Projects::open_project`]) in the run that holds the project's record continues that
+    ///   record. A history that cannot take the moves does not undo the save; the result says so.
     pub fn save(
         &self,
         name: &str,

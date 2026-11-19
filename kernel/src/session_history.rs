@@ -120,8 +120,9 @@ impl<W: Write> History<W> {
     }
 }
 
-/// What holds a record: one open (by its catalog name) until a save binds that open to a project,
-/// then that project. The name is held in memory only and is never written to disk.
+/// What holds a record: one open (by its catalog name) until a save, or a reopen in the run that
+/// holds the project's record, binds that open to a project, then that project. The name is held
+/// in memory only and is never written to disk.
 #[derive(Clone, Debug, PartialEq, Eq)]
 enum Holder {
     Open(String),
@@ -132,10 +133,12 @@ enum Holder {
 struct Open {
     /// The catalog name the commands carry. Memory only.
     name: String,
-    /// The open's one dataset identity: minted once, and carried by the history's header, by every
+    /// The open's one dataset identity: minted at its first mention, or for a reopened open the
+    /// project file's ([`StepRecorder::reopened`]), and carried by the history's header, by every
     /// step's `data.dataset` and by the project file's dataset entry.
     uri: DatasetUri,
-    /// The project a save has bound this open to ([`StepRecorder::adopt_project`]).
+    /// The project this open is bound to: by a save ([`StepRecorder::adopt_project`]), or by a
+    /// reopen in the run that holds the project's record ([`StepRecorder::reopened`]).
     bound: Option<ProjectUri>,
 }
 
@@ -151,7 +154,9 @@ impl Open {
 
 /// One record: the history of the steps of one holder, from the holder's first step. An open has a
 /// record of its own until a save binds it to a project, and from then on its steps go to the
-/// project's record. A second open of the same file is another open and has its own record.
+/// project's record. A reopen in the run that holds the project's record is bound at the
+/// reopen and makes no record of its own; any other open of the same file is another open and
+/// has its own record.
 struct Record {
     dir: PathBuf,
     holder: Holder,
