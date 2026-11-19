@@ -973,8 +973,8 @@ fn the_first_save_records_its_folder_as_first_in_folders_json() {
     );
     assert_eq!(
         file_names(&record),
-        ["folders.json", "locations.json"],
-        "no temp file is left"
+        ["folders.json", "locations.json", "open.lock"],
+        "the two documents and the lock, and no temp file"
     );
 }
 
@@ -1121,20 +1121,17 @@ fn a_project_saved_first_in_this_process_is_refused_to_another_process() {
     assert_eq!(len, 0, "open.lock is never written");
 }
 
-/// **K-O24**, off Windows only, checked at run time; it prints the operating system it ran on. A
-/// first save into a folder this test made read only is refused when it stages the project file,
-/// which comes after the lock, and `ProjectLock::try_lock` on the identity then succeeds: the
-/// refused save freed its lock. On Windows a folder marked read only still takes a new file, so the
-/// case is not built there: the test returns at once and proves nothing.
+/// **K-O24**: a first save into a folder this test made refuse a new file is refused when it
+/// stages the project file, which comes after the lock, and `ProjectLock::try_lock` on the
+/// identity then succeeds: the refused save freed its lock. Off Windows the folder is made read
+/// only. On Windows, where a folder marked read only still takes a new file, `icacls` adds an
+/// entry denying Everyone (`S-1-1-0`) the right to add a file to it, and removes that entry after
+/// the save.
 ///
-/// RECORDED MUTATION: the lock kept with the saved entry on a failed save. Expected failure (off
-/// Windows): the lock is refused as held, and this test fails at its last assertion.
+/// RECORDED MUTATION: the lock kept with the saved entry on a failed save. Expected failure: the
+/// lock is refused as held, and this test fails at its last assertion.
 #[test]
 fn a_first_save_refused_after_the_lock_leaves_it_free() {
-    println!("K-O24 runs on {}", std::env::consts::OS);
-    if std::env::consts::OS == "windows" {
-        return;
-    }
     let rig = rig("ko24");
     let path = rig.dir.join("elsewhere").join("parcels.parquet");
     f1(&path);
@@ -1143,10 +1140,23 @@ fn a_first_save_refused_after_the_lock_leaves_it_free() {
     let before = std::fs::metadata(folder).expect("folder").permissions();
     let mut read_only = before.clone();
     read_only.set_readonly(true);
-    std::fs::set_permissions(folder, read_only).expect("the folder made read only");
+    let windows = std::env::consts::OS == "windows";
+    let icacls = |args: [&str; 2]| {
+        let status = Command::new("icacls").arg(folder).args(args).status();
+        assert!(status.is_ok_and(|s| s.success()), "icacls {args:?}");
+    };
+    if windows {
+        icacls(["/deny", "*S-1-1-0:(WD)"]);
+    } else {
+        std::fs::set_permissions(folder, read_only).expect("the folder made read only");
+    }
     let ws = workspace(&ds, None, -4.5);
     let result = rig.projects.save(handle.as_str(), &ds, Some(folder), ws);
-    std::fs::set_permissions(folder, before).expect("the folder's permissions restored");
+    if windows {
+        icacls(["/remove:d", "*S-1-1-0"]);
+    } else {
+        std::fs::set_permissions(folder, before).expect("the folder's permissions restored");
+    }
     let refused = result.expect_err("a read-only folder takes no project file");
     let staged = matches!(refused, SaveFailure::ProjectFileUnwritable(_));
     assert!(staged, "refused at the project file: {refused}");
