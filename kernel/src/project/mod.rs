@@ -20,10 +20,10 @@
 //! - [`Projects::save_project`]: the same save as an SKP command (SKP-V0 §11): the request's checks,
 //!   the workspace built from its wire form, and each [`SaveFailure`] as its one SKP code.
 //!
-//! No handle is held in a project folder. [`Projects`] holds one on `open.lock` in the machine
-//! store for each identity it saved first, until it is dropped. The only files written in a
-//! project folder are `project.spatial` and the temporary file that [`store`]'s atomic replace
-//! renames over it.
+//! Nothing in this module holds a handle in a project folder. [`Projects`] holds one on
+//! `open.lock` in the machine store for each identity it saved first, until it is dropped. The
+//! only files this module writes in a project folder are `project.spatial` and the temporary file
+//! that [`store`]'s atomic replace renames over it.
 
 pub mod file;
 pub mod resolver;
@@ -318,8 +318,9 @@ impl Projects {
             None
         };
         // A first save takes the identity's open lock after both documents are built, so that a
-        // refusal above writes nothing, and before the first write (the form's Amendment 36, item
-        // 6 (a)). A lock that cannot be taken refuses the save, naming `open.lock`.
+        // refusal above writes nothing, and before the documents are written; taking it makes the
+        // identity's machine folder and `open.lock` (the form's Amendment 36, item 6 (a)). A lock
+        // that cannot be taken refuses the save, naming `open.lock`.
         let lock_refused = |e| {
             let source = match e {
                 store::LockRefused::Held => std::io::Error::other("another handle holds it"),
