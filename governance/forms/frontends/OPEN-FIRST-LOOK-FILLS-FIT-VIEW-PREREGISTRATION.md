@@ -447,3 +447,288 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — step S8 stopped on I3 at FILL's precondition: FILL's set-up adds one declared drag east of the fit view before the toggle, with OPEN-6 (A)'s counting kept
+
+*Drafted by the architect (claude-opus-5-5), read only, at main 1067f753bd4f4226260575cbd3bbe3ece8fc7180 and at the worktree's commit 1, 476936642cddefe4a7652918f7674907a9f2b183, under the advisor's ruling ADV-2026-11-18-27, items 3 and 4. Appended by the custodian's script. It declares FILL's set-up before the code for it. It changes no product file and no line of `stepFill` from the line that takes `mark` onward. The reuse index missed. The line below is byte-copied from the custodian's brief and marked so: `No prior art recorded for "e2e check set-up that moves the view off the open's planned box before a resize". Research it before planning an implementation.` Code is cited by symbol at 476936642cdd unless another commit is named. Figures come from the files named, or are worked here.*
+
+1. **(a) The set-up.** After the wheel notch, its settle and its zoom check, `stepFill` makes one declared drag before it reads the size, the growth and the status. The drag starts at the canvas centre and goes 160 CSS px to the left in 16 steps. That moves the view east. It is not a search.
+   - The lines, added to `frontends/shell/e2e/layout.mjs`. The first three go after `FILL_WINDOW_MS`:
+     ```js
+     // FILL's declared drag (open-first-look-fills-fit-view Amendment 3, item 1): from the canvas centre, 160 CSS px to the left in 16 steps. Not a search.
+     const FILL_PAN_PX = 160;
+     const FILL_PAN_STEPS = 16;
+     ```
+     These seven go after the `view.zoom === zoom0` check in `stepFill`:
+     ```js
+       // The open's own plan asked for the fit view's cells, so the view moves east off them before the toggle: one declared drag after the notch.
+       // Its effect is read back from the view-state lines, as the notch's is, and the drag's views count as asks below.
+       await page.mouse.move(centre.x, centre.y);
+       await page.mouse.down();
+       await page.mouse.move(centre.x - FILL_PAN_PX, centre.y, { steps: FILL_PAN_STEPS });
+       await page.mouse.up();
+       await settleFully(page, consoleHandle, "FILL: after the drag");
+     ```
+   - The drag is worked out and recorded the same way the notch is. Its effect is never assumed. `markView` is taken before the notch, so every view-state line the drag emits (`WorkingCanvas.tsx` `onViewStateChange` traces one per tick) counts as an ask in `qualifying`. The grown view is read from the last view-state line. The run's result line records both qualifying counts.
+   - Unchanged, as ADV-2026-11-18-27 item 2 rules:
+     - the notch, its settle and its I3 check;
+     - `PARCEL_AREA`;
+     - `qualifying` as commit 1 left it;
+     - the status precondition, which is now read after the drag and still ends in I3;
+     - the precondition's form, at least one qualifying cell or else I3;
+     - everything from `const mark` onward.
+
+2. **(b) Where the boxes and cells lie, with the working.**
+   - **Frame.** The 100k dataset's `candidate-grid-frame-established` line (`<S>/fl8-layout-s8.session.log:257`; the same values at `<S>/fl8-layout-c.session.log:260`) gives:
+     - baseSpan 25346.079664039426, originX 2593667.074747726, originY 1187966.9847111297, level medium;
+     - 16 cells per axis (`tileGridConstants.ts` `TILE_GRID_DIMENSIONS`), so a cell is 1584.129979 m (`tileGrid.ts` `cellSizeForLevel`).
+   - **Column and row edges.** Column c starts at originX + c × cell, and row r at originY + r × cell. Cells are half-open (`coveringIndexRange`).
+     - Columns 3, 4, 5, 8, 9, 10 and 12 start at 2598419.465, 2600003.595, 2601587.725, 2606340.115, 2607924.245, 2609508.375 and 2612676.634.
+     - Rows 4, 5, 6, 7, 8, 9, 10 and 11 start at 1194303.505, 1195887.635, 1197471.765, 1199055.895, 1200640.025, 1202224.155, 1203808.285 and 1205392.414. Row 14 ends at 1211728.934.
+   - **Cells wholly inside `PARCEL_AREA`.** These are columns 4 to 11 and rows 8 to 14, 56 cells.
+     - Column 3 starts west of 2,600,000.
+     - Column 11 ends at 2612676.634, which is not past 2,612,680.
+     - Row 7 starts south of 1,200,000.
+     - Row 15 ends at 1213313.064, which is past 1,212,600.
+   - **The open's planned box, at this suite's sizes.** The 100k dataset's `candidate-first-look-view-planned` line (`<S>/fl8-layout-s8.session.log:258`; the same box at `<S>/fl8-layout-c.session.log:261`) is x 2599141.846 to 2607778.383 and y 1195053.894 to 1204985.911.
+     - That is the fit's view-state, centre (2603460.114, 1200019.902) at zoom -4.169346624228335, at 480 × 552 CSS px. The box is 8636.537 m ÷ 480 = 9932.018 m ÷ 552 = 17.99279 m per px. The view-state is at `<H>/fl-e2e-layout-s8.rep.layout-results-1795045054002.json:4166` and at `:4184` of the C results file.
+     - Its cover is columns 3 to 8 and rows 4 to 10, 42 cells. Of those, 15 are wholly inside (columns 4 to 8, rows 8 to 10).
+     - The other 41 wholly-inside cells lie outside the open's cover: columns 9 to 11 in rows 8 to 14, and columns 4 to 8 in rows 11 to 14.
+   - **The notch, as observed.** The zoom goes to -3.2394433553937008 at the same centre (`:6050`; `:6080` at C). That is 9.44430 m per px.
+     - At 480 px the view covers x 2601193.483 to 2605726.745 and y 1197413.276 to 1202626.528, so columns 4 to 7 and rows 5 to 9.
+     - At 480 + 312 px it covers x 2599720.173 to 2607200.055, so columns 3 to 8.
+     - At C the exposed wholly-inside cells were 8:8 and 9:8, so 2, as C's line says. Both are in the open's cover, so commit 1 counted 0, as its line says.
+   - **The drag.** 160 px in 16 steps moves the view 150 px, because deck drops the first step (`e2e/pan-anchor.mjs` `instrumentA`, its `dx / steps` term). At 9.44430 m per px that is 1416.644 m east, so the centre x becomes 2604876.758.
+     - Before the toggle, the view covers x 2602610.127 to 2607143.389, so columns 5 to 8.
+     - Grown, it covers x 2601136.817 to 2608616.699, so columns 4 to 9.
+     - Rows stay 5 to 9.
+   - **The asked set.** It is the union of:
+     - the open's cover;
+     - the notch's and the drag's view-state lines at 480 × 552, which give columns 4 to 8 and rows 5 to 9;
+     - the first dataset's tile lines (item 7), which give columns 3 to 5 and rows 7 to 8.
+   - **Predicted count.** In the grown cover, only column 9 is unasked, in rows 5 to 9. Of those cells, 8:9 and 9:9 are wholly inside. **The prediction is 2 qualifying cells before the toggle and 2 after.**
+   - **Margins.** The count stays 2 for any effective drag from 77 px to 232 px:
+     - column 9 enters the grown view past 76.68 px;
+     - column 9 enters the view before the toggle past 232.68 px;
+     - column 10 enters the grown view only past 244.41 px.
+     - Row 9 is inside by 42.6 px, and row 10 is outside by 125.1 px.
+   - **At the toggle.** The grown view's plan has five unresident cells, column 9 in rows 5 to 9. Rows 7 to 9 of that column hold parcels, so streams and rows are due.
+
+3. **(c) What FILL proves after the change.** On `100k-happy-path.parquet`, after the open's own fill, one notch in, and a move about 150 px east, a growth that uncovers a cell wholly inside the parcel area that no earlier ask covered issues a stream that delivers rows within 10 s.
+   - It no longer tests the growth at the centred one-notch view. There, since this node, the open's fill has already loaded the uncovered cells, no stream is due, and FILL asserts nothing about that case.
+   - FILL's mutation (`SHELL-MAP-REFILL-AFTER-RESIZE-PREREGISTRATION.md`, Amendment 2, item 7) still fails by name. The mutated handler re-reports the last asked box, which is now the drag's view. The status precondition shows that every cell of that box is complete, so no stream is issued.
+
+4. **(d) The stop.**
+   - **Step 1, at C (e4c1dfba), with the script unedited, failed as §5's table said it might.** The two exposed cells were already resident from the open's fill. Byte-copied from `<H>/fl-e2e-layout-c.log:14`: `[FILL] FAIL (21546ms): FILL: within 10000ms of closing the Inspector 0 streams were issued and 0 rows arrived on them, expected at least 1 stream and 1 row (qualifying cells 2 before, 2 after; zoom -3.2394433553937008)`. The run went from 2026-11-18T23:34:01Z to 2026-11-18T23:35:14Z, by the log's first and last lines.
+   - **Step 3, at commit 1, stopped at the precondition.** Byte-copied from `<H>/fl-e2e-layout-s8.log:14`: `[FILL] FAIL (9725ms): FILL: 0 qualifying cells before the toggle (zoom -3.2394433553937008, 480x552 + 312px): invalidator I3, STOP and report`. The run went from 2026-11-18T23:36:41Z to 2026-11-18T23:37:34Z.
+   - So OPEN-6 (A) alone was not enough. §5's P-head predicted that every test passes, and that did not hold for FILL at commit 1.
+
+5. **(e) The worker's deviations: (1) and (3) as its S8 report (`<S>/fl-s8-report-1.md`) states them, (2) as the custodian reported it to the advisor.**
+   - (1) Before step 1, it applied the FILL edit by mistake. It saved the edit to `<S>/fl8-fill.patch` and reverted it with `git checkout -- frontends/shell/e2e/layout.mjs`. It then ran the busy check and the run with `git status --porcelain` empty, so step 1 ran on the unedited file at C.
+   - (2) It drafted the README, KNOWN-LIMITATIONS and walkthrough words while step 3 ran, before step 3's result; none of them was committed, and ADV-2026-11-18-28 replaced the KNOWN-LIMITATIONS and walkthrough drafts.
+   - (3) Beyond its brief, it wrote seven scratch files under `<S>` with `fl8-` names.
+
+6. **(f) The prediction for the next run.** `layout.mjs` runs once, whole, at the worker's commit. Every step passes, FILL among them, with 2 qualifying cells before the toggle and 2 after.
+   - The run's record copies:
+     - the 100k dataset's `candidate-grid-frame-established` and `candidate-first-look-view-planned` session-log lines;
+     - the last view-state line before the toggle.
+   - It also says whether the planned box equals the fit view-state's box at FILL's measured size.
+   - If FILL passes with any other count, or the box differs, the run goes to the advisor before S8 continues. Anything else follows ADV-2026-11-18-27 item 7.
+
+7. **The ruling's item 4: the size at the plan.**
+   - **The 100k open, which FILL counts, planned at 480 × 552.** That is the size FILL measures. Item 2 shows the session-log box is the fit's view-state at that size, in both runs. No script action between E-REOPEN's `openPath` and FILL's size read changes the window or a region, and the notch and the drag change no size.
+   - **Commit 1's scan also counts another dataset.** It runs from the trace's first line, so it also counts the first dataset's tile lines. That open planned at 668 × 712 (`<S>/fl8-layout-s8.session.log:7`: 2239.774 × 2387.304 m at zoom -1.7454331102923848), and RESIZEQ asked at a grown size. The scan counts both at FILL's size in the 100k frame, which adds columns 3 to 5 and rows 7 to 8.
+   - **Those extra asks can only remove a qualifying cell.** They only add cells to the asked set, so they can never add a qualifying cell. All of them lie in the open's cover, so they remove nothing here.
+   - **A larger canvas at the plan could make FILL fail, never pass falsely.** If a page reflow without input ever made the canvas larger at the plan than at FILL's read, FILL could fail although the app is right. It could not pass where no stream is issued. Item 6's record checks this.
+   - **No counting fix is made.**
+
+8. **The lines, against §7.** The change adds 10 lines to `e2e/layout.mjs` and removes none, so `git diff --numstat 476936642cdd <commit>` gives 10 and 0.
+   - Against the base, the file then stands at 20 of §7's 30: commit 1's 10 (9 added, 1 removed) plus these 10.
+   - A count over 30 is class 8, recorded in the closing, and §7 is not edited.
+   - No other e2e file changes. The README's FILL entry is redrawn afterwards from the script, under ADV-2026-11-18-27 item 8 (b).
+
+9. **The walkthrough's Part V (class 9, a scope addition beside §10.2's rows).** Rows V2 and V3 of `frontends/shell/MANUAL-WALKTHROUGH.md` each gain a note, in the advisor's words (ADV-2026-11-19-02 item 4): since this node the strip V2 gains can already be loaded. Both rows join `operator-sitting-queue`.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 4 — step S9 stopped on I7: each first look's fill now goes into the console's 256-entry ring, so `command-bar.mjs` E-AND and `project.mjs` STYLE count `record_step` rows the ring has dropped; both suites read the newest rows by their content, declared here (class 9)
+
+*Drafted by the architect (claude-opus-5-5), read only, at main 3d94561d50dc9bebd7f8346cf8d9cdbfeb3634dc and at F = e1fd84957b7ae042a075e7ccc5628a3de5670eb7, for the advisor's ruling; appended by the custodian's script after it. Code is cited by symbol and line at F. Reuse index: the custodian's line, byte-copied, the output of `node tools/reuse.mjs console ring record_step e2e suite rows dropped` in the reuse clone: `No prior art recorded for "console ring record_step e2e suite rows dropped". Research it before planning an implementation.`. It changes no product file, no test of §4 and no prediction of §5.*
+
+1. **The stop.**
+   - S9 at F failed `command-bar.mjs` E-AND and `project.mjs` STYLE twice each, with the same line each time. The reports are `state/consults/2026-11-19-open-first-look-fills-fit-view-s9-series-at-e1fd8495-tester-report.md` and `state/consults/2026-11-19-open-first-look-fills-fit-view-s9-re-runs-at-e1fd8495-tester-report.md`.
+   - At the base, 9a4c58332661b6fd69fb477b1184f0147f38df2b, both suites passed once (`<S>/flbr-1.md`).
+   - These are assertions not in §5's table, so this is I7. I4 is not engaged.
+2. **The cause.**
+   - The block (`candidateArmSession.ts:1490-1505`) plans the cover at every `Completed` first look.
+   - Each tile is minted by `viewportQuery` (`tileViewportStreamManager.ts:955`). Every call is recorded in the console (`skp/client.ts:57`).
+   - The console's ring drops its oldest entry when it holds 256 (`console/recorder.ts:141`, `:284`).
+   - Evidence: in `<S>/fl9-s9-command-bar.session.log` the fills at `:140-252`, `:260-372` and `:379-490` hold 110 tile terminals each; in `<S>/fl9-s9-project.session.log` the fill at `:195-306` holds 110.
+3. **What a user sees.**
+   - After an open, and more after each Apply or Clear, the Console fills with the fill's `viewport_query` rows.
+   - Older rows leave, and the label shows them as dropped (`ConsolePanel.tsx:65-68`).
+   - Steps still reach the session history. No string changes.
+   - §3 did not name this change. KNOWN-LIMITATIONS gains item 67, in the advisor's words (ADV-2026-11-19-06 item 5; class 9, a scope addition), and a node is proposed (item 14, A4-6).
+4. **The fix (class 9, declared here before its code).**
+   - `e2e/command-bar.mjs` `stepAnd` and `e2e/project.mjs` (`readRecordStepRows`, `waitRecorded`, `stepClauses`, `stepStyle`) read each `record_step` row's request and outcome.
+   - After each commit they wait until the rows' requests end with the tail of the steps the suite has committed, in order, and the last row is `ok`.
+   - Ceilings, `git diff --numstat` against F, added plus removed: `command-bar.mjs` 30; `project.mjs` 40.
+   - No other file changes, except the records. §7's table is not edited.
+5. **§5's last row failed for two suites, and is recorded as failed.** The row predicted no change for `command-bar.mjs` and `project.mjs`. At F, E-AND and STYLE failed; CLAUSES passed, and its reading changes with theirs. The row is not rewritten. Three rows are added below it, each marked "found at S9, not predicted", each with the cause of item 2:
+   - `command-bar.mjs` E-AND;
+   - `project.mjs` CLAUSES;
+   - `project.mjs` STYLE.
+6. **§11 item 11 is engaged, and the advisor lifts it for this case (ADV-2026-11-19-06 item 3).** A prediction of §5 failed at S9, and two suites' readings change after that run. The block is lifted on three conditions. The failed prediction is recorded as failed (item 5). The new reading is declared here before its code and keeps the property each step asserted: one row per commit, in order, `ok`. Each of item 7's three mutations is seen to fail. Both gates check all three. A gate that finds the property weakened reports it as a Correctness finding.
+7. **Mutations.** Each is applied by hand on the frontend, its suite is run whole, the failing line is recorded with its commit id, and it is reverted with the porcelain empty. None is committed. A `verify-mutation` run is a check of a mutation's text, not its observation.
+   - **M-A4-1:** delete `App.tsx:1060`. Expect E-AND to fail after B, and CLAUSES to fail.
+   - **M-A4-2:** delete the loop at `App.tsx:2051`. Expect STYLE to fail after the opacity.
+   - **M-A4-3:** enqueue the `App.tsx:1060` step twice. Expect E-AND to fail on the tail.
+8. **The worker's steps** (the Sonnet worker, ADV-2026-11-18-16 item 7 (b)):
+   - (a) Read the real request text of a `record_step` row (`console/render.ts`; `StepIntent` in `skp/types.ts`) before writing any matcher.
+   - (b) Commit item 4's edits as F'.
+   - (c) Run both suites whole at F', each in its own shared hold, with the S9 debug exe and its sha256 checked.
+   - (d) Run item 7's three mutations.
+   - (e) Report each run's lines byte-copied, with the commit ids.
+9. **The custodian's steps:**
+   - commit this amendment after the ruling;
+   - dispatch item 8;
+   - file the report;
+   - give the reviewer `git diff --name-only e1fd8495 F'`;
+   - the closing names F', the two runs and the three mutations by reference.
+10. **The runs at F'.**
+    - Only `command-bar.mjs` and `project.mjs` run. The product and the exe are unchanged, so S9's other results stand at F' by that diff.
+    - Prediction: both exit 0, and each mutation fails as item 7 says.
+    - A failure of E-AND, CLAUSES or STYLE at F' is I7 again. It goes to the advisor, with no second run.
+11. **Budget.** `budget_minutes` goes from 440 to 500, my estimate. §7's table is not edited.
+12. **Superseded index.**
+    - Nothing of §5 is superseded: its last row stands, as a prediction that failed for `command-bar.mjs` and `project.mjs` (item 5).
+    - The S9 series report's "as seen" for those two suites, and the re-runs report's reading of `s9-command-bar-2` as I4: by item 1.
+13. **Packet for the advisor.**
+    - **A4-1, the fix:** Option 1, the two suites (recommended); Option 2 adds `recording.mjs`; Options 3 and 4 are rejected.
+    - **A4-2:** confirm item 6's reading of §11 item 11 (recommended: confirm).
+    - **A4-3, the runs at F':** the two suites only (recommended), or the whole series again.
+    - **A4-4:** base runs of the edited suites: none (recommended; item 7 shows the strength), or one each.
+    - **A4-5:** `console`'s REGRESS' through K7 stays as the custodian classed it. It is not diagnosed here.
+    - **A4-6:** the group that collapses when its first entry is dropped is reached right after an open now. Recommended: a proposed node, not this piece.
+    - **A4-7:** a note on walkthrough rows AA1 and AA2: none (recommended; AA1 stays true by my reading), or a note in the advisor's words.
+14. **The packet, as the advisor ruled it (ADV-2026-11-19-06).** Where an item above says "recommended", this item settles it.
+    - **A4-1:** Option 1. `recording.mjs` is not changed. Not covered: its `waitForRecordedRows` counts the `record_step` rows since the open, and passed at F with one open's fill and one Apply's fill in the ring. The proposed node of A4-6 names it, and the form of the next piece that adds a first look to that suite's path reads it.
+    - **A4-2:** item 6, as it now reads.
+    - **A4-3:** the two suites only, if `git diff --name-only` from F to the merge request's head names only `frontends/shell/e2e/command-bar.mjs`, `frontends/shell/e2e/project.mjs` and `KNOWN-LIMITATIONS.md`. Any other path there comes to the advisor.
+    - **A4-4:** no base runs of the edited suites.
+    - **A4-5:** the `console` suite's one failure through K7 stays as classed (I4; its re-run passed). The reviewer's brief carries one question on it (ADV-2026-11-19-06 item 7).
+    - **A4-6:** one node is proposed, not placed, and not on v0.2's list: the Console's ring against a view load's tile requests. Its summary names three things: the entries before two or three loads are dropped, a recorded step among them; an opened group closes when its first entry is dropped; `recording.mjs` counts rows since the open.
+    - **A4-7:** no note on AA1 or AA2. J1 says "at least one `viewport_query`" and stays true by the advisor's reading.
+    - **The reuse index:** the slot in this amendment's first paragraph takes the custodian's line, byte-copied and marked.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 5 — C1: `command-bar.mjs` E-AND after card B counts the `record_step` rows recorded since a mark taken from the Console's label, and fails where it cannot tell (class 9)
+
+*Drafted by the architect (claude-opus-5-5), read only, at main 65a72f7243d205e519f194de1b9175dd669286fd and at H = e374eb711caaeae4dd898e8ddb49a35d4d80c619, for the advisor's ruling (ADV-2026-11-19-08 item 3); appended by the custodian's script after it. Code is cited `<path>:<line> at H`. Reuse index: the custodian's line, byte-copied, the output of `node tools/reuse.mjs console ring dropped entries sequence e2e record step count` in the reuse clone, run after the architect's hand-back because its brief carried none (a disclosed departure, class 1, ADV-2026-11-19-09 item 8): `No prior art recorded for "console ring dropped entries sequence e2e record step count". Research it before planning an implementation.`. It changes no product file, no test of §4 and no prediction of §5. "(mine)" marks the architect's choices.*
+
+1. **The finding.** The reviewer's gate report at H (`state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-reviewer.md`), C1 and check 8's M-X2 line; ADV-2026-11-19-08 items 1 and 2. §11 item 11 is not engaged (ADV-2026-11-19-08 item 4).
+2. **What the code gives.**
+   - Label: `frontends/shell/src/console/ConsolePanel.tsx:64-68 at H`. Held + dropped = entries recorded since the page loaded: `frontends/shell/src/console/recorder.ts:205-213`, `:282-288`, `:339 at H`.
+   - Label and rendered entries come from one update: `ConsolePanel.tsx:48-52 at H`.
+   - Order and groups: `recorder.ts:300-302`, `frontends/shell/src/console/consoleViewModel.ts:177-189`, `ConsolePanel.tsx:106-131 at H`.
+   - Hence (mine): in one reading, counting a closed group as its `×N`, the entry at position k is entry number dropped + k.
+3. **The reading after card B** (class 9, declared before its code; mine).
+   - (a) Mark: after card A's wait (`frontends/shell/e2e/command-bar.mjs:433-434 at H`, unchanged), one read of the label; mark = held + dropped. An unparsable label fails with F1.
+   - (b) Readings: one `page.evaluate` every 200 ms. They start once card B's cards read as applied (after `command-bar.mjs:437 at H`), go on while the step waits for the map to settle and makes its map checks (`:438-441 at H`), and end at (e)'s decision or at F3. The draft started them after `:439-441 at H`; the earlier start is the advisor's change (item 12). Each one: opens the Console if it is closed, and discards that reading; numbers each rendered entry by item 2; discards the reading if the entries and `×N` counts do not sum to held; returns each rendered `record_step` row's number, `stepKey` (`:368-373 at H`) and outcome; in the same call, clicks each closed group that holds an entry numbered at or above the mark.
+   - (c) An entry is seen once a reading has rendered it. A row's outcome is the latest one read.
+   - (d) An entry numbered at or above the mark that is unseen and below the reading's dropped count fails the step with F2. The step never passes on what the Console still holds.
+   - (e) At the first reading after the check at `command-bar.mjs:441 at H` in which every entry from the mark up to the reading's total has been seen, and the newest `record_step` row at or above the mark is `ok`: the rows at or above the mark must be exactly one, keyed `filter:` + `ZONE_AB`, at `ok`. Otherwise F4.
+   - (f) If no such reading comes within 30 s of that check: F3.
+   - (g) Unchanged: card A's wait (`waitCommitted`, `:375 at H`), `readRecordStepRows` and `project.mjs` (ADV-2026-11-19-08 item 5). Replaced: `:442-444 at H`.
+   - (h) Texts (test strings):
+     - F1 `E-AND: the Console's label could not be read after card A's wait (<text>)`
+     - F2 `E-AND: cannot tell how many record_step rows card B's commit added: entry <n>, recorded after the mark at <mark>, was dropped before it was read (label after card A's wait: <held> actions, <dropped> dropped; now: <held> actions, <dropped> dropped)`
+     - F3 `E-AND: within 30000ms of card B's map settling no reading had read every entry since the mark with a record_step row since it at ok (<last reading>)`
+     - F4 `E-AND: card B's commit added <n> record_step rows, expected exactly one, at ok, carrying the combined text: <[[key, outcome], ...]>`
+     - In the PASS text (`:451 at H`), `one more record_step row reached ok` becomes `card B's commit added exactly one record_step row, at ok (Console after card A's wait: <held> actions, <dropped> dropped; after card B's map settled: <held> actions, <dropped> dropped)`. The second pair is the reading of (e).
+   - (i) Why order needs no timing (by reading): the mark is read before `sendCondition` for B (`:435 at H`). The queue sends one step at a time, and the next step is recorded in the same task that resolves the one before (`frontends/shell/src/workspace/stepRecorder.ts:52-60`, `frontends/shell/src/skp/client.ts:57-60 at H`).
+4. **Ceiling.** `command-bar.mjs`: 70 added plus removed, `git diff --numstat` against F, the E-AND-b header line included (the advisor's figure, item 12; the draft's was 60); this supersedes Amendment 4 item 4's 30 for this file. `project.mjs`: 40, not edited. No other path but the words commit's two (ADV-2026-11-19-08 items 8 and 9).
+5. **Unmutated run.** E-AND passes with 3(h)'s PASS text. It decides if every entry recorded since the mark is rendered by some reading before 256 newer entries are recorded. The readings run during the load (3 (b)), so that asks for fewer than 256 entries in about two reading intervals (400 ms). The draft's reader started after the settle and had at most 36 entries of room, by ADV-2026-11-19-08 item 6's floor of 220. Prediction: it decides; not measured. F2 here is I7: it goes to the advisor with the four numbers, with no second run.
+6. **Mutations** (as Amendment 4 item 7; a `verify-mutation` run is a check of a mutation's text, not its observation).
+   - M-A4-1 (`App.tsx:1060 at H` deleted): fails at card A's wait, the unchanged line `E-AND: the newest record_step rows did not end with card A's step at ok before card B (<rows>)` (`command-bar.mjs:434 at H`).
+   - M-A4-3 (the `App.tsx:1060 at H` step enqueued twice): card A's wait passes (the architect's gate at H, O1). Then F4 with n = 2, both rows `filter:` + `ZONE_AB`, at `ok`.
+   - M-X2 (the reviewer's line, as applied in its gate report at H, C1): F4 with n = 2, `["filter:\"zone\" = 'residential'","ok"]` then `["filter:(\"zone\" = 'residential') AND (\"zone\" <> 'residential')","ok"]`.
+   - F2 in place of F4 still fails, but it is not the predicted line: recorded as such, with the four numbers.
+7. **Unit layer** (by reading; no run required (mine)). `frontends/shell/src/App.command.test.tsx` RC3 (`:505`, `:512 at H`), RC5 (`:543`, `:548 at H`) and RC16 (`:644 at H`) pin the recorded steps of card changes. Under M-X2, RC3 fails at `:512` and RC5 at `:543`; RC16 passes.
+8. **Worker's steps.** (a) Item 3's edits and the E-AND-b header line (the architect's draft, section 4), as one commit; the other words of ADV-2026-11-19-08 items 6 to 8 are a second commit, by the custodian's script, after (c). (b) `command-bar.mjs` run whole once, unmutated, in its own shared hold, with the S9 debug exe and its sha256 checked. (c) Item 6's three mutations. (d) Each run's lines byte-copied, with the commit ids. (e) One focused vitest run of `frontends/shell/src/App.command.test.tsx` under M-X2, reverted after it with the porcelain empty: RC3 and RC5 are predicted to fail and RC16 to pass (item 7).
+9. **Not covered** (mine): a duplicate of card A's commit (the architect's gate O1; ADV-2026-11-19-08 item 5).
+10. **Budget.** `budget_minutes` from 500 to 560, my estimate. §7's table is not edited.
+11. **Superseded index.** Amendment 4 item 4, for `command-bar.mjs` after card B: the tail reading and the ceiling of 30, by items 3 and 4 here. Amendment 4 item 7 is not edited; its lines stand as the predictions for H.
+12. **As the advisor ruled it (ADV-2026-11-19-09).** Items 3 (b), (e) and (f), the PASS line of 3 (h), and items 4, 5 and 8 carry the advisor's changes: the readings start once card B's cards are applied and run during the load, and the decision is still taken only after the map checks, when every entry since the mark has been read; the ceiling is 70; the words are a second commit; one vitest run under M-X2 is added. Confirmed as drafted: item 6's predictions, F2 in the unmutated run as I7 with no second run, item 9, and item 10's budget. The reuse slot in the first paragraph takes the custodian's line, byte-copied and marked.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 6 — the first look's closing, before its merge request: the gates; the words commits, as ruled; the counts, with two class 8 rows; C1's reading and its runs; what is not covered; what is recorded by reference; the mint-window node; the departures; CI and the red runs; the holds
+
+*Written by the custodian, 2026-11-19, before PR 335's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates** (§9).
+   - The architect at e374eb71: PASS WITH NOTES, `state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-architect.md`.
+   - The reviewer at e374eb71: FAIL on C1, `state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-reviewer.md`.
+   - The reviewer alone, again, at 5c913c14 (ADV-2026-11-19-08 item 9): PASS WITH NOTES, with no Correctness or Evidence finding, `state/consults/gates/2026-11-19-open-first-look-fills-fit-view-gate-reviewer-attempt-2.md`.
+   - C1 was closed by Amendment 5's reading (item 4).
+2. **The words commits, as ruled.** Each is applied by script from a filed report or ruling. None was gated again.
+   - fcf58897: KNOWN-LIMITATIONS item 67 in the advisor's words (Amendment 4; ADV-2026-11-19-06 item 5).
+   - 5c913c14 (ADV-2026-11-19-08 items 6 to 8): item 67 replaced whole, and item 64's comment gains its sentence. In `candidateArmSession.ts`, the frame sentence, the auto-fit sentence and the not-covered note. The README's E-FL entry.
+     - In `candidateArmSession.ts` the commit changes 21 lines. By script, every one is a comment line (ADV-2026-11-19-08 item 9), so no app-window run followed.
+   - 22624329 (ADV-2026-11-19-16 items 1 and 2): `watchConsole`'s doc line, the re-gate's D1, and item 67's sentence on a tile's load, the re-gate's O6. One comment line and one sentence.
+3. **The counts** (§7; Amendment 4 item 4; Amendment 5 item 4; ADV-2026-11-19-04 item 7). Counted by `git diff --numstat 349cec82e5ecbfab40db3ae9b6811d471d9ea2de...22624329`, added plus removed; for `command-bar.mjs` and `project.mjs`, against F (e1fd84957b7ae042a075e7ccc5628a3de5670eb7), where the counts are the same.
+   - product: `candidateArmSession.ts` 63 of 60; `WorkingCanvas.tsx` 14 of 25;
+   - unit: `candidateArmSession.test.ts` 301 of 320; `WorkingCanvas.wiring.test.tsx` 35 of 110;
+   - e2e:
+     - `open-fills-fit-view.mjs` 255 of 380; `package.json` 1 of 2; `layout.mjs` 20 of 30;
+     - `command-bar.mjs` 71 of 70; `project.mjs` 38 of 40;
+   - docs: `e2e/README.md` 16 of 60; `MANUAL-WALKTHROUGH.md` 21 of 40; `KNOWN-LIMITATIONS.md` 12 of 14.
+   - In all, 847 lines in 12 files, against 1,151 in 12 (§7's 1,041 and Amendment 4's two files).
+   - **Two class 8 rows.** §7 is not edited.
+     - `command-bar.mjs`, 71 against 70, one line over. The cause: the definition of `parseLabel` was cut to fit the ceiling and then put back, with nothing else cut (ADV-2026-11-19-12 item 1).
+     - `candidateArmSession.ts`, 63 against 60, three lines over. It was 46 at F. The words commit 5c913c14 changed only comment lines and brought it to 63 (item 2).
+   - From the merge base 349cec82 to main, no path of the pull request has changed (ADV-2026-11-14-21 item 6 (a)).
+4. **C1's reading and its runs** (Amendment 5; ADV-2026-11-19-09; ADV-2026-11-19-12). The reports:
+   - `state/consults/2026-11-19-open-first-look-fills-fit-view-c1-worker-report.md`;
+   - `state/consults/2026-11-19-open-first-look-fills-fit-view-c1-resumed-worker-report.md`.
+   What they record:
+   - **The failed run at 8a58d91b.** `parseLabel` was not defined. It is the worker's defect in the test code, and it is neither I7 nor F2 (ADV-2026-11-19-12 item 2).
+   - **The unmutated run at e2be4fd5** is the run of Amendment 5 item 5. E-AND passed. The Console's label gave 256 held and 444 dropped after card A's wait, and 256 held and 672 dropped after card B's map settled. So 228 entries were recorded in between, which is not fewer than 220 (ADV-2026-11-19-08 item 6). There was no F2.
+   - The three mutations and the vitest run under M-X2 are as that report gives them.
+5. **Not covered** (ADV-2026-11-19-08 item 5; the architect's O1). `project.mjs` is not changed. Its reading has the same gap at its second step: a duplicate of a suite's first commit is not caught, at F or now.
+6. **Recorded by reference; the form is not edited** (ADV-2026-11-19-08 item 8).
+   - The M-U2g row: the architect's E-R1, and the reviewer's D5 with its M-X.
+   - M-A4-1's earlier failure: the architect's E-R2.
+   - FILL's mutation after Amendment 3: the reviewer saw it fail at the head (its check 8), which answers the architect's O2.
+   - The architect's D5 is not applied. It changes a string in `layout.mjs`, not a comment, and `layout.mjs` stays the file that ran. It is recorded here for the next piece that edits that suite.
+7. **The mint-window node** (ADV-2026-11-19-01 item 1; ADV-2026-11-19-08 item 10). The advisor grades `untiled-reissue-holds-earlier-look-handle-until-mint` at the merge check, from the reviewer's mint-window probe (its check 7 at e374eb71).
+8. **The departures** (class 1, disclosed).
+   - Amendment 5's reuse line is recorded in its filing note (ADV-2026-11-19-09 item 8).
+   - At step S8 after Amendment 3:
+     - the harness's README entry gained two sentences, where the brief said to correct it or leave it;
+     - the timeout wrapped only the hold call.
+     Both are in the step's report, `state/consults/2026-11-19-open-first-look-fills-fit-view-s8-after-amendment-3-worker-report.md`.
+   - The departures recorded in Amendments 1 to 5 stand as recorded.
+9. **CI and the red runs** (ADV-2026-11-18-12 item 6).
+   - At 22624329, by `gh run list` read at 2026-11-19T09:43:34Z: six runs, all success. These are Product CI — shell twice, Ported notices twice, DCO sign-off and the exposure scan.
+   - The red and cancelled runs on the branch:
+     - 44410261339 at 3ab8c8a7, Product CI — shell, failure. Both its jobs failed the typecheck: the tests U-FL1 to U-FL6 name `shownViewportBbox`, which `WorkingCanvasHandle` did not yet have. The tests were merged into the branch before step S5's code, as §7's order has it, and pushed before ADV-2026-11-19-10.
+     - 44432851114 at 2272cce8, Product CI — shell, cancelled at 2026-11-19T00:58:48Z. The workflow's concurrency cancels a branch's older run, and e1fd8495 was pushed at 00:58:43Z.
+10. **The holds** (ADV-2026-11-16-06 item 2 (e)). By the machine log, the piece had 69 holds, from 2026-11-18T19:05:09Z to 2026-11-19T08:32:17Z:
+    - S4 8, S7 6, S8 3, S9 33;
+    - Amendment 4's runs 6, Amendment 5's 5;
+    - the reviewer's gates 8.
+    None stood beside another hold of this project.
+11. **Superseded index.** Nothing in the form is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.

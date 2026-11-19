@@ -58,25 +58,35 @@ import type { RequestOutcome } from "../streaming/viewportStreamManager";
  * (`viewportQuery`/`dataPlaneAttach`/`startStream`), reused here rather than reimplemented. Its
  * batches are ingested through the SAME `WorkingCanvas.pushTileBatch` seam every tile stream's
  * batches are (tagged under the reserved `INITIAL_TILE_KEY`, never a real tile the grid could ever
- * produce -- `tileKeyToString`'s own `"row:col"` shape never collides with a bare word). The FIRST
- * batch that carries any geometry gives `pushTileBatch` a non-null `fitAnchor`
+ * produce -- `tileKeyToString`'s own `"row:col"` shape never collides with a bare word).
+ * The FIRST batch that carries any geometry gives `pushTileBatch` a non-null `fitAnchor`
  * (`WorkingCanvas.tsx`'s own `fitAnchorRef`, shared with the baseline arm's identical one-shot
- * auto-fit) -- exactly mirroring baseline's own auto-fit timing (`pushBatch`'s
- * `!hasAutoFitRef.current && residentExtentRef.current` check) -- at which point this module calls
- * `establishGridFrame` exactly once, ever, for this session.
+ * auto-fit) and fits the camera to it once -- exactly mirroring baseline's own auto-fit timing
+ * (`pushBatch`'s `!hasAutoFitRef.current && residentExtentRef.current` check). The grid frame waits
+ * for the look to end: the untiled sink's `onTerminal` (`issueUntiledQuery`, below) calls
+ * `establishFrameFromExtent` on the union of every batch the look delivered
+ * (`latestUnionedExtent`), and `manager.establishGridFrame` fixes the frame once for the session
+ * (it returns at once when a frame exists).
  *
- * **Why tile-keyed planning does not start immediately after that.** `establishGridFrame` alone
+ * **When tile-keyed planning starts.** `establishGridFrame` alone
  * gives `TileViewportStreamManager.onCameraChange` a frame to plan against, but planning ALSO needs a
  * real "current viewport" bbox -- and at the moment the initial untiled stream first delivers,
  * `lastViewportBboxRef`/deck's own `onViewStateChange` has not necessarily fired at all (baseline's
  * own auto-fit is `notifyViewport: false`, precisely so it does not race the very stream that is
- * still delivering). Tile-keyed planning therefore begins the same way baseline's own FIRST real
- * `viewport_query` beyond the initial load does: the next genuine `onViewportChanged` event -- a real
- * pan/zoom, or the "fit" trace step's `.zoom-to-layer` click (`WorkingCanvas.fitToBounds`, which
- * fits `fitAnchorRef` and DOES notify, `notifyViewport: true`). At fit-to-extent the viewport IS the
- * dataset (NEXT-CUT.md's own restated target for this whole cut) -- the covering tile set at THAT
- * moment is typically many tiles, which is why the fit step is expected to show `>1` tile stream
- * issued, not the open-drain step (this module's own report has the full account).
+ * still delivering). Tile-keyed planning therefore begins at the first of two moments
+ * (open-first-look-fills-fit-view, its form's §2.1):
+ * - a genuine `onViewportChanged` once the frame exists -- a real pan/zoom, or the `.zoom-to-layer`
+ *   click (`WorkingCanvas.fitToBounds`, which fits `fitAnchorRef` and DOES notify);
+ * - the first look's own `Completed` terminal, when no plan has run this generation: the untiled
+ *   sink (`issueUntiledQuery`, below) plans the box the canvas then shows (`shownViewportBbox`) by
+ *   calling `handleViewportChange` itself, not through the debounce. It plans nothing there for the
+ *   terminal of a look the session no longer holds (`wasCurrent`; the sink's comment names the one
+ *   window where an earlier look is still held), after a self-cancel (an operator Cancel with a frame,
+ *   or `stop()`'s teardown cancel), while a relinquish stands, once the session is stopped or ended,
+ *   while a viewport change is pending (that change plans instead), or with no frame or no shown box.
+ * With no input, and when the look admitted geometry, that box is the look's own auto-fit, so the
+ * fit view's tiles are planned without a pan; when it admitted none, no fit runs and the box is the
+ * view left standing.
  */
 
 /** Reserved tile key for the initial, untiled "first look" query's own batches -- never a real
@@ -1471,6 +1481,33 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
           } else {
             deps.onResidencyStatusChange?.({ kind: "candidate-first-look-failed", frame: manager.gridFrame !== null });
             firstLookFailureStanding = true;
+          }
+        }
+        // open-first-look-fills-fit-view (its form's §2.1): the complement of S1's block above. Terms
+        // (i) to (iii) are S1's guard and (iv) and (v) negate its last term, so at most one of the two
+        // blocks acts on a terminal, and S1's has read `hasPlanned` before `handleViewportChange` sets it.
+        // A Completed look with no plan this generation plans the box the canvas shows, called directly
+        // so its tiles are tracked before the `syncScanLiveness()` below: no scan reset between look and fill.
+        // Not covered (AUTONOMY §31), the same window as S1's: an earlier look's Completed terminal that
+        // arrives after a reissue but before the new look's ticket is minted is read as current, and can
+        // plan the pre-fit view under the new filter (`untiled-reissue-holds-earlier-look-handle-until-mint`).
+        // That plan sets `hasPlanned`, so the new look's own terminal plans nothing: its fit view is asked
+        // for at the next camera change, and until then the status S1 recomputes there can read settled
+        // for the pre-fit view's cells.
+        if (
+          wasCurrent && // (i)
+          !wasSelfCancelled && // (ii)
+          !relinquishedReEmitted && // (iii)
+          !hasPlanned && // (iv)
+          terminal.kind === "Completed" && // (v)
+          !stopped && !sessionEnded && // (vi)
+          !relinquishClearPending && // (vii): a relinquish in the frameless window resumes at the next camera change
+          !pendingViewportChange // (viii): the pending change plans instead
+        ) {
+          const box = canvas?.shownViewportBbox?.() ?? null;
+          if (box !== null && manager.gridFrame !== null) {
+            logSessionEvent("candidate-first-look-view-planned", `{xmin:${box.xmin},ymin:${box.ymin},xmax:${box.xmax},ymax:${box.ymax}}`);
+            handleViewportChange(box);
           }
         }
         syncScanLiveness(); // P5f should-fix 3: covers a genuine terminal (failure/complete/cancel)

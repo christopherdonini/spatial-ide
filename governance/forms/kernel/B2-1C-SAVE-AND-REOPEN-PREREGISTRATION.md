@@ -2295,3 +2295,685 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 36 — the reopen's P3a, the kernel's open of a saved project, declared before its code as two parts, P3a-1 (the lock at a first save) and P3a-2 (`Projects::open_project`) (ADV-2026-11-16-10 R1 to R4; ADV-2026-11-16-16 item 3; ADV-2026-11-18-18 item 4; ADV-2026-11-18-23 item 2; ADV-2026-11-18-24 items 3 and 5): scope, rules, ceilings, tests, mutations, pre-committed producers, regions, stops and gates; a correction of Amendment 34 item 3's group figures (class 3); `kernel/src/skp.rs` and tests outside §2.11's and §4's lists (class 9)
+
+*Drafted by the architect for the custodian, read only, at main 1067f753bd4f4226260575cbd3bbe3ece8fc7180, and appended by the custodian's script. References only. Nothing below is a quotation. Under ADV-2026-11-16-10 item 5, each choice below is the custodian's declaration; where it is the architect's recommendation, it says so. Rulings are cited by id, or by file, and item. Code is cited by path and symbol.*
+
+1. **Basis.**
+   - P3a is ADV-2026-11-16-10 R1 (a): the kernel's open of a saved project, full class (ADV-2026-11-16-06 item 2 (a)). P3b, the wire (`skp/0.14`) and the binding, follows it.
+   - Its rules:
+     - §2.4, steps 1 to 6;
+     - §2.5, with its declared window;
+     - §2.7's lock;
+     - Amendment 1 item 5 (V3, M1, M2);
+     - Annex A items 2, 3 and 5;
+     - R3 (a) to (d);
+     - OPEN-N4 (a), as ADR-036 Amendment 2 item 4 states it;
+     - the second-open form's five carried items (`governance/forms/kernel/SECOND-OPEN-HISTORY-BEFORE-1C-STEP-3-PREREGISTRATION.md`, §2.4).
+   - P1a, P1b and P2 have merged (Amendments 33 to 35). P3a consumes their pre-committed producers (Amendment 30 items 5 (d) and 6 (d); Amendment 31 item 6).
+   - **Not P3a's:**
+     - every wire byte, type, fixture and code. That includes the codes for P3a's new failures and C-6's withdrawal of `project_target_outside_folder` (P3b, R1 (e)).
+     - the binding's commands, the pool poll, and freeing the lock at `close_dataset` and at a session end (P3b; O-12, O-13).
+     - every shell item, O-14 to O-17, E-REOPEN, E-CHANGED, E-SECOND and E-CRASH-UNLOCK (P4).
+     - the record's own `locations.json` writer (step 3's node, Amendment 32 item 3).
+   - **Model:** worker-high, on the strongest model, for both parts (ADV-2026-11-18-02 item 2 (a); ADV-2026-11-16-06 item 5 (a)). The grounds: a lock, a path check, a persistence format, concurrency and cancellation.
+
+2. **Correction (class 3).**
+   - Amendment 34 item 3 gives the groups after P2 as 1,282 of 1,400 and 1,137 of 1,300. Those figures add P2's counts to Amendment 31 item 4's figures, and those figures are what was left (665 = 925 − 260).
+   - Corrected, the counts of Amendments 33, 34 and 35 (each item 3) give step 2's use so far:
+     - kernel product 792 of 1,400 (99 + 336 + 357);
+     - kernel tests 883 of 1,300 (145 + 341 + 397);
+     - protocol 5 of 320.
+   - The proof is those three items' numstat figures, summed as shown.
+
+3. **Size and split (R1 (d)).** The architect's recommendation.
+   - **The read's figure.** The step-2 read puts P3 at about 2,210 lines and P3b at about 810, so P3a at about 1,400 (`state/consults/2026-11-16-b2-piece-1c-save-and-reopen-step-2-declaration-read-architect.md`, §3, P3: 750 product + 650 tests).
+   - **This declaration's ceilings** come to 1,440 lines (item 4).
+   - **P3a splits in two.**
+     - P3a-1 is the lock at a first save, with its documentation items: 210 lines, 3 files.
+     - P3a-2 is `Projects::open_project`: 1,230 lines, 6 files.
+     - P3a-1 has a product caller now: the shipped `save_project` command calls `Projects::save`.
+     - P3a-2 is cut from main after P3a-1 merges. Both edit `kernel/src/project/mod.rs`, and P3a-2 registers its open in the `SavedProject` field that P3a-1 adds.
+   - **P3a-2 does not split again by the arms of the open.** It stays over 800 lines for three reasons.
+     - (a) The six steps run in one call, under one cancel key and one lock. Every arm's test either ends in `opened`, which needs step 4, or asserts that a refusal after the lock leaves `open.lock` free (K-O14). A part cut inside step 2 would land an `open_project` whose missing arms answer in a way §2.4 does not define. A part made of crate-private helpers without their caller would land dead code, which clippy reports in a changed file (ADV-2026-11-18-24 item 5 (b)).
+     - (b) About a third of P3a-2's test lines are one rig in one file: hand-built folders, `folders.json`, `locations.json` and lineage files. A split would duplicate that rig or share a helper across parts, either of which would first go to the advisor (ADV-2026-11-16-16 item 1 (e)).
+     - (c) The largest arm, `copy`, is about a fifth of the part. Cut out, it would leave an interim `copy` answer that §2.4 does not have.
+   - The advisor rules the split with the packet (P-1).
+
+4. **Ceilings, both numstat columns, by §2.11's groups.** Neither §2.11 nor §7 is edited. An overrun is class 8, recorded in the part's closing amendment.
+
+   | Part | File | Group | Ceiling |
+   |---|---|---|---|
+   | P3a-1 | `kernel/src/project/mod.rs` | kernel product | 60 |
+   | P3a-1 | `kernel/src/project/store.rs` | kernel product | 20 |
+   | P3a-1 | `kernel/tests/project_save.rs` (class 9 by Amendment 30) | kernel tests | 130 |
+   | P3a-2 | `kernel/src/project/mod.rs` | kernel product | 520 |
+   | P3a-2 | `kernel/src/skp.rs` (class 9, O-10) | kernel product | 60 |
+   | P3a-2 | `kernel/src/session_history.rs` (class 9 by Amendment 31) | kernel product | 50 |
+   | P3a-2 | `kernel/src/dataset_ref.rs` | kernel product | 10 |
+   | P3a-2 | `kernel/tests/project_reopen.rs` | kernel tests | 520 |
+   | P3a-2 | `kernel/tests/project_lock_crash.rs` | kernel tests | 70 |
+
+   - **Group totals.** P3a-1 is 80 product and 130 tests. P3a-2 is 640 product and 590 tests.
+   - **The forecast** (item 2's figures).
+     - Kernel product has 608 left. P3a takes it to 112 over.
+     - Kernel tests have 417 left. P3a takes them to 303 over.
+     - Protocol stays at 5 of 320.
+     - Both kernel overruns are class 8 at the closings. The advisor reads the forecast now (P-7).
+   - **Contingent.** If the advisor rules packet P-6 option (ii), `kernel/src/project/resolver.rs` joins P3a-2 with a ceiling of 15. Its test case falls within `project_reopen.rs`'s ceiling.
+   - The reviewer recounts §2.11's command with its excludes set to this form's present path.
+
+5. **The open's rules** (P3a-2, the architect's recommendation).
+   - **(a) The cancel key.**
+     - The key is registered at the entry of `open_project`, before `project.spatial` is read. It goes in the host's open registry, reached through `StepRecorder::host`.
+     - A new crate-private split of `SkpHost::open_dataset` in `kernel/src/skp.rs` does this (O-10; the 2026-10-23 draft's point (a)). The split has two halves: one registers a key and returns its guard and token, and one opens under a token already registered.
+     - `open_dataset` becomes the two halves in sequence. Its behaviour does not change.
+     - A key already in use is refused as `cancel_key_in_use`.
+     - The token is checked between steps and after each blocking read, and the engine open takes the same token.
+     - The longest stretch with no cancel check is one bounded read: at most 1 MiB for `project.spatial`, 2 MiB for each machine document, and 32 MiB for each of the two lineage files.
+   - **(b) The order** (class 1, disclosed).
+     - Step 2 decides with nothing written. The `question` arm returns from there.
+     - Step 3 takes the lock before any write to the machine store or to the folder. Step 2's writes (`same`, the move, `copy`'s new identity) come after the lock. For `copy`, the lock is the new identity's.
+     - Step 6, the lineage read, runs after step 3 and before step 4's engine open. A cancel during the read therefore opens nothing (ADV-2026-11-18-23 item 2 (b)). The reply's content is unchanged.
+     - Every refusal or cancel after step 3 frees the lock before the reply (K-O14).
+   - **(c) The machine documents.**
+     - `folders.json` and `locations.json` are read under their bounds.
+     - A refused file gives a failure that names the file and leaves it byte for byte (M1, K-O10).
+     - `same` goes through `KnownFolders::with_same`, and over 256 it is refused with nothing dropped (M2, K-O11).
+     - A move goes through `KnownFolders::moved_to` (K-O6 (b)).
+     - Every write goes through `KnownFolders::to_bytes` or `store::locations_to_bytes`, then `write_machine_file`. A refusal by a writer names its file and writes nothing (Amendment 30 item 4 (a)).
+   - **(d) The folder's case** (Amendment 33 item 9; the architect's O-7).
+     - The known check compares canonical forms. It canonicalizes this folder and each remembered entry that resolves; an entry that does not resolve is compared as written.
+     - What is written stays the absolute form, as at the save.
+     - `with_same` is called only for a folder the known check did not find (K-O23).
+   - **(e) The data step.**
+     - A `project-relative` locator goes through `resolver::check_inside`, and the engine gets the returned path (H4). The engine path is armed for watching with the same string (K-O15).
+     - Each refusal names the locator's own JSON path, `$.datasets[0].resource.locators[i].at`, and the segment. It never forwards the `$` that `NotCanonical` carries (ADV-2026-11-18-24 item 3 (a)).
+     - `NotCanonical` cannot be reached through the data step. `DatasetRef::parse` refuses a non-canonical `at` at step 1, through `in_canonical_form` in its locator loop in `kernel/src/dataset_ref.rs` (K-R3). Only parsed `at`s are passed, which bounds the segments (Amendment 35 item 10).
+     - Otherwise the machine location from `locations.json` is used. A location that is absent, or a file that is missing, gives `not_found`.
+     - A re-link is checked against `observed` (K-O8). After the open succeeds, the re-link is written to `locations.json`. A re-link path that the writer refuses, a relative one included, is refused by name with nothing written.
+     - The race between the check and the open is §2.5's declared window.
+   - **(f) The open's identity in the recorder** (O-6 items 1 and 2; O-11).
+     - A new crate-private `StepRecorder` call runs before any step. It gives the reopened open the project file's dataset identity, and binds the open at the reopen only when this run holds the project's record (OPEN-N4 (a); ADR-036 Amendment 2 item 4).
+     - A later run's reopen does not bind (R3 (a)).
+     - The open is registered in `Projects`'s saved list, with its lock, so that its next save keeps both identities and its folder (K-O21).
+   - **(g) Sub-case 2** (R3 (b)): a later run's reopen with no step before its first save, where another run left the project's record folder.
+     - At main, `StepRecorder::adopt_project` binds without a move. Each later step is then refused, at `create`'s `create_dir` on the leftover folder.
+     - Recommended, and contingent on the advisor (packet P-2): `adopt_project` does not bind an open with no record of its own when `<sessions root>/<project hex>` exists and this run holds no record for the project. The open stays unbound, the save replies withheld as `HistoryUnwritable`, and the open's steps keep a record of their own.
+   - **(h) Told at the reopen.**
+     - The reply carries no history fact (R3 (c)). The first save's withheld mark is the existing `HistoryMark::Withheld`, which P4 shows as S5.
+     - A later save of a reopened file whose member records a lineage is refused by `Projects::save`'s existing check (R3 (d), K-O20).
+   - **(i) The lineage paths** (Amendment 31 item 1): `lineage.jsonl` in the folder, and `previous-lineage.jsonl` in the identity's machine folder. Both are private constants in `mod.rs`, passed to `session_history::read_lineage`.
+   - **(j) A lock freed late after a crash on Windows** (Amendment 33 item 9; the architect's O-1, the reviewer's O2). No retry is declared. K-O5 tries the lock only after it has waited for the child to exit. A failure of K-O5 or T6 on Windows is stop 6.
+
+6. **P3a-1: the lock at a first save.** Branch `cut/b2-piece-1c-p3a-1`, worktree `C:/dev/wt/1c-p3a-1`, build folder `D:/wt-targets/1c-p3a-1`, cut from main.
+   - **(a) Files and regions.**
+     - **`kernel/src/project/mod.rs`, the lock.**
+       - `SavedProject` gains a private field holding the `ProjectLock`.
+       - At a first save, `Projects::save` takes `ProjectLock::try_lock` after both machine documents are built and before `create_dir_all` (Amendment 30 item 4 (b); Amendment 33 item 9, the reviewer's O1). A refusal before that point therefore writes nothing, and T14 holds unedited.
+       - `LockRefused` maps to the existing `SaveFailure::MachineStore`, naming the lock file, so no `pub` item and no wire change are added. `Held` at a first save needs a freshly minted identity to be held already, which ordinary use cannot reach.
+       - The lock is kept with the saved entry. It is freed when `Projects` is dropped, and from P3b also at `close_dataset`.
+     - **`kernel/src/project/mod.rs`, two doc comments.**
+       - `Projects::save`'s doc: the sentence that lists the order of a save is corrected to the order the code follows (ADV-2026-11-18-18 item 4 (a)).
+       - `write_machine_file`'s doc names its residual: a crash between the temp's creation and the rename leaves `<name>.tmp-<hex>` in the identity folder, which nothing removes (ADV-2026-11-18-18 item 4 (c), the architect's O-4).
+     - **`kernel/src/project/store.rs`, docs only.**
+       - `remove_stale_temps`'s doc names its residual: two first saves of different identities into one empty folder, between the folder check and the rename (Amendment 30 item 4 (b)).
+       - `Staged::commit`'s doc stops linking the private `sync_folder` (ADV-2026-11-18-18 item 4 (b)).
+     - **`kernel/tests/project_save.rs`:** K-O17 and K-O24, appended, using its rig. One line naming them is added to its module doc. No existing line changes.
+   - **(b) Tests and mutations** (round-25 rule: apply, run the named test, record its failure by name with the commit, revert; a `verify-mutation` run is not called an observation).
+
+     | Id | Test | Asserts | Mutation |
+     |---|---|---|---|
+     | K-O17 | `a_project_saved_first_in_this_process_is_refused_to_another_process` (the first half of Amendment 30 item 6 (d)'s working name; its second half, until its dataset closes, is P3b's) | after a real first save, a child process (re-exec, the `project_save_crash.rs` pattern) gets `LockRefused::Held` on the identity; `open.lock` stays empty | no lock taken at a first save |
+     | K-O24 | `a_first_save_refused_after_the_lock_leaves_it_free` (off Windows, by a run-time check; the folder made read only in test code) | the save is refused; `ProjectLock::try_lock` on the identity then succeeds | the lock kept with the saved entry on a failed save |
+
+     - K-O24 passes at main by design (main takes no lock), so it is exempt by name from stop 4. Its mutation is the observation.
+     - T14 is re-run unedited at P3a-1's candidate, with its mutation (b) observed again. That shows the lock sits after the documents are built.
+   - **(c)** P3a-1 adds no `pub` item.
+
+7. **P3a-2: `Projects::open_project`.** Branch `cut/b2-piece-1c-p3a-2`, worktree `C:/dev/wt/1c-p3a-2`, build folder `D:/wt-targets/1c-p3a-2`, cut from main after P3a-1 merges.
+   - **(a) Files and regions.**
+     - **`kernel/src/project/mod.rs`:** a new region after `save`.
+       - `pub fn Projects::open_project(folder, cancel_key, answer, relink)`, with item 5's steps.
+       - Its `pub` result types, in kernel terms that mirror §2.2 field for field: `Answer` (`Copy`, `Same`), `Reopen` (`Opened`, `Question`, `NotFound { file_name }`), `Opened`, the view's state (V3), and `OpenFailure`.
+       - Private helpers.
+       - `skp_error_of` is unchanged: mapping `OpenFailure` to wire codes is P3b's.
+     - **`kernel/src/skp.rs`:** item 5 (a)'s split of `open_dataset`. Crate-private only.
+     - **`kernel/src/session_history.rs`:**
+       - item 5 (f)'s crate-private call;
+       - item 5 (g)'s arm of `adopt_project`, if the advisor rules it.
+       - The reader items of P2 do not change.
+     - **`kernel/src/dataset_ref.rs`:** N-10. The containment sentence in `in_canonical_form`'s doc takes the 2026-10-23 draft's words, point (l) (`state/consults/2026-10-23-b2-piece-1c-save-and-reopen-steps-2-and-3-ahead-architect-draft.md`), applied by script (R1 (g)).
+     - **`kernel/tests/project_reopen.rs`:** item (b)'s rows, appended. No existing test changes (I3).
+     - **`kernel/tests/project_lock_crash.rs`:** K-O5, appended, using its child pattern.
+   - **(b) Tests and mutations** (round-25 rule as in item 6 (b)).
+     - Each test fails at main by a missing symbol, which is a compile failure. L5, L6 and L7 are the exceptions, by name: they assert P2's reader as merged, and they are exempt from stop 4.
+     - Every case asserts its arm's result and that `open.lock` is free after a refusal.
+     - Every case that opens nothing also asserts that the catalog holds no entry for it.
+
+     | Id | Test | Asserts | Mutation |
+     |---|---|---|---|
+     | K-R1 | `a_link_below_the_folder_is_refused_and_never_opened` | a junction as an intermediate (Windows); a symlink as an intermediate, and a symlink to a regular file as the final segment (off Windows, where it needs no privilege; ADV-2026-11-18-24 item 3 (b)): each refused as through a link, naming the locator's JSON path and the segment | the data step skips `check_inside` |
+     | K-R2 | `on_windows_a_junction_out_of_the_folder_is_refused` | as §4 states | the walk follows reparse points |
+     | K-R3 | `a_device_name_or_trailing_dot_target_is_refused_at_read_before_any_open` (C-7) | `project_file_refused` at `$.datasets[0].resource.locators[i].at` (built through `SkpError::project_file_refused`, which exists) | `in_canonical_form` not called for a project-relative `at` |
+     | K-R4 | `an_unresolvable_target_is_refused_by_name` | a missing intermediate and a missing final, each naming the segment | a missing segment opened as the folder |
+     | K-O1 | `a_saved_project_reopens_with_its_data_claims_and_workspace` | after a real save, the reopen's claims, workspace and check | the claims dropped |
+     | K-O1 (b) | `a_saved_project_whose_member_records_a_lineage_reopens_with_its_lineage_named` (Amendment 31 item 6) | a hand-built project and lineage file: `Recorded` with its lines for a match; `NotTheRecordedOne` for a file from a different save | step 6 not run |
+     | K-O2 | `a_changed_file_is_reopened_with_each_differing_component_named` | as §4 states | only `byte_size` compared |
+     | K-O3 | `a_missing_file_returns_not_found_and_opens_nothing` | as §4 states | the machine location falls back to the folder |
+     | K-O4 | `a_second_open_of_an_open_identity_is_refused_in_this_process_and_another` | as §4 states, and `folders.json` and `locations.json` byte for byte unchanged | (a) no lock; (b) step 2's writes made before the lock |
+     | K-O5 | `the_second_open_refusal_never_outlives_a_crash` (`project_lock_crash.rs`) | a child opens and aborts; after the child's exit has been waited for, the parent's open succeeds | a `create_new` marker in place of the lock |
+     | K-O6 | `the_question_is_asked_only_when_the_first_folder_holds_this_identity_or_cannot_be_reached` (five cases, §4; a refused `project.spatial` in the first folder asks) | as §4 states | asked whenever the first folder exists |
+     | K-O6 (b) | `a_move_answer_rewrites_folders_json_with_this_folder_first_and_asks_again_at_the_old_path` (Amendment 30 item 6 (d)) | after a move, this folder is `first`; a copy placed back at the old path is asked | the old first kept in `same` |
+     | K-O7 | `a_copy_gets_a_new_identity_in_the_new_folder_and_its_own_links` | as §4 states, the first folder's files and the old identity's machine files unchanged | the new identity written to the first folder |
+     | K-O8 | `a_relinked_file_is_checked_against_the_observation_and_each_difference_named` | as §4 states; a relative re-link is refused, naming `locations.json`, with nothing written | (a) the check skipped on re-link; (b) the re-link written without `locations_to_bytes` |
+     | K-O9 | `a_view_saved_in_another_space_is_not_applied_and_the_reopen_names_it` (V3) | the view's named state with its basis | the spaces compared by identifier only |
+     | K-O10 | `a_folders_json_the_reader_refuses_refuses_the_open_by_name_and_is_kept` (M1; cases: a duplicate key, 257 folders as hand-built bytes) | refused, naming the file; its bytes unchanged | a refused file replaced by a fresh one |
+     | K-O10 (b) | `a_locations_json_the_reader_refuses_refuses_the_open_by_name_and_is_kept` (Amendment 30 item 6 (d); cases: a relative `path`, a bad dataset URI, a wrong format; ADV-2026-11-18-18 item 4 (c)) | the same | the same |
+     | K-O11 | `a_same_answer_past_256_known_folders_is_refused_and_none_is_forgotten` (M2) | as Amendment 1 item 5 states | the oldest `same` entry dropped |
+     | K-O12 | `a_project_file_over_its_ceiling_is_refused_at_reopen_without_being_read_whole` (class 9) | `set_len` to 1,048,577: refused by name | the read unbounded |
+     | K-O13 | `a_cancel_before_the_engine_open_ends_the_reopen_with_nothing_opened_and_no_lock_held` (class 9; the rig widens step 6 with a valid lineage file near its bound, and a thread cancels the key as soon as the registry holds it) | cancelled; nothing opened; lock free | the key registered only by `open_dataset` |
+     | K-O14 | `a_refused_or_cancelled_reopen_leaves_open_lock_free` (class 9; cases: not found, through a link, an engine refusal after the lock) | the lock can be taken after each | the error arm keeps the guard |
+     | K-O15 | `on_windows_a_reopened_project_relative_open_is_watched` (class 9) | the arm reports watching for the `\\?\` path | the arm given another spelling than the engine's |
+     | K-O16 | `a_save_after_a_reopen_whose_project_record_another_run_left_replaces_neither_history` (sub-case 1; R3 (b)) | a later run (a new recorder and `Projects` over the same roots, with no `end_session`): the save replies withheld as `HistoryUnwritable`; the earlier record byte for byte; the open's own record keeps its steps; no mark in either | `copy_under` writes into an existing folder |
+     | K-O18 | `a_save_after_a_reopen_with_no_step_whose_project_record_another_run_left_leaves_it_and_keeps_the_open_unbound` (sub-case 2; contingent on P-2) | withheld as `HistoryUnwritable`; the earlier record unchanged | the open bound without a move over another run's folder |
+     | K-O19 | `the_first_step_after_that_save_meets_no_leftover_folder_and_has_a_record_of_its_own` (the leftover folder meeting the first step's create; R3 (b)) | under P-2 option (i): the step is recorded under its own record and the leftover is unchanged; under option (ii): the step is refused and the leftover is unchanged | `create`'s `create_dir` replaced by `create_dir_all` |
+     | K-O20 | `a_later_save_of_a_reopened_project_whose_member_records_a_lineage_is_refused_and_the_files_are_kept` (R3 (d)) | `LineageNotKept`; `project.spatial` unchanged | the kept-lineage refusal removed |
+     | K-O21 | `a_save_after_a_reopen_keeps_the_project_and_dataset_identities_and_the_folder` (O-11; O-6 item 2) | the next save writes the same project URI and dataset URI into the same folder, and a step's `data.dataset` is the file's dataset URI | (a) not registered in the saved list; (b) the recorder's minted dataset URI kept |
+     | K-O22 | `a_reopen_in_the_run_that_holds_the_projects_record_continues_it_from_the_first_step` (OPEN-N4 (a); O-6 item 1; the first `Projects` is dropped to free the lock, standing in for P3b's close) | the first step after the reopen has the record's last step as its parent | no bind at the reopen |
+     | K-O23 | `on_windows_a_folder_spelled_with_another_case_is_the_known_folder` | opened with no question; `folders.json` unchanged | compared as written |
+     | L5 | `a_previous_lineage_whose_hash_matches_but_whose_step_count_does_not_is_named_and_not_used` (ADV-2026-11-18-23 item 2 (a)) | `previous_file` is `NotTheRecordedOne` and `lineage` is `None` | the count comparison in `read_lineage`'s arm 2 removed |
+     | L6 | `a_lineage_file_with_two_broken_lines_is_named_by_the_first` (Amendment 34 item 9) | `Damaged` at the first line in file order | the reader goes past the first failure |
+     | L7 | `a_link_at_the_lineage_name_beside_a_not_kept_member_is_named_and_never_followed` (ADV-2026-11-18-23 item 2 (c); a dangling symlink off Windows, a junction on Windows) | `NotRead` | `symlink_metadata` replaced by `metadata` |
+
+     - No existing test is edited (I3).
+   - **(c) Pre-committed producers** (R2): see item 8.
+
+8. **Producers and their consumers.**
+
+   | Producer | Consumer | Seam's end-to-end test |
+   |---|---|---|
+   | `resolver::check_inside`, `CheckRefused` (P1a) | P3a-2's data step | K-R1 to K-R4; E-REOPEN (P4) |
+   | `ProjectLock`, `LockRefused`, `OPEN_LOCK` (P1b) | `Projects::save` at a first save (P3a-1); step 3 (P3a-2); the binding (P3b) | K-O17, K-O24, K-O4, K-O5, K-O14; P3b: `a_reopen_after_a_session_end_in_the_same_process_takes_the_lock` and the second half of `a_project_saved_first_in_this_process_is_refused_to_another_process_until_its_dataset_closes`; E-SECOND, E-CRASH-UNLOCK (P4) |
+   | `KnownFolders::with_same`, `KnownFoldersFull` (P1b) | the `same` arm | K-O11, K-O6 |
+   | `KnownFolders::moved_to` (P1b) | the move arm | K-O6 (b) |
+   | `store::read_locations`, `Location` (P1b) | the machine-location arm | K-O3, K-O10 (b) |
+   | `session_history::read_lineage` and its types (P2) | step 6 | K-O1 (b), L5 to L7; P3b's `v0-open_project-opened-lineage`; P4's shell test |
+   | `Projects::open_project`, `Answer`, `Reopen`, `Opened`, the view's state, `OpenFailure` (P3a-2) | P3b's binding command and its wire mapping | P3b's `v0-open_project-*` fixtures; E-REOPEN (P4) |
+
+   - Each working-named test of P3b and P4 is declared in full, with its mutation, in that piece's amendment before its code (R2 (b)).
+   - The node is not done until each seam's test has passed on main (R2 (c)).
+   - Any other `pub` item is a gate finding (R2 (d)).
+   - All of these are named in each part's PR body and in the node's plan summary.
+
+9. **Not covered, by name, with the reason.**
+   - `CheckRefused::FolderUnresolvable` through the data step (ADV-2026-11-18-24 item 3 (c)). Step 1 has just read `project.spatial` from the folder, so `canonicalize` fails at step 4 only if the folder changes between the two steps, which no test can build without a seam. The arm maps to an `OpenFailure` that names the folder. Its code is P3b's (packet P-6).
+   - `NotCanonical` through the data step: it cannot be reached (item 5 (e)).
+   - `KnownFolders::with_same` with the folder equal to `first`: the known check returns first (ADV-2026-11-18-18 item 4 (c)).
+   - D-16's `eprintln!` line (ADV-2026-11-18-18 item 4 (c)). T7 reaches the branch, but no test reads standard error.
+   - The temp that `write_machine_file` leaves after a crash (the architect's O-4). It is named in its doc by P3a-1; nothing removes it.
+   - For a not-kept member, a metadata error other than not-found (ADV-2026-11-18-23 item 2 (c)). It is read as `NotRead`, which is the reader's code as merged. No test can make the folder readable while that one name's metadata fails.
+   - Two live opens bound to one record (O-6 item 3). K-O4 refuses a second live open of one identity in this process, and `StepRecorder::record_step` refuses a name the catalog no longer holds.
+   - For a kept member, a link at the lineage name is followed by `File::open` (packet P-9).
+   - The cloud placeholder (Amendment 35 item 6).
+
+10. **ADR-036 Amendment 3** (R4).
+    - It lands in P3a-2's pull request, copied by script (R4 (d)).
+    - Its item 1 is OPEN-S2-1 (c)'s body, the body of line 360 of `state/consults/2026-10-23-b2-piece-1c-save-and-reopen-steps-2-and-3-ahead-architect-draft.md`, byte for byte as the packet's first fence. Its item 2 is OPEN-S2-2 (a)'s body, line 376 of the same file, as the second fence.
+    - The heading and the lead-in are the architect's draft, in the packet (P-3). Nothing is reworded.
+    - The clause check against ADR-036 Amendment 2 items 1, 2 and 4 goes to the advisor before either part's code (R4 (c); packet P-2 and P-3). One clause does not hold at main for sub-case 2 (item 5 (g)). It goes to the advisor, and on to the human if the advisor so rules.
+
+11. **Regions against the pieces in flight.**
+    - P3a touches nothing in `protocol/`. Rule (00) leaves it free for P3b.
+    - The first look and the stop alarm touch no kernel file.
+    - P3a-2 takes main in before its gate (ADV-2026-11-16-06 item 4).
+    - The reviewer recomputes each file list with git against its branch.
+
+12. **Stops.** The worker stops and reports alone when any of these happens:
+    1. A file or region outside item 6 (a) or 7 (a) is needed. `protocol/`, `frontends/` and `resolver.rs` (unless P-6 (ii) is ruled) are among them.
+    2. A `pub` item outside item 8 is needed.
+    3. An existing test needs an edit (I3), or a dependency or a lock file changes (I6).
+    4. A test other than K-O24, L5, L6 and L7 passes at its base before its code, or a mutation does not fail its test.
+    5. `open_dataset`'s split changes a test of `open_dataset`, or its behaviour.
+    6. K-O5, K-O13 or T6 fails on any platform, or cannot be made deterministic.
+    7. A case a test cannot build. That is a stop, not a skip.
+    8. P3a-2's code is begun before the advisor's ruling on packet P-1 to P-3.
+
+13. **Class and gates.**
+    - **Full class, both gates, for each part** (ADV-2026-11-16-06 item 2 (a)). The grounds:
+      - a lock;
+      - a path check;
+      - a persistence format;
+      - concurrency and cancellation;
+      - seams;
+      - and, for P3a-2, more than 260 lines.
+    - **Clippy** (ADV-2026-11-18-24 item 5 (b)). The reviewer runs `cargo clippy --locked -p spatial-kernel --all-targets` at the gated head, in a hold. A warning in a file the part changes is a finding.
+    - **On the laptop,** by THE MACHINE paragraph, each part keeps at its final candidate:
+      - the focused test targets (`project_save`, `project_lock_crash`, `project_reopen`, `project_resolver`, `project_store`, `session_history` and the skp targets);
+      - every mutation of item 6 (b) or 7 (b), observed;
+      - §2.11's command;
+      - empty lock-file diffs.
+    - **One E-SAVE run per part,** an app-window run. P3a-1 changes every first save the shipped app makes, and P3a-2 changes the shipped `open_dataset` path.
+    - **CI:** the workspace on three platforms, fmt, and the governance workflows.
+
+14. **Where each ruling item is met.**
+    - ADV-2026-11-16-10:
+      - R1 (d): item 3;
+      - R1 (g): K-R1 to K-R4, and N-10 in item 7 (a);
+      - R2: item 8;
+      - R3 (a) to (d): items 5 (f) to (h), with K-O16 to K-O22;
+      - R4: item 10;
+      - item 5: the lead-in.
+    - ADV-2026-11-16-16 item 3: item 6 (a).
+    - ADV-2026-11-18-18 item 4 (a) and (b): item 6 (a). Item 4 (c): K-O8, K-O10 (b) and item 9.
+    - ADV-2026-11-18-23 item 2 (a): L5. Item 2 (b): item 5 (a) and (b), with K-O13. Item 2 (c): L7 and item 9.
+    - ADV-2026-11-18-24 item 3 (a): item 5 (e). Item 3 (b): K-R1. Item 3 (c): item 9. Item 5: item 13.
+    - Amendment 33 item 9: items 5 (d) and (j), and 6 (a).
+    - Amendment 34 item 9 (P3a): L5, item 5 (b), L6 and L7.
+    - Amendment 35 item 10 (P3a): items 5 (e) and 9, with K-R1 and K-O1.
+    - Amendment 30 item 3's O-items for P3a:
+      - O-5: R3;
+      - O-6 items 1 to 5: K-O22, K-O21, item 9, K-O19, and K-O16 with K-O18;
+      - O-10: item 5 (a);
+      - O-11: K-O21;
+      - O-21: K-R3 and N-10.
+
+15. **Superseded index.**
+    - §2.4 step 3's lock is widened to a first save (Amendment 30 items 4 (b) and 8; class 5, ADV-2026-11-16-16 item 3).
+    - §2.4's order is qualified by item 5 (b): step 2's writes come after the lock, and step 6 comes before step 4's engine open (class 1).
+    - §2.11's step-2 kernel product list gains `kernel/src/skp.rs` (class 9).
+    - §4's step-2 table gains K-O17 to K-O24 and L5 to L7, with K-O12 to K-O16 declared (class 9).
+    - Amendment 34 item 3's group figures are superseded by item 2.
+    - Nothing else is superseded.
+
+16. **The packet, as the advisor ruled it (ADV-2026-11-19-04).** Where an item above says "contingent", "recommended" or "if the advisor rules", this item settles it.
+    - P-1: two parts, P3a-1 and P3a-2, as item 3 declares.
+    - P-2: option (i). Item 5 (g) is in force: `adopt_project` does not bind an open with no record of its own to a project whose record another run left. K-O18 stands as declared. K-O19 asserts option (i)'s outcome only: the step is recorded under a record of its own and the leftover folder is unchanged.
+    - P-3: ADR-036 Amendment 3 lands in P3a-2's pull request with the heading and lead-in of ADV-2026-11-19-04 item 4, its two items byte for byte.
+    - P-6: option (i). `kernel/src/project/resolver.rs` does not join P3a-2, and item 4's contingent line lapses. A missing segment of a `project-relative` target is refused by name, as §2.5 and ADR-036's containment paragraph say. K-R4 stands as §4 states it.
+    - P-9 (a), (b), (d) and (e): as recommended. The lock lives in `Projects`'s saved entry; K-O22's rig stands; the child pattern may be copied into `project_save.rs`; the order of item 5 (b) is class 1.
+    - P-4, P-5, P-8 and P-9 (c) are P3b's. Its declaring amendment states them, under ADV-2026-11-19-04 item 6.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 37 — P3a-1's stop at its head, written after the result was seen (class 1): K-S13's expected list gains `open.lock`, and `mod.rs`'s module doc is corrected, a scope addition (class 9) on ADV-2026-11-16-16 item 3; K-O24 on every platform (packet P-10); `Projects::save`'s doc corrected; the worker's departures; the next steps
+
+*Drafted by the architect for the custodian, read only, at main 85250a8d95b788e4f1e84ba8f0fff39f0fd5b0c1 and at the branch head 2519aef1fc8798760afb9d8f3dd8d2527b67ebe1, and appended by the custodian's script. References only. Each Old block is code text the architect copied byte for byte from its own Read of the named file at 2519aef1fc8798760afb9d8f3dd8d2527b67ebe1, not by script. Before appending, the custodian's script checks that each Old block occurs exactly once in that file at that commit. Nothing else below is a quotation. Code is cited by path and symbol. Each choice is the custodian's declaration. Where it is the architect's recommendation, it says so.*
+
+1. **The stop.**
+   - The worker-high ran from 2026-11-19T00:53:47Z to 01:27:38Z, by its transcript.
+   - The branch is `cut/b2-piece-1c-p3a-1`, base 0c5f85a1b8fcf2bff4e1972ebae4f4c081c5744d. It has three commits: 077fe26bc26672336895224b91b675f4b87d1381, ef6d65942e5b3013319fcdc9c74eea0cbbefa2a2 and 2519aef1fc8798760afb9d8f3dd8d2527b67ebe1. The pushed head is 2519aef1 and there is no pull request. The worker's report is filed by the custodian.
+   - **P-base** at ef6d6594, exit 101:
+     - K-O17 failed at its reply assertion, with `Ok(Some("taken"))` against `Ok(Some("held"))`, as predicted.
+     - K-O24 passed. It is exempt by name.
+     - Every existing test passed.
+   - **P-head** at 2519aef1, exit 101. One test failed: K-S13, `the_first_save_records_its_folder_as_first_in_folders_json`, at its last assertion. The identity's folder holds `open.lock` beside its two documents, because `store::ProjectLock::try_lock` creates `store::OPEN_LOCK` under `store::record_dir`.
+   - This is item 12's stop 3: an existing test needs an edit.
+   - Stop 4 also waits at the mutation step. K-O24 returns at once on Windows, so its mutation cannot fail it on the laptop. The worker's probe found that a Windows folder with the ReadOnly attribute still takes a new file. Its output is evidence and is filed with the worker's report.
+   - No mutation was observed, and §2.11's command was not run.
+
+2. **K-S13** (scope addition, class 9, on ADV-2026-11-16-16 item 3, the lock at a first save; Amendment 36 item 15's first row). This is an edit to an existing test, declared before the edit.
+   - The expected list gains `open.lock`.
+   - The message "no temp file is left" stays true: the comparison is exact, so it still excludes every temp name. But it would name the wrong cause when the lock is missing, so it changes too.
+   - `kernel/tests/project_save.rs`, K-S13. Old:
+     ```
+         assert_eq!(
+             file_names(&record),
+             ["folders.json", "locations.json"],
+             "no temp file is left"
+         );
+     ```
+     New:
+     ```
+         assert_eq!(
+             file_names(&record),
+             ["folders.json", "locations.json", "open.lock"],
+             "the two documents and the lock, and no temp file"
+         );
+     ```
+   - Cost: 2 lines added and 2 deleted.
+   - **Mutation owed.** K-O17's mutation ("no lock taken at a first save") is applied once. Both of these are recorded by name from that one application:
+     - K-O17 fails at its reply assertion;
+     - K-S13 fails at its last assertion.
+   - K-S13's own recorded mutation is unchanged.
+
+3. **K-O24** (packet P-10, for the advisor).
+   - **Reading `Projects::save`'s order at the head:** no set-up built from std alone fails after `store::ProjectLock::try_lock` on every platform.
+     - `std::fs::create_dir_all` of the identity's folder cannot fail, because `try_lock` has just made that folder.
+     - The two `write_machine_file` calls write into a folder named by an identity that is minted inside the save, so a test cannot place anything there beforehand.
+     - `store::replace`'s target is refused before the lock if anything exists there (the first-save `symlink_metadata` check, `SaveFailure::FolderHoldsProject`).
+     - The temp name of `store::stage` is random.
+     - Two other routes were set aside: a thread racing the save is not deterministic (stop 6's standard), and path-length bounds differ by platform, with T14's 4,096-byte bound refusing first on Windows.
+   - **The options:**
+     - **(i)** K-O24 stays off Windows. Its mutation is observed on CI: the mutation is committed on a scratch branch that is never merged and pushed in its own call, and Ubuntu's and macOS's Rust workspace runs show K-O24 failing at its last assertion. The run ids and the commit are recorded, and the mutation is then reverted.
+       - Cost: no lines (`project_save.rs` 117 of 130 with item 2).
+       - Item 13's laptop mutation line is superseded for K-O24.
+       - Windows, the shipped build's platform, stays unproven by any test.
+     - **(ii)** The same assertions on every platform. Off Windows the folder is made read only, as now. On Windows, `icacls` adds an entry that denies Everyone (`S-1-1-0`) the right to add a file (`WD`) to the folder, and removes it after the save.
+       - Cost: about 10 net lines (`project_save.rs` about 127 of 130; an overrun would be class 8 at the closing).
+       - This uses a system tool from test code, with no crate, no `cfg` and no lock-file change.
+       - It needs a probe first, because no prior art is recorded (the reuse index).
+       - The mutation is observed on the laptop, as item 13 asks.
+     - **(iii)** The mutation is recorded as not observed on the laptop.
+       - Cost: no lines.
+       - K-O24 would then have no observed failure anywhere, which leaves its stop-4 exemption (Amendment 36 item 6 (b)) without its basis. That is an Evidence gap at the gate.
+   - **Recommended:** (ii), with (i) as the declared fallback if the probe fails. Not (iii).
+   - **Under (ii)**, `kernel/tests/project_save.rs`, K-O24. Old A:
+     ```
+     /// **K-O24**, off Windows only, checked at run time; it prints the operating system it ran on. A
+     /// first save into a folder this test made read only is refused when it stages the project file,
+     /// which comes after the lock, and `ProjectLock::try_lock` on the identity then succeeds: the
+     /// refused save freed its lock. On Windows a folder marked read only still takes a new file, so the
+     /// case is not built there: the test returns at once and proves nothing.
+     ///
+     /// RECORDED MUTATION: the lock kept with the saved entry on a failed save. Expected failure (off
+     /// Windows): the lock is refused as held, and this test fails at its last assertion.
+     #[test]
+     fn a_first_save_refused_after_the_lock_leaves_it_free() {
+         println!("K-O24 runs on {}", std::env::consts::OS);
+         if std::env::consts::OS == "windows" {
+             return;
+         }
+         let rig = rig("ko24");
+     ```
+     New A:
+     ```
+     /// **K-O24**: a first save into a folder this test made refuse a new file is refused when it
+     /// stages the project file, which comes after the lock, and `ProjectLock::try_lock` on the
+     /// identity then succeeds: the refused save freed its lock. Off Windows the folder is made read
+     /// only. On Windows, where a folder marked read only still takes a new file, `icacls` adds an
+     /// entry denying Everyone (`S-1-1-0`) the right to add a file to it, and removes that entry after
+     /// the save.
+     ///
+     /// RECORDED MUTATION: the lock kept with the saved entry on a failed save. Expected failure: the
+     /// lock is refused as held, and this test fails at its last assertion.
+     #[test]
+     fn a_first_save_refused_after_the_lock_leaves_it_free() {
+         let rig = rig("ko24");
+     ```
+     Old B:
+     ```
+         let folder = rig.folder.as_path();
+         let before = std::fs::metadata(folder).expect("folder").permissions();
+         let mut read_only = before.clone();
+         read_only.set_readonly(true);
+         std::fs::set_permissions(folder, read_only).expect("the folder made read only");
+         let ws = workspace(&ds, None, -4.5);
+         let result = rig.projects.save(handle.as_str(), &ds, Some(folder), ws);
+         std::fs::set_permissions(folder, before).expect("the folder's permissions restored");
+     ```
+     New B:
+     ```
+         let folder = rig.folder.as_path();
+         let before = std::fs::metadata(folder).expect("folder").permissions();
+         let mut read_only = before.clone();
+         read_only.set_readonly(true);
+         let windows = std::env::consts::OS == "windows";
+         let icacls = |args: [&str; 2]| {
+             let status = Command::new("icacls").arg(folder).args(args).status();
+             assert!(status.is_ok_and(|s| s.success()), "icacls {args:?}");
+         };
+         if windows {
+             icacls(["/deny", "*S-1-1-0:(WD)"]);
+         } else {
+             std::fs::set_permissions(folder, read_only).expect("the folder made read only");
+         }
+         let ws = workspace(&ds, None, -4.5);
+         let result = rig.projects.save(handle.as_str(), &ds, Some(folder), ws);
+         if windows {
+             icacls(["/remove:d", "*S-1-1-0"]);
+         } else {
+             std::fs::set_permissions(folder, before).expect("the folder's permissions restored");
+         }
+     ```
+     - The rest of K-O24 is unchanged.
+     - The mutation stays as declared, and it is now expected to fail on every platform.
+     - At base, K-O24 still passes (no lock is taken), so it stays exempt by name from stop 4.
+     - A deny entry left by a failed run does not stop the rig from removing the folder on the next run.
+
+4. **`mod.rs`'s module doc** (scope addition, class 9, on ADV-2026-11-16-16 item 3). Its `Projects::save` bullet lists the save's order without the lock. Its sentence on handles is untrue at the head, because `SavedProject::_lock` holds a handle on `open.lock`.
+   - `kernel/src/project/mod.rs`, module doc. Old:
+     ```
+     //! - [`Projects::save`]: the save, in order: the checks that can refuse it, the judgment, the
+     //!   document, the machine store's files, the atomic replace of `project.spatial`, and last the
+     //!   history's two moves (binding the open to the project, which moves the open's own record under
+     //!   the project if it has one, and the `saved-here` mark in the project's record).
+     ```
+     New:
+     ```
+     //! - [`Projects::save`]: the save, in order: the checks that can refuse it, the judgment, the
+     //!   document, the machine store's documents built, at a first save the identity's open lock
+     //!   ([`store::ProjectLock`]), the machine store's documents written, the atomic replace of
+     //!   `project.spatial`, and last the history's two moves (binding the open to the project, which
+     //!   moves the open's own record under the project if it has one, and the `saved-here` mark in the
+     //!   project's record).
+     ```
+     Old:
+     ```
+     //! Nothing here holds a handle. The only files written in a project folder are `project.spatial`
+     //! and the temporary file that [`store`]'s atomic replace renames over it.
+     ```
+     New:
+     ```
+     //! No handle is held in a project folder. [`Projects`] holds one on `open.lock` in the machine
+     //! store for each identity it saved first, until it is dropped. The only files written in a
+     //! project folder are `project.spatial` and the temporary file that [`store`]'s atomic replace
+     //! renames over it.
+     ```
+   - Cost: 10 + 6 lines.
+   - Neither sentence is the human's wording.
+
+5. **`Projects::save`'s doc** (within Amendment 36 item 6 (a)). "which [`Projects`] holds until it is dropped" does not hold for a first save refused after the lock: the `lock` local is dropped at each `?` that follows `try_lock`.
+   - Old:
+     ```
+         ///   lock ([`store::ProjectLock`]), which [`Projects`] holds until it is dropped. The save then
+         ///   writes `locations.json`, and `folders.json` at a first save, and replaces
+         ///   `project.spatial` whole or not at all.
+     ```
+     New:
+     ```
+         ///   lock ([`store::ProjectLock`]). The save then writes `locations.json`, and `folders.json`
+         ///   at a first save, and replaces `project.spatial` whole or not at all. A first save that
+         ///   replaces it keeps the lock in [`Projects`] until that is dropped; one refused after the
+         ///   lock frees it.
+     ```
+   - This is a worker's sentence, not the human's.
+   - `mod.rs` comes to about 58 of 60 with item 4.
+
+6. **The worker's departures** (class 1, disclosed). The record keeps the following.
+   - **(a)** The first two pushes ran inside compound calls. The record keeps that the head equals origin, that the porcelain is empty, and that the diff names only item 6 (a)'s three files; the reviewer rechecks the file list.
+   - **(b)** `--no-fail-fast` was added, and `--lib` ran whole rather than `--lib project`. The runs were widened, not narrowed. P-base 1 at 077fe26b stopped after `project_save`, so P-base is the run at ef6d6594. From here on, the declared commands carry `--no-fail-fast`. The record names the one ignored lib test from the run's log.
+   - **(c)** `Clone` is no longer derived on `SavedProject`, because a `File` is not `Clone`. `SavedProject` is private, and every use is in `kernel/src/project/mod.rs`. `Projects::save`'s lookup now clones the three fields it reads. Behaviour and `pub` items are unchanged.
+   - **(d)** ef6d6594 fixes K-O17's own new test (how it finds the child's line), after a P-base failure with the wrong cause (`Ok(None)`) and before the predicted failure was seen. It is not I3, as with Amendment 33 item 3's fix commit. The reviewer confirms that it changes no assertion.
+   - **(e)** The branch's CI on push is red at 2519aef1 from K-S13. The closing amendment names each red run on the branch with its commit and its cause.
+
+7. **What the worker does next**, once this amendment is on main. Item 12's stops stand, with one addition: the probe in step (1) shows anything other than both of its results.
+   1. **Under (ii) only: the probe.** In a scratch folder outside the repository, with no repository file:
+      - `icacls <folder> /deny *S-1-1-0:(WD)`, then a new file is refused;
+      - `icacls <folder> /remove:d *S-1-1-0`, then a new file is taken.
+      The output goes into the report, copied byte for byte. If the probe shows anything else, the worker stops, and (i) applies as declared in item 3.
+   2. **Commit `test:`** with item 2's edit and, under (ii), item 3's edit. Only the test file changes.
+   3. **Commit `docs:`** with items 4 and 5. Only comment lines change.
+   4. **P-head** at that commit, in one hold, with `--no-fail-fast`, over item 13's focused targets and the lib. Every test passes.
+   5. **Mutations, by the round-25 rule:** apply, run the named test, record its failure by name with the commit, and revert, checking that the diff is empty after each revert.
+      - K-O17's mutation: K-O17 and K-S13 fail, as item 2 says.
+      - K-O24's mutation: on the laptop under (ii), or by (i)'s CI route.
+      - T14's mutation (b), observed again (Amendment 36 item 6 (b)).
+   6. **Counts and checks:**
+      - §2.11's command;
+      - `git diff --numstat 0c5f85a1b8fcf2bff4e1972ebae4f4c081c5744d...HEAD` against item 4's ceilings, with any overrun recorded as class 8 at the closing;
+      - empty lock-file diffs;
+      - no new `pub` item.
+   7. **Push** in its own call. The report is the worker's final message.
+   - **Then the custodian's steps, as item 13 sets them:** both gates, the reviewer's clippy, one E-SAVE run, and CI.
+
+8. **Superseded index.**
+   - Amendment 36 item 6 (a)'s "No existing line changes" (`project_save.rs`) is superseded for K-S13's last assertion (item 2).
+   - Item 6 (a)'s regions gain `mod.rs`'s module doc (item 4).
+   - Under (ii), item 6 (b)'s K-O24 row ("off Windows, by a run-time check; the folder made read only") is superseded by item 3. Under (i), item 13's laptop mutation line is superseded for K-O24 alone.
+   - Nothing else is superseded.
+
+9. **The packet and the notes, as the advisor ruled them (ADV-2026-11-19-05).** Where an item above says "recommended", "under (ii)", "under (i)" or "for the advisor", this item settles it.
+   - **P-10: option (ii), with (i) as the fallback item 3 declares.** Item 3's New A and New B are in force. The folder of item 7 step (1)'s probe is made under the directory `std::env::temp_dir()` names on the laptop, where the test's rig makes its own, so the probe and the test meet the same volume.
+   - **The fallback.** If the probe shows anything other than both of its results, or if the Guardian refuses one of its calls, the worker stops and the refusal is not worked around. Nothing of New A or New B is committed, and (i) applies without a further ruling. The scratch branch is named in the closing with its commit and its run ids, and no pull request is opened from it.
+   - **`icacls` is not a dependency.** It ships with Windows; no crate, manifest, lock file or workflow changes and CI installs nothing. It is called on the test's own folder under the temp directory, and the entry is removed after the save.
+   - **`icacls` prints the path of the folder it changes.** A log or a report that carries that line is filed with the path replaced, as any other path is (ADV-2026-11-18-07).
+   - **Class 9's hook (note 1).** A ruling of the advisor under the delegation of 2026-11-13 counts as the hook class 9 asks for. The grant's item 2 says such a ruling stands as the human's on gate rulings and standing rules. The amendment's first line cites it by its id, and the record by its filed path.
+   - **Note 4.** P3a-1's closing amendment carries a "not covered" row: a first save refused after the lock leaves the identity's folder and its `open.lock` in the machine store, and nothing removes them. The custodian adds one line to the notes of the node `b2-piece-1c-step-3-recovery-offer`: its form states what it does with an identity's folder that no project file names.
+   - **Note 5.** The module doc of `kernel/tests/no_generation_in_persisted_artifacts.rs` names `open.lock` in P3b. P3b's declaring amendment lists the file and gives the words.
+   - **Item 6.** The five departures stand as recorded, class 1. For (d), the reviewer confirms at the gate that ef6d6594 changes no assertion.
+   - **Item 7.** Under (ii) the closing names, from the logs, each platform on which K-O24 ran its assertions at the gated head.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 38 — P3a-1's closing, before its merge request: the gates; the words commit, as ruled; the counts, with no class 8 row; a correction of one word (class 3); the module doc's paragraph replaced; what is not covered; what the user is told; clippy; the runs and E-SAVE; CI, K-O24 on each platform and the red runs; the departures; the holds; notes for P3a-2, P3b, P4 and P5
+
+*Written by the custodian, 2026-11-19, before PR 334's merge request. References and hashes only. Items 6 and 7 carry the advisor's wording, under the delegation of 2026-11-13, copied by the custodian's script byte for byte from the ruling's file. Item 4 names one word of the form. Nothing else below is a quotation.*
+
+1. **The gates** (Amendment 36 item 13). Both at H = c905c7ea06cbe9e354c346e3a7777c3a2546bd85, both PASS WITH NOTES, with no Correctness or Evidence finding: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-1-gate-architect.md` and `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-1-gate-reviewer.md`. The worker-high's reports: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-1-worker-high-report.md` and `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-1-resumed-worker-high-report.md`. The ruling on the words: `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-07-the-words-in-pr-334-p-1-and-p-2-yes-in-the-gates-words-the-not-covered-row-and-the-user-told-line-given.md`.
+2. **The words commit** (ADV-2026-11-19-07 items 1 to 3 and 8). W = b680aeac654ac2198c6748dfdd42c393324a6150, the one commit after H. It carries four blocks, applied by the custodian's script byte for byte from the filed gate reports: in `kernel/src/project/store.rs`, the architect's D1 (`remove_stale_temps`'s doc) and D2 (`Staged::commit`'s doc); in `kernel/src/project/mod.rs`, the reviewer's D1 (the comment above the lock) and D2 (the module doc's second paragraph). Comment lines only, with no re-gate (ADV-2026-11-16-06 item 2 (c); ADV-2026-11-19-07 item 8).
+3. **The counts** (Amendment 36 item 4, both columns; ADV-2026-11-19-04 item 7), `git diff --numstat 0c5f85a1...b680aeac`:
+   - `mod.rs` 57 (45 added, 12 deleted) of 60; `store.rs` 14 (11 and 3) of 20; kernel product 71 of 80;
+   - `project_save.rs` 127 (125 and 2) of 130; kernel tests 127 of 130;
+   - in all, 198 lines in 3 files, against 210 and 3. No row is over, so there is no class 8 row for P3a-1. Of item 4's remainders, 608 for kernel product and 417 for kernel tests, 537 and 290 are left before P3a-2.
+   - At H the reviewer's recount by §2.11's command gave 56, 9 and 127 (its check 3). W adds 1 line to `mod.rs` and 5 to `store.rs`, all comment lines.
+   - From the merge base, which is the branch's base, to main, no path of the pull request changed (ADV-2026-11-14-21 item 6 (a)).
+4. **A correction (class 3), one word** (ADV-2026-11-19-07 item 1; the architect's O8). Amendment 30 item 4 (b), and Amendment 36 item 6 (a) after it, place `remove_stale_temps`'s residual in an empty folder. A first save's check asks only that the folder holds no `project.spatial` (`SaveFailure::FolderHoldsProject`), so that word was narrower than the code. W's doc names the folder by that check. Neither amendment is edited.
+5. **The module doc's paragraph** (ADV-2026-11-19-07 item 2; the reviewer's D2 and its draft A). The paragraph that Amendment 37 item 4 gave and ADV-2026-11-19-05 item 4 approved spoke for the whole app. On Windows the engine's source watcher holds directory handles in a project folder when its data sits there. W's paragraph scopes the handle sentence to the module and keeps every other clause. Amendment 37 is not edited; item 14 records what is superseded.
+6. **Not covered** (Amendment 37 item 9, note 4; ADV-2026-11-19-07 item 4; the architect's A1 with the reviewer's O2). The advisor's wording, under the delegation of 2026-11-13:
+
+   Not covered. A first save refused after the lock is taken leaves the identity's folder in the machine store, with its `open.lock` and, where the save wrote them before its refusal, `locations.json` and `folders.json`; a refusal at the project file, a project folder that takes no new file among its causes, leaves all three. A lock that is refused by an input or output error after its folder is made leaves that folder too, with `open.lock` if the file was created. Nothing removes them. The mapping of a refused lock to the save's refusal (`lock_refused` in `Projects::save`) has no test: its `Held` arm cannot be reached at a first save (Amendment 36 item 6 (a)), and its `Io` arm can be reached and is not tested.
+
+   - Note 4's line is in the notes of the node `b2-piece-1c-step-3-recovery-offer` in `governance/PLAN.yaml`.
+7. **What the user is told** (ADV-2026-11-19-07 item 5; the architect's A2; the reviewer's O3 and its draft B). The advisor's wording, under the delegation of 2026-11-13:
+
+   What the user is told changes for one case: a first save whose machine-store folder or `open.lock` cannot be made, opened or locked ends in `project_file_unwritable` with the detail `open.lock: ` and the operating system's error, where main named the project's machine folder; `Held` gives `open.lock: another handle holds it`, which ordinary use cannot reach at a first save. No shell string changes.
+
+   - The message stands as built in P3a-1. It joins P4's strings, which go to the advisor (item 13).
+8. **Clippy** (ADV-2026-11-18-24 item 5 (b); Amendment 36 item 13). The reviewer ran `cargo clippy --locked -p spatial-kernel --all-targets` at H in a hold: rc 0, 9 warnings, none in the three files the part changes (its check 8). There is no finding.
+9. **The runs and E-SAVE** (Amendment 36 item 13; ADV-2026-11-16-06 item 1).
+   - **Reused:** the worker-high's P-head at H, from its log (the reviewer's check 8). The log has no head line; the reviewer dates it to H by its file time, which CI corroborates (its O6).
+   - **Run by the reviewer at H, in one hold:** `project_reopen`, `project_resolver`, `project_save_skp` and `session_history`, cargo rc 0 (its check 8).
+   - **The mutations at H,** by the round-25 rule (the reviewer's check 7): K-O17's fails K-O17 and K-S13, each at its own assertion (Amendment 37 item 2); K-O24's fails K-O24 at its last assertion on Windows, on the laptop; T14's (b) fails T14; and the reviewer's supplementary mutation (d), the lock moved alone above the documents, fails T14.
+   - **The probe** of Amendment 37 item 7 (1): the worker-high's on C: (item 11 (a)) and the reviewer's on D:, the volume the test's rig uses, each with both results (the reviewer's check 6).
+   - **E-SAVE,** one app-window run at H: 12 PASS, 0 FAIL, rc 0 (`state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-1-e-save-series-tester-report.md`; the reviewer's check 8). It was filed with the masks the reviewer's O8 asks for; its filing note lists them.
+   - Nothing was run again at W, which changes comment lines only; CI ran at W (item 10).
+10. **CI, K-O24 on each platform, and the red runs** (Amendment 37 items 6 (e) and 9; ADV-2026-11-19-07 item 7; the reviewer's O7).
+   - At H, read by the reviewer at 2026-11-19T03:42:40Z: twelve runs, all success. The Rust workspace ran in the push run 44447998372 and the pull_request run 44448999249 (its check 10).
+   - K-O24 ran its assertions on ubuntu-24.04, macos-latest and windows-latest in both of those runs, by each job's log line for the test (the reviewer's check 10). It has no early return at H (its check 5). (ii) was built; (i)'s fallback was not used, and no scratch branch was made.
+   - At W, read 2026-11-19T04:37:24Z: twelve runs, all success, among them the Rust workspace on all three platforms in the push run 44457102819 and the pull_request run 44457108613. No run on the branch is red or cancelled at W.
+   - The red and cancelled runs on the branch, listed by `gh run list` at 2026-11-19T03:55:14Z, each the Rust workspace on push:
+     - 44433707986 at 077fe26b: K-O17 failing before its code, on all three platforms;
+     - 44436057025 at ef6d6594: the same failure on Ubuntu and macOS, and its Windows job cancelled at 01:27:00Z, after the push of 2519aef1;
+     - 44436969877 at 2519aef1: K-S13 on all three platforms, Amendment 37's stop.
+11. **The departures** (class 1, disclosed).
+   - **(a)** The worker-high's probe ran on C:, in the scratch folder the custodian's brief named, while the test's rig runs on D: under the brief's `TMP`. Amendment 37 item 9 asked for the volume `std::env::temp_dir()` names. The worker-high disclosed it, and the reviewer's probe on D: gave both results (item 9). The brief was the custodian's.
+   - **(b)** The reviewer passed the test names after `-- --exact`, and added the supplementary mutation (d) (its check 7).
+   - **(c)** The reviewer's first probe call went through Git Bash's path conversion, which made `/deny` a path: icacls refused it with rc 87 and changed nothing. It ran again with that conversion off. Rust's `Command` passes the argument unchanged, so the test is not affected (its check 6).
+   - Amendment 37 item 6's five departures stand as recorded. For its (d), the reviewer confirms that ef6d6594 changes no assertion (its O1).
+   - The reviewer's O5: K-O24's message for the refused save names a read-only folder, which is not how the folder is set up on Windows. Amendment 37 item 3 keeps the rest of K-O24 unchanged, and no edit is made.
+12. **The holds** (ADV-2026-11-16-06 item 2 (e)). P3a-1 had 14 holds by the machine log: five of the worker-high's, three of E-SAVE's and six of the reviewer's. None stood beside another hold of this project.
+13. **Notes for P3a-2, P3b, P4 and P5** (none blocks P3a-1; ADV-2026-11-19-07 items 5 and 6).
+   - P3a-2's cut: the architect's O3 (a later save does not check which project's file it replaces) and O4 (freeing the lock at a close, and the module doc's clause on the identities it saved first once a reopen holds a lock).
+   - P3b's declaring amendment: O3, either as a check or as a "not covered" row, to the advisor; `open.lock` in the module doc of `kernel/tests/no_generation_in_persisted_artifacts.rs` (Amendment 37 item 9, note 5); the step's total as then forecast (ADV-2026-11-19-04 item 7).
+   - P4's strings: item 7's detail goes to the advisor with them.
+   - P5's words: KNOWN-LIMITATIONS item 62 lists the files a first save leaves in the identity's folder and does not name `open.lock`.
+14. **Superseded index.**
+   - Amendment 37 item 4's second New block, approved by ADV-2026-11-19-05 item 4, is superseded by W's paragraph (item 5).
+   - The word of Amendment 30 item 4 (b) and Amendment 36 item 6 (a) for the folder is corrected by item 4.
+   - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 39 — P3a-2's stop 4 on K-O19, written after the result was seen (class 1): its declared mutation did not fail its test; K-O18's mutation is recorded for K-O19; the refusal by `create` of a record folder that exists is not covered; one worker step; the two docs corrected in this part
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-11, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-11-p3a-2-stop-on-k-o19-no-architect-draft-k-o18s-mutation-recorded-for-k-o19-creates-refusal-not-covered-the-two-docs-corrected.md`. It is written after the result was seen. References and hashes only; nothing below is a quotation. The worker-high's report: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-worker-high-report.md`.*
+
+1. **The result** (Amendment 36 item 12, stop 4). At 270d3ac2c17c6551f7783c1feba1bfc5ad140178, K-O19's declared mutation (Amendment 36's table, K-O19's row) was applied and did not fail its test. The other 34 mutations of the table failed theirs. The cause is in ADV-2026-11-19-04, which ruled P-2 option (i) and left the row's mutation as written for option (ii): under option (i) the open stays unbound, its first step makes a record folder that does not yet exist, and `create_dir` and `create_dir_all` act the same there (ADV-2026-11-19-11 item 1). K-O19's row is not edited.
+2. **K-O19 stays as built** (ADV-2026-11-19-11 item 2 (b)). It shows option (i)'s outcome one step later than K-O18 does. Its recorded mutation becomes K-O18's, as K-O18's row in Amendment 36's table declares it. That mutation is declared after the result, and it is not a mutation of K-O19's own. Predicted: K-O19 fails, at its step or at an assertion after it. The worker records the line.
+3. **Not covered** (ADV-2026-11-19-11 item 2 (c) and (d)). The refusal by `create` of a record folder that exists (`create_dir`) has no test: under option (i), K-O19 does not reach it. The architect's gate answers by reading whether any path reaches `create` for a project's record folder that exists, in one process or in two. If ordinary use reaches one, it goes to the advisor before the merge request.
+4. **One worker step** (ADV-2026-11-19-11 item 3). K-O18's mutation applied, K-O19 run alone, the failing line recorded, the revert shown with the diff empty. Then the `RECORDED MUTATION` comment above K-O19 changed to name that mutation and the failure seen: one commit, comment lines only. The step does not need the strongest model. Its push carries nothing expected to fail CI (ADV-2026-11-19-10 item 2).
+5. **The two docs** (ADV-2026-11-19-11 item 4). The doc of `SavedProject._lock` and the doc of `save` on the folder it goes to are corrected in this part, as comment lines only. The two gates draft the words, and they go in the words commit after the gates, with no re-gate. Where the two gates give different words for one place, it goes to the advisor. The module doc's second paragraph of `kernel/src/project/mod.rs`, as changed at 270d3ac2, stands in place of the words ADV-2026-11-19-07 item 2 ruled if both gates find every clause of it true at the head. An untrue clause goes to the advisor.
+6. **The order** (ADV-2026-11-19-11 item 5). This amendment on main; item 4's step; the PR; both gates, the reviewer with clippy and the mutations by the round-25 rule; the words commit; the closing; the merge request.
+7. **For the gates' briefs** (ADV-2026-11-19-11 item 6).
+   - Commit 0c539ed2 changed the word K-O2 and K-O8 expect, after their base commit and before the code. Both gates check that word against the form's rows and against the descriptor. An expectation the form does not support goes to the advisor.
+   - The symbol named in that commit's message is recorded in the closing. Nothing is amended.
+   - The `pub` items with no product caller yet, disclosed against §8 item 9, are read by both gates.
+   - The reviewer confirms that the clippy warning in `kernel/src/skp.rs` is at the base.
+8. **The counts** (ADV-2026-11-19-11 item 7; ADV-2026-11-19-04 item 7). Class 8 is recorded at the closing, at the counts.
+   - The merge request gives each ceiling for P3a-2 beside its count. It says whether the step's total ceiling is passed at that head, and it gives the step's total as now forecast with P3b.
+   - The architect's gate says, by reading, why the tests are near three times their ceiling, and whether any test or helper is not asked for by the form's rows.
+9. **A red run** (ADV-2026-11-19-10 item 4). Run 44474730131, the Rust workspace at ff31b05c, failed at the build step on all three platforms, because the tests' commit was pushed before its code. The closing records it with that cause.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 40 — P3a-2's K-O19 step, its result, written after the result was seen (class 1): under K-O18's mutation K-O19 fails at the save's mark, an earlier place than Amendment 39 item 2 predicted; one more mutation, K-O19's own, declared before its run; nothing committed
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-14, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-14-k-o19s-result-stands-as-seen-one-more-mutation-k-o19s-own-declared-before-its-run-nothing-committed.md`. It is written after the result was seen. References and hashes only, except item 1's two lines, which are byte-copied from the K-O19 step's report: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-k-o19-step-worker-report.md`.*
+
+1. **The result** (Amendment 39 item 4; ADV-2026-11-19-14 item 1). K-O18's mutation was applied at 270d3ac2c17c6551f7783c1feba1bfc5ad140178 and K-O19 was run alone: cargo rc 101. The two lines, byte-copied from the report:
+   - `thread 'the_first_step_after_that_save_meets_no_leftover_folder_and_has_a_record_of_its_own' (69832) panicked at kernel\tests\project_reopen.rs:1673:5:`
+   - `assertion failed: withheld_unwritable(&saved.expect("saved").history_mark)`
+   The line is the tree at 270d3ac2. The assertion is the first thing K-O19 asserts, right after the save and before its step, and K-O18 asserts the same mark. The revert left the diff empty. The comment above K-O19 at b5c351564dd4798fdd341e783b9d71b0054242e9 names K-O18's mutation and this failure.
+2. **The prediction** (ADV-2026-11-19-14 item 1). Amendment 39 item 2's prediction named a later place than the one seen. The cause is the advisor's (ADV-2026-11-19-14 item 1). So nothing yet shows that K-O19's own assertions can fail. Amendment 39 is not edited.
+3. **One more observation, declared before its run** (ADV-2026-11-19-14 item 2). The mutation is K-O19's own, as that item declares it: in `StepRecorder::adopt_project` (`kernel/src/session_history.rs` on the branch), in the arm of item 5 (g), the open is bound to the project before the refusal is returned.
+   - Predicted for K-O19: the mark assertion passes, and the test fails at its step or at the count of the open's own records.
+   - Predicted for K-O18: it fails at its second save.
+   - The worker applies it, runs K-O19 and K-O18 alone, records each failing line, and reverts with the diff empty. It commits nothing, so PR 337's head stays at b5c35156.
+   - If K-O19 passes, or fails at the mark assertion, it goes to the advisor, and nothing is redeclared.
+4. **The comment above K-O19** (ADV-2026-11-19-14 item 4). It changes once more, in the words commit after the gates, comment lines only. It names item 3's mutation as K-O19's own with the failure seen, keeps K-O18's as seen at the mark, and cites no line number: it names the assertion by its text. The reviewer's gate re-runs item 3's mutation by the round-25 rule and gives the words.
+5. **Not covered, unchanged** (ADV-2026-11-19-14 item 5; Amendment 39 item 3). If item 3's mutation fails K-O19 at its step, the closing may say that the refusal by `create` of a record folder that exists was reached under that mutation, and no more than that.
+6. **The architect's gate** (ADV-2026-11-19-14 item 6). It ran at b5c35156 and handed back before this amendment was written. Its report is filed at `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect.md`. What closes its Evidence finding goes to the advisor.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 41 — P3a-2: Amendment 40's run and its result; what closes the architect's E1; the re-link's check by the writer moved before the lock (class 9), with one new test row and its mutation, declared before its code; five more doc places join the words commit; the F4 row's word left to P3b; the order
+
+*Written by the custodian, 2026-11-19, from the advisor's ruling ADV-2026-11-19-15, under the delegation of 2026-11-13, filed at `state/directives/2026-11-19-advisor-ruling-adv-2026-11-19-15-pr-337s-architect-gate-o1-fixed-in-p3a-2-e1-closed-by-the-run-the-reviewers-rerun-and-an-attempt-2-five-doc-places-join-the-words-commit-o2-to-p3bs-amendment.md`. Item 1 is written after its result was seen. Items 3 to 8 are declared before their code. References and hashes only. The architect's report: `state/consults/gates/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-gate-architect.md`.*
+
+1. **Amendment 40 item 3's run, its result.** The worker's report: `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3a-2-k-o19-own-mutation-worker-report.md`.
+   - **K-O19 failed at its step**, as predicted. Its mark assertion passed. The failure was inside `Run::opacity_step`, called from K-O19's step, and it was `create`'s refusal of the record folder that exists. So Amendment 40 item 5's sentence may be said in the closing, and no more than it.
+   - **K-O18 failed inside its loop**, as predicted: the mark was no longer the unwritable one. The report reads the first save as passing; that reading is the worker's, and the lines it printed do not show it.
+   - The mutation was reverted with the diff empty. Nothing was committed: PR 337's head stayed at b5c351564dd4798fdd341e783b9d71b0054242e9.
+2. **What closes E1** (ADV-2026-11-19-15 item 1). Three things together:
+   - item 1's run;
+   - the reviewer's own re-run of Amendment 40 item 3's mutation in its gate;
+   - the architect's attempt 2, limited to E1 and to item 3's fix, by reading, after the reviewer's gate.
+3. **The fix, class 9** (ADV-2026-11-19-15 item 3 (a) and (b)). This is the architect's O1, against Amendment 36 item 5 (e).
+   - (a) The re-link's check by the writer runs before the lock is taken: with step 2, where nothing is written. Its bytes are kept for step 6's write. Nothing else changes order.
+   - (b) Declared with it: a re-link the writer refuses is now refused before a held lock is reported, and before a machine-store failure of step 3.
+4. **The test** (ADV-2026-11-19-15 item 3 (c) and (d)). One new row in `kernel/tests/project_reopen.rs`, named by the worker, with two cases:
+   - a first reopen on this machine, with no `folders.json`, and a re-link the writer refuses: it is refused by name, and afterwards the machine store holds no folder for the identity;
+   - the answer `copy` with such a re-link: it is refused by name, `project.spatial` is byte for byte as before, and no folder exists for a new identity.
+   Its mutation puts the check back after step 3's writes. Predicted: the test fails at its assertion that nothing was written, in both cases.
+5. **The order of the work** (ADV-2026-11-19-15 item 3 (e) to (g); ADV-2026-11-19-10 item 2).
+   - The test's commit comes first. The worker's local run shows that it fails at b5c35156.
+   - Then the fix's commit, which also brings `open_project`'s doc: in its steps 2 and 5, where the check now runs. Both gates read that doc.
+   - Both commits are pushed together.
+   - An existing test that fails after the fix stops the worker and goes to the advisor. No existing test is edited.
+6. **The model.** Worker-high, on the strongest model (ADV-2026-11-18-02 item 2): persistence, and the order of an open's writes.
+7. **The counts** (ADV-2026-11-19-15 item 3 (h)). Recorded at the closing as they stand, class 8.
+8. **Five more doc places** (ADV-2026-11-19-15 item 2). The architect's Drafts 3 to 7 join the words commit after the gates, with Amendment 39 item 5's two places: comment lines only, as the drafts give them. The reviewer's gate checks each clause. Where the reviewer gives different words for a place, it goes to the advisor.
+9. **The F4 row's word** (ADV-2026-11-19-15 item 4). Not decided here. K-O2 and K-O8 stand as built, on the producer's word. The closing records, class 1, that the F4 row's word differs from what is built. The ruling on P3b's declaring amendment decides whether the row is corrected or the wire maps the word.
+10. **The order for PR 337** (ADV-2026-11-19-15 item 7):
+    - this amendment on main;
+    - item 5's worker;
+    - the reviewer's gate, whole, at the head with the fix: clippy, the mutations by the round-25 rule (Amendment 40 item 3's and item 4's among them), the seven doc drafts, and the words for the comment above K-O19 (Amendment 40 item 4);
+    - the architect's attempt 2;
+    - the words commit;
+    - the closing and the merge request.
+
+Read the last amendment first.
+
+Nothing above is edited.

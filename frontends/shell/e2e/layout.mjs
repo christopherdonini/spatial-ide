@@ -40,6 +40,9 @@ const SETTLE_MS = 250; // a React commit after a key press; not a timing claim
 // e2e-local windows (shell-map-refill-after-resize section 7), harness bounds and not timing claims.
 const RESIZEQ_WINDOW_MS = 3_000;
 const FILL_WINDOW_MS = 10_000;
+// FILL's declared drag (open-first-look-fills-fit-view Amendment 3, item 1): from the canvas centre, 160 CSS px to the left in 16 steps. Not a search.
+const FILL_PAN_PX = 160;
+const FILL_PAN_STEPS = 16;
 const BURST_MOVES = 24; // at least 20 pointer moves
 const BURST_STEP_PX = 4;
 
@@ -433,15 +436,30 @@ async function stepFill(page, consoleHandle) {
   await settleFully(page, consoleHandle, "FILL: after the wheel notch");
   const view = lastViewState(consoleHandle);
   if (zoom0 === undefined || view === null || view.zoom === zoom0) throw new Error("FILL: a wheel notch at the canvas centre did not change the zoom: invalidator I3, STOP and report");
+  // The open's own plan asked for the fit view's cells, so the view moves east off them before the toggle: one declared drag after the notch.
+  // Its effect is read back from the view-state lines, as the notch's is, and the drag's views count as asks below.
+  await page.mouse.move(centre.x, centre.y);
+  await page.mouse.down();
+  await page.mouse.move(centre.x - FILL_PAN_PX, centre.y, { steps: FILL_PAN_STEPS });
+  await page.mouse.up();
+  await settleFully(page, consoleHandle, "FILL: after the drag");
   const size = await canvasSize(page);
   const growth = await inspectorGrowthPx(page);
   const status = await page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null);
   if (!WITHIN_BUDGET_PATTERN.test(status ?? "")) throw new Error(`FILL: .residency-status is ${JSON.stringify(status)} after the notch, not the complete within-budget sentence: invalidator I3, STOP and report`);
   const cover = (v, width, height) => tilesCoveringBbox(frame, frame.level, computeAuthoritativeViewportBbox({ ...v, widthPx: width, heightPx: height }));
   const wholly = (key) => { const b = tileBbox(frame, frame.level, key); return b.xmin >= PARCEL_AREA.xmin && b.xmax <= PARCEL_AREA.xmax && b.ymin >= PARCEL_AREA.ymin && b.ymax <= PARCEL_AREA.ymax; };
-  /** Cells the grown view covers that no view-state line since the mark covers at the size before the toggle, lying wholly inside the parcel area. */
+  /** Cells the grown view covers that no earlier ask covers at the size before the toggle, lying wholly inside the parcel area.
+   * The earlier asks are the view-state lines since the mark and, OPEN-6 (A) of open-first-look-fills-fit-view section 5, the open's planned box:
+   * the session plans the shown view when the first look ends, so each tile `viewport_query` line before the mark (its bbox prints as `Object`,
+   * so the line carries no cells) counts the cells of the view-state line last seen before it. */
   const qualifying = (width, height) => {
     const asked = new Set();
+    let shown = null;
+    for (const e of consoleHandle.renderTrace().slice(0, markView)) {
+      shown = (e.text.includes("[render-trace] view-state ") ? parseViewState(e.text) : null) ?? shown;
+      if (shown !== null && /viewport_query \{[^}]*bbox: Object/.test(e.text)) for (const key of cover(shown, size.width, size.height)) asked.add(tileKeyToString(key));
+    }
     for (const e of consoleHandle.renderTrace().slice(markView)) {
       const v = e.text.includes("[render-trace] view-state ") ? parseViewState(e.text) : null;
       if (v !== null) for (const key of cover(v, size.width, size.height)) asked.add(tileKeyToString(key));

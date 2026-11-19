@@ -140,9 +140,10 @@ pub fn stage(folder: &Path, bytes: &[u8]) -> Result<Staged, SaveError> {
 
 impl Staged {
     /// Rename the temp file over `project.spatial`, trying again as declared, then flush the folder
-    /// ([`sync_folder`]) and remove the temp files a crash left. Once the rename has succeeded, the
-    /// save stands: a flush that fails after it is written to standard error, as the error's kind
-    /// only, and refuses nothing (D-16; the form's Amendment 30, item 3, O-8).
+    /// where the platform lets a program open it (`sync_folder`; where the open is refused,
+    /// nothing is flushed), and remove the temp files a crash left. Once the rename has succeeded,
+    /// the save stands: a flush that fails after it is written to standard error, as the error's
+    /// kind only, and refuses nothing (D-16; the form's Amendment 30, item 3, O-8).
     pub fn commit(self) -> Result<(), SaveError> {
         self.commit_with(sync_folder)
     }
@@ -198,6 +199,13 @@ fn is_temp_name(name: &str) -> bool {
     hex.is_some_and(|h| h.len() == TEMP_HEX_LEN && h.bytes().all(lower))
 }
 
+/// Remove the temp files a crash left in `folder`, after a successful rename: the files named by
+/// exactly the pattern ([`is_temp_name`]), and nothing else. Not excluded: two saves of different
+/// identities into one folder that holds no `project.spatial`, between `Projects::save`'s check of
+/// the folder and the rename. Each holds only its own identity's open lock ([`ProjectLock`]),
+/// which does not exclude the other: the one that renames first can remove the other's temp here,
+/// and the other's rename then fails as [`SaveError::RenameKeepsFailing`]; if the other renames
+/// before that removal, its project file replaces the first one's.
 fn remove_stale_temps(folder: &Path) {
     let Ok(entries) = fs::read_dir(folder) else {
         return;
