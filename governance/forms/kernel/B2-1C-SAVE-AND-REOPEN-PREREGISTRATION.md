@@ -3522,3 +3522,67 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 45 — P3b-2's strings, ruled (ADV-2026-11-19-26): P-9's bound met at the wire by one helper, the sixteen messages, the three A1 places, ADR-036 Amendment 4, and P3b-2's ceilings restated (class 9)
+
+*Written by the custodian from ADV-2026-11-19-26's items, on main before P3b-2's code (its opening paragraph). References only. Nothing below is a quotation. Every text the worker copies is in the ruling's own fences, and the worker copies it from the filed ruling byte for byte, never from this amendment.*
+
+1. **The strings ruling.** Item 20's strings ruling for P3b-2 is ADV-2026-11-19-26, given on the architect's table at `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-2-strings-table-architect.md`. Stop 11 of item 20 is met once this amendment is on main (the ruling's item 7).
+2. **P-9's bound is met at the wire, not in the reader** (the ruling's item 1). The shared reader's files are not touched.
+   - (a) **One helper** in `kernel/src/project/mod.rs`, named by the worker, bounds a text taken from a file the kernel did not write: at most 256 bytes, cut on a character boundary with the cut marked, and every control character replaced (item 1 (a) gives the mark and the replacement).
+   - (b) It applies to `path` and `rule` of `project_file_refused`, to `rule` of `project_machine_record_refused`, and to `segment`, in the reopen's map and in the save's `skp_error_of`, before the constructor builds the message.
+   - (c) **W-4 gains three cases**, as item 1 (c) states them: a number token of 100,000 digits, a control character in a key, and a word of 4,096 bytes where a closed word is expected. Each asserts that no field and no message holds a control character, and that each bounded field is at most 262 bytes. Its mutation: the helper returns its input. Predicted: all three red.
+   - (d) **Stop 10** is restated by item 1 (d): a text from a file the kernel did not write that reaches the wire without the helper.
+   - (e) **Two named exceptions** (item 1 (e)): an engine message through `Open(e)`, unedited as P-11 has it; and an identity read from a file, which is validated.
+3. **The messages** (the ruling's item 2). Its first fence gives the whole format of each of sixteen messages.
+   - The worker copies each byte for byte. Where `OpenFailure`'s own text differs from its line, the worker makes that arm equal to the line.
+   - What each line changes is in item 2's list under the fence. In short:
+     - `cancel_key_in_use` names both calls;
+     - `project_file_refused` has a new head for the save and the reopen alike. Its data file `v0-error-project_file_refused.json` changes with it, class 1;
+     - `project_open_elsewhere` keeps its code and gets a new message;
+     - a new code, `skp.project_machine_store_failed` with one field `detail`, carries the reopen's `MachineStore` failures and the binding with no `Projects`. It replaces the P-7 note that `MachineStore` stays under `project_file_unwritable`, which keeps the save's failures and the copy's `replace`;
+     - the two unreachable arms take `skp.project_target_unresolvable` with `locator` alone;
+     - the not-Unicode line has no field and no path, replacing item 5 (c)'s `detail`;
+     - O3's code has the fields `project` and `found`;
+     - a join failure at the binding is `skp.open_project_panicked`, by the binding's pattern.
+   - **`kernel/src/skp.rs` joins P3b-2's files** for the two untrue doc clauses of `OpenRegistry`, comment lines only, in the words the architect's gate gives.
+4. **Two messages stand with a clause that can be untrue, named** (item 3):
+   - the engine's clause on the caller's assertion at a reopen; P4's form decides what the shell shows;
+   - `skp.unknown_dataset` from the reopen's own check after its open. It is named in a source comment and in the closing, and not changed.
+5. **The three A1 places of item 5 (g)** (item 4).
+   - `stored_path` takes a noun and prints no path. Its three texts are the ruling's second fence, and the nouns are given in item 4.
+   - The reviewer's A1 (i) is the new head of item 3 here.
+   - A test inside `store.rs`, `file.rs` or `strict_json.rs` that pins one of the old texts, or the old head, is edited to the new text and to nothing else, and the worker names each in its report. Any other edit of an existing test is stop 3.
+6. **ADR-036 Amendment 4** (item 5). The ruling's third fence is appended to `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md` after Amendment 3, by script, byte for byte, with the date of landing in its slot. Both gates check each clause against the code at P3b-2's head. An untrue clause goes to the advisor.
+7. **Docs that widen** (item 6), in the worker's words, read by both gates:
+   - the doc of `project_file_refused`;
+   - SKP-V0.md §4 item 5's list, which gains `open_project`;
+   - the new §12.
+8. **P3b-2's ceilings** (item 7). Item 20's P3b-2 rows are superseded by these:
+
+   | Group | Ceiling |
+   |---|---|
+   | protocol | 455 |
+   | fixtures | 390 |
+   | literal | 190, in at most 22 files |
+   | kernel product | 285 |
+   | kernel tests | 590 |
+   | src-tauri | 35 |
+   | records | 10 |
+   | **Total** | **1,955** |
+
+9. **For P4's strings** (item 8), which go to the advisor:
+   - the shell's own words for each code;
+   - the clause of item 4 here on the caller's assertion;
+   - how the shell bounds what it shows and logs of an engine message.
+10. **Superseded index:**
+    - item 5 (c)'s `detail` for the not-Unicode arm, by item 3 here;
+    - the P-7 note on `MachineStore`, by item 3 here;
+    - item 20's stop 10 wording, by item 2 (d) here;
+    - item 20's P3b-2 ceilings, by item 8 here;
+    - P3b-2's files, which gain `kernel/src/skp.rs` (comment lines only), by item 3 here.
+    - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
