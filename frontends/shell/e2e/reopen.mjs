@@ -165,18 +165,19 @@ async function openFile(page, consoleHandle, path, what, afterOpen = async () =>
   await settle(consoleHandle, `after ${what}'s first look`);
 }
 
-/** Waits for a `close_dataset` row at `ok` beyond the `before` already counted; returns the reading, printed with the ring's fill. */
-async function waitClosed(page, before, what) {
+/** The request texts of the close rows in a reading. Each close names its own handle, so the texts differ. */
+const closedTexts = (reading) => rowsOf(reading, "close_dataset").map((row) => row.request);
+
+/** Waits for a `close_dataset` row at `ok` whose request text is not among `known` (read before the open), so no older row's staying in the ring matters. Returns the reading with the new row as `fresh`. */
+async function waitClosed(page, known, what) {
   const reading = await waitFor(
-    `a close_dataset row at ok beyond the ${before} counted (${what}); a row missing at its read is the form's stop 13`,
-    () => readConsole(page),
-    (r) => rowsOf(r, "close_dataset").filter((row) => row.outcome === "ok").length > before,
+    `a new close_dataset row at ok, its request not among the ${known.length} read before (${what}); a row missing at its read is the form's stop 13`,
+    async () => { const r = await readConsole(page); return { ...r, fresh: rowsOf(r, "close_dataset").find((row) => row.outcome === "ok" && !known.includes(row.request)) }; },
+    (r) => r.fresh !== undefined,
     30_000
   );
   return reading;
 }
-
-const closedCount = (reading) => rowsOf(reading, "close_dataset").filter((row) => row.outcome === "ok").length;
 
 async function hookSave(page, folder) {
   return withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eSaveProjectToFolder(f), folder), 60_000, "e2eSaveProjectToFolder");
@@ -261,11 +262,10 @@ async function stepR4(page) {
 }
 
 async function stepR5(page, consoleHandle, ctx) {
-  const before = closedCount(await readConsole(page));
+  const known = closedTexts(await readConsole(page));
   let reading;
-  await openFile(page, consoleHandle, FIXTURE, "another file (the fixture itself)", async () => { reading = await waitClosed(page, before, "the first handle's close"); });
-  const rows = rowsOf(reading, "close_dataset");
-  ctx.r5 = `${reading.label}; the close_dataset row has ${reading.rows.length - 1 - rows.at(-1).index} entries after it`;
+  await openFile(page, consoleHandle, FIXTURE, "another file (the fixture itself)", async () => { reading = await waitClosed(page, known, "the first handle's close"); });
+  ctx.r5 = `${reading.label}; the close_dataset row has ${reading.rows.length - 1 - reading.fresh.index} entries after it`;
   return `another file opened; the first handle's close_dataset row is at ok (${ctx.r5})`;
 }
 
@@ -313,11 +313,10 @@ function knownFolders(project) {
 
 async function stepR8(page, consoleHandle, ctx) {
   // This window's open of P still holds P's lock; the answer `same` would meet it. As at R5, another file is opened and the close of P's handle is seen first.
-  const before = closedCount(await readConsole(page));
+  const known = closedTexts(await readConsole(page));
   let closed;
-  await openFile(page, consoleHandle, FIXTURE, "another file (before Q)", async () => { closed = await waitClosed(page, before, "P's handle"); });
-  const closeRow = rowsOf(closed, "close_dataset").at(-1);
-  ctx.r8 = `${closed.label}; the close_dataset row has ${closed.rows.length - 1 - closeRow.index} entries after it`;
+  await openFile(page, consoleHandle, FIXTURE, "another file (before Q)", async () => { closed = await waitClosed(page, known, "P's handle"); });
+  ctx.r8 = `${closed.label}; the close_dataset row has ${closed.rows.length - 1 - closed.fresh.index} entries after it`;
   cpSync(FOLDER_P, FOLDER_Q, { recursive: true });
   expectAnswer(await hookOpen(page, FOLDER_Q), "question", "the reopen of Q");
   const text = noticeText("QUESTION_TEXT");
@@ -341,24 +340,26 @@ async function stepR9(page, consoleHandle) {
   const project = await openAndSave(page, consoleHandle, FOLDER_P2, dataD);
   const kinds = project.datasets?.[0]?.resource?.locators?.map((l) => l.kind).join();
   if (kinds !== "machine-recorded") throw new Error(`P2's dataset locators read ${kinds}, expected machine-recorded alone`);
-  const before = closedCount(await readConsole(page));
-  await openFile(page, consoleHandle, FIXTURE, "another file");
-  await waitClosed(page, before, "P2's data handle");
+  const known = closedTexts(await readConsole(page));
+  let closed;
+  await openFile(page, consoleHandle, FIXTURE, "another file", async () => { closed = await waitClosed(page, known, "P2's data handle"); });
+  const ring = `${closed.label}; the close_dataset row has ${closed.rows.length - 1 - closed.fresh.index} entries after it`;
   const moved = join(DATA_DIR, "found-again.parquet");
   await retrying("renaming P2's data file", () => renameSync(dataD, moved));
   expectAnswer(await hookOpen(page, FOLDER_P2), "not_found", "the reopen of P2");
   const shown = await page.evaluate(() => document.querySelector(".admission-reopen-not-found p")?.textContent ?? null);
   if (shown === null || !shown.includes(basename(dataD))) throw new Error(`S11 shows ${JSON.stringify(shown)}, expected it to name ${basename(dataD)}`);
   expectAnswer(await hookRelink(page, moved), "admitted", "the re-link");
-  return `P2's data moved; S11 named ${basename(dataD)}; the re-link slot's file opened the project`;
+  return `P2's handle closed (${ring}); P2's data moved; S11 named ${basename(dataD)}; the re-link slot's file opened the project`;
 }
 
 async function stepChanged(page, consoleHandle) {
   const data = join(FOLDER_C, "parcels.parquet");
   await openAndSave(page, consoleHandle, FOLDER_C, data);
-  const before = closedCount(await readConsole(page));
-  await openFile(page, consoleHandle, FIXTURE, "another file");
-  await waitClosed(page, before, "F4's handle");
+  const known = closedTexts(await readConsole(page));
+  let closed;
+  await openFile(page, consoleHandle, FIXTURE, "another file", async () => { closed = await waitClosed(page, known, "F4's handle"); });
+  const ring = `${closed.label}; the close_dataset row has ${closed.rows.length - 1 - closed.fresh.index} entries after it`;
   const stat = statSync(data);
   await retrying("moving F4's mtime", () => utimesSync(data, stat.atime, new Date(stat.mtimeMs + 60_000)));
   expectAnswer(await hookOpen(page, FOLDER_C), "admitted", "the reopen of F4");
@@ -366,7 +367,7 @@ async function stepChanged(page, consoleHandle) {
   const text = notices.join("\n");
   if (!text.includes("In the file: mtime.")) throw new Error(`the notices read ${JSON.stringify(notices)}, expected S10 naming mtime`);
   if (text.includes("In its admission")) throw new Error(`the notices read ${JSON.stringify(notices)}, expected no admission part`);
-  return `F4 (F1 with its mtime 60 s later) opened; the notice names mtime alone: ${JSON.stringify(notices)}`;
+  return `F4's predecessor handle closed (${ring}); F4 (F1 with its mtime 60 s later) opened; the notice names mtime alone: ${JSON.stringify(notices)}`;
 }
 
 async function main() {
