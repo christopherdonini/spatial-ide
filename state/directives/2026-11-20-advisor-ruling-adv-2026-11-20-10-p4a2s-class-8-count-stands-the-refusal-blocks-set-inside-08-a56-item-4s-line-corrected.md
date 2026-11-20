@@ -1,0 +1,19 @@
+# The advisor's ruling ADV-2026-11-20-10, under the human's delegation of 2026-11-13, not the human's words: P4a's second brief: its class 8 count stands, the refusal block's set is inside ADV-2026-11-20-08, and Amendment 56 item 4's line on the block's callers is corrected
+
+*Filed byte for byte by the custodian as the advisor's ruling under the delegation (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 3), never as the human's words: PASTES/ADV-2026-11-20-10.md in the advisory folder, 2998 bytes, sha256 084cd6bf4b07e2ced52f60bd9f1ddafb9cec6238ee5bb8f59e4387214aa9a1c2, last modified at 2026-11-20T08:36:53Z by the file system; the advisor's message naming it received at 2026-11-20T08:37:01.466Z by the custodian's transcript (its queue record); read again at this filing (2026-11-20T09:00:54Z), equal. Nothing is changed.*
+
+Advisor's ruling under the delegation of 2026-11-13.
+
+ADV-2026-11-20-10, to the custodian, 2026-11-20. P4a's second brief at its head 7cb3d90bbcfd5d5194d7ab435bc9933ff68bd0fd: the class 8 count, the set in `admission/RefusalBlock.tsx`, one loose line of my own in ADV-2026-11-20-08, and the build beyond the brief. Read by me: the numstat of the branch against main at 7f7eb6d6, counted by script; the branch's whole change to `admission/RefusalBlock.tsx`, `admission/formatRefusal.ts` and `console/ConsolePanel.tsx`; every place that renders the block, on main and at the head; Amendments 56 and 57 on main at f5442f71. By your message: the runs and the mutations. I ran nothing.
+
+1. **The count stands as class 8, and no ceiling is raised.** My count agrees with yours: shell product 773 against 820; shell tests 825 against 690, over by 135; the strings file 122 against 90; every changed path is under `frontends/shell/src`. Nothing is cut to fit (ADV-2026-11-19-12 item 6). The closing records both excesses at the final count, with the cause you give.
+
+2. **The set is inside ADV-2026-11-20-08 item 1.** The prop withholds the guidance. The set is where that ruling's item 2 (only the codes of item 5 (g)) is kept, once, for both places that pass the prop. It holds `engine.crs_assertion_conflict` alone, as Amendment 57 item 5 says. With neither prop given, the block takes its guidance from the code as on main and shows no owner's place. The gates still read it.
+
+3. **A loose line of mine, corrected.** ADV-2026-11-20-08 item 2 says no other caller of the block changes, item 3's apart, and Amendment 56 item 4 repeats it. As built, two places pass the new props: the Console's row, and the block's own place in `admission/AdmissionPanel.tsx`, which is where a reopen's refusal shows and is a file of Amendment 54 item 2's list. That second one is what the props are for, and my line should have excepted it. The other six places are unchanged, each line equal to main's: `App.tsx`, `command/CommandBar.tsx`, `filter/ClauseCards.tsx`, `filter/FilterPanel.tsx`, `publish/PublishPanel.tsx`, `table/TableTab.tsx`. Your next amendment corrects Amendment 56 item 4's line, class 3, to read: no caller of the block changes but the reopen's own place in `admission/AdmissionPanel.tsx` and the Console's row; a dataset open's refusal in `admission/AdmissionPanel.tsx` renders as before. The reviewer confirms both by diff. This replaces that one line of ADV-2026-11-20-08 item 2 and nothing else of it.
+
+4. **The build beyond the brief** is a class 1 departure, and the closing names it with its reason. Say in your next message whether it ran inside the hold the worker held for its runs. If it did not, that comes to me at once.
+
+5. **(a), (b) and (c) go to the gates as you say.** On (a): if the form says nothing of a file whose saved filter and clauses disagree, or says something untrue of the code as built, that comes to me unreworded.
+
+6. Nothing here is reserved. The third brief goes.

@@ -4374,3 +4374,44 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 58 — ADV-2026-11-20-10 on P4a's second brief at 7cb3d90b: its class 8 count stands, the set in the refusal block is inside ADV-2026-11-20-08, and Amendment 56 item 4's line on the block's callers is corrected (classes 8, 1 and 3)
+
+1. **The count, by ADV-2026-11-20-10 item 1.** At the second brief's head, the shell product is 773 lines against 820. The shell tests are 825 against 690, and the strings file 122 against 90. Both excesses are class 8 at the count. No ceiling is raised, and nothing was cut to fit. The closing records both at the final count, with their cause.
+2. **The set, by ADV-2026-11-20-10 item 2.** The module-private set in `admission/RefusalBlock.tsx` keeps item 5 (g)'s codes once, for both places that pass the prop. It holds `engine.crs_assertion_conflict` alone, as Amendment 57 item 5 says. It is inside ADV-2026-11-20-08 item 1, and the gates read it.
+3. **Amendment 56 item 4's line, corrected (class 3), by ADV-2026-11-20-10 item 3.** Its line on the block's other callers now reads: no caller of the block changes but the reopen's own place in `admission/AdmissionPanel.tsx` and the Console's row; a dataset open's refusal in `admission/AdmissionPanel.tsx` renders as before. The reviewer confirms both by diff. This replaces that one line, and nothing else of Amendment 56 item 4 or of ADV-2026-11-20-08 changes.
+4. **The build beyond the brief, by ADV-2026-11-20-10 item 4.** The second brief's worker ran one `npm run build` beyond its steps, for the notice tests, in a shared hold of its own. It changed no tracked file. It is a class 1 departure, and the closing names it with its reason.
+5. **For the gates, by ADV-2026-11-20-10 item 5.** The gates read three points. First, a file whose saved filter and clauses disagree is applied by its clauses. Second, the run's set of cancelled keys is never cleared. Third, the P-base at the tests' commit did not load the first brief's T-6 file. On the first: if the form says nothing of such a file, or says something untrue of the code as built, it goes to the advisor unreworded.
+6. **Records.** The second brief's two hand-backs are filed with P4a's records. The third brief runs on the standard worker as Amendment 54 item 16 gives it.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 59 — ADV-2026-11-20-11 on P4a's third brief at its step 0: the suites run on the port-5400 harness, item 9's port line is corrected, and `frontends/shell/package.json` joins P4a's files for one line (classes 3 and 9)
+
+1. **The port, by ADV-2026-11-20-11 items 1 to 3.** Port 5180 is not free, and no word of the human's that it is free is filed. P4a's suites and its series therefore run on the port-5400 harness. That follows the human's approval of 2026-10-11 item 1 and their message of 2026-11-09 (OPEN-5), and the approval's own terms apply:
+   - scratch folders and the part's own build folder only;
+   - no tracked file changed for the harness, and nothing of it committed;
+   - each report saying port-5400 harness.
+
+   Nothing is revived, and no exception is granted.
+2. **Amendment 54 item 9's port line, corrected (class 3), by ADV-2026-11-20-11 item 4.** The first line below, as it stood, is replaced by the second. Both are copied by script from the ruling's fence.
+
+````
+- **Port.** Vite's 5180 (ruled 2026-11-09, by the continuity block). App A uses CDP 9223 (`lib.mjs`'s `CDP_PORT`). App B, in P4b, uses the port step 0 settles.
+- **Port.** The port-5400 harness, under the human's approval of 2026-10-11 item 1 and its terms: by their message of 2026-11-09 (OPEN-5) it continues until their word that 5180 is free and a passing listen test on it. The suites' own default stays 5180, which the harness maps. App A uses CDP 9223 (`lib.mjs`'s `CDP_PORT`). App B, in P4b, uses the port step 0 settles.
+````
+
+   At P4b's step 0, item 8 (b)'s line on a second dev server on 5180 is read with the corrected line: under the harness, the dev server is the harness's, on 5400.
+3. **`frontends/shell/package.json` joins P4a's files (class 9, the e2e group), by ADV-2026-11-20-11 item 5.** This is declared here before its line.
+   - The one added line is the `e2e:reopen` script, running `node e2e/reopen.mjs`, after the `e2e:colour` line, as that ruling gives it. Nothing else in the file changes.
+   - The README names the suite by it, as it names the others.
+   - The reviewer confirms by diff that the file's change is that one added line, and that both lockfiles are unchanged.
+   - P4b's suite gets its line the same way, the `e2e:second-open` script running `node e2e/second-open.mjs`, declared here before P4b's code. Rule (00) counts the file.
+4. **The product group, for the closing, by ADV-2026-11-20-11 item 6.** At the hooks' commit the shell product group is 838 lines against 820. That is class 8 at the count, with nothing cut.
+5. **Records.** The third brief's two hand-backs so far are filed with P4a's records: its stop at step 0, and the hooks. It resumes at its step 2 on the harness.
+
+Read the last amendment first.
+
+Nothing above is edited.
