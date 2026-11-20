@@ -85,14 +85,15 @@ import ErrorBanner from "./ErrorBanner";
 import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { actionEntry } from "./layout/actionRegistry";
 import { closeDataset, recordStep, saveProject, SkpCallError } from "./skp/client";
+import { reopenApply, type Reopened } from "./project/openProject";
 import { createProjectSaver, pickProjectFolder } from "./project/saveProject";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
 import TableTab from "./table/TableTab";
 import { TableSource } from "./table/tableSource";
 import { createStepQueue, noticeText as stepNoticeText } from "./workspace/stepRecorder";
-import { proposeClauseChange } from "./workspace/filterClauses";
-import type { ClauseRequest, ClauseResult } from "./workspace/filterClauses";
+import { combineClauses, proposeClauseChange } from "./workspace/filterClauses";
+import type { ClauseRequest, ClauseResult, FilterClause } from "./workspace/filterClauses";
 import { checkScope, resolveScope } from "./workspace/scope";
 import type { ResolvedScope, ScopeCheck } from "./workspace/scope";
 import { NO_MEMBERS, unionOfBounds } from "./workspace/selection";
@@ -884,6 +885,12 @@ export default function App() {
   // `handleSaveProject`; the saver (`project/saveProject.ts`) asks for the folder at an open's first save and sends it once. Its notices
   // are for the dataset they were made on and end with it, as `recordNotice` does.
   const [saveNotices, setSaveNotices] = useState<{ dataset: string; texts: readonly string[] } | null>(null);
+  /** A reopen's places (`project/openProject.ts`'s `reopenApply`), for the open they were made on; they end with it, as the save's do. */
+  const [reopenNotices, setReopenNotices] = useState<{ dataset: string; texts: readonly string[] } | null>(null);
+  /** The project identity this window holds and the open it is for (Amendment 54 item 5 (f)), from `SaveProjectResponse.project` and `opened.project`. */
+  const heldProjectRef = useRef<{ dataset: string; project: string } | null>(null);
+  /** A reopen's saved view (O-17), held for its open's `[admitted]` effect, which writes it to the canvas once. */
+  const reopenViewRef = useRef<{ dataset: string; view: { centre: [number, number]; zoom: number } } | null>(null);
   /** The one-shot slot of the DEV-only `e2eSaveProjectToFolder` hook (`e2e-test-surface.ts`): a folder it supplies for the save it starts. Always `null` in a plain build. */
   const e2eSaveFolderRef = useRef<string | null>(null);
   const [projectSaver] = useState(() =>
@@ -895,7 +902,11 @@ export default function App() {
         e2eSaveFolderRef.current = null;
         return Promise.resolve(supplied);
       },
-      save: (dataset, folder, workspace) => saveProject(dataset, folder, workspace),
+      save: async (dataset, folder, workspace) => {
+        const response = await saveProject(dataset, folder, workspace);
+        heldProjectRef.current = { dataset, project: response.project };
+        return response;
+      },
     })
   );
   const activeFilter = view === null ? null : view.filter;
@@ -909,6 +920,7 @@ export default function App() {
   const notice = view === null ? null : viewSelectionNotice(view);
   const shownRecordNotice = admitted !== null && recordNotice?.dataset === admitted.dataset ? recordNotice.text : null;
   const shownSaveNotices = admitted !== null && saveNotices?.dataset === admitted.dataset ? saveNotices.texts : [];
+  const shownReopenNotices = admitted !== null && reopenNotices?.dataset === admitted.dataset ? reopenNotices.texts : [];
   // `highlightLayers` caches on the Set's identity, and the reducer keeps the same Map while the selection is unchanged, so the Set
   // is rebuilt only when the selection is. The canvas's effect is keyed on `selected` and `inspected`, not on this wrapper.
   const selectedIds = useMemo(() => new Set(selection.keys()), [selection]);
@@ -1192,6 +1204,47 @@ export default function App() {
     // `useEffect` chain). `viewBox` is a `useState` initialiser's value, so it is as stable.
     [commitScanState, viewBox]
   );
+
+  /**
+   * B2 piece 1c (O-15; Amendment 54 item 5 (h), (i)): a reopen's admission, beside `handleAdmitted`, which runs first as for any open. In the
+   * same turn the saved clauses and filter (O-16) and the style (O-18, W-STYLE) go through the reducer's own transitions, from the view as the
+   * admission leaves it, so the first look runs under the saved filter. The saved view is held for the `[admitted]` effect (O-17), the saver
+   * adopts the open (O-11), the identity is held (item 5 (f)), and the places are shown. No step is recorded for any of it, as none is for an open.
+   * When the file holds clauses, the filter is the one they combine to, as the reducer derives it; with none, the saved filter is applied.
+   */
+  const handleReopened = useCallback(
+    (next: Admitted, reopened: Reopened): void => {
+      const before = workspaceRef.current;
+      const prior = before.drawOrder[0] === undefined ? undefined : before.views[before.drawOrder[0]];
+      const viewId: ViewId = prior === undefined ? `view-${before.nextViewNumber}` : prior.id;
+      const applied = reopenApply(reopened, projectionFor(next.describe) ?? []);
+      handleAdmitted(next);
+      let number = prior === undefined ? 1 : viewNextClauseNumber(prior);
+      const clauses: FilterClause[] = reopened.workspace.clauses.map((clause): FilterClause => ({ id: `clause-${number++}`, text: clause.text, enabled: clause.enabled }));
+      const transitions: ViewTransition[] = [];
+      if (clauses.length > 0) {
+        activeFilterRef.current = combineClauses(clauses);
+        transitions.push({ action: "filter.clauses.set", params: { clauses, step: { kind: "add", clause: clauses[clauses.length - 1].id } } });
+      } else if (reopened.workspace.filter !== null) {
+        activeFilterRef.current = reopened.workspace.filter;
+        transitions.push({ action: "filter.apply", params: { filter: reopened.workspace.filter } });
+      }
+      transitions.push(...styleTransitions(prior === undefined ? DEFAULT_STYLE_STATE : { ...prior.style, fillMatch: null }, applied.style));
+      for (const transition of transitions) dispatch({ type: "view.transition", view: viewId, transition });
+      lastCommittedStyle.current = applied.style;
+      projectSaver.adopt(next.dataset);
+      heldProjectRef.current = { dataset: next.dataset, project: reopened.project };
+      reopenViewRef.current = applied.view === null ? null : { dataset: next.dataset, view: applied.view };
+      setReopenNotices({ dataset: next.dataset, texts: applied.notices });
+    },
+    [handleAdmitted, projectSaver]
+  );
+
+  /** The identity this window holds for its current open, or `null` (S9's own-window place, Amendment 54 item 5 (f)). */
+  const heldProject = useCallback((): string | null => {
+    const held = heldProjectRef.current;
+    return held !== null && held.dataset === admittedDatasetRef.current ? held.project : null;
+  }, []);
 
   /**
    * **An export run** (Amendment 7 item 2): App acquires an operation consumer (`export-<n>`) on the resource when the panel reports the run, and releases it when
@@ -1617,6 +1670,12 @@ export default function App() {
     // JSX below mounts for *this* `admitted.dataset` (keyed on it), for this manager's whole
     // lifetime -- 1:1, never reassigned later even if `canvasRef.current` is.
     const canvas = canvasRef.current;
+    // B2 piece 1c (O-17, V3): a reopen's saved view, when it applies, is written to this open's canvas once, before its first look.
+    const reopenView = reopenViewRef.current;
+    if (reopenView !== null && reopenView.dataset === admitted.dataset) {
+      reopenViewRef.current = null;
+      canvas?.applyView?.(reopenView.view);
+    }
     if (canvas === null) {
       // Unreachable today: React's commit order re-points a `ref` at its new instance in the
       // layout phase, strictly before this passive effect runs -- by the time this line executes,
@@ -2120,6 +2179,7 @@ export default function App() {
       onClearSelection={handleClearSelection}
       selectionAvailable={selection.size > 0}
       onOpenDataset={() => admissionRef.current?.requestPick() ?? "busy"}
+      onOpenProject={() => admissionRef.current?.requestProjectPick() ?? "busy"}
       onRevealExport={() => publishRef.current?.reveal()}
       onSaveProject={() => void handleSaveProject()}
       onAddClause={(condition) => changeClauses({ kind: "add", text: condition })}
@@ -2134,7 +2194,7 @@ export default function App() {
       slots={{
         "region.layers": (
           <>
-            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} />
+            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} onReopened={handleReopened} heldProject={heldProject} />
             {/* B2 piece 1c: App's own control for the one save, with the entry's label; shown only while a dataset is admitted. */}
             {admitted && (
               <button type="button" className="save-project" onClick={() => void handleSaveProject()}>
@@ -2387,7 +2447,7 @@ export default function App() {
             <RefusalBlock refusal={sessionEnded} />
           </div>
         ),
-        "attention.canvasRefusal": admitted && (canvasRefusal || shownRecordNotice || shownSaveNotices.length > 0) && (
+        "attention.canvasRefusal": admitted && (canvasRefusal || shownRecordNotice || shownSaveNotices.length > 0 || shownReopenNotices.length > 0) && (
           <>
             {canvasRefusal && (
               <div className="canvas-refusal" role="alert">
@@ -2416,6 +2476,12 @@ export default function App() {
             {/* B2 piece 1c: the notices of the last save (section 2.8), one line each; they end with the dataset they name. */}
             {shownSaveNotices.map((text, index) => (
               <div key={index} className="canvas-refusal save-notice" role="alert">
+                {text}
+              </div>
+            ))}
+            {/* B2 piece 1c: a reopen's places, in `reopenApply`'s order, one line each; they end with the open they name. */}
+            {shownReopenNotices.map((text, index) => (
+              <div key={index} className="canvas-refusal reopen-notice" role="alert">
                 {text}
               </div>
             ))}

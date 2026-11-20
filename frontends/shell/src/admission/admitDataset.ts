@@ -5,7 +5,8 @@ import { logSessionEvent } from "../diagnostics/log";
 import { traceDescribeBounds } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
 import { describe as describeDataset, openDataset, SkpCallError } from "../skp/client";
-import type { CrsAssertion, DescribeResponse, IdentityDeclaration } from "../skp/types";
+import type { Reopened } from "../project/openProject";
+import type { CrsAssertion, DescribeResponse, IdentityDeclaration, ReopenAnswer } from "../skp/types";
 import { formatRefusal, FormattedRefusal } from "./formatRefusal";
 
 export interface Admitted {
@@ -17,16 +18,24 @@ export interface Admitted {
   session: string;
 }
 
+/** B2 piece 1c (Amendment 54 item 5 (b)): a reopen's run (`project/openProject.ts`'s `admitProject`) adds `reopened` to its admission, an owner
+ * place to its refusal, and ends at a `question` or a `not_found` (O-14), whose `fileName` is bounded. This function returns neither. */
 export type AdmissionOutcome =
-  | { kind: "admitted"; admitted: Admitted }
-  | { kind: "refused"; refusal: FormattedRefusal };
+  | { kind: "admitted"; admitted: Admitted; reopened?: Reopened }
+  | { kind: "refused"; refusal: FormattedRefusal; owner?: string | null }
+  | { kind: "question" }
+  | { kind: "not_found"; fileName: string | null };
 
 /** `skp/0.2` remediation options (NEXT-CUT.md P3): re-entering this SAME function with one of
  * these set is the ONLY way the shell ever asserts a CRS or declares an identity column -- there
- * is no parallel admission path. Both default to unset, matching a plain re-open. */
+ * is no parallel admission path. Both default to unset, matching a plain re-open.
+ *
+ * `reopen` (B2 piece 1c) marks a reopen's run: its answer to a `question` and its re-link, each `null` for none. It is read by `admitProject`
+ * alone, and a run that carries it never reaches this function or a remediation form. */
 export interface AdmitOptions {
   crsAssertion?: CrsAssertion | null;
   identity?: IdentityDeclaration | null;
+  reopen?: { answer: ReopenAnswer | null; relink: string | null };
 }
 
 /**

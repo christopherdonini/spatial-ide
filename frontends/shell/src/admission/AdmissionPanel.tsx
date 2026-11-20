@@ -1,13 +1,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { forwardRef, useCallback, useEffect, useImperativeHandle, useState } from "react";
+import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useState } from "react";
 
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
+import { admitProject, type Reopened } from "../project/openProject";
+import { fileNotFoundNotice, QUESTION_CANCEL, QUESTION_COPY, QUESTION_SAME, QUESTION_TEXT, RELINK_CHOICE } from "../project/reopenNotices";
 import { cancel as cancelClient } from "../skp/client";
 import { crsCatalog } from "../skp/crsCatalog";
-import { pickFile } from "../skp/dialog";
+import { pickFile, pickProjectFolder } from "../skp/dialog";
+import type { ReopenAnswer } from "../skp/types";
 import { admitDataset, AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import { splitCandidateColumns } from "./candidateColumns";
 import CrsAssertionForm from "./CrsAssertionForm";
@@ -98,8 +101,14 @@ export type State =
        * RENDERED refusal until the resubmit itself resolves (P4 item A: `openLivenessText` needs
        * to know whether the identity form's own submit, specifically, is the one in flight). */
       pendingOptions: AdmitOptions | null;
+      /** A reopen refusal's owner place (B2 piece 1c, `project/openProject.ts`'s `reopenRefusalPlace`), shown inside the block. Absent for a dataset open. */
+      owner?: string | null;
     }
-  | { kind: "admitted"; admitted: Admitted };
+  | { kind: "admitted"; admitted: Admitted }
+  /** B2 piece 1c (O-14): a reopen's run ended at a `question` (S8) or a `not_found` (S11). `options` are the run's, so that a choice re-enters
+   * the run with the answer it gave; nothing else is held between the calls (SKP-V0.md section 12.3). */
+  | { kind: "question"; folder: string; options: AdmitOptions }
+  | { kind: "not_found"; folder: string; options: AdmitOptions; fileName: string | null };
 
 /** `EngineError::Cancelled`'s own SKP wire code (`kernel/src/skp.rs::error_of`) -- the ONLY code
  * naming a cancelled `open_dataset` call, minted only when this exact request's `cancel_key` (or the
@@ -182,6 +191,10 @@ export interface AdmitPathDeps {
   makeCancelKey: () => string;
   /** Asked before anything else when present (Amendment 1 B3): `false` drops the open. Absent, as in the tests that predate it, the open goes on. */
   confirmOpen?: () => Promise<boolean>;
+  /** B2 piece 1c (O-15): a reopen's admission goes here in place of `onAdmitted`, with what the reply gives beyond it. */
+  onReopened?: (admitted: Admitted, reopened: Reopened) => void;
+  /** Whether Cancel was pressed for `cancelKey` (Amendment 54 item 5 (e)): a `question` or a `not_found` that arrives after it is dropped. */
+  wasCancelled?: (cancelKey: string) => boolean;
 }
 
 /**
@@ -194,6 +207,11 @@ export interface AdmitPathDeps {
  * and inspects the `State` values `setState` was called with directly.
  *
  * **`confirmOpen` is awaited before the first `setState`** (B3): when it answers `false` nothing is admitted, no state is set and the result is `null`.
+ *
+ * **A reopen's run** (B2 piece 1c, Amendment 54 item 5 (b) to (e)) is this same function, with `options.reopen` set and `admitProject` as its
+ * `admit`, so the liveness line, Cancel and the refusal block are the ones above. Its refusal opens no form (the claims are the project file's,
+ * not the user's), a `question` or a `not_found` ends the run, and one that arrives after Cancel for its key asks nothing and ends at the
+ * cancelled note. An admission after a Cancel is applied, as any late admission is.
  */
 export async function runAdmitPath(
   path: string,
@@ -218,6 +236,12 @@ export async function runAdmitPath(
   );
 
   const outcome = await deps.admit(path, cancelKey, options);
+
+  if (outcome.kind === "question" || outcome.kind === "not_found") {
+    if (deps.wasCancelled?.(cancelKey)) deps.setState(() => ({ kind: "idle", note: "Open cancelled" }));
+    else deps.setState(() => (outcome.kind === "question" ? { kind: "question", folder: path, options } : { kind: "not_found", folder: path, options, fileName: outcome.fileName }));
+    return outcome;
+  }
 
   if (outcome.kind === "refused") {
     // I8/P4: a refusal carrying `CANCELLED_REFUSAL_CODE` is not product refusal UX -- it is this
@@ -249,30 +273,46 @@ export async function runAdmitPath(
         kind: "refused",
         path,
         refusal: outcome.refusal,
-        formFamily: nextFormFamily(priorFamily, outcome.refusal.code),
+        // A reopen refusal opens no remediation form (Amendment 54 item 5 (g)).
+        formFamily: options.reopen !== undefined ? null : nextFormFamily(priorFamily, outcome.refusal.code),
         options,
         inFlight: false,
         cancelKey: null,
         pendingOptions: null,
+        ...(outcome.owner !== undefined ? { owner: outcome.owner } : {}),
       };
     });
     return outcome;
   }
 
   deps.setState(() => ({ kind: "admitted", admitted: outcome.admitted }));
-  deps.onAdmitted(outcome.admitted);
+  if (outcome.reopened !== undefined && deps.onReopened !== undefined) deps.onReopened(outcome.admitted, outcome.reopened);
+  else deps.onAdmitted(outcome.admitted);
   return outcome;
 }
+
+/** A fresh `cancel_key` for one call. */
+const newCancelKey = (): string => (typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`);
+
+/** O-19a: the Open project control's two texts, idle and opening (P6 placeholders; the advisor's words, ADV-2026-11-20-05 item 2). */
+const OPEN_PROJECT_IDLE = "[P6 placeholder] Open project…";
+const OPEN_PROJECT_OPENING = "[P6 placeholder] Opening project…";
 
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
   /** Resolves `true` at once when no export runs; otherwise `App` asks, and `false` (Keep exporting) drops the open. */
   confirmOpen: () => Promise<boolean>;
+  /** B2 piece 1c: App's reopen handler (O-15), called for a reopen's admission in place of `onAdmitted`. */
+  onReopened: (admitted: Admitted, reopened: Reopened) => void;
+  /** The project identity this window holds, or `null`; read when a reopen is refused, for S9's own-window place (Amendment 54 item 5 (f)). */
+  heldProject: () => string | null;
 }
 
-/** What the command bar's `/open` calls (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7): it does what a click of Open does at that moment. */
+/** What the command bar's `/open` calls (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7): it does what a click of Open does at that moment.
+ * `requestProjectPick` is the same for the bar's Open project entry (B2 piece 1c, O-19b) and the Open project control. */
 export interface AdmissionPanelHandle {
   requestPick(): "started" | "busy";
+  requestProjectPick(): "started" | "busy";
 }
 
 /**
@@ -282,10 +322,13 @@ export interface AdmissionPanelHandle {
  * reason, verbatim -- the refusal UX *is* the feature. NEXT-CUT.md P3 adds the two remediation
  * forms (`CrsAssertionForm`/`IdentityDeclarationForm`), both re-entering `admitPath` below -- the
  * SAME function a plain retry uses, just with `AdmitOptions` set -- never a parallel admission
- * path.
+ * path. B2 piece 1c adds the Open project control (O-19a): a folder picked runs `reopenPath`, which is `runAdmitPath` with the reopen's own
+ * `admit`, and S8's choices and S11's re-link re-enter it.
  */
-const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen }, ref) {
+const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen, onReopened, heldProject }, ref) {
   const [state, setState] = useState<State>({ kind: "idle", note: null });
+  /** The keys Cancel was pressed for (Amendment 54 item 5 (e)), read by `runAdmitPath` when a reopen's `question` or `not_found` arrives. */
+  const cancelledKeys = useRef(new Set<string>());
 
   // The one piece of the manual flow a path string can't replay itself -- everything from here
   // down is the product's own admission behavior, unchanged by the E2E hook registered below.
@@ -298,10 +341,24 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
         setState,
         onAdmitted,
         confirmOpen,
-        makeCancelKey: () =>
-          typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`,
+        makeCancelKey: newCancelKey,
       }),
     [onAdmitted, confirmOpen]
+  );
+
+  // A reopen's run (B2 piece 1c): the same transition with the reopen's `admit`, which never reaches `admitDataset`.
+  const reopenPath = useCallback(
+    (folder: string, reopen: { answer: ReopenAnswer | null; relink: string | null }): Promise<AdmissionOutcome | null> =>
+      runAdmitPath(folder, { reopen }, {
+        admit: (path, cancelKey, options) => admitProject(path, cancelKey, options, heldProject()),
+        setState,
+        onAdmitted,
+        onReopened,
+        confirmOpen,
+        makeCancelKey: newCancelKey,
+        wasCancelled: (cancelKey) => cancelledKeys.current.has(cancelKey),
+      }),
+    [onAdmitted, onReopened, confirmOpen, heldProject]
   );
 
   const handlePick = useCallback(async () => {
@@ -312,8 +369,32 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
     await admitPath(path);
   }, [admitPath]);
 
+  // O-19a: the folder picker (S2's title, shared with the save), then the reopen's first call. A dismissed picker starts nothing.
+  const handleProjectPick = useCallback(async () => {
+    const folder = await pickProjectFolder();
+    if (folder !== null) await reopenPath(folder, { answer: null, relink: null });
+  }, [reopenPath]);
+
+  // S11's choice: the file picker, then the re-link call with the answer the run already gave (Amendment 54 item 5 (d)). A dismissed picker ends
+  // the run at the cancelled note.
+  const handleRelink = useCallback(
+    async (folder: string, options: AdmitOptions) => {
+      const file = await pickFile();
+      if (file === null) setState({ kind: "idle", note: "Open cancelled" });
+      else await reopenPath(folder, { answer: options.reopen?.answer ?? null, relink: file });
+    },
+    [reopenPath]
+  );
+
   // The Open button's own condition decides (section 2.7): busy starts nothing, else a pick starts, so a second `/open` during the picker or the ask starts a new pick, as a second click does.
-  useImperativeHandle(ref, () => ({ requestPick() { if (isOpenInFlight(state)) return "busy"; void handlePick(); return "started"; } }), [state, handlePick]);
+  useImperativeHandle(
+    ref,
+    () => ({
+      requestPick() { if (isOpenInFlight(state)) return "busy"; void handlePick(); return "started"; },
+      requestProjectPick() { if (isOpenInFlight(state)) return "busy"; void handleProjectPick(); return "started"; },
+    }),
+    [state, handlePick, handleProjectPick]
+  );
 
   // E2E TEST SURFACE (dev builds only, e2e/README.md): `pickFile()` above opens a native dialog no
   // CDP driver can reach, so this hook lets the harness supply a path directly and run `admitPath`
@@ -368,7 +449,10 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   return (
     <div className="admission-panel">
       <button type="button" onClick={() => void handlePick()} disabled={isOpenInFlight(state)}>
-        {state.kind === "opening" ? "Opening…" : "Open GeoParquet…"}
+        {state.kind === "opening" && state.options.reopen === undefined ? "Opening…" : "Open GeoParquet…"}
+      </button>
+      <button type="button" className="admission-open-project" onClick={() => void handleProjectPick()} disabled={isOpenInFlight(state)}>
+        {state.kind === "opening" && state.options.reopen !== undefined ? OPEN_PROJECT_OPENING : OPEN_PROJECT_IDLE}
       </button>
 
       {/* P4 item B: Cancel appears with ZERO delay -- `inFlightCancelKey` alone gates it, exactly
@@ -378,7 +462,12 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
         <button
           type="button"
           className="admission-open-cancel"
-          onClick={() => requestOpenCancel(state, cancelClient)}
+          onClick={() =>
+            requestOpenCancel(state, (cancelKey) => {
+              cancelledKeys.current.add(cancelKey);
+              return cancelClient(cancelKey);
+            })
+          }
         >
           Cancel
         </button>
@@ -393,9 +482,35 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
 
       {state.kind === "idle" && state.note && <p className="admission-open-cancelled-note">{state.note}</p>}
 
+      {/* S8 (B2 piece 1c): the reopen's question. A choice re-enters the run with its answer and a fresh key; the third ends the run. */}
+      {state.kind === "question" && (
+        <div className="admission-reopen-question" role="group">
+          <p>{QUESTION_TEXT}</p>
+          <button type="button" className="admission-reopen-copy" onClick={() => void reopenPath(state.folder, { answer: "copy", relink: state.options.reopen?.relink ?? null })}>
+            {QUESTION_COPY}
+          </button>
+          <button type="button" className="admission-reopen-same" onClick={() => void reopenPath(state.folder, { answer: "same", relink: state.options.reopen?.relink ?? null })}>
+            {QUESTION_SAME}
+          </button>
+          <button type="button" className="admission-reopen-cancel" onClick={() => setState({ kind: "idle", note: null })}>
+            {QUESTION_CANCEL}
+          </button>
+        </div>
+      )}
+
+      {/* S11 or S11-none: the data file was not found. `fileName` is bounded already (`admitProject`). */}
+      {state.kind === "not_found" && (
+        <div className="admission-reopen-not-found">
+          <p>{fileNotFoundNotice(state.fileName)}</p>
+          <button type="button" className="admission-reopen-relink" onClick={() => void handleRelink(state.folder, state.options)}>
+            {RELINK_CHOICE}
+          </button>
+        </div>
+      )}
+
       {state.kind === "refused" && (
         <>
-          <RefusalBlock refusal={state.refusal} />
+          <RefusalBlock refusal={state.refusal} reopen={state.options.reopen !== undefined} owner={state.owner ?? null} />
           {state.formFamily === "crs" && (
             <>
               {/* MF2 honesty requirement: a carried identity option is the operator's own earlier

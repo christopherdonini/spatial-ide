@@ -8,8 +8,8 @@
  * this module only says, for every action a shell operator can take, which of the cut's three
  * display classes it falls into and, for classes B/C, the fixed prose that accounts for it.
  *
- &
- *   A -- one of the seven SKP commands: exact serialized request, copyable. Display text is never
+ * NEXT-CUT.md's three-class table:
+ *   A -- one of the eight SKP commands: exact serialized request, copyable. Display text is never
  *        owned here (I3: "the console owns no command shapes").
  *   B -- a binding-local Tauri command: prose + the command NAME only, never the argument object
  *        (ADR-024's fence), never a copy affordance, never the string "SKP" (I6).

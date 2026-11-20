@@ -143,6 +143,8 @@ export interface StudioLayoutProps {
   filterFields?: FieldSource | null;
   /** B2 piece 1c: `project.save` is App's one save handler, which the bar's `/save` and App's own control both call. An absent prop leaves the entry unavailable. */
   onSaveProject?: () => void;
+  /** B2 piece 1c (Amendment 54 item 5 (m)): `project.open` is the Layers panel's `requestProjectPick`, as `dataset.open` is its `requestPick`. An absent prop leaves the entry unavailable. */
+  onOpenProject?: () => "started" | "busy";
   /** Milestone 4 PR C (section 2.4 (b)): called with whether the Table tab is shown (Activity open and the Table tab selected), on mount and on each change. Consumer: App, which hands it to the Table tab so the first scope issues only while shown. */
   onTableShownChange?: (shown: boolean) => void;
 }
@@ -162,6 +164,7 @@ export default function StudioLayout({
   clausePending,
   filterFields,
   onSaveProject,
+  onOpenProject,
   onTableShownChange,
 }: StudioLayoutProps) {
   const [state, dispatch] = useReducer(layoutReducer, undefined, initialLayoutState);
@@ -210,6 +213,8 @@ export default function StudioLayout({
         return dataset && selectionAvailable === true && onClearSelection !== undefined;
       case "dataset.open":
         return onOpenDataset !== undefined;
+      case "project.open":
+        return onOpenProject !== undefined;
       case "layer.revealExport":
         return dataset && onRevealExport !== undefined;
       case "filter.addClause":
@@ -256,6 +261,7 @@ export default function StudioLayout({
       barRef.current?.take();
       return "moved-focus";
     } else if (id === "dataset.open") return onOpenDataset?.() === "busy" ? "busy" : "done";
+    else if (id === "project.open") return onOpenProject?.() === "busy" ? "busy" : "done";
     else if (id === "layer.revealExport") {
       if (!state.inspector.open) apply({ kind: "toggle", region: "inspector" });
       if (state.inspector.tab !== "layer") apply({ kind: "selectTab", region: "inspector", tab: "layer" });

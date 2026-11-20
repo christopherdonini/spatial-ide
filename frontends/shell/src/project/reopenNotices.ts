@@ -3,16 +3,15 @@
 
 /**
  * B2 piece 1c, Amendment 54 item 12: the owner's places for a reopen, and the builders that fill their slots. Every text is a P6 placeholder, marked
- * as the shell marks them, and is the advisor's wording from ADV-2026-11-20-05 item 2, copied from that ruling by script; none is the human's
- * (S8 is theirs to overturn at P6). A text states the owner's consequence and repeats no engine or kernel fact: engine messages state engine facts,
- * owners state consequences.
+ * as the shell marks them, and is the advisor's wording from ADV-2026-11-20-05 item 2, or for W-STYLE and O-18 from ADV-2026-11-20-09 item 2,
+ * copied from those rulings by script; none is the human's (S8 is theirs to overturn at P6). A text states the owner's consequence and repeats no
+ * engine or kernel fact: engine messages state engine facts, owners state consequences.
  *
  * - **A builder takes its slot values as given.** None of them is bounded here. The bound on text read from a file (Amendment 54 item 5 (j))
  *   is applied by the caller to `{file_name}`, `{column}`, `basis` and every refusal's message and fields before they reach a builder.
- * - **Which place shows where is the caller's routing**, not this file's (ADV-2026-11-20-05 item 4). In particular no lineage fact is mapped
- *   to a place here: S16 and S17 are places and their builder, and what they follow waits for the advisor's answer on stop 8.
- * - **Every export has one product caller**: the reopen's run, its refusal routing, or App's handler (`project/openProject.ts`,
- *   `admission/AdmissionPanel.tsx`, `App.tsx`), which come with the second brief of P4a. This commit has none; Amendment 54 item 7 (a) names them.
+ * - **Which place shows where is the caller's routing**, not this file's (ADV-2026-11-20-05 item 4): `reopenRefusalPlace`, `lineagePlaces`
+ *   (Amendment 55's table) and `reopenApply` in `project/openProject.ts`.
+ * - **Every export has its product caller** there, or in the panel's question and re-link (`admission/AdmissionPanel.tsx`).
  */
 
 import type { AdmissionChange, LineageRefusal, ObservedChange } from "../skp/types";
@@ -112,9 +111,12 @@ export function workspaceTextNotice(members: readonly string[]): string {
   return WORKSPACE_TEXT.replace("{members}", () => members.join(", "));
 }
 
-const COLOUR_BY_NOT_RESTORED = "[P6 placeholder] Colour by was not restored: the data does not offer the column {column} for it now. The rest of the saved style was applied.";
+const COLOUR_BY_NOT_RESTORED = "[P6 placeholder] Colour by was not restored: the data does not offer the column {column} for it now. The rest of the saved style was applied. A save now replaces the saved style with the one shown.";
 
 /** O-18: a Colour by was not restored because the data does not offer its column. `column` is shown as given. */
 export function colourByNotRestoredNotice(column: string): string {
   return COLOUR_BY_NOT_RESTORED.replace("{column}", () => column);
 }
+
+/** W-STYLE (Amendment 57 item 1): the saved style was not applied, because the shell's reader answers with none for it, and the default is shown. It shows no text of the file. */
+export const STYLE_NOT_APPLIED_NOTICE = "[P6 placeholder] The saved style was not applied: this version cannot show it. The default style is shown. A save now replaces the saved style with the one shown.";
