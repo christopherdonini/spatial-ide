@@ -793,9 +793,9 @@ pub struct OpenProjectRequest {
     pub relink: Option<String>,
 }
 
-/// The answer to a `question` reply: the project is open elsewhere on this machine under another
-/// folder, and the client says whether this folder is a `copy` of it (a new identity) or the `same`
-/// project moved here.
+/// The answer to a `question` reply (see [`ReopenQuestion`]): the client says whether this folder
+/// is a `copy` of the project, which then gets a new identity, or the `same` project, in which case
+/// this folder is recorded beside the first.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "kebab-case")]
 pub enum ReopenAnswer {
@@ -919,8 +919,10 @@ pub enum LineageRefusal {
     ThroughLink {},
 }
 
-/// The project is open elsewhere on this machine under another folder, and nothing was written.
-/// The client asks and calls again with an `answer`.
+/// This folder is not one that this user's machine store records for the project, and the folder it
+/// records first still holds a project file of this identity, or one the reader refuses, or cannot
+/// be read, it or its project file. Nothing was written. The client asks and calls again with an
+/// `answer`.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ReopenQuestion {

@@ -518,8 +518,9 @@ pub enum Answer {
 #[derive(Debug)]
 pub enum Reopen {
     Opened(Box<Opened>),
-    /// The folder is not known for the identity, and the first folder still holds this identity
-    /// or cannot be read: nothing was written, and the caller asks and calls again with an answer.
+    /// The folder is not known for the identity, and the first folder still holds a project file of
+    /// this identity, or one the reader refuses, or cannot be read, it or its project file: nothing
+    /// was written, and the caller asks and calls again with an answer.
     Question,
     /// No file was found for the dataset through the machine store, and the caller may re-link it.
     /// `file_name` is the last name of the recorded path that is missing; `None` when no location
@@ -560,8 +561,10 @@ pub enum ViewState {
 pub enum OpenFailure {
     /// The host refused the cancel key, or the engine refused the open: the host's error.
     Open(SkpError),
-    /// The cancel key was cancelled before the engine's open returned; a cancel after it is not
-    /// seen, and the reopen replies `Opened`.
+    /// The reopen saw its cancel key cancelled, at one of its checks between steps or when the
+    /// host's open returned an error. A `Question`, a `NotFound` or another refusal already decided
+    /// can still follow a cancel. A cancel after the host's open returned a dataset is not seen:
+    /// the reopen goes on as it would with none.
     Cancelled,
     /// The folder's `project.spatial` could not be read.
     ProjectFileUnreadable(std::io::Error),
@@ -654,7 +657,10 @@ impl Projects {
     /// `open_project` (§2.4): reopen the project saved in `folder`, under `cancel_key`. In order:
     ///
     /// 1. `cancel_key` is registered with the host's opens, so that `cancel` reaches this call
-    ///    from here until it returns; the token is checked after each step that reads.
+    ///    from here until it returns; the token is checked after step 1's read, in step 2 once the
+    ///    folder's place is decided and the call goes on, after step 4, and in step 5 once the path
+    ///    is found, before the host's open; and again if that open returns an error. A `Question`
+    ///    or a `NotFound` is returned with no check after the read that decided it.
     ///    `project.spatial` is read up to its ceiling and one byte, and parsed by the strict
     ///    reader.
     /// 2. The identity and the folder, with nothing written. The folder is known when its

@@ -926,10 +926,12 @@ impl SessionInvalidator {
     }
 }
 
-/// Names an in-flight `open_dataset` call so `cancel(cancel_key)` can reach it before it returns a
-/// handle. Separate from [`StreamRegistry`]: a different handle kind (client-minted, SKP-V0.md §3),
-/// a different underlying cancel primitive (`engine::CancelToken` directly, not the data plane's
-/// type-erased `SourceCancel`), and a different lifetime (dies the instant `open_dataset` returns).
+/// Names an in-flight `open_dataset` or `open_project` call so `cancel(cancel_key)` can reach it
+/// before the call returns. Separate from [`StreamRegistry`]: a different handle kind
+/// (client-minted, SKP-V0.md §3), a different underlying cancel primitive (`engine::CancelToken`
+/// directly, not the data plane's type-erased `SourceCancel`), and a different lifetime (an entry
+/// is removed when the call that registered it returns, by [`OpenGuard`]'s drop, an unwind
+/// included).
 #[derive(Default)]
 struct OpenRegistry {
     inflight: Mutex<HashMap<String, CancelToken>>,

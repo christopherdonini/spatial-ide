@@ -246,7 +246,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eight
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset` and for `open_project` (§2, C3; §12.3).
-   Progress: data-plane batches only. `open_dataset` is cancellable but not progress-reporting.
+   Progress: data-plane batches only. `open_dataset` and `open_project` are cancellable but not progress-reporting.
    **v0.1 (§7) adds a named shortfall to this item, not a new gap**: for a filtered scan whose
    predicate matches late, "progress: data-plane batches only" can mean *zero* batches for a long
    time — see §7's own shortfall paragraph.
@@ -1157,7 +1157,7 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 ### skp/0.14 — `open_project` (B2 piece 1c, step 2, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`, Amendment 43)
 
-**The version's FULL field set, as §8's own discipline requires:** one command and its types, nine codes, two changed messages and one changed code; no change to the other seven commands.
+**The version's FULL field set, as §8's own discipline requires:** one command and its types, nine codes, two changed messages and one changed code. The other seven commands keep their requests and replies; of these codes and messages, `save_project` can return `skp.project_file_names_another_project`, the changed code and `skp.project_file_refused`'s new message, and `open_dataset` can return `skp.cancel_key_in_use`'s.
 
 - **An eighth command, `open_project`:** request `{skp, folder, cancel_key, answer, relink}`, reply one of `{opened}`, `{question}` and `{not_found}`; §12.2 gives every member. `answer` and `relink` are always present, `null` for none.
 - **Nine new `skp.*` codes:** `skp.project_file_unreadable` (`detail`), `skp.project_machine_record_refused` (`file`, `rule`), `skp.project_known_folders_full` (`project`, `count`), `skp.project_open_elsewhere` (`project`), `skp.project_machine_store_failed` (`detail`), `skp.project_target_unresolvable`, `skp.project_target_through_link` (`locator`, `segment`), `skp.project_target_wrong_kind` (`locator`, `segment`, `expected`) and `skp.project_file_names_another_project` (`project`, `found`). §12.4 and §11.4 list them.
@@ -1427,12 +1427,12 @@ refused   = { reason: "over-bound", line: n | null, limit } | { reason: "damaged
 ### 12.3 The contract
 
 - **Two calls, no state between them.** The kernel keeps nothing between the first call and the second. A `question` or a `not_found` is answered by calling again, with `answer` or with `relink`.
-- **`question`** means the folder is not one the machine remembers for the project and the folder it remembers first still holds the project or cannot be read. Nothing was written. The answer `copy` mints a new identity into this folder; the answer `same` is remembered for this folder.
+- **`question`** means the folder is not one the machine remembers for the project, and the folder it remembers first still holds a project file of this identity, or one the reader refuses, or cannot be read, it or its project file. Nothing was written. The answer `copy` mints a new identity into this folder; the answer `same` is remembered for this folder.
 - **The data** is found by the project-relative locator the file carries, through the resolver's check, which refuses a locator it cannot resolve; otherwise by the location this machine's store holds for the dataset, and a location that is absent, or whose file is missing, is `not_found`.
 - **A `relink`** is an absolute UTF-8 path to a file the client chose after `not_found`. It replaces the dataset's entry in the machine store whatever the entry held. A client sends one after a `not_found`.
-- **The open** is `open_dataset`'s, with the claims the project file recorded and the request's `cancel_key`. A project is open once at a time on this machine: a reopen of a project another open holds is refused as `skp.project_open_elsewhere`.
+- **The open** is `open_dataset`'s, with the claims the project file recorded and the request's `cancel_key`. A project is open once at a time within one user's machine store, where its lock is kept: a reopen of a project whose lock another open holds is refused as `skp.project_open_elsewhere`. The lock does not reach another user's store on the same machine.
 - **No reply carries a path.** A refusal may name the request's own `folder` or `relink` as sent, a locator's JSON path and its segment as the project file spells it, a machine-store file by its fixed name, and an identity. One exception: an engine refusal keeps the engine's own message, unedited (§5), and that message may name the path the engine was given.
-- **Cancellable**, through `cancel` and the request's `cancel_key`, as `open_dataset` is, and not progress-reporting. A key that a live `open_dataset` or `open_project` call holds is refused as `skp.cancel_key_in_use`. A cancel before the engine's open returned refuses the call as `engine.cancelled`; a cancel after it is not seen, and the reply is `opened`.
+- **Cancellable**, through `cancel` and the request's `cancel_key`, as `open_dataset` is, and not progress-reporting. A key that a live `open_dataset` or `open_project` call holds is refused as `skp.cancel_key_in_use`. A cancel that the call sees before the engine's open returned refuses it as `engine.cancelled`. The call looks between its steps, so a `question`, a `not_found` or another refusal already decided can still be the reply. A cancel after the engine's open returned a dataset is not seen: the call goes on as it would with none.
 
 ### 12.4 Refusal taxonomy
 
@@ -1446,7 +1446,7 @@ Eight new codes, all minted by the host. A ninth, `skp.project_file_names_anothe
 | `skp.project_machine_record_refused` | `file`, `rule` | `folders.json` or `locations.json` breaks a rule its reader holds |
 | `skp.project_known_folders_full` | `project`, `count` | the machine remembers `count` folders for the project, and no more can be added |
 | `skp.project_open_elsewhere` | `project` | another open holds the project, in this process or in another |
-| `skp.project_machine_store_failed` | `detail` | this machine's store for the project could not be used; `detail` is a file's fixed name, a colon and the error's text |
+| `skp.project_machine_store_failed` | `detail` | this machine's store for the project could not be used; `detail` is a file's fixed name, a colon and the error's text, or, from the shell's `open_project` binding when no per-user data directory resolves, `no per-user data directory is available` |
 | `skp.project_target_unresolvable` | `folder`; or `locator` and `segment`; or `locator`; or none | the project folder, or a segment of the data's locator, cannot be resolved; the last form is a data path that is not Unicode |
 | `skp.project_target_through_link` | `locator`, `segment` | a segment of the data's locator is a link, which is not followed |
 | `skp.project_target_wrong_kind` | `locator`, `segment`, `expected` (`folder` or `file`) | a segment of the data's locator is not a folder, or the last is not a regular file |

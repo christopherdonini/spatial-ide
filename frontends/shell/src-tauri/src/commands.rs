@@ -5,9 +5,11 @@
 //! them apart at a glance:
 //!
 //! - **SKP v0** (`open_dataset`, `describe`, `viewport_query`, `cancel`, `close_dataset` and, from
-//!   `skp/0.12`, `record_step` and, from `skp/0.13`, `save_project`, and, from `skp/0.14`, `open_project`) — each takes the exact request struct `protocol/skp` defines and returns the exact response or
-//!   `SkpError`. No renaming, no remapping: the same type is the fixture-verified wire shape and
-//!   the Tauri command's own argument/return type, so there is nothing here to drift.
+//!   `skp/0.12`, `record_step` and, from `skp/0.13`, `save_project`, and, from `skp/0.14`,
+//!   `open_project`) — each takes the exact request struct `protocol/skp` defines and returns the
+//!   exact response or `SkpError`. No renaming, no remapping: the same type is the fixture-verified
+//!   wire shape and the Tauri command's own argument/return type, so there is nothing here to
+//!   drift.
 //! - **Binding-local** (`binding_*`) — named so they cannot be mistaken for SKP, excluded from the
 //!   command catalog and from any future conformance suite (SKP-V0.md §4 item 1).
 //!

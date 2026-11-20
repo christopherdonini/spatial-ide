@@ -127,7 +127,10 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `project_known_folders_full`, `project_open_elsewhere`, `project_machine_store_failed`,
 /// `project_target_unresolvable`, `project_target_through_link`, `project_target_wrong_kind` and
 /// `project_file_names_another_project`. `project_file_refused` and `cancel_key_in_use` take new
-/// messages. The other seven commands are unchanged; `protocol/data-plane/` has an empty diff. Same
+/// messages. The other seven commands keep their requests and replies. Of these codes and messages,
+/// `save_project` can return `project_file_names_another_project`, `project_machine_record_refused`
+/// where it returned `project_file_refused`, and `project_file_refused`'s new message, and
+/// `open_dataset` can return `cancel_key_in_use`'s; `protocol/data-plane/` has an empty diff. Same
 /// discipline again: `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in
 /// the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.14` entry).
 pub const SKP_VERSION: &str = "skp/0.14";
