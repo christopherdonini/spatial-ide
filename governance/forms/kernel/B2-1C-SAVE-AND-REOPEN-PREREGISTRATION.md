@@ -3891,3 +3891,23 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 53 — P3b-2's closing, completed after PR 340's merge (ADV-2026-11-20-03): ADV-2026-11-19-33 items 5 and 6 recorded; N-A and three notes of the first attempts carried
+
+*Written by the custodian, 2026-11-20, after PR 340's merge at a2354cbe340158e766a6f36a3130b41bca107f51. References and hashes only. Nothing below is a quotation.*
+
+1. **The two records that Amendments 51 and 52 omit** (ADV-2026-11-20-03 item 4).
+   - ADV-2026-11-19-33 item 5: the worker's fetch, departure (d), class 1. Later briefs say that a worker does not fetch, and that the push's own output shows the remote head.
+   - ADV-2026-11-19-33 item 6: departure (e), the runs not repeated at 8759491f, accepted; the commit is two attribute lines in src-tauri. CI's Rust workspace run at that commit, 44633818992, was red on Ubuntu in W-7's case (b). It went to the advisor and is ruled by ADV-2026-11-19-34 (Amendment 51 item 3).
+
+2. **Carried** (ADV-2026-11-20-03 items 1 to 3).
+   - For P5's form: whether section 12 of the SKP spec gains one sentence on what the machine means there, or stays as it is (item 1), beside the second point of ADV-2026-11-20-01 item 9.
+   - For the node proposed for `opened_of`'s panic sites (ADV-2026-11-20-01 item 5): the reviewer's first-attempt note on `opened_of`'s doc (item 2).
+   - For P4's strings: the architect's first-attempt N-5, a format character in a bounded text (item 3 (a)).
+   - For the next batch: the second point of the architect's first-attempt N-6, that nothing checks that `folder` is absolute, at a save or at a reopen; where it is recorded, or a node proposed, not placed (item 3 (b)).
+
+3. **Superseded:** nothing. Item 2 here completes Amendment 51 item 9's carried list.
+
+Read the last amendment first.
+
+Nothing above is edited.
