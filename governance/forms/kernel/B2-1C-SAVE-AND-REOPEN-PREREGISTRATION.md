@@ -4560,3 +4560,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 64 — PR 341 merged; ADV-2026-11-20-16: the test files Amendment 54 item 7 (a) has the closing list (class 1)
+
+*Written by the custodian, 2026-11-20, after PR 341's merge. References and hashes only. Nothing below is a quotation.*
+
+1. **The merge.** PR 341 was merged by the advisor by merge commit 1c45b0ef98b25cde952630ed729a625d32574c48, at 2026-11-20T15:01:41Z, at its checked head 51fed8a5, on its verdict MERGE: state/consults/merge-checks/PR-341-51fed8a55340.md. Main's CI at the merge commit: 4 runs, all success, read at 2026-11-20T15:14:19Z.
+
+2. **The test files named at step 0, class 1** (ADV-2026-11-20-16 item 3; Amendment 54 item 7 (a)). The worker named three, each beside the product file it tests, so none is outside the list: style/document.test.ts, the style reader's; canvas/WorkingCanvas.wiring.test.tsx, the camera write's, as Amendment 56 item 3 also records; App.reopen.test.tsx, the workspace apply's. Amendment 54 item 2's table names admission/AdmissionPanel.test.ts, which the PR does not change. The admission run's cases are in App.reopen.test.tsx: by their names, T-2 to T-5, T-11, T-12 and T-18 are there at the merge commit.
+
+3. **ADV-2026-11-20-16,** filed as state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-16-pr-341s-result-line-stays-as-filed-and-the-test-files-the-closing-owes.md. The series report's Result line stays as filed, and Amendment 63 item 9 is its record (class 3). source-changed-post is not counted as a pass and did not hold the merge. Amendment 63 item 11's departures stand.
+
+4. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
