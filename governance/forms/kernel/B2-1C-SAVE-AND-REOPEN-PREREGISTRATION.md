@@ -4679,3 +4679,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 68 — PR 342 merged; E-SECOND on main owed by the merge verdict, its run at the merge commit dispatched
+
+*Written by the custodian, 2026-11-20, after PR 342's merge. References and hashes only. Nothing below is a quotation.*
+
+1. **The merge.** PR 342 was merged by the advisor by merge commit b7926b92e619ed7031ac76d4a9acc2cf9d6df8e6, at 2026-11-20T20:01:32Z, at its checked head 26d76ebc, on its verdict MERGE: state/consults/merge-checks/PR-342-26d76ebc5aa9.md. Main's CI at the merge commit: 4 runs, all success, read at 2026-11-20T20:07:59Z.
+
+2. **Owed after the merge** (the verdict). E-SECOND passing on main, by a run of the second-open suite at the merge commit, before the reopen's plan node is called done for this part. The run was dispatched at 2026-11-20T20:05:46Z to the standard tester, in P4b's worktree checked out detached at the merge commit, on 5180 through the suite's own launch. The merge commit differs from 26d76ebc in records paths alone. Its result is the next amendment's.
+
+3. **Next for the reopen** is P5, the words. Its dispatch waits for the redaction node's merge if its declared files hold a src-tauri path (the redaction form's Amendment 1 item 3).
+
+4. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
