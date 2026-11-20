@@ -4618,3 +4618,64 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 67 — P4b's closing at 26d76ebc, before its PR: both gates at 0c74eeab closed on their words by ADV-2026-11-20-23 with no re-gate; the series; the class 1, 2, 3 and 8 rows
+
+*Written by the custodian, 2026-11-20, at the branch's head 26d76ebc5aa927beaf26ca98827b8727b3152314, on cut/b2-piece-1c-p4b. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates, at 0c74eeab7e0c100a5a193e5109e272025ca43bb6.**
+   - The architect, on the strongest model, ground architecture and concurrency: PASS WITH NOTES, nothing blocking. Its report is state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p4b-gate-architect.md, sha256 1e60e233c724050474bd9a0e4039fe192b7f712495771232a349604334f651d0.
+   - The reviewer, on the standard model: FAIL on one sentence of wording only, its E-1, with no code finding. Its report is state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p4b-gate-reviewer.md, sha256 1d58a9255d87fbc9089a66ea35032c5a38ce814e20851f175c3950f12c37c22e.
+   - The reviewer made E-SECOND's mutation again at 0c74eeab, and its report gives the line as printed: red at the bound, the log named, 0 bytes read, the log empty, and that the suite cannot tell (ADV-2026-11-20-21 item 1 (d)).
+
+2. **The words, as ADV-2026-11-20-23 rules them,** filed as state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-23-p4bs-gate-words-five-replacements-in-three-files-n2-to-the-proposed-node-one-check-before-the-merge-request.md (the PASTES file's sha256 8cb704d1f865e4879b3f47dc4f8e3d405d2011257c89dd067b1119cb8fb47ba8).
+   - They were applied in one commit, 26d76ebc5aa927beaf26ca98827b8727b3152314, by the standard worker: state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4b-words-worker-report.md. Its parent is 0c74eeab. It changes 3 files, 6 lines in and 6 out. Each file is byte-equal to the custodian's file, built by script from 0c74eeab and the ruling's five fences.
+   - Words 1: the reviewer's E-1, in the advisor's words, with a second sentence of the advisor's on the 0-byte log (the e2e README).
+   - Words 2 and 3: the architect's D1, its first clause, and the reviewer's D-1 and D-2: the three outcomes at the bound, and the poll as the code has it (the README, and the suite's header).
+   - Words 4: the architect's D1, its second clause: the suite's cleanup as it is.
+   - Words 5: the architect's D3, byte for byte (lib.mjs).
+   - No gate re-runs (the ruling's item 1), under the human's message of 2026-11-13 on a gate closed on wording. The reviewer's only blocking finding was wording. The head differs from 0c74eeab in the three files and the ruled lines alone. This amendment records the closing. The advisor's reading that the gates' doc fixes and its own two additions count among the ruled words is listed in the digest for the human to overturn (the ruling's item 9).
+
+3. **Class 2, A's log** (ADV-2026-11-20-21 item 1 (e); the architect's D2). Amendment 54 item 6 says the launcher's log receives A's standard error. In these runs it received nothing, and e2e/out/app.log stayed at 0 bytes. ADV-2026-11-20-19 item 6 was wrong on the same point, and Amendment 66 item 5's last sentence carries its premise. ADV-2026-11-20-18 item 5 stands as it is. Why the log is empty goes to a node the daily batch proposes (ADV-2026-11-20-21 item 1 (f)).
+
+4. **Class 3, the poll's 10 s** (the ruling's item 7; the reviewer's question 4). Amendment 54 item 6 gives the bound as 40 tries in 10 s. The code waits 250 ms after each refused try, so the 10 s is nominal: 40 tries took about 10.7 s in the mutation runs. Nothing rests on the figure, as that item says.
+
+5. **The architect's N2** (the ruling's item 4). The printed words at the bound, the log is empty, stay for P4b. They are exact where the file is 0 bytes, which is every case the reports show, and inexact when earlier runs left bytes and this run added none. They change with the node of ADV-2026-11-20-21 item 1 (f), which then says that this run's part of the log gave 0 bytes. The same node takes the reviewer's N-1 and the architect's N1: B is left running, and the failure is not labelled a launcher failure, when the connect or the page lookup throws after the checks (the ruling's item 5).
+
+6. **The architect's D4, a record.** E-CRASH-UNLOCK's control run replaced the stop of A with `a.browser.close()`, a CDP disconnect that keeps A's process and its open. It was not a graceful stop of A. B stayed refused, and the step went red by name.
+
+7. **The mutations observed.** E-SECOND's, at 441e2346 by the worker and again at 0c74eeab by the reviewer; E-CRASH-UNLOCK's control, at 441e2346 by the worker, which the reviewer reused at 0c74eeab since the change between them is not on that step's path. Each went red by name. The suite's header line for recorded mutations stays as it is (the ruling's item 7).
+
+8. **Class 1, the sign-offs** (ADV-2026-11-20-21 item 3). The sign-off lines on the branch's first two commits, 89625824 and 441e2346, are class 1, and the fault is the brief's. The later two were made with -s and no typed sign-off, as the brief's fix has it.
+
+9. **The cleanup warning** (ADV-2026-11-20-21 item 2; the ruling's item 8). The series run printed that B's WebView2 data folder could not be removed, with EPERM. The check before the merge request, with no suite run: at 2026-11-20T19:27Z no process's command line named spatial-second-wv2b, and the four such folders left under the piece's test data folder were removed at 2026-11-20T19:27:55Z, none left. The line stays a warning. It is not a row.
+
+10. **Stop 10 and the runs.**
+    - Stop 10 holds: three runs in a row within the bound, by the worker at 441e2346 (state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4b-second-brief-worker-report.md).
+    - The series, the one series report of the PR (ADV-2026-11-16-06), at 0c74eeab, by the tester on the standard model, on 5180 through the suites' own launch: state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4b-series-tester-report.md. The project, reopen and second-open suites each rc 0, every row PASS: E-SAVE, E-REOPEN R1 to R9 with E-CHANGED, E-SECOND and E-CRASH-UNLOCK. It is not run again at 26d76ebc: the words change comments and the README alone.
+    - CI at 26d76ebc: 2 runs, both success, read at 2026-11-20T19:39:46Z. The PR holds no Rust file, so no clippy run is owed (ADV-2026-11-18-24 item 5 (b)).
+    - This project's hold lines in the machine log on 2026-11-20: 128 holds, no two overlapping, read at 2026-11-20T19:39:37Z (ADV-2026-11-16-08 item 4).
+
+11. **Class 8, the step's figures,** restated as each later part's closing does.
+    - P4b's groups at 26d76ebc, by the form's section 2.11 command with the form's path excluded, from the merge base db6eb550 to 26d76ebc: e2e 266 lines in and none out, against 425, within; every other group 0. P4b's total is 266 lines in 4 files.
+    - The step stood at 9,047 lines and 86 files at 51fed8a5. P4b adds 266 lines and 2 files new to the step, lib.mjs and second-open.mjs, by the union of the files of PRs 331, 332, 333, 334, 337, 339, 340 and 341. So the step stands at 9,313 lines and 88 files, against its Total of 5,170 and 75. Nothing is cut.
+
+12. **Main since the merge base** (ADV-2026-11-14-21 item 6 (a)). The merge base with main is db6eb550bc88fe492f41b5973d16dc8a675a5ee9. The 5 commits on main after it, to 0dd9bed363b85e10e53f622e7c5da8afd2d05d97, change 17 paths, none of the PR's 4. This amendment's commit adds records and forms alone. So the branch takes nothing more from main, and main is not merged into it.
+
+13. **To the advisor, with the merge request, unreworded** (ADV-2026-11-19-06 items 5 and 6). The series report held two hold-line project values, masked at its filing, and its INSIDE-OPEN line drops a U+007F that the log holds. The words worker's report does not byte-copy the changed lines its brief asked for, and says so; the custodian checked the three files by sha256.
+
+14. **Carried.**
+    - The node of ADV-2026-11-20-21 item 1 (f), to the daily batch: why A's log is empty under the suites' own launch, with N2, N-1 and N1 (items 3 and 5).
+    - The reviewer's D-3, the callers named in two comments of e2e-test-surface.ts, to the docs lane with its words (the ruling's item 6).
+
+15. **Departures.**
+    - The architect's gate: one Read of this form was refused as over the size limit, and it read the form in parts.
+    - The reviewer's gate: a foreground sleep the harness refused, and a TaskStop the harness does not give a subagent. Nothing ran from either.
+    - The series tester's final report came as its last message, not as a hand-back, and was filed from its transcript.
+    - The words worker's report, item 13.
+
+16. **Superseded:** Amendment 54 item 6's clause that the launcher's log receives A's standard error, and its 10 s as a figure (items 3 and 4); Amendment 66 item 5's last sentence (item 3). Nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.
