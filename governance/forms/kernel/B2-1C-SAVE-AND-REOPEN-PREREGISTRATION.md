@@ -4596,3 +4596,25 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 66 — P4b's step 0: stop 9 reached and closed by ADV-2026-11-20-18, as ADV-2026-11-20-19 reads it after the human's word that 5180 is free (class 5); item 6's line on the release thread (class 3); the port
+
+*Written by the custodian, 2026-11-20, after P4b's step 0 and before its suite code. References and hashes only. Nothing below is a quotation.*
+
+1. **Step 0.** The standard worker probed item 8 (b) at main 897e7bd9, on the port-5400 harness, with nothing committed; its hand-back is filed as state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4b-step-0-worker-report.md. Two app processes ran at once with one machine store, B with a WebView2 data folder of its own and no second dev server. B's reopen of the project A held was refused as skp.project_open_elsewhere with S9's other-window place, and admitted after A opened another file. Item 8 (b)'s third need, a launch whose port is not the overlay's, was not met: a port set for B through the WebView2 browser-arguments variable is ignored, and B answered on the IPv6 loopback at the overlay's port while A held that port on 127.0.0.1.
+
+2. **Stop 9 reached, and its close (class 5).** ADV-2026-11-20-18 item 1 closes stop 9 by route (i), with its four conditions (a) to (d); item 8 (b) is not corrected. The port that step 0 settles, in item 9, is the overlay's port on the IPv6 loopback. B is always started while A is up (ADV-2026-11-20-18 item 2). Route (ii) is not taken. If (i) does not hold at the probe of item 4 below or at stop 10, it comes to the advisor with both routes open, a second exe and the measure exe, in no fixed order (ADV-2026-11-20-19 item 5).
+
+3. **The port.** The human's word that 5180 is free came at 2026-11-20T16:43:57Z, and the custodian's listen test on 5180 passed at 2026-11-20T16:45:16Z, both filed as state/directives/2026-11-20-the-humans-message-5180-is-free-the-listen-test-passed-e2e-runs-on-5180-the-port-5400-harness-ended.md. By the human's rule of 2026-11-09 (OPEN-5), from that test on P4b's e2e runs use 5180 through the suites' own launch, and the port-5400 harness of Amendment 65 item 3, with its approval of 2026-10-11, ended. Step 0 ran on the harness before the word. Item 8 (b)'s dev server is now the suites' own, started by A's launch (ADV-2026-11-20-19 item 4).
+
+4. **The probe again, before any suite code** (ADV-2026-11-20-19 items 3 and 4), under the suites' own launch, with nothing committed: conditions (a) and (b) of ADV-2026-11-20-18 item 1; and (c), after A is killed as E-CRASH-UNLOCK kills it, whether 5180 still answers and whether B's reopen still runs to opened. A failure of any is a stop, and the custodian sends it to the advisor.
+
+5. **Item 6's line (class 3)** (ADV-2026-11-20-18 item 5, its first half as ADV-2026-11-20-19 item 6 keeps it). close_dataset writes its line to standard error only when the release thread does not start. At the bound the suite says whether that line is in A's log, names the log it read, and says so when it could read none; it never reports the line absent from a log it did not read. Under the suites' own launch A's log is e2e/out/app.log, the launcher's, as item 6 says.
+
+6. **The model, the files and the ceiling** are unchanged: the standard worker; Amendment 65 item 2's four files; the e2e group's 425.
+
+7. **Superseded:** nothing. Amendment 65 item 3 ran to its own end condition.
+
+Read the last amendment first.
+
+Nothing above is edited.
