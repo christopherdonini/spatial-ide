@@ -5,7 +5,7 @@
  * B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 54 item 7 (b) and Amendment 57 item 3: the reopen through the REAL `App`, `AdmissionPanel`,
  * `RefusalBlock` and action registry. The harness is `App.save.test.tsx`'s (the SKP transport, the stream manager and the WebGL canvas are
  * stand-ins), with the client's `openProject` answering from a queue the test fills, the two pickers answering from the test, the canvas
- * stand-in counting `applyView`, and the session log captured.
+ * stand-in counting `applyView` and recording it beside `resetFitForNewGeneration` in order, and the session log captured.
  */
 
 import { act, forwardRef, useImperativeHandle } from "react";
@@ -30,6 +30,10 @@ const mocks = vi.hoisted(() => ({
   /** The filter of each `requestViewport`, in order. */
   requests: [] as ({ predicate: string } | null)[],
   applied: [] as { centre: readonly [number, number]; zoom: number }[],
+  /** The canvas stand-in's `resetFitForNewGeneration` and `applyView` calls, in one list, in order (Amendment 60 item 4). */
+  fitCalls: [] as ({ call: "reset" } | { call: "applyView"; view: { centre: readonly [number, number]; zoom: number } })[],
+  /** When true, the client's `viewportQuery` (the candidate session's untiled first look) is held and never answers. */
+  holdUntiled: false,
   logs: [] as { level: string; message: string }[],
 }));
 
@@ -73,6 +77,7 @@ vi.mock("./skp/client", () => {
       return { state: "requested" };
     },
     viewportQuery: async (): Promise<never> => {
+      if (mocks.holdUntiled) return new Promise<never>(() => {});
       throw new Error("viewportQuery must not be reached directly -- ViewportStreamManager is mocked at the module boundary");
     },
     recordStep: async (): Promise<Record<string, never>> => ({}),
@@ -122,7 +127,9 @@ vi.mock("./canvas/WorkingCanvas", () => {
         pushBatch: () => 0,
         clearStream: () => {},
         fitToBounds: () => true,
-        resetFitForNewGeneration: () => {},
+        resetFitForNewGeneration: () => {
+          mocks.fitCalls.push({ call: "reset" });
+        },
         getResidentCounts: () => ({ totalResidentVertices: 0, totalResidentFeatures: 0 }),
         armFirstPixelRenderHook: () => false,
         disarmFirstPixelRenderHook: () => true,
@@ -140,6 +147,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
         currentView: () => ({ centre: [2_600_050.5, 1_200_050.25], zoom: 7.5 }),
         applyView: (view) => {
           mocks.applied.push(view);
+          mocks.fitCalls.push({ call: "applyView", view });
         },
       }),
       []
@@ -218,7 +226,7 @@ describe("App: the reopen (B2 piece 1c, Amendment 54), through the real App", ()
   let root: Root;
 
   beforeEach(() => {
-    Object.assign(mocks, { opens: 0, datasets: 0, reopens: [], replies: [], cancels: [], saves: [], folderPicks: 0, files: [], filePicks: 0, requests: [], applied: [], logs: [] });
+    Object.assign(mocks, { opens: 0, datasets: 0, reopens: [], replies: [], cancels: [], saves: [], folderPicks: 0, files: [], filePicks: 0, requests: [], applied: [], fitCalls: [], holdUntiled: false, logs: [] });
     setResidencyArm("baseline");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -353,6 +361,20 @@ describe("App: the reopen (B2 piece 1c, Amendment 54), through the real App", ()
     await reopen(opened({ view: { state: "saved-in-another-space", basis } }));
     expect(mocks.applied, "no camera write; the canvas's own fit runs").toHaveLength(1);
     expect(texts(".reopen-notice")).toEqual([viewNotAppliedNotice(shownText(basis))]);
+  });
+
+  // RECORDED MUTATION for this case (Amendment 60 item 4): in App's `[admitted]` effect the saved view is written before the first look's call, as at
+  // da94ae0b. Expected failure: a reset of the fit follows the write.
+  it("a reopen's saved view is written once, after the first look's call resets the fit, and no reset follows it (Amendment 60 item 4)", async () => {
+    // The candidate arm, the app's default, whose first look (`reissueUnrestricted`, the real session) resets the fit before its first await.
+    expect(setResidencyArm("candidate")).toEqual({ ok: true });
+    mocks.holdUntiled = true;
+    await reopen(opened());
+    const writes = mocks.fitCalls.flatMap((c, i) => (c.call === "applyView" ? [i] : []));
+    expect(writes, "one write").toHaveLength(1);
+    expect(mocks.fitCalls.slice(writes[0] + 1).filter((c) => c.call === "reset"), "no reset after the write").toEqual([]);
+    expect(mocks.fitCalls.slice(0, writes[0]).some((c) => c.call === "reset"), "the first look's reset, before the write").toBe(true);
+    expect(mocks.applied, "the saved view, bit for bit").toEqual([{ centre: CENTRE, zoom: ZOOM }]);
   });
 
   // RECORDED MUTATION for T-8: in App's reopen handler the saved filter is written in an effect after the admission's render. Expected failure:
