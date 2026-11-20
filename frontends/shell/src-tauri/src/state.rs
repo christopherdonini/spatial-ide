@@ -13,7 +13,8 @@ use std::sync::Mutex;
 pub struct DataPlaneHandle {
     pub port: u16,
     /// The data plane's own session (`RunningDataPlane::session`, cloned at startup): its token is
-    /// what `binding_data_plane_attach` hands out and what `binding_log_session_event` redacts.
+    /// what `binding_data_plane_attach` hands out, and what `SessionLog::append_redacted` redacts
+    /// when `binding_log_session_event` passes this session to it.
     pub session: spatial_data_plane::Session,
 }
 
@@ -22,9 +23,10 @@ pub struct DataPlaneHandle {
 /// handler's output outlives the session, not so the wire can carry anything through it.
 ///
 /// The session token does not reach this file through the page's lines:
-/// `binding_log_session_event` (`commands.rs`) passes the page's `level` and `message` through the
-/// data plane's `Session::redact`, which replaces every occurrence of the token's exact text with
-/// `<redacted>`, before it calls `append`. The host's own lines are composed in this crate and take
+/// `binding_log_session_event` (`commands.rs`) writes them through `append_redacted`, which passes
+/// the page's `level` and `message` through the data plane's `Session::redact`, replacing every
+/// occurrence of the token's exact text with `<redacted>`, and then calls `append`. The host's own
+/// lines are composed in this crate and take
 /// no token, with one exception that ordinary use does not reach: the origin self-check (`lib.rs`,
 /// `on_page_load`) writes the main window's actual origin, or its whole URL when that URL has no
 /// host, unredacted, so a page script that navigates the main window to an address holding the
@@ -61,7 +63,7 @@ impl SessionLog {
     /// U+2029. A text holding none of those is written as given. No length bound is applied. Nor
     /// does this make a line's fields always separable: a `level` holding a space, or a backslash
     /// followed by `n` in either text, is written as given. The page's texts reach this already
-    /// redacted (`binding_log_session_event`); the rule replaces characters and removes none, and
+    /// redacted ([`Self::append_redacted`]); the rule replaces characters and removes none, and
     /// the token is hex, so running it after the redaction cannot change what the redaction caught.
     pub fn append(&self, level: &str, message: &str) {
         let ms = std::time::SystemTime::now()

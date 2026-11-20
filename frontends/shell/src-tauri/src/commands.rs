@@ -14,12 +14,10 @@
 //!   command catalog and from any future conformance suite (SKP-V0.md §4 item 1).
 //!
 //! **This file contains no logic** beyond decode → call one `SkpHost`/state method → serialize
-//! (`close_dataset` also starts [`Projects::release_ended`], after the host's close, and
-//! `binding_log_session_event` passes the page's text through the data plane's `Session::redact`
-//! before the append) — docs/02's "frontends: clients only, no logic" applied to the Rust half of a
-//! client. `lib.rs` lists every command below in its `tauri::generate_handler!` call; adding one
-//! here without adding it there is a command JS can never reach, which is the reason there is
-//! exactly one list.
+//! (`close_dataset` also starts [`Projects::release_ended`], after the host's close) — docs/02's
+//! "frontends: clients only, no logic" applied to the Rust half of a client. `lib.rs` lists every
+//! command below in its `tauri::generate_handler!` call; adding one here without adding it there is
+//! a command JS can never reach, which is the reason there is exactly one list.
 
 use std::sync::{Arc, Mutex};
 
