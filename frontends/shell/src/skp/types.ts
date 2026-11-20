@@ -379,3 +379,79 @@ export interface DatasetSessionEnded {
   session: string;
   reason: EndReason;
 }
+
+/** `skp/0.14`, `open_project`: the client's answer to a `question` reply. */
+export type ReopenAnswer = "copy" | "same";
+
+/** `skp/0.14`: a reopen's request. `answer` and `relink` are always present, `null` for none; `folder` is an absolute UTF-8 path (SKP-V0.md section 12.2). */
+export interface OpenProjectRequest {
+  skp: string;
+  folder: string;
+  cancel_key: string;
+  answer: ReopenAnswer | null;
+  relink: string | null;
+}
+
+/** Whether the saved view applies to the reopened data. `basis` names both spaces by identifiers, each cut by the kernel at 262 bytes, and holds no path. */
+export type ReopenView = { state: "applies" } | { state: "saved-in-another-space"; basis: string };
+
+/** A component of the file's observation that differs, in the engine's own words. */
+export type ObservedChange = "size" | "mtime" | "footer-length" | "footer-hash";
+
+/** A claim of the admission that differs from the one the project file recorded. */
+export type AdmissionChange = "crs" | "identity";
+
+/** What differs between the project file's reference to the data and the data as opened; names only. Both lists are empty exactly when no component differed. */
+export interface ReopenCheck {
+  observed: ObservedChange[];
+  admission: AdmissionChange[];
+}
+
+/** Why a lineage file was refused whole: a reason, and a line number where there is one. No rule text crosses. */
+export type LineageRefusal =
+  | { reason: "over-bound"; line: number | null; limit: number }
+  | { reason: "damaged"; line: number }
+  | { reason: "unreadable" }
+  | { reason: "through-link" };
+
+/** The lineage file in the project folder, against the lineage the project file records. */
+export type FolderLineageFact =
+  | "absent"
+  | "not-read"
+  | "recorded"
+  | "recorded-with-lines-after"
+  | "not-the-recorded-one"
+  | { refused: LineageRefusal };
+
+/** The previous lineage file kept on this machine. */
+export type PreviousLineageFact = "absent" | "used" | "not-the-recorded-one" | { refused: LineageRefusal };
+
+/** Two facts about the lineage files of a reopen. `previous_file` is `null` where there was none to look for. */
+export interface ReopenLineage {
+  folder_file: FolderLineageFact;
+  previous_file: PreviousLineageFact | null;
+}
+
+/** A reopened project. `project` is its identity, a new one after the answer `copy`. `dataset` and `session` are what `open_dataset` returns. */
+export interface OpenedProject {
+  project: string;
+  dataset: string;
+  session: string;
+  workspace: ProjectWorkspace;
+  view: ReopenView;
+  check: ReopenCheck;
+  lineage: ReopenLineage;
+}
+
+/** The folder is not one the machine remembers for the project, and the folder it remembers first still holds a project of this identity or one it cannot read. */
+export interface ReopenQuestion {
+  kind: "copy-or-same";
+}
+
+/** No file was found for the data. `file_name` is a last name, never a path, cut by the kernel at 262 bytes, and `null` when no location is recorded. */
+export interface ReopenNotFound {
+  file_name: string | null;
+}
+
+/** `skp/0.14`: one of three replies, externally tagged. No reply carries a path. */
+export type OpenProjectResponse = { opened: OpenedProject } | { question: ReopenQuestion } | { not_found: ReopenNotFound };

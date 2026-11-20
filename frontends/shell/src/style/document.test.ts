@@ -201,3 +201,53 @@ describe("the vector's match rows through the shell's path (PB-U4)", () => {
     expect(mixed.resolve("zone-a").fillColor, "the same text in lower case is another value").toBe("#cccccc");
   });
 });
+
+import { colourByNotRestoredNotice } from "../project/reopenNotices";
+import { readStyleDocument } from "./document";
+
+describe("readStyleDocument (B2 piece 1c, Amendment 54 T-9, O-18)", () => {
+  const MATCHED: StyleState = {
+    fillColor: DEFAULT_STYLE_STATE.fillColor,
+    fillOpacity: 0.5,
+    outlineColor: "#112233",
+    outlineWidth: 2.5,
+    fillMatch: {
+      column: "zone",
+      cases: [
+        { when: "r", then: "#aa0000" },
+        { when: "c", then: "#00aa00" },
+      ],
+      onNull: "#cccccc",
+      onUnmatched: "#eeeeee",
+    },
+  };
+
+  // RECORDED MUTATION for T-9: in `readStyleDocument` (style/document.ts) the match is read without its cases. Expected failure: the state's match is member
+  // for member the saved one in the first assertion below, and is not.
+  it("the style document reads back; a Colour by whose column is gone keeps the rest and says so", () => {
+    const literal = readStyleDocument({ ...toStyleDocument(DEFAULT_STYLE_STATE) }, ["zone"]);
+    expect(literal, "a literal fill reads back whole").toEqual({ state: DEFAULT_STYLE_STATE, colourByNotRestored: null });
+
+    const matched = readStyleDocument({ ...toStyleDocument(MATCHED) }, ["area", "zone"]);
+    expect(matched?.colourByNotRestored).toBeNull();
+    expect(matched?.state.fillMatch, "the match, member for member").toEqual(MATCHED.fillMatch);
+    expect(matched?.state.fillOpacity).toBe(0.5);
+    expect(matched?.state.outlineColor).toBe("#112233");
+    expect(matched?.state.outlineWidth).toBe(2.5);
+    expect(toStyleDocument(matched!.state), "and the document it writes is the one it read").toEqual(toStyleDocument(MATCHED));
+
+    const gone = readStyleDocument({ ...toStyleDocument(MATCHED) }, ["area"]);
+    expect(gone?.colourByNotRestored, "the column the data no longer offers").toBe("zone");
+    expect(gone?.state.fillMatch, "the match is not applied").toBeNull();
+    expect(gone?.state.fillColor, "the fill takes a literal").toMatch(/^#[0-9a-f]{6}$/);
+    expect(gone?.state.fillOpacity, "the rest is applied").toBe(0.5);
+    expect(gone?.state.outlineColor).toBe("#112233");
+    expect(gone?.state.outlineWidth).toBe(2.5);
+    expect(colourByNotRestoredNotice(gone!.colourByNotRestored!), "O-18's place names the column").toContain("zone");
+  });
+
+  it("a document outside the shell's own shape is not read", () => {
+    expect(readStyleDocument({ style_version: 2 }, [])).toBeNull();
+    expect(readStyleDocument({ style_version: 1, layer: { geometry: "polygon" } }, [])).toBeNull();
+  });
+});

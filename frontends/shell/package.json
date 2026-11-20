@@ -43,6 +43,7 @@
     "e2e:recentre-crossing": "node e2e/recentre-crossing.mjs",
     "e2e:open-fills-fit-view": "node e2e/open-fills-fit-view.mjs",
     "e2e:colour": "node e2e/colour.mjs",
+    "e2e:reopen": "node e2e/reopen.mjs",
     "test:residency-trace": "node e2e/residencyTrace.test.mjs",
     "test:citation-integrity": "node e2e/citationIntegrity.test.mjs",
     "test:export-elapsed": "node e2e/exportElapsed.test.mjs",

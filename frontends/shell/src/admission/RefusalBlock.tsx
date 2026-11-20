@@ -20,9 +20,14 @@ import { FormattedRefusal, refusalGuidance } from "./formatRefusal";
  * blanket cut-2 note this block used to render (`remediationIsCut2` + a fixed sentence) is gone
  * entirely (NEXT-CUT.md P3 item G); `refusalGuidance` below replaces it with copy specific to the
  * one code (I1) and the two codes (D) that need product framing beyond `message`.
+ *
+ * **At a reopen** (B2 piece 1c, Amendment 54 item 5 (g); Amendment 56 item 4), two optional props: `reopen` withholds the guidance of a code
+ * whose guidance names the user's own assertion, since a reopen's claims are the project file's (`engine.crs_assertion_conflict` alone; every
+ * other code keeps its guidance), and `owner` is the owner's place for the code, shown inside the block after the fields. With neither given,
+ * the block renders as it did before them.
  */
-export default function RefusalBlock({ refusal }: { refusal: FormattedRefusal }) {
-  const guidance = refusalGuidance(refusal.code);
+export default function RefusalBlock({ refusal, reopen = false, owner = null }: { refusal: FormattedRefusal; reopen?: boolean; owner?: string | null }) {
+  const guidance = reopen && ASSERTION_GUIDANCE_CODES.has(refusal.code) ? null : refusalGuidance(refusal.code);
   return (
     <div className="admission-refusal" role="alert">
       <div className="admission-refusal-code">{refusal.code}</div>
@@ -37,7 +42,11 @@ export default function RefusalBlock({ refusal }: { refusal: FormattedRefusal })
           ))}
         </dl>
       )}
+      {owner !== null && <p className="admission-refusal-owner">{owner}</p>}
       {guidance !== null && <p className="admission-refusal-guidance">{guidance}</p>}
     </div>
   );
 }
+
+/** The codes whose guidance names the user's own assertion: withheld at a reopen. */
+const ASSERTION_GUIDANCE_CODES: ReadonlySet<string> = new Set(["engine.crs_assertion_conflict"]);

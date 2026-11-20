@@ -154,6 +154,13 @@ export interface WorkingCanvasHandle {
    * the candidate session's first-look terminal (`candidateArmSession.ts`'s untiled sink, through `CandidateArmSessionDeps.canvas`),
    * which plans this box. Optional in the type only, as `currentView?` is; the component always provides it. */
   shownViewportBbox?(): AuthoritativeBbox | null;
+  /** B2 piece 1c, Amendment 54 O-17: writes a saved view to the camera, through the frame origin (ADR-010 rule 1). `view.centre` is a dataset-space
+   * point, as `currentView` answers it; the offset frame is recentred on it, as a fit recentres it, and the camera's local target is the
+   * centre minus the origin, so that `currentView` answers the saved centre and zoom bit for bit. It marks the one-shot auto-fit done, so that
+   * the data of the first look does not move the camera again. It reports no viewport and issues no query (it goes through `fitToExtent` unreported, so the
+   * box it shows goes to `onViewShown` as an auto-fit's does); the caller's first look asks for what it needs. Nothing is reprojected: the caller applies it only when the saved view's space is the data's (V3). Its product caller
+   * is the reopen's workspace apply (Amendment 54 item 5 (h)). Optional in the type only, as `currentView?` is; the component always provides it. */
+  applyView?(view: { centre: readonly [number, number]; zoom: number }): void;
   /**
    * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
@@ -1413,12 +1420,15 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
    * data for wherever the camera just jumped to; recentring the camera alone (this function's
    * pre-existing behavior) only re-renders whatever happens to already be resident there. Each call
    * site decides `notifyViewport` for itself -- see their own comments for why.
+   *
+   * `saved` (B2 piece 1c, Amendment 54 O-17): a saved view's centre and zoom, written as the fit state in place of the bbox's own; `bbox` is then not read.
    */
-  function fitToExtent(bbox: AuthoritativeBbox, notifyViewport: boolean): void {
+  function fitToExtent(bbox: AuthoritativeBbox, notifyViewport: boolean, saved?: { centre: readonly [number, number]; zoom: number }): void {
     const canvas = canvasElRef.current;
     const widthPx = canvas?.clientWidth || 1;
     const heightPx = canvas?.clientHeight || 1;
-    const fit = fitViewStateForBbox(bbox, widthPx, heightPx);
+    // A saved view (`applyView`) is a fit state of its own: its centre is where the frame origin is recentred, so its local target is [0, 0], the origin subtracted.
+    const fit = saved ? { target: [0, 0] as [number, number], zoom: saved.zoom, centerX: saved.centre[0], centerY: saved.centre[1] } : fitViewStateForBbox(bbox, widthPx, heightPx);
     // Entry 47, D1/D6(a): both read BEFORE the new zoom is written -- see `scheduleHoverRepick`.
     const zoomChanged = fit.zoom !== currentZoomRef.current;
     const readoutWasStanding = lastHoverReadoutRef.current !== null;
@@ -1631,6 +1641,12 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         const camera = cameraRef.current;
         if (camera === null) return null;
         return { centre: [camera.targetX + camera.originX, camera.targetY + camera.originY], zoom: camera.zoom };
+      },
+
+      applyView(view) {
+        // The box is not read: a saved view's fit state is its own centre and zoom (`fitToExtent`'s `saved`), and the write is unreported.
+        fitToExtent({ xmin: view.centre[0], ymin: view.centre[1], xmax: view.centre[0], ymax: view.centre[1] }, false, view);
+        hasAutoFitRef.current = true; // the saved view is the fit: the first look's data does not move the camera again
       },
 
       shownViewportBbox() {

@@ -116,7 +116,7 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
       NO_CANONICAL_SPELLING_NOTICE,
       SELECTION_NOTICE,
     ]);
-    for (const judgment of ["carried", "outside", "through-link"]) {
+    for (const judgment of ["carried", "outside"]) {
       replyWith("written", judgment);
       expect(await saver.save(input()), `${judgment} shows no S18`).toEqual([SAVED_NOTICE]);
     }
@@ -137,5 +137,16 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     });
     expect(await saver.save(input()), "a refusal leaves the next save to ask for the folder again").toEqual([FOLDER_HOLDS_PROJECT_NOTICE]);
     expect(sent().filter((c) => c.command === "binding_pick_project_folder")).toHaveLength(2);
+  });
+
+  // RECORDED MUTATION for T-16: in `createProjectSaver` (project/saveProject.ts) O-9's entry is removed from the saved list. Expected failure: the list
+  // is the saved notice alone.
+  it("T-16: a through-link save shows its notice", async () => {
+    const { THROUGH_LINK_NOTICE } = await import("./saveProject");
+    invokeMock.mockImplementation(async (command: string) => {
+      if (command === "binding_pick_project_folder") return FOLDER;
+      return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written", project_relative: "through-link" };
+    });
+    expect(await newSaver().save(input()), "the saved notice, then O-9's place, and nothing after").toStrictEqual([SAVED_NOTICE, THROUGH_LINK_NOTICE]);
   });
 });

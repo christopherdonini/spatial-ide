@@ -175,7 +175,7 @@ function ConsoleRow({ vm }: { vm: ConsoleRowViewModel }) {
           <div className="console-outcome">{vm.outcome}</div>
           {vm.outcome === "refused" && vm.refusal && (
             <div className="console-refusal">
-              <RefusalBlock refusal={formatRefusal(vm.refusal)} />
+              <RefusalBlock refusal={formatRefusal(vm.refusal)} reopen={vm.commandLabel === "open_project"} />
             </div>
           )}
           {vm.outcome === "threw" && vm.error && <p className="console-error">{vm.error}</p>}

@@ -94,3 +94,41 @@ describe("RefusalBlock, engine.source_changed", () => {
     expect(text).not.toMatch(/reads one snapshot/i);
   });
 });
+
+describe("RefusalBlock at a reopen (Amendment 54 item 5 (g); Amendment 56 item 4; T-11)", () => {
+  const conflict: SkpError = { code: "engine.crs_assertion_conflict", message: "the file declares a CRS", fields: {} };
+  const axis: SkpError = { code: "engine.axis_order_unestablished", message: "no axis order", fields: {} };
+  const markup = (error: SkpError, props: Record<string, unknown> = {}) => renderToStaticMarkup(<RefusalBlock refusal={formatRefusal(error)} {...props} />);
+
+  // RECORDED MUTATION for T-11's two sides: in `RefusalBlock.tsx` the guidance is withheld at a reopen for every code. Expected failure: the
+  // axis-order guidance is missing at a reopen.
+  it("T-11: at a reopen the guidance that names the user's own assertion is withheld, every other code keeps its own, and without the props the block is as before", () => {
+    expect(markup(conflict), "a dataset open shows it").toContain("admission-refusal-guidance");
+    expect(markup(conflict, { reopen: true }), "a reopen withholds it").not.toContain("admission-refusal-guidance");
+    expect(markup(axis, { reopen: true }), "another code keeps its guidance at a reopen").toContain("admission-refusal-guidance");
+    expect(markup(axis, { reopen: true, owner: "the owner's line" }), "the owner's place, inside the block").toContain('<p class="admission-refusal-owner">the owner&#x27;s line</p>');
+    expect(markup(axis, { reopen: false, owner: null })).toBe(markup(axis));
+  });
+
+  // RECORDED MUTATION for T-11's Console case: in `ConsolePanel.tsx` the row passes no reopen prop. Expected failure: the open_project row shows the guidance.
+  it("T-11, the Console: an open_project row withholds the same guidance, and an open_dataset row keeps it", async () => {
+    const { act } = await import("react");
+    const { createRoot } = await import("react-dom/client");
+    const { consoleRecorder } = await import("../console/recorder");
+    const { default: ConsolePanel } = await import("../console/ConsolePanel");
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+    consoleRecorder.record({ skp: "skp/0.14", folder: "C:/p", cancel_key: "k1", answer: null, relink: null }, "open_project").resolveRefused(conflict);
+    consoleRecorder.record({ skp: "skp/0.14", path: "C:/d.parquet", cancel_key: "k2", crs_assertion: null, identity: null }, "open_dataset").resolveRefused(conflict);
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    act(() => root.render(<ConsolePanel />));
+    act(() => container.querySelector<HTMLButtonElement>(".console-disclosure")!.click());
+    const row = (command: string) => [...container.querySelectorAll(".console-entry-class-a")].find((el) => el.querySelector(".console-entry-header")?.textContent === command);
+    expect(row("open_project")?.querySelector(".admission-refusal-code")?.textContent).toBe(conflict.code);
+    expect(row("open_project")?.querySelector(".admission-refusal-guidance"), "withheld on the reopen's row").toBeNull();
+    expect(row("open_dataset")?.querySelector(".admission-refusal-guidance"), "kept on a dataset open's row").not.toBeNull();
+    act(() => root.unmount());
+    container.remove();
+  });
+});

@@ -9,7 +9,7 @@
  * display classes it falls into and, for classes B/C, the fixed prose that accounts for it.
  *
  * NEXT-CUT.md's three-class table:
- *   A -- one of the seven SKP commands: exact serialized request, copyable. Display text is never
+ *   A -- one of the eight SKP commands: exact serialized request, copyable. Display text is never
  *        owned here (I3: "the console owns no command shapes").
  *   B -- a binding-local Tauri command: prose + the command NAME only, never the argument object
  *        (ADR-024's fence), never a copy affordance, never the string "SKP" (I6).
@@ -25,11 +25,11 @@
 
 export type SurfaceClass = "A" | "B" | "C";
 
-/** A class-A row names one of the seven SKP commands. No display field: `console/recorder.ts` +
+/** A class-A row names one of the eight SKP commands. No display field: `console/recorder.ts` +
  * `console/render.ts` own the actual rendered text, sourced from the captured request itself. */
 export interface ClassARow {
   readonly class: "A";
-  /** One of the seven SKP command names, e.g. `"open_dataset"` -- the same string
+  /** One of the eight SKP command names, e.g. `"open_dataset"` -- the same string
    * `skp/client.ts`'s `call()` passes to `invoke` as its first argument. */
   readonly command: string;
 }
@@ -72,12 +72,12 @@ const BINDING_LOCAL_CITATION =
   "host-local, not part of the API; excluded from the SKP catalog (SKP-V0 §4 items 1/3/11/13; " +
   "ADR-024); not callable by a script, plugin, notebook, CLI, or AI client.";
 
-/** The seven SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
- * class-A half of the registry. An eighth command changes `skp/client.ts`, this list, and
+/** The eight SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
+ * class-A half of the registry. A ninth command changes `skp/client.ts`, this list, and
  * `surfaceCompleteness.test.ts`'s derived-set assertion together, or the completeness scan fails
  * the build (NEXT-CUT.md P2's own anti-debt-accrual mechanism). `record_step` (`skp/0.12`) is the
  * sixth, and it is what every committed filter and style edit shows here (B2 piece 1b); `save_project`
- * (`skp/0.13`) is the seventh, and it is what a save shows (B2 piece 1c). */
+ * (`skp/0.13`) is the seventh, and it is what a save shows (B2 piece 1c); `open_project` (`skp/0.14`) is the eighth, and it is what a reopen shows (B2 piece 1c, Amendment 54). */
 const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "open_dataset" },
   { class: "A", command: "describe" },
@@ -86,6 +86,7 @@ const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "close_dataset" },
   { class: "A", command: "record_step" },
   { class: "A", command: "save_project" },
+  { class: "A", command: "open_project" },
 ];
 
 /** The eight binding-local commands plus the dev-only E2E destination seam (NEXT-CUT.md's

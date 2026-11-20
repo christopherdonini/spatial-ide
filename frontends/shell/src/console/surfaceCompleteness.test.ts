@@ -195,15 +195,15 @@ describe("console/surfaceRegistry completeness scan (NEXT-CUT.md P2)", () => {
     });
   });
 
-  describe("class A: the seven SKP commands", () => {
+  describe("class A: the eight SKP commands", () => {
     const derived = deriveSkpCommandSetFromClient();
     // Hard backstop, per NEXT-CUT.md P2: if this ever disagrees with `derived` above, an eighth
     // command has been added to skp/client.ts without updating this list -- update BOTH this
     // array and console/surfaceRegistry.ts's CLASS_A_ROWS together.
-    const expectedSeven = ["cancel", "close_dataset", "describe", "open_dataset", "record_step", "save_project", "viewport_query"];
+    const expectedEight = ["cancel", "close_dataset", "describe", "open_dataset", "open_project", "record_step", "save_project", "viewport_query"];
 
-    it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the seven named commands", () => {
-      expect(derived).toEqual(expectedSeven);
+    it("skp/client.ts's own call(\"<name>\", ...) sites are exactly the eight named commands", () => {
+      expect(derived).toEqual(expectedEight);
     });
 
     it("the registry's class-A command set equals exactly skp/client.ts's derived command set", () => {

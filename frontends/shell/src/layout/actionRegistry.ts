@@ -17,7 +17,8 @@
  * has no chord, bare key or scope words. Their caller is the bar (`/colour`, `/table`); `StudioLayout` runs them itself.
  *
  * B2 piece 1c (Save project) adds `project.save`: no chord, no bare key, no scope words, no top-bar toggle. Its callers are the bar (`/save`) and App's own control, which
- * takes its label from the entry; `StudioLayout` runs it through `onSaveProject`.
+ * takes its label from the entry; `StudioLayout` runs it through `onSaveProject`. The reopen (Amendment 54 item 5 (m)) adds `project.open` the same way, appended last:
+ * its callers are the bar (O-19b's word) and the Layers panel's Open project control, and `StudioLayout` runs it through `onOpenProject`.
  *
  * Callers: `StudioLayout`'s one `keydown` listener on `window` (via `matchChord`, `matchToolKey` and `matchCommandOpener`), the three
  * toggle buttons in the top bar and the Layers row's button (each by id); the tool switch's two buttons and the
@@ -41,7 +42,8 @@ export type ActionId =
   | "filter.addClause"
   | "project.save"
   | "layer.revealStyle"
-  | "layer.revealTable";
+  | "layer.revealTable"
+  | "project.open";
 
 /** A chord is the modifier (Mod) plus one letter. `letter` is the Latin letter matched on
  * `event.key`; `code` is the physical key matched instead when `event.key` is not a Latin letter (a
@@ -84,6 +86,8 @@ export const ACTIONS: readonly ActionEntry[] = [
   // The labels are P6 placeholders, so marked; the words are the bar's `/colour` and `/table`.
   { id: "layer.revealStyle", label: "[P6 placeholder] Colour by", chord: null, bareKey: null, scopeWords: null, command: "colour", takes: "nothing" },
   { id: "layer.revealTable", label: "[P6 placeholder] Table", chord: null, bareKey: null, scopeWords: null, command: "table", takes: "nothing" },
+  // O-19b: the label (a P6 placeholder, so marked) and the bar's word, which carries no marker, as the save's does (ADV-2026-11-20-05 item 6).
+  { id: "project.open", label: "[P6 placeholder] Open project", chord: null, bareKey: null, scopeWords: null, command: "open-project", takes: "nothing" },
 ];
 
 /** The registry's entry for `id`. Every id has one. */

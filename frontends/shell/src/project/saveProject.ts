@@ -9,7 +9,7 @@
  *
  * - **The folder is sent once.** An open's first save asks the native picker (`binding_pick_project_folder`) and sends the folder it gave;
  *   once a save of that open has been confirmed, every later one sends `folder: null`, and the picker is not opened. A save that was refused,
- *   or whose picker was cancelled, leaves the next save to ask again.
+ *   or whose picker was cancelled, leaves the next save to ask again. A reopened open is adopted (`adopt`): the kernel holds its folder already.
  * - **The view is the canvas's.** `view` comes from `WorkingCanvasHandle.currentView`; with none, nothing is sent (`NO_VIEW_NOTICE`).
  * - **A selection made by clicking is not saved.** The workspace has no member for it; a save with one standing says so (`SELECTION_NOTICE`).
  * - **Every string here is a P6 placeholder**, marked as the shell marks them. None is the human's wording.
@@ -29,6 +29,8 @@ export const MARK_WITHHELD_NOTICE = "[P6 placeholder] The session history holds 
 /** S18: the data is inside the project folder, and its path has no canonical spelling on this machine (`project_relative: "no-canonical-spelling"`); the project will not find that file on another machine. */
 export const NO_CANONICAL_SPELLING_NOTICE =
   "[P6 placeholder] The data is inside the project folder, but its path has no canonical spelling on this machine. The project will not find that file on another machine.";
+/** O-9 (B2 piece 1c, Amendment 54 item 12): the data is inside the project folder, and the path it was opened by reaches it through a link (`project_relative: "through-link"`); the project will not find that file on another machine. */
+export const THROUGH_LINK_NOTICE = "[P6 placeholder] The data is inside the project folder, but the path it was opened by reaches it through a link. The project will not find that file on another machine.";
 /** S6: the selection notice at save. */
 export const SELECTION_NOTICE = "[P6 placeholder] A selection made by clicking is not saved.";
 /** S7: the first save went to a folder that already holds a project. */
@@ -62,6 +64,8 @@ export interface ProjectSaverDeps {
 export interface ProjectSaver {
   /** One save. Answers the notices to show (none when the operator cancelled the folder picker), or `null` when a save is already in flight, which this call did not start. */
   save(input: SaveInput): Promise<readonly string[] | null>;
+  /** O-11 (Amendment 54 item 5 (i)): a reopened open, whose folder the kernel holds already, so that its first save sends `folder: null` and opens no picker. Its caller is App's reopen handler. */
+  adopt(dataset: string): void;
 }
 
 /** The kernel's own code and message for a typed refusal, the error's message otherwise. */
@@ -111,6 +115,7 @@ export function createProjectSaver(deps: ProjectSaverDeps): ProjectSaver {
             SAVED_NOTICE,
             ...(response.history_mark === "withheld" ? [MARK_WITHHELD_NOTICE] : []),
             ...(response.project_relative === "no-canonical-spelling" ? [NO_CANONICAL_SPELLING_NOTICE] : []),
+            ...(response.project_relative === "through-link" ? [THROUGH_LINK_NOTICE] : []),
             ...afterwards,
           ];
         } catch (error) {
@@ -120,6 +125,9 @@ export function createProjectSaver(deps: ProjectSaverDeps): ProjectSaver {
       } finally {
         inFlight = false;
       }
+    },
+    adopt(dataset) {
+      saved.add(dataset);
     },
   };
 }
