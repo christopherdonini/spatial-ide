@@ -419,3 +419,47 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — the words at 0cc509fe, K-4's second mutation and section 8 items 5 and 6, as ADV-2026-11-20-26 and -27 rule them (classes 5 and 1), before the gates
+
+*2026-11-20, by the custodian, under the advisor's rulings ADV-2026-11-20-26 and ADV-2026-11-20-27, filed as state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-26-the-four-clauses-route-ii-made-untrue-the-words-before-the-gates-k-4s-mutation-b-amendment-3.md and state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-27-section-8-item-6-superseded-by-22-item-2-its-new-words-item-5-read-with-amendment-2-item-6.md: the advisor's words under the delegation of 2026-11-13, never the human's. The words of this amendment are the custodian's, except section 8 item 6's new words in item 5, which are the advisor's.*
+
+1. **The build at 0005d0d3** (Amendment 2 items 2, 3, 7 and 8). Worker-high, on the strongest model, made the tests' commit 1b903cff, which failed to build because the method did not yet exist, and then the code commit 0005d0d3. Both were pushed together. The method is `SessionLog::append_redacted`, and the binding's body is its one call. The crate's lib test executable started and ran 80 tests, all passing: the 76 existing ones, unedited, and K-1 to K-4. Each of the five mutations of Amendment 2 item 3 went red by name. The report is state/consults/2026-11-20-session-log-token-redaction-rests-on-page-code-second-brief-worker-report.md.
+
+2. **The four clauses route (ii) made untrue** (class 5; ADV-2026-11-20-26 items 1 to 3).
+   - Section 2.4's words (b), (c) and (e), and the worker's words (f) in `append`'s doc, are replaced in the advisor's words. The standard worker applied them in one doc-only commit, 0cc509fe, on 0005d0d3. Each of its two files is byte-equal, by sha256, to the custodian's file built by script from 0005d0d3 and the ruling's four fences. The report is state/consults/2026-11-20-session-log-token-redaction-rests-on-page-code-words-worker-report.md.
+   - (b): the module doc's paragraph is main's again. For that parenthetical this replaces ADV-2026-11-20-17 item 2.
+   - (c), (e) and (f) name `SessionLog::append_redacted` as where the redaction runs, and the binding as its caller.
+   - (d) stands as written.
+
+3. **K-4's mutation (b)** (ADV-2026-11-20-26 item 4). The standard worker made it at 0cc509fe, uncommitted. The binding kept its call of the method and gained a line that calls the log's `append` with the page's texts. K-4 went red by name at its absence assertion, which named that line. The line was then removed, and nothing was committed from it. The worker's first insert landed outside the body and was removed before any run; only the second was run. Both of K-4's assertions are now seen red.
+
+4. **K-3's added assertion** (class 1; ADV-2026-11-20-26 item 5). K-3's message carries the credential, so K-3 also asserts that the token does not leak. It does so after the line count, which is still its first assertion. That is more than section 4 lists.
+
+5. **Section 8 item 6** (class 5; ADV-2026-11-20-27 items 1 and 2) is superseded by ADV-2026-11-20-22 item 2. From this amendment on it reads, in the advisor's words, byte-copied by script from the ruling's fence:
+
+````
+A test whose credential is anything other than `tok.` followed by the real session's `token_for_delivery()`; or a difference between how a test composes the credential and how `binding_data_plane_attach` composes it.
+````
+
+   The gates read the three tests' composition of the credential against the attach's line, and a difference is a block.
+
+6. **Section 8 item 5** (class 5; ADV-2026-11-20-27 item 3) reads with Amendment 2 item 6. Under route (ii) no `Cargo.toml` entry is left to except, so any dependency or lockfile change at all is a block.
+
+7. **The count** (section 7's commands, B = d7f27ef8; ADV-2026-11-20-26 item 8).
+   - At 0005d0d3: commands.rs 181 and 11, state.rs 62 and 6, lib.rs 1 and 1, Cargo.toml none: 262, against the ceiling of 230.
+   - At 0cc509fe: commands.rs 175 and 7, state.rs 64 and 6, lib.rs 1 and 1, Cargo.toml none: 254.
+   - Both are recorded as counted. The count is taken again at the gated head, and the excess there is class 8 in the closing. Nothing was cut or packed.
+   - At both heads, `--name-only` shows the three source files alone, and the `Cargo.lock` and `Cargo.toml` diffs are empty.
+
+8. **The clippy warning** in `publish.rs`, on `PrepareOutcome`, is not this piece's and is not silenced. It goes to the daily batch (ADV-2026-11-20-26 item 7).
+
+9. **CI** (ADV-2026-11-20-26 item 9; ADV-2026-11-20-24 item 4). At 0005d0d3: 4 workflow runs, each completed success, read at 2026-11-20T21:53:18Z. At 0cc509fe: 4 workflow runs, each completed success, read at 2026-11-20T21:53:18Z.
+
+10. **The gates** (section 9) read 0cc509fe, the gated head, with this amendment on main. The branch does not take main in for it (ADV-2026-11-20-26 item 6).
+
+11. **Superseded:** section 8 item 6's words, by item 5. Nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.
