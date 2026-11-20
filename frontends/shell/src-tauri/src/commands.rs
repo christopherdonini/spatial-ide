@@ -269,8 +269,7 @@ pub fn binding_log_session_event(
     level: String,
     message: String,
 ) {
-    let session = &handle.session;
-    log.append(&session.redact(&level), &session.redact(&message));
+    log.append_redacted(&handle.session, &level, &message);
 }
 
 /// One entry of the pinned, in-tree CRS definition catalog (ADR-026 decision 1(a)), as handed to

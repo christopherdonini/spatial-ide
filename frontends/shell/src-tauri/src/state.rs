@@ -77,6 +77,20 @@ impl SessionLog {
             let _ = f.flush();
         }
     }
+
+    /// Append one line of the page's text, for `binding_log_session_event` (`commands.rs`), its one
+    /// product caller: `level` and `message` each pass through `session`'s `Session::redact`, which
+    /// replaces every occurrence of the session token's exact text with `<redacted>`, and then
+    /// [`Self::append`] writes the two results under its own rule. Text holding the token in any
+    /// other form is not caught (this type's doc).
+    pub fn append_redacted(
+        &self,
+        session: &spatial_data_plane::Session,
+        level: &str,
+        message: &str,
+    ) {
+        self.append(&session.redact(level), &session.redact(message));
+    }
 }
 
 /// One text of a session-log line: each LF as a backslash and `n`; each other Unicode Cc
