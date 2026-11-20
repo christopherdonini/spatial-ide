@@ -4415,3 +4415,38 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 60 — ADV-2026-11-20-12 on P4a's third brief, stop 7 at E-REOPEN R6: the first look's reset undid the saved view, so the write moves after the first look's call in `App.tsx`, O-17 gains a sentence, and a unit case holds the order (classes 5 and 8)
+
+1. **The cause, by ADV-2026-11-20-12 item 1.** At da94ae0b, the `[admitted]` effect of `App.tsx` writes the saved view, and the write marks the one-shot fit done (O-17). Then comes the first look's call, `reissueUnrestricted`. Inside it, before its first await, the call resets the fit for its generation. The first data then fits the camera. So R6 fails in runs w-r1 and w-r2, which stay on record.
+2. **The fix, by ADV-2026-11-20-12 items 2 and 3.**
+   - In `App.tsx` alone, the saved view is written after the first look's call has started, in the same turn of the effect. A comment says why.
+   - The worker places the write so that the order holds in both branches of the effect. It says what it found in the branch that builds no candidate session.
+   - No other product file changes. If the fix needs one, it goes to the advisor before it is written.
+   - What must hold: in an open whose saved view applies, the write comes after the last reset of the fit that the first look's call makes. No reset of the fit follows the write before that look's data is drawn.
+3. **O-17's new sentence (class 5), by ADV-2026-11-20-12 item 5.** It is placed after O-17's last sentence, copied by script from the ruling's fence:
+
+````
+In an open, the write comes after the first look's call has reset the fit for its generation and before any of that look's data is drawn, and nothing resets the one-shot fit between the write and that data. So the first look's data does not move the camera of a reopen whose saved view applies.
+````
+
+4. **The tests, by ADV-2026-11-20-12 item 4.**
+   - R6, as written.
+   - A new unit case in `App.reopen.test.tsx`. The canvas stand-in records its `resetFitForNewGeneration` and `applyView` calls in one list, in order. The case reopens with a view that applies, and asserts one write and no reset after it.
+   - Its mutation moves the write back to before the first look's call. It must turn red by name.
+   - The case fails at its own commit, before the fix.
+   - If the file cannot see the order as the app runs it, that goes to the advisor. No weaker assertion takes its place.
+   - T-17 stays as it is.
+5. **The commits and the model, by ADV-2026-11-20-12 items 6 and 7.**
+   - The suite's commit and the unit case's commit come before the fix's commit, and the three are pushed together.
+   - The fix and the unit case go to worker-high on the strongest model, on the ground of concurrency. The rest of the third brief stays with the standard worker.
+   - The product group is class 8 at the count, with nothing cut.
+6. **What goes to the advisor, by ADV-2026-11-20-12 item 8:**
+   - a camera moved by anything else after the write, the frame's establishment on the first data among it;
+   - a saved view that returns but not bit for bit, with the difference;
+   - a clause of item 3's sentence that is untrue of the code as built, unreworded.
+7. **Records.** Stop 13 did not fire. The worker moved R5's read to before the first look, and discloses that for the gates. The third brief's hand-back at stop 7 is filed with P4a's records.
+
+Read the last amendment first.
+
+Nothing above is edited.
