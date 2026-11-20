@@ -4479,3 +4479,23 @@ In an open, the write comes right after the first look's call, in the same turn 
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 62 — ADV-2026-11-20-14 on P4a's third brief, stop 13 at E-REOPEN R9 in run w-r3: the suite's late read of the close row, and its count in a ring that drops its oldest (class 3)
+
+1. **Run w-r3, at e35693f2.** That commit is R8's correction by Amendment 61 item 3, made alone after the product commit and not yet pushed. R1 to R8 passed. R9 waited 30 s for the close row of P2's data handle and failed, which is stop 13. E-CHANGED was not reached.
+2. **The late read, by ADV-2026-11-20-14 item 1 (class 3).**
+   - In R9 and E-CHANGED, the suite read the close row after the first look had filled the ring. Amendment 54 item 9's line says the suite reads each row right after its call.
+   - Their read moves into the open's after-call hook, as at R5 and R8. It is a defect of the suite, not of the product.
+   - No row of item 9 changes.
+3. **The count, by ADV-2026-11-20-14 item 2.**
+   - The helper that waits for a close row compared a count of close rows at ok against the count read before the open. A row counted before the open can be dropped from the ring between the two reads. Then the new row does not raise the count, and the wait fails as a stop 13 that is not one.
+   - So the new row is known by its request, not by a count. It is a close row at ok whose request text was not among the close rows read before the open. Each close names its own handle.
+   - It is one change in the helper, and in where the steps take the earlier reading, and it serves all four reads. The worker may choose an equal means, if it rests on no older row staying in the ring. The hand-back says what was done.
+   - A row that is truly dropped before a read made right after its call is still stop 13. It goes to the advisor with the ring's fill.
+4. **The run, by ADV-2026-11-20-14 item 3.** The standard worker makes both changes in one test commit after R8's, then runs the suite once as w-r4. If the e2e group goes past 485, it is class 8 at the count, with nothing cut. R8's commit and this one are pushed with the rest of the third brief.
+5. **The closing, by ADV-2026-11-20-14 item 4.** It names no place for f-r1's refused R8, because that run's record holds none.
+6. **Records.** The third brief's hand-back at R9 is filed with P4a's records, with its hold lines masked.
+
+Read the last amendment first.
+
+Nothing above is edited.
