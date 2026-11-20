@@ -47,6 +47,7 @@ import {
   REOPEN_LOCATOR_REFUSAL_NOTICE,
   REOPEN_REFUSAL_NOTICE,
   viewNotAppliedNotice,
+  workspaceTextNotice,
 } from "./reopenNotices";
 import { shownText } from "./shownText";
 
@@ -140,7 +141,8 @@ describe("the bound at a reopen's run (Amendment 54 item 5 (j) and (l), T-12)", 
       },
       ["id"]
     );
-    expect(applied.notices).toEqual([viewNotAppliedNotice(shownText(basis)), colourByNotRestoredNotice(shownText(column))]);
+    // The column holds U+202E, so W-TEXT names the style, between S19 and O-18 (reopenApply's order).
+    expect(applied.notices).toEqual([viewNotAppliedNotice(shownText(basis)), workspaceTextNotice(["style"]), colourByNotRestoredNotice(shownText(column))]);
     expect(applied.style.fillMatch).toBeNull();
     expect(applied.view, "not applied").toBeNull();
   });
