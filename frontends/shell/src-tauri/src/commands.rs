@@ -689,3 +689,169 @@ pub async fn binding_publish_prepare_e2e_destination(
     .await
     .map_err(|e| format!("binding_publish_prepare_e2e_destination panicked: {e}"))
 }
+
+// -------------------------------------------------------------------------------------------
+// Tests: the session log's binding, invoked through tauri's mock runtime as the page invokes it
+// -------------------------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use std::path::PathBuf;
+
+    use spatial_data_plane::session::REDACTED;
+    use spatial_data_plane::Session;
+    use tauri::test::{
+        get_ipc_response, mock_builder, mock_context, noop_assets, MockRuntime, INVOKE_KEY,
+    };
+    use tauri::{App, WebviewWindow, WebviewWindowBuilder};
+
+    use crate::state::{DataPlaneHandle, SessionLog};
+
+    /// One mock app, with the two commands, a `Session` of its own, and a `SessionLog` in a fresh
+    /// folder of its own, made as `publish.rs`'s `workspace` makes one: the log's file name has
+    /// one-second resolution (`SessionLog::open`).
+    struct Shell {
+        _app: App<MockRuntime>,
+        webview: WebviewWindow<MockRuntime>,
+        session: Session,
+        log_path: PathBuf,
+    }
+
+    fn shell(name: &str) -> Shell {
+        let dir = std::env::temp_dir()
+            .join("spatial-ide-shell-session-log-tests")
+            .join(name);
+        let _ = std::fs::remove_dir_all(&dir);
+        let log = SessionLog::open(&dir).unwrap();
+        let log_path = log.path.clone();
+        let session = Session::with_origin("http://tauri.localhost".to_string()).unwrap();
+        let app = mock_builder()
+            .manage(DataPlaneHandle {
+                port: 0,
+                session: session.clone(),
+            })
+            .manage(log)
+            .invoke_handler(tauri::generate_handler![
+                super::binding_data_plane_attach,
+                super::binding_log_session_event,
+            ])
+            .build(mock_context(noop_assets()))
+            .unwrap();
+        let webview = WebviewWindowBuilder::new(&app, "main", Default::default())
+            .build()
+            .unwrap();
+        Shell {
+            _app: app,
+            webview,
+            session,
+            log_path,
+        }
+    }
+
+    /// Invokes `cmd` with `args` as a JSON body, as `invoke(cmd, args)` does, from the page's URL.
+    fn invoke(shell: &Shell, cmd: &str, args: serde_json::Value) -> serde_json::Value {
+        let request = tauri::webview::InvokeRequest {
+            cmd: cmd.into(),
+            callback: tauri::ipc::CallbackFn(0),
+            error: tauri::ipc::CallbackFn(1),
+            url: shell.webview.url().unwrap(),
+            body: tauri::ipc::InvokeBody::Json(args),
+            headers: Default::default(),
+            invoke_key: INVOKE_KEY.to_string(),
+        };
+        let reply = get_ipc_response(&shell.webview, request).unwrap();
+        reply.deserialize().unwrap()
+    }
+
+    /// The credential as the page takes it from the attach's reply (`subprotocols[1]`), checked to
+    /// be `tok.` and the session's token. `assert!`, not `assert_eq!`: a failure prints no token.
+    fn credential(shell: &Shell) -> String {
+        let reply = invoke(shell, "binding_data_plane_attach", serde_json::json!({}));
+        let credential = reply["subprotocols"][1].as_str().unwrap().to_string();
+        assert!(credential == format!("tok.{}", shell.session.token_for_delivery()));
+        credential
+    }
+
+    /// `logSessionEvent`'s invoke: the argument names `level` and `message`.
+    fn log(shell: &Shell, level: &str, message: &str) {
+        let args = serde_json::json!({ "level": level, "message": message });
+        let reply = invoke(shell, "binding_log_session_event", args);
+        assert_eq!(reply, serde_json::Value::Null);
+    }
+
+    /// A line after its `<unix-ms>` stamp and the space, its LF kept.
+    fn after_stamp(line: &str) -> &str {
+        let (ms, rest) = line.split_once(' ').unwrap();
+        assert!(!ms.is_empty() && ms.bytes().all(|b| b.is_ascii_digit()));
+        rest
+    }
+
+    /// What no line may hold but its final LF: a Unicode Cc, a Bidi_Control character, U+2028 or
+    /// U+2029.
+    fn hidden(c: char) -> bool {
+        c.is_control()
+            || matches!(
+                c,
+                '\u{061C}' | '\u{200E}' | '\u{200F}' | '\u{202A}'..='\u{202E}'
+            )
+            || matches!(c, '\u{2066}'..='\u{2069}' | '\u{2028}' | '\u{2029}')
+    }
+
+    #[test]
+    fn a_token_in_the_pages_message_never_reaches_the_session_log() {
+        let shell = shell("k1");
+        let credential = credential(&shell);
+        log(
+            &shell,
+            "error",
+            &format!("offered {credential}, then {credential}."),
+        );
+        let text = std::fs::read_to_string(&shell.log_path).unwrap();
+        assert!(!shell.session.leaks_into(&text));
+        let lines: Vec<&str> = text.split_inclusive('\n').collect();
+        assert_eq!(lines.len(), 1);
+        let expected = format!("error offered tok.{REDACTED}, then tok.{REDACTED}.\n");
+        assert_eq!(after_stamp(lines[0]), expected);
+    }
+
+    #[test]
+    fn a_token_in_the_pages_level_never_reaches_the_session_log() {
+        let shell = shell("k2");
+        let credential = credential(&shell);
+        log(
+            &shell,
+            &format!("watchdog:{credential}:end"),
+            "the page's message",
+        );
+        let text = std::fs::read_to_string(&shell.log_path).unwrap();
+        assert!(!shell.session.leaks_into(&text));
+        let lines: Vec<&str> = text.split_inclusive('\n').collect();
+        assert_eq!(lines.len(), 1);
+        let expected = format!("watchdog:tok.{REDACTED}:end the page's message\n");
+        assert_eq!(after_stamp(lines[0]), expected);
+    }
+
+    #[test]
+    fn a_control_character_in_the_pages_text_never_breaks_the_session_log_line() {
+        let shell = shell("k3");
+        credential(&shell);
+        let (level, message) = (
+            "lv\r\u{7}\u{202E}\u{2028}\nend",
+            "msg\r\u{7}\u{202E}\u{2028}\nend",
+        );
+        log(&shell, level, message);
+        log(&shell, "info", "a plain line, as before");
+        let text = std::fs::read_to_string(&shell.log_path).unwrap();
+        // The line count first: two lines, each ending in its one LF.
+        assert_eq!(text.matches('\n').count(), 2);
+        assert!(text.ends_with('\n'));
+        let lines: Vec<&str> = text.split_inclusive('\n').collect();
+        for line in &lines {
+            assert!(!line[..line.len() - 1].chars().any(hidden));
+        }
+        let r = '\u{FFFD}';
+        let expected = format!("lv{r}{r}{r}{r}\\nend msg{r}{r}{r}{r}\\nend\n");
+        assert_eq!(after_stamp(lines[0]), expected);
+        assert_eq!(after_stamp(lines[1]), "info a plain line, as before\n");
+    }
+}
