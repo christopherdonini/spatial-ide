@@ -4317,3 +4317,23 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 55 — P4a's stop 8 at its first brief's step 0, closed by ADV-2026-11-20-06: the lineage facts' places that T-14 maps, replacing packet P-7's table (class 5)
+
+1. **The table** (ADV-2026-11-20-06 item 1). It replaces packet P-7's table, which ADV-2026-11-20-04 item 2 had ruled.
+   - S17 shows exactly when the project file records a lineage: `folder_file` is `recorded` or `recorded-with-lines-after`, or `previous_file` is not `null`.
+   - S16 shows once, before S17, when either file is `not-the-recorded-one`.
+   - S17's refused line shows before S17, once for each refused file (ADV-2026-11-20-05 item 3).
+   - No place shows for `absent` with `null`, or for `not-read` with `null`.
+   - So `used`, and `absent` with `absent`, take S17, where P-7 gave them none.
+2. **T-14** asserts this table, with a case for each line of item 1, `used` and `absent` with `absent` among them. Its mutation stays. The shell maps by the rule, and adds no case for a pair the kernel does not send (ADV-2026-11-20-06 item 3).
+3. **Records.**
+   - Stop 8 at P4a's first brief is closed by that ruling (its item 4). For every later brief, Amendment 54 item 15's stop 8 reads against item 1's table.
+   - The first brief resumed at its step 1, with no lineage fact mapped to a place. T-14 is the second brief's.
+   - The first brief's hand-back is filed with P4a's records.
+   - S17's words stand as ADV-2026-11-20-05 rules them (ADV-2026-11-20-06 item 2).
+4. **Superseded:** packet P-7's table, wherever Amendment 54 refers to it: item 7 (b)'s T-14 row, item 12's S16 and S17 row, and item 15's stop 8. Nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.
