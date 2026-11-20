@@ -4357,3 +4357,20 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 57 — P4a's second brief's stop 11 at step 0, closed by ADV-2026-11-20-09: a saved style the shell cannot show gets a place of its own, O-18's words are replaced, and the R-CODE clause on a copy's failed write is corrected (classes 5 and 3)
+
+1. **W-STYLE, by ADV-2026-11-20-09 item 1.** A reopen whose saved style `readStyleDocument` answers with none is not refused. The saved style is not applied, the default style is shown, and a new owner place, W-STYLE, says so. It shows no text of the file, and it shows for every style the reader answers with none, a `match` on `fill_opacity`, `outline_color` or `outline_width` among them. The filter, the clauses and the view apply as for any reopen. Item 12's places gain W-STYLE, beside O-18, with no slot.
+2. **The words, by ADV-2026-11-20-09 item 2.** W-STYLE's words and O-18's are the two lines of that ruling's fence. O-18's line replaces its line of ADV-2026-11-20-05 item 2, and nothing else of that ruling changes. Both are copied by script, as the others were: W-STYLE's is added to `project/reopenNotices.ts`, and O-18's text there is replaced by script. Never a typed word. They count in the strings file, and an overrun is class 8.
+3. **T-9's case, by ADV-2026-11-20-09 item 3.** T-9 gains a case. A style with a `match` on one of the three properties is not applied, the state is the default, and W-STYLE's place shows. Its mutation: when the reader answers with none, the apply keeps the style the window held and shows no place. It must turn red at the state and at W-STYLE's place. No test asserts the words.
+4. **The R-CODE clause, corrected (class 3), by ADV-2026-11-20-09 item 4.** In item 12's R-CODE row, the clause on `project_file_unwritable` now reads: a copy's replace; its text is a fixed phrase and the operating system's error, or the rename's count and its last error. R-CODE's words and the bound are unchanged.
+5. **Step 0's other answers, by ADV-2026-11-20-09 item 5.**
+   - The workspace apply's tests are in `App.reopen.test.tsx`, a new file beside `App.tsx`, inside ADV-2026-11-20-04 item 4 (c).
+   - Item 5 (g)'s guidance is withheld for `engine.crs_assertion_conflict` alone.
+   - `ProjectUri`'s length is fixed by the reader's grammar.
+   - The first brief left two doc defects in `console/surfaceRegistry.ts`: a doc line became a lone `&`, and the table's class-A line still says seven commands. The resumed second brief fixes both. The gates read them, and the closing names them, class 1.
+6. **Records.** Items 1 to 4 are declared here before their code. The second brief resumes at its step 1, and its first hand-back, the stop, is filed with P4a's records.
+
+Read the last amendment first.
+
+Nothing above is edited.
