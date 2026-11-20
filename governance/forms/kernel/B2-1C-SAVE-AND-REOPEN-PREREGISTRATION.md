@@ -4317,3 +4317,185 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 55 — P4a's stop 8 at its first brief's step 0, closed by ADV-2026-11-20-06: the lineage facts' places that T-14 maps, replacing packet P-7's table (class 5)
+
+1. **The table** (ADV-2026-11-20-06 item 1). It replaces packet P-7's table, which ADV-2026-11-20-04 item 2 had ruled.
+   - S17 shows exactly when the project file records a lineage: `folder_file` is `recorded` or `recorded-with-lines-after`, or `previous_file` is not `null`.
+   - S16 shows once, before S17, when either file is `not-the-recorded-one`.
+   - S17's refused line shows before S17, once for each refused file (ADV-2026-11-20-05 item 3).
+   - No place shows for `absent` with `null`, or for `not-read` with `null`.
+   - So `used`, and `absent` with `absent`, take S17, where P-7 gave them none.
+2. **T-14** asserts this table, with a case for each line of item 1, `used` and `absent` with `absent` among them. Its mutation stays. The shell maps by the rule, and adds no case for a pair the kernel does not send (ADV-2026-11-20-06 item 3).
+3. **Records.**
+   - Stop 8 at P4a's first brief is closed by that ruling (its item 4). For every later brief, Amendment 54 item 15's stop 8 reads against item 1's table.
+   - The first brief resumed at its step 1, with no lineage fact mapped to a place. T-14 is the second brief's.
+   - The first brief's hand-back is filed with P4a's records.
+   - S17's words stand as ADV-2026-11-20-05 rules them (ADV-2026-11-20-06 item 2).
+4. **Superseded:** packet P-7's table, wherever Amendment 54 refers to it: item 7 (b)'s T-14 row, item 12's S16 and S17 row, and item 15's stop 8. Nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 56 — P4a's first brief at its head: stop 3 closed by one more declared test edit, the strings file and the camera tests' file recorded (ADV-2026-11-20-07); three files join item 7 (a)'s list before their code (ADV-2026-11-20-08) (class 9)
+
+1. **The loop's edit (I3, class 9), by ADV-2026-11-20-07 item 1.** In the test of `project/saveProject.test.ts` that saves with each `project_relative` judgment, the loop's list loses `through-link` and keeps `carried` and `outside`. Nothing else of that test changes: its name, its message and its other assertions stay. T-16 asserts the whole list for `through-link`: `SAVED_NOTICE`, then O-9's place, and nothing after. The second brief makes the edit in its tests' commit, before O-9's code. The reviewer confirms by diff that the loop's change is that one word, and that T-16 fails at the tests' commit. Item 7 (a)'s declared edits of existing tests are now three: T-15's, the pinned list's and this one.
+2. **The strings file (class 8), by ADV-2026-11-20-07 item 2.** `project/reopenNotices.ts` is 120 lines at the first brief's head, against item 3's 90. Nothing was cut to fit. The shell product group's ceiling of 820 is what the part is held to. The closing records it.
+3. **The camera write's tests (class 1), by ADV-2026-11-20-07 item 3.** They are added to `canvas/WorkingCanvas.wiring.test.tsx`, an existing file beside the product file, not the file the first brief's step 0 named. The closing lists it.
+4. **Three files join item 7 (a)'s list (class 9), by ADV-2026-11-20-08,** declared here before any of their code. Each counts in the shell product group.
+   - `admission/formatRefusal.ts`: its doc alone, for item 5 (j)'s exception. No code line changes.
+   - `admission/RefusalBlock.tsx`: an optional prop that withholds the guidance and, if the worker shows the owner's place inside the block, an optional prop for that. With neither given, the block renders as it does on main.
+   - `console/ConsolePanel.tsx`: the same optional prop, passed on a row whose command is `open_project`, and nothing else. If it takes more than that, the worker leaves the file, names the case as not covered, and it goes to the advisor.
+   - No other caller of the block changes. The reviewer confirms by diff that each renders as before.
+   - The existing tests of these files stay unedited (stop 3). New tests may be added to `admission/RefusalBlock.test.tsx` and `admission/formatRefusal.test.ts`, each beside its product file.
+   - The guidance is withheld only for item 5 (g)'s codes, those whose guidance names the user's own assertion, as the second brief's step 0 lists them. Every other code keeps its guidance at a reopen. T-11 asserts both sides, and gains the case of the Console's `open_project` row.
+   - The doc's new words are the worker's, read by both gates.
+5. **For both gates, by ADV-2026-11-20-07 item 4.** The camera member goes through `fitToExtent` unreported, and the box it shows reaches `onViewShown` once. Both gates read this against item 5 (h) and T-17's row. A clause of this form that is untrue of the code as built goes to the advisor unreworded, as does one about the three files' changes.
+6. **Records.** The first brief's two hand-backs are filed with P4a's records (Amendment 55 item 3).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 57 — P4a's second brief's stop 11 at step 0, closed by ADV-2026-11-20-09: a saved style the shell cannot show gets a place of its own, O-18's words are replaced, and the R-CODE clause on a copy's failed write is corrected (classes 5 and 3)
+
+1. **W-STYLE, by ADV-2026-11-20-09 item 1.** A reopen whose saved style `readStyleDocument` answers with none is not refused. The saved style is not applied, the default style is shown, and a new owner place, W-STYLE, says so. It shows no text of the file, and it shows for every style the reader answers with none, a `match` on `fill_opacity`, `outline_color` or `outline_width` among them. The filter, the clauses and the view apply as for any reopen. Item 12's places gain W-STYLE, beside O-18, with no slot.
+2. **The words, by ADV-2026-11-20-09 item 2.** W-STYLE's words and O-18's are the two lines of that ruling's fence. O-18's line replaces its line of ADV-2026-11-20-05 item 2, and nothing else of that ruling changes. Both are copied by script, as the others were: W-STYLE's is added to `project/reopenNotices.ts`, and O-18's text there is replaced by script. Never a typed word. They count in the strings file, and an overrun is class 8.
+3. **T-9's case, by ADV-2026-11-20-09 item 3.** T-9 gains a case. A style with a `match` on one of the three properties is not applied, the state is the default, and W-STYLE's place shows. Its mutation: when the reader answers with none, the apply keeps the style the window held and shows no place. It must turn red at the state and at W-STYLE's place. No test asserts the words.
+4. **The R-CODE clause, corrected (class 3), by ADV-2026-11-20-09 item 4.** In item 12's R-CODE row, the clause on `project_file_unwritable` now reads: a copy's replace; its text is a fixed phrase and the operating system's error, or the rename's count and its last error. R-CODE's words and the bound are unchanged.
+5. **Step 0's other answers, by ADV-2026-11-20-09 item 5.**
+   - The workspace apply's tests are in `App.reopen.test.tsx`, a new file beside `App.tsx`, inside ADV-2026-11-20-04 item 4 (c).
+   - Item 5 (g)'s guidance is withheld for `engine.crs_assertion_conflict` alone.
+   - `ProjectUri`'s length is fixed by the reader's grammar.
+   - The first brief left two doc defects in `console/surfaceRegistry.ts`: a doc line became a lone `&`, and the table's class-A line still says seven commands. The resumed second brief fixes both. The gates read them, and the closing names them, class 1.
+6. **Records.** Items 1 to 4 are declared here before their code. The second brief resumes at its step 1, and its first hand-back, the stop, is filed with P4a's records.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 58 — ADV-2026-11-20-10 on P4a's second brief at 7cb3d90b: its class 8 count stands, the set in the refusal block is inside ADV-2026-11-20-08, and Amendment 56 item 4's line on the block's callers is corrected (classes 8, 1 and 3)
+
+1. **The count, by ADV-2026-11-20-10 item 1.** At the second brief's head, the shell product is 773 lines against 820. The shell tests are 825 against 690, and the strings file 122 against 90. Both excesses are class 8 at the count. No ceiling is raised, and nothing was cut to fit. The closing records both at the final count, with their cause.
+2. **The set, by ADV-2026-11-20-10 item 2.** The module-private set in `admission/RefusalBlock.tsx` keeps item 5 (g)'s codes once, for both places that pass the prop. It holds `engine.crs_assertion_conflict` alone, as Amendment 57 item 5 says. It is inside ADV-2026-11-20-08 item 1, and the gates read it.
+3. **Amendment 56 item 4's line, corrected (class 3), by ADV-2026-11-20-10 item 3.** Its line on the block's other callers now reads: no caller of the block changes but the reopen's own place in `admission/AdmissionPanel.tsx` and the Console's row; a dataset open's refusal in `admission/AdmissionPanel.tsx` renders as before. The reviewer confirms both by diff. This replaces that one line, and nothing else of Amendment 56 item 4 or of ADV-2026-11-20-08 changes.
+4. **The build beyond the brief, by ADV-2026-11-20-10 item 4.** The second brief's worker ran one `npm run build` beyond its steps, for the notice tests, in a shared hold of its own. It changed no tracked file. It is a class 1 departure, and the closing names it with its reason.
+5. **For the gates, by ADV-2026-11-20-10 item 5.** The gates read three points. First, a file whose saved filter and clauses disagree is applied by its clauses. Second, the run's set of cancelled keys is never cleared. Third, the P-base at the tests' commit did not load the first brief's T-6 file. On the first: if the form says nothing of such a file, or says something untrue of the code as built, it goes to the advisor unreworded.
+6. **Records.** The second brief's two hand-backs are filed with P4a's records. The third brief runs on the standard worker as Amendment 54 item 16 gives it.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 59 — ADV-2026-11-20-11 on P4a's third brief at its step 0: the suites run on the port-5400 harness, item 9's port line is corrected, and `frontends/shell/package.json` joins P4a's files for one line (classes 3 and 9)
+
+1. **The port, by ADV-2026-11-20-11 items 1 to 3.** Port 5180 is not free, and no word of the human's that it is free is filed. P4a's suites and its series therefore run on the port-5400 harness. That follows the human's approval of 2026-10-11 item 1 and their message of 2026-11-09 (OPEN-5), and the approval's own terms apply:
+   - scratch folders and the part's own build folder only;
+   - no tracked file changed for the harness, and nothing of it committed;
+   - each report saying port-5400 harness.
+
+   Nothing is revived, and no exception is granted.
+2. **Amendment 54 item 9's port line, corrected (class 3), by ADV-2026-11-20-11 item 4.** The first line below, as it stood, is replaced by the second. Both are copied by script from the ruling's fence.
+
+````
+- **Port.** Vite's 5180 (ruled 2026-11-09, by the continuity block). App A uses CDP 9223 (`lib.mjs`'s `CDP_PORT`). App B, in P4b, uses the port step 0 settles.
+- **Port.** The port-5400 harness, under the human's approval of 2026-10-11 item 1 and its terms: by their message of 2026-11-09 (OPEN-5) it continues until their word that 5180 is free and a passing listen test on it. The suites' own default stays 5180, which the harness maps. App A uses CDP 9223 (`lib.mjs`'s `CDP_PORT`). App B, in P4b, uses the port step 0 settles.
+````
+
+   At P4b's step 0, item 8 (b)'s line on a second dev server on 5180 is read with the corrected line: under the harness, the dev server is the harness's, on 5400.
+3. **`frontends/shell/package.json` joins P4a's files (class 9, the e2e group), by ADV-2026-11-20-11 item 5.** This is declared here before its line.
+   - The one added line is the `e2e:reopen` script, running `node e2e/reopen.mjs`, after the `e2e:colour` line, as that ruling gives it. Nothing else in the file changes.
+   - The README names the suite by it, as it names the others.
+   - The reviewer confirms by diff that the file's change is that one added line, and that both lockfiles are unchanged.
+   - P4b's suite gets its line the same way, the `e2e:second-open` script running `node e2e/second-open.mjs`, declared here before P4b's code. Rule (00) counts the file.
+4. **The product group, for the closing, by ADV-2026-11-20-11 item 6.** At the hooks' commit the shell product group is 838 lines against 820. That is class 8 at the count, with nothing cut.
+5. **Records.** The third brief's two hand-backs so far are filed with P4a's records: its stop at step 0, and the hooks. It resumes at its step 2 on the harness.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 60 — ADV-2026-11-20-12 on P4a's third brief, stop 7 at E-REOPEN R6: the first look's reset undid the saved view, so the write moves after the first look's call in `App.tsx`, O-17 gains a sentence, and a unit case holds the order (classes 5 and 8)
+
+1. **The cause, by ADV-2026-11-20-12 item 1.** At da94ae0b, the `[admitted]` effect of `App.tsx` writes the saved view, and the write marks the one-shot fit done (O-17). Then comes the first look's call, `reissueUnrestricted`. Inside it, before its first await, the call resets the fit for its generation. The first data then fits the camera. So R6 fails in runs w-r1 and w-r2, which stay on record.
+2. **The fix, by ADV-2026-11-20-12 items 2 and 3.**
+   - In `App.tsx` alone, the saved view is written after the first look's call has started, in the same turn of the effect. A comment says why.
+   - The worker places the write so that the order holds in both branches of the effect. It says what it found in the branch that builds no candidate session.
+   - No other product file changes. If the fix needs one, it goes to the advisor before it is written.
+   - What must hold: in an open whose saved view applies, the write comes after the last reset of the fit that the first look's call makes. No reset of the fit follows the write before that look's data is drawn.
+3. **O-17's new sentence (class 5), by ADV-2026-11-20-12 item 5.** It is placed after O-17's last sentence, copied by script from the ruling's fence:
+
+````
+In an open, the write comes after the first look's call has reset the fit for its generation and before any of that look's data is drawn, and nothing resets the one-shot fit between the write and that data. So the first look's data does not move the camera of a reopen whose saved view applies.
+````
+
+4. **The tests, by ADV-2026-11-20-12 item 4.**
+   - R6, as written.
+   - A new unit case in `App.reopen.test.tsx`. The canvas stand-in records its `resetFitForNewGeneration` and `applyView` calls in one list, in order. The case reopens with a view that applies, and asserts one write and no reset after it.
+   - Its mutation moves the write back to before the first look's call. It must turn red by name.
+   - The case fails at its own commit, before the fix.
+   - If the file cannot see the order as the app runs it, that goes to the advisor. No weaker assertion takes its place.
+   - T-17 stays as it is.
+5. **The commits and the model, by ADV-2026-11-20-12 items 6 and 7.**
+   - The suite's commit and the unit case's commit come before the fix's commit, and the three are pushed together.
+   - The fix and the unit case go to worker-high on the strongest model, on the ground of concurrency. The rest of the third brief stays with the standard worker.
+   - The product group is class 8 at the count, with nothing cut.
+6. **What goes to the advisor, by ADV-2026-11-20-12 item 8:**
+   - a camera moved by anything else after the write, the frame's establishment on the first data among it;
+   - a saved view that returns but not bit for bit, with the difference;
+   - a clause of item 3's sentence that is untrue of the code as built, unreworded.
+7. **Records.** Stop 13 did not fire. The worker moved R5's read to before the first look, and discloses that for the gates. The third brief's hand-back at stop 7 is filed with P4a's records.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 61 — ADV-2026-11-20-13 on P4a at 20895dfb: Amendment 60 item 3's sentence for O-17 replaced, and E-REOPEN's R8 row corrected (class 3)
+
+1. **The fix, by ADV-2026-11-20-13 item 1.** At 20895dfb the write follows the first look's call in each branch of the `[admitted]` effect, in the same turn. The unit case asserts one write, a reset before it and none after it, through the real session.
+2. **O-17's sentence (class 3), by ADV-2026-11-20-13 item 2.** In the baseline arm the first look's call makes no reset of the fit, so a clause of Amendment 60 item 3's sentence was untrue there. That sentence is replaced. Below are the old sentence and then the new one, copied by script from the ruling's fence. The new one is O-17's. It replaces the fence of ADV-2026-11-20-12 item 5, and nothing else of that ruling.
+
+````
+In an open, the write comes after the first look's call has reset the fit for its generation and before any of that look's data is drawn, and nothing resets the one-shot fit between the write and that data. So the first look's data does not move the camera of a reopen whose saved view applies.
+In an open, the write comes right after the first look's call, in the same turn of the effect: after any reset of the fit that call makes, and before any of that look's data can be drawn. The candidate arm's call makes one such reset; the baseline arm's makes none, and its write takes the same place. The open makes no reset of the fit after the write, so the first look's data does not move the camera of a reopen whose saved view applies. A later generation's reset, a filter's Apply among them, fits the camera as after any open.
+````
+
+3. **E-REOPEN's R8 (class 3), by ADV-2026-11-20-13 item 3.**
+   - In run f-r1, R8's answer `same` met the lock that this window's open of P still held. The refusal came before the store's write. That is the product as ruled, so no product line changes.
+   - R8 now first opens another file and sees the close of P's handle on the console, as R5 does. Then it copies P and reopens Q. Its read of that row falls under stop 13, as R5's does.
+   - The standard worker makes the correction, in a commit after the product commit. It changes R8 and nothing else of the suite.
+   - Amendment 54 item 9's R8 row is corrected. Below are the old row and then the new one, copied by script from the ruling's fence:
+
+````
+- R8, P copied by hand to Q; reopen Q: S8; the page's same choice clicked: `opened`; the store's `folders.json` lists both;
+- R8, open another file, and the close of P's handle is seen on the console, as at R5; then P copied by hand to Q; reopen Q: S8; the page's same choice clicked: `opened`; the store's `folders.json` lists both;
+````
+
+   - The refused run stays on record. If its record shows which place the page showed at that refusal, the closing says so. A place other than S9's own-window one goes to the advisor. No step is added to assert it.
+4. **The counts, by ADV-2026-11-20-13 item 4.** At 20895dfb the shell product group is 846 against 820 and its tests 847 against 690. Both are class 8, with nothing cut. The `holdUntiled` switch in the test file's stand-in is test only, for the gates.
+5. **Records.** The fix's hand-back is filed with P4a's records.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 62 — ADV-2026-11-20-14 on P4a's third brief, stop 13 at E-REOPEN R9 in run w-r3: the suite's late read of the close row, and its count in a ring that drops its oldest (class 3)
+
+1. **Run w-r3, at e35693f2.** That commit is R8's correction by Amendment 61 item 3, made alone after the product commit and not yet pushed. R1 to R8 passed. R9 waited 30 s for the close row of P2's data handle and failed, which is stop 13. E-CHANGED was not reached.
+2. **The late read, by ADV-2026-11-20-14 item 1 (class 3).**
+   - In R9 and E-CHANGED, the suite read the close row after the first look had filled the ring. Amendment 54 item 9's line says the suite reads each row right after its call.
+   - Their read moves into the open's after-call hook, as at R5 and R8. It is a defect of the suite, not of the product.
+   - No row of item 9 changes.
+3. **The count, by ADV-2026-11-20-14 item 2.**
+   - The helper that waits for a close row compared a count of close rows at ok against the count read before the open. A row counted before the open can be dropped from the ring between the two reads. Then the new row does not raise the count, and the wait fails as a stop 13 that is not one.
+   - So the new row is known by its request, not by a count. It is a close row at ok whose request text was not among the close rows read before the open. Each close names its own handle.
+   - It is one change in the helper, and in where the steps take the earlier reading, and it serves all four reads. The worker may choose an equal means, if it rests on no older row staying in the ring. The hand-back says what was done.
+   - A row that is truly dropped before a read made right after its call is still stop 13. It goes to the advisor with the ring's fill.
+4. **The run, by ADV-2026-11-20-14 item 3.** The standard worker makes both changes in one test commit after R8's, then runs the suite once as w-r4. If the e2e group goes past 485, it is class 8 at the count, with nothing cut. R8's commit and this one are pushed with the rest of the third brief.
+5. **The closing, by ADV-2026-11-20-14 item 4.** It names no place for f-r1's refused R8, because that run's record holds none.
+6. **Records.** The third brief's hand-back at R9 is filed with P4a's records, with its hold lines masked.
+
+Read the last amendment first.
+
+Nothing above is edited.
