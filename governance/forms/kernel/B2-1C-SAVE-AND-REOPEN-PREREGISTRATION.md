@@ -3877,3 +3877,17 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 52 — P3b-2's closing, continued: two records that Amendment 51 omits, the F4 row (class 2) and the named arm of `skp.unknown_dataset`
+
+*Written by the custodian, 2026-11-20, before PR 340's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **§3's F4 row, class 2** (Amendment 43 item 20, packet P-3). The row predicted a word that did not hold; the descriptor's words stand, as P-3 (i) rules. Amendment 42 item 8 recorded the difference at P3a-2, class 1. It is recorded here as class 2, by §5. The row is not edited.
+
+2. **`skp.unknown_dataset` from the reopen's own check after its open** (Amendment 45 item 4, its second point). Its message keeps a clause that can be untrue there. At H it is named in a source comment in `kernel/src/project/mod.rs`, by ADV-2026-11-19-26 item 3's row 5, and it is not changed. The item's first point, the engine's clause on the caller's assertion at a reopen, is carried for P4's form beside Amendment 51 item 9.
+
+3. **Superseded index:** nothing is superseded. Amendment 51 stands, with these two records added.
+
+Read the last amendment first.
+
+Nothing above is edited.
