@@ -35,6 +35,7 @@ import type { ExecuteOutcome, PrepareOutcome } from "./publish/types";
 import type { ResidencyArm, SetResidencyArmResult } from "./residency/residencyArm";
 import type { SetResidencyTileSizeLevelResult } from "./residency/residencyTileSizeLevel";
 import type { CrsCatalogEntry } from "./skp/crsCatalog";
+import type { StyleState } from "./style/document";
 
 /** Viewport-residency cut P1b (N4, the G6 instrument): `residencyEndStep`'s real return shape --
  * the pure `ResidencyStepResult` plus the resident vertex/feature totals read off `WorkingCanvas` at
@@ -187,6 +188,21 @@ export interface E2eTestSurface {
    * Its only caller is `e2e/project.mjs`. **A run through this hook does not exercise the native
    * folder picker: only the operator's walkthrough does (the form's section 9, OP1).** */
   e2eSaveProjectToFolder?: (folder: string) => Promise<"asked" | "not-asked">;
+  /** **DEV-ONLY E2E TEST SEAM** (B2 piece 1c, Amendment 54 item 7 (a)). Supplies `folder` once, in place of the folder picker, to the click's own
+   * handler of the Open project control, and answers the run's end: `admitted`, `question`, `not_found`, a refusal's code, or `dropped`.
+   * Only caller: `e2e/reopen.mjs`. It does not exercise the native picker (the operator's Part). */
+  e2eOpenProjectFolder?: (folder: string) => Promise<string>;
+  /** **DEV-ONLY E2E TEST SEAM** (same item). Supplies `file` once, in place of the file picker, to S11's choice while the panel stands at `not_found`;
+   * answers as `e2eOpenProjectFolder` does, or `not-asked` when no `not_found` stands. Only caller: `e2e/reopen.mjs`. */
+  e2eRelinkFile?: (file: string) => Promise<string>;
+  /** **DEV-ONLY E2E TEST SEAM** (same item). Reads the applied workspace: the drawn view's filter text, clauses and style state, and the canvas's
+   * held `currentView`. It changes nothing. Only caller: `e2e/reopen.mjs`, which must see the state a reopen applied. */
+  e2eReadWorkspace?: () => Promise<{
+    filter: string | null;
+    clauses: { text: string; enabled: boolean }[];
+    style: StyleState | null;
+    view: { centre: [number, number]; zoom: number } | null;
+  }>;
   /** **DEV-ONLY E2E TEST SEAM** (viewport-residency cut P1, `RESIDENCY-PREREGISTRATION.md`).
    * Flips `instrument/residencyInstrument.ts`'s runtime `enabled` flag -- OFF by default, so a
    * driver run that never calls this exercises the exact same code paths (and, per §8's

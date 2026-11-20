@@ -291,6 +291,14 @@ export async function runAdmitPath(
   return outcome;
 }
 
+/** A picker's answer: the hook's slot once when it holds one (instrumented builds only), else the picker's. */
+function takeSlot(slot: { current: string | null }, pick: () => Promise<string | null>): Promise<string | null> {
+  const supplied = isInstrumentedBuild() ? slot.current : null;
+  if (supplied === null) return pick();
+  slot.current = null;
+  return Promise.resolve(supplied);
+}
+
 /** A fresh `cancel_key` for one call. */
 const newCancelKey = (): string => (typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`);
 
@@ -329,6 +337,11 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   const [state, setState] = useState<State>({ kind: "idle", note: null });
   /** The keys Cancel was pressed for (Amendment 54 item 5 (e)), read by `runAdmitPath` when a reopen's `question` or `not_found` arrives. */
   const cancelledKeys = useRef(new Set<string>());
+  /** The DEV-only hooks' one-shot slots (`e2e-test-surface.ts`): a folder or a file supplied in place of a picker's answer. Always `null` in a plain build. */
+  const e2eFolderRef = useRef<string | null>(null);
+  const e2eFileRef = useRef<string | null>(null);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
   // The one piece of the manual flow a path string can't replay itself -- everything from here
   // down is the product's own admission behavior, unchanged by the E2E hook registered below.
@@ -370,18 +383,19 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   }, [admitPath]);
 
   // O-19a: the folder picker (S2's title, shared with the save), then the reopen's first call. A dismissed picker starts nothing.
-  const handleProjectPick = useCallback(async () => {
-    const folder = await pickProjectFolder();
-    if (folder !== null) await reopenPath(folder, { answer: null, relink: null });
+  const handleProjectPick = useCallback(async (): Promise<AdmissionOutcome | null> => {
+    const folder = await takeSlot(e2eFolderRef, pickProjectFolder);
+    return folder === null ? null : reopenPath(folder, { answer: null, relink: null });
   }, [reopenPath]);
 
   // S11's choice: the file picker, then the re-link call with the answer the run already gave (Amendment 54 item 5 (d)). A dismissed picker ends
   // the run at the cancelled note.
   const handleRelink = useCallback(
-    async (folder: string, options: AdmitOptions) => {
-      const file = await pickFile();
+    async (folder: string, options: AdmitOptions): Promise<AdmissionOutcome | null> => {
+      const file = await takeSlot(e2eFileRef, pickFile);
       if (file === null) setState({ kind: "idle", note: "Open cancelled" });
-      else await reopenPath(folder, { answer: options.reopen?.answer ?? null, relink: file });
+      else return reopenPath(folder, { answer: options.reopen?.answer ?? null, relink: file });
+      return null;
     },
     [reopenPath]
   );
@@ -426,6 +440,26 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       unregisterE2eHook("crsCatalog");
     };
   }, [admitPath]);
+
+  // The reopen's two DEV hooks: each fills a slot, runs the click's own handler and empties the slot.
+  useEffect(() => {
+    if (!isInstrumentedBuild()) return;
+    const answer = (outcome: AdmissionOutcome | null): string => (outcome === null ? "dropped" : outcome.kind === "refused" ? outcome.refusal.code : outcome.kind);
+    registerE2eHook("e2eOpenProjectFolder", async (folder) => {
+      e2eFolderRef.current = folder;
+      try { return answer(await handleProjectPick()); } finally { e2eFolderRef.current = null; }
+    });
+    registerE2eHook("e2eRelinkFile", async (file) => {
+      const at = stateRef.current;
+      if (at.kind !== "not_found") return "not-asked";
+      e2eFileRef.current = file;
+      try { return answer(await handleRelink(at.folder, at.options)); } finally { e2eFileRef.current = null; }
+    });
+    return () => {
+      unregisterE2eHook("e2eOpenProjectFolder");
+      unregisterE2eHook("e2eRelinkFile");
+    };
+  }, [handleProjectPick, handleRelink]);
 
   // P4 item A: the liveness line is gated by `OPEN_LIVENESS_DELAY_MS`, reset per NEWLY in-flight
   // `cancel_key` (never re-armed by a sub-transition that keeps the SAME key in flight -- there is

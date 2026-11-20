@@ -1463,6 +1463,21 @@ export default function App() {
     return () => unregisterE2eHook("e2eSaveProjectToFolder");
   }, []);
 
+  // The DEV-only read of the applied workspace (`e2e-test-surface.ts`): the drawn view's filter text, clauses and style, and the canvas's held camera.
+  useEffect(() => {
+    if (!isInstrumentedBuild()) return;
+    registerE2eHook("e2eReadWorkspace", async () => {
+      const current = selectDrawnViews(workspaceRef.current)[0] ?? null;
+      return {
+        filter: current?.filter?.predicate ?? null,
+        clauses: current === null ? [] : viewClauses(current).map(({ text, enabled }) => ({ text, enabled })),
+        style: current?.style ?? null,
+        view: canvasRef.current?.currentView?.() ?? null,
+      };
+    });
+    return () => unregisterE2eHook("e2eReadWorkspace");
+  }, []);
+
   /**
    * **P3b §2a(ii): the one binding both arms' `onSessionEnded` and both catches reach.** Writes the
    * ref synchronously (so a hover in this same tick is already refused) and then runs the exported
