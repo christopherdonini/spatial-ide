@@ -40,3 +40,20 @@ describe("the reopen's notices (Amendment 54 T-6)", () => {
     expect(workspaceTextNotice(["filter", "style"])).toContain("filter, style");
   });
 });
+
+describe("the bound on text from a file (Amendment 54 item 5 (j), T-12)", () => {
+  // RECORDED MUTATION for T-12's bound: in `shownText` (project/shownText.ts) the cut takes 1,024 units whatever the last one is. Expected failure: a
+  // surrogate pair is split.
+  it("replaces hidden characters, then cuts past 1,024 units on a code-point boundary with the kernel's mark", async () => {
+    const { holdsHiddenText, shownText } = await import("./shownText");
+    expect(shownText("a\u202Eb\u0007c\u0085d\u061Ce\u200Ef\u2066g\u2028h\u2029i\u007Fj\u0000")).toBe("a\uFFFDb\uFFFDc\uFFFDd\uFFFDe\uFFFDf\uFFFDg\uFFFDh\uFFFDi\uFFFDj\uFFFD");
+    expect(shownText("plain é 字 \u{1F600}"), "nothing else changes").toBe("plain é 字 \u{1F600}");
+    const path = `C:/${"p".repeat(1997)}`;
+    expect(shownText(path)).toBe(`${path.slice(0, 1024)} [cut]`);
+    expect(shownText(path).length, "at most 1,030 units").toBe(1030);
+    expect(shownText("x".repeat(1024)), "at the bound, no cut").toBe("x".repeat(1024));
+    expect(shownText(`${"x".repeat(1023)}\u{1F600}y`), "the pair is not split").toBe(`${"x".repeat(1023)} [cut]`);
+    expect(shownText(`\u202E${"x".repeat(1100)}`).startsWith("\uFFFD"), "replaced before the cut").toBe(true);
+    expect([holdsHiddenText("a\u202Eb"), holdsHiddenText("a\u0007"), holdsHiddenText("a\u2066"), holdsHiddenText("zone = 'a'")]).toEqual([true, true, true, false]);
+  });
+});
