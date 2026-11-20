@@ -4450,3 +4450,32 @@ In an open, the write comes after the first look's call has reset the fit for it
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 61 — ADV-2026-11-20-13 on P4a at 20895dfb: Amendment 60 item 3's sentence for O-17 replaced, and E-REOPEN's R8 row corrected (class 3)
+
+1. **The fix, by ADV-2026-11-20-13 item 1.** At 20895dfb the write follows the first look's call in each branch of the `[admitted]` effect, in the same turn. The unit case asserts one write, a reset before it and none after it, through the real session.
+2. **O-17's sentence (class 3), by ADV-2026-11-20-13 item 2.** In the baseline arm the first look's call makes no reset of the fit, so a clause of Amendment 60 item 3's sentence was untrue there. That sentence is replaced. Below are the old sentence and then the new one, copied by script from the ruling's fence. The new one is O-17's. It replaces the fence of ADV-2026-11-20-12 item 5, and nothing else of that ruling.
+
+````
+In an open, the write comes after the first look's call has reset the fit for its generation and before any of that look's data is drawn, and nothing resets the one-shot fit between the write and that data. So the first look's data does not move the camera of a reopen whose saved view applies.
+In an open, the write comes right after the first look's call, in the same turn of the effect: after any reset of the fit that call makes, and before any of that look's data can be drawn. The candidate arm's call makes one such reset; the baseline arm's makes none, and its write takes the same place. The open makes no reset of the fit after the write, so the first look's data does not move the camera of a reopen whose saved view applies. A later generation's reset, a filter's Apply among them, fits the camera as after any open.
+````
+
+3. **E-REOPEN's R8 (class 3), by ADV-2026-11-20-13 item 3.**
+   - In run f-r1, R8's answer `same` met the lock that this window's open of P still held. The refusal came before the store's write. That is the product as ruled, so no product line changes.
+   - R8 now first opens another file and sees the close of P's handle on the console, as R5 does. Then it copies P and reopens Q. Its read of that row falls under stop 13, as R5's does.
+   - The standard worker makes the correction, in a commit after the product commit. It changes R8 and nothing else of the suite.
+   - Amendment 54 item 9's R8 row is corrected. Below are the old row and then the new one, copied by script from the ruling's fence:
+
+````
+- R8, P copied by hand to Q; reopen Q: S8; the page's same choice clicked: `opened`; the store's `folders.json` lists both;
+- R8, open another file, and the close of P's handle is seen on the console, as at R5; then P copied by hand to Q; reopen Q: S8; the page's same choice clicked: `opened`; the store's `folders.json` lists both;
+````
+
+   - The refused run stays on record. If its record shows which place the page showed at that refusal, the closing says so. A place other than S9's own-window one goes to the advisor. No step is added to assert it.
+4. **The counts, by ADV-2026-11-20-13 item 4.** At 20895dfb the shell product group is 846 against 820 and its tests 847 against 690. Both are class 8, with nothing cut. The `holdUntiled` switch in the test file's stand-in is test only, for the gates.
+5. **Records.** The fix's hand-back is filed with P4a's records.
+
+Read the last amendment first.
+
+Nothing above is edited.
