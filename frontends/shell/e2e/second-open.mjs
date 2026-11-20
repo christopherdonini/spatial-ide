@@ -104,11 +104,13 @@ async function pollOpen(page, other) {
   throw err;
 }
 
-/** Whether the release thread's failure line is in A's log, from the byte where this run's launch began; says so when the log could not be read. */
+/** What A's log lets the suite say about the release thread's failure line: the bytes this run could read (from the byte where its launch began, cut as bytes and then decoded), and "not in A's log" only of bytes it read. */
 function releaseLineIn(fromByte) {
   try {
-    const found = readFileSync(APP_LOG, "utf8").slice(fromByte).includes(RELEASE_LINE);
-    return `${APP_LOG} was read: the line "${RELEASE_LINE}" is ${found ? "in" : "not in"} A's log`;
+    const bytes = readFileSync(APP_LOG).subarray(fromByte);
+    if (bytes.length === 0) return `${APP_LOG} gave 0 bytes: the log is empty, so the suite cannot tell from it whether the line "${RELEASE_LINE}" was written`;
+    const found = bytes.toString("utf8").includes(RELEASE_LINE);
+    return `${APP_LOG} gave ${bytes.length} bytes: the line "${RELEASE_LINE}" is ${found ? "in" : "not in"} those bytes`;
   } catch (e) {
     return `no log could be read (${APP_LOG}: ${e.message})`;
   }
