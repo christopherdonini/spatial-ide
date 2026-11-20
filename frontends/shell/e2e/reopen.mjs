@@ -311,7 +311,13 @@ function knownFolders(project) {
   return JSON.parse(readFileSync(join(SCRATCH, "spatial-ide", "projects", id, "folders.json"), "utf8"));
 }
 
-async function stepR8(page, ctx) {
+async function stepR8(page, consoleHandle, ctx) {
+  // This window's open of P still holds P's lock; the answer `same` would meet it. As at R5, another file is opened and the close of P's handle is seen first.
+  const before = closedCount(await readConsole(page));
+  let closed;
+  await openFile(page, consoleHandle, FIXTURE, "another file (before Q)", async () => { closed = await waitClosed(page, before, "P's handle"); });
+  const closeRow = rowsOf(closed, "close_dataset").at(-1);
+  ctx.r8 = `${closed.label}; the close_dataset row has ${closed.rows.length - 1 - closeRow.index} entries after it`;
   cpSync(FOLDER_P, FOLDER_Q, { recursive: true });
   expectAnswer(await hookOpen(page, FOLDER_Q), "question", "the reopen of Q");
   const text = noticeText("QUESTION_TEXT");
@@ -327,7 +333,7 @@ async function stepR8(page, ctx) {
   await waitFor("S8 to be gone", () => page.evaluate(() => document.querySelector(".admission-reopen-question") !== null), (open) => open === false, 10_000);
   const folders = JSON.stringify(knownFolders(ctx.saved.project));
   for (const folder of [FOLDER_P, FOLDER_Q]) if (!folders.includes(basename(folder))) throw new Error(`folders.json reads ${folders}, expected it to list ${basename(folder)}`);
-  return `Q (a hand copy of P) gave S8 with its text; the same choice opened it (${reading.label}); folders.json lists both folders`;
+  return `P's handle closed (${ctx.r8}); Q (a hand copy of P) gave S8 with its text; the same choice opened it (${reading.label}); folders.json lists both folders`;
 }
 
 async function stepR9(page, consoleHandle) {
@@ -431,7 +437,7 @@ async function main() {
       (await runStep("R5", 240_000, () => stepR5(page, consoleHandle, ctx))) &&
       (await runStep("R6", 300_000, () => stepR6(page, consoleHandle, ctx))) &&
       (await runStep("R7", 120_000, () => stepR7(page, ctx))) &&
-      (await runStep("R8", 240_000, () => stepR8(page, ctx))) &&
+      (await runStep("R8", 240_000, () => stepR8(page, consoleHandle, ctx))) &&
       (await runStep("R9", 400_000, () => stepR9(page, consoleHandle))) &&
       (await runStep("E-CHANGED", 300_000, () => stepChanged(page, consoleHandle)));
     console.log("\n== Summary ==");
