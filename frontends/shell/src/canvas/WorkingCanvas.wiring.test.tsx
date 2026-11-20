@@ -476,7 +476,7 @@ describe("T-17: the camera write (B2 piece 1c, Amendment 54 O-17)", () => {
     expect(Object.is(held.centre[1], centre[1]), "centre y, bit for bit").toBe(true);
     expect(Object.is(held.zoom, zoom), "zoom, bit for bit").toBe(true);
     expect(onViewportChanged, "the write reports no viewport").not.toHaveBeenCalled();
-    expect(onViewShown, "and shows no fitted box").not.toHaveBeenCalled();
+    expect(onViewShown, "the box it shows goes to onViewShown, as an unreported fit's does").toHaveBeenCalledTimes(1);
 
     push(); // the first look's data arrives: no auto-fit follows the write
     const after = ref.current!.currentView!()!;
