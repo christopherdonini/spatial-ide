@@ -14,7 +14,9 @@ import {
   Filter,
   IdentityDeclaration,
   OpenDatasetResponse,
+  OpenProjectResponse,
   ProjectWorkspace,
+  ReopenAnswer,
   RecordStepResponse,
   SaveProjectResponse,
   SkpError,
@@ -152,4 +154,19 @@ export function recordStep(dataset: string, intent: StepIntent): Promise<RecordS
  */
 export function saveProject(dataset: string, folder: string | null, workspace: ProjectWorkspace): Promise<SaveProjectResponse> {
   return call("save_project", { skp: SKP_VERSION, dataset, folder, workspace });
+}
+
+/**
+ * `skp/0.14`: reopens a saved project (SKP-V0.md section 12). Client only: this function checks nothing; the kernel does, and may refuse
+ * the reopen. `answer` is `null` at the first call and the client's answer to a `question` reply at the second; `relink` is `null`, or the
+ * absolute path of the data file the client chose after a `not_found` reply. Both are sent as `null`, never omitted (`key_present` on the
+ * Rust side). The call keeps no state between its two calls: the reply names the next one.
+ */
+export function openProject(
+  folder: string,
+  cancelKey: string,
+  answer: ReopenAnswer | null,
+  relink: string | null
+): Promise<OpenProjectResponse> {
+  return call("open_project", { skp: SKP_VERSION, folder, cancel_key: cancelKey, answer, relink });
 }

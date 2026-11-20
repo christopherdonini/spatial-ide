@@ -193,3 +193,56 @@ export function resolveDrawParameters(state: StyleState): DrawParameters {
 export function parseStyleState(state: StyleState): Style {
   return Style.parse(JSON.stringify(toStyleDocument(state)), "shell-style");
 }
+
+/** What a reopen reads back from a project file's `style` member: the state, and the column of a Colour by that was not applied (`null` when none). */
+export interface ReadStyle {
+  state: StyleState;
+  colourByNotRestored: string | null;
+}
+
+const isObject = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null && !Array.isArray(v);
+
+/** `property`'s literal when the document holds one there, else `undefined`. */
+function literalOf(layer: Record<string, unknown>, property: string, type: "string" | "number"): string | number | undefined {
+  const value = layer[property];
+  return isObject(value) && typeof value.literal === type ? (value.literal as string | number) : undefined;
+}
+
+/** The match of `fill_color` as plain data, when the document holds a well-formed one. */
+function matchOf(value: Record<string, unknown>): FillMatch | undefined {
+  const m = value.match;
+  if (!isObject(m) || typeof m.column !== "string" || typeof m.on_null !== "string" || typeof m.on_unmatched !== "string" || !Array.isArray(m.cases)) return undefined;
+  const cases: { when: string; then: string }[] = [];
+  for (const c of m.cases) {
+    if (!isObject(c) || typeof c.when !== "string" || typeof c.then !== "string") return undefined;
+    cases.push({ when: c.when, then: c.then });
+  }
+  return { column: m.column, cases, onNull: m.on_null, onUnmatched: m.on_unmatched };
+}
+
+/**
+ * B2 piece 1c, Amendment 54 O-18: the inverse of `toStyleDocument`, for a project file's `style` member at a reopen. `columns` are the columns
+ * the reopened data offers. A Colour by whose column is not among them is not applied: the fill is the default literal (the document holds none,
+ * the match having stood in its place), the rest is applied, and `colourByNotRestored` names the column for the owner's notice. Answers `null`
+ * for a document outside the shell's own shape (`style_version` 1, polygon, a literal or a match on `fill_color`, literals elsewhere): nothing
+ * is guessed. Its product caller is the reopen's workspace apply (Amendment 54 item 5 (h)). Every value is the document's as it stands; none
+ * is re-normalised, so `toStyleDocument` of the state is the document read, for a document `toStyleDocument` wrote.
+ */
+export function readStyleDocument(doc: Record<string, unknown>, columns: readonly string[]): ReadStyle | null {
+  const layer = doc.layer;
+  if (doc.style_version !== 1 || !isObject(layer) || layer.geometry !== "polygon") return null;
+  const fill = layer.fill_color;
+  const opacity = literalOf(layer, "fill_opacity", "number");
+  const outlineColor = literalOf(layer, "outline_color", "string");
+  const outlineWidth = literalOf(layer, "outline_width", "number");
+  if (!isObject(fill) || opacity === undefined || outlineColor === undefined || outlineWidth === undefined) return null;
+  const rest = { fillOpacity: opacity as number, outlineColor: outlineColor as string, outlineWidth: outlineWidth as number };
+  const literal = literalOf(layer, "fill_color", "string");
+  if (literal !== undefined) return { state: { fillColor: literal as string, ...rest, fillMatch: null }, colourByNotRestored: null };
+  const match = matchOf(fill);
+  if (match === undefined) return null;
+  if (!columns.includes(match.column)) {
+    return { state: { fillColor: DEFAULT_STYLE_STATE.fillColor, ...rest, fillMatch: null }, colourByNotRestored: match.column };
+  }
+  return { state: { fillColor: DEFAULT_STYLE_STATE.fillColor, ...rest, fillMatch: match }, colourByNotRestored: null };
+}
