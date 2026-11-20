@@ -4576,3 +4576,23 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 65 — P4b's files before its code: its suite's scripts line (ADV-2026-11-20-11 item 5), the port and the step 0 stop (class 9)
+
+*Written by the custodian, 2026-11-20, after P4a's merge (Amendment 64) and before P4b's code. References and hashes only. Nothing below is a quotation.*
+
+1. **Where P4b is built,** as Amendment 54 item 8 gives it: the branch cut/b2-piece-1c-p4b, the worktree C:/dev/wt/1c-p4b, the build folder D:/wt-targets/1c-p4b and the test data folder D:/wt-data/1c-p4b. It is cut from main at the commit that holds this amendment.
+
+2. **Its files, class 9, the e2e group** (ADV-2026-11-20-11 item 5). Amendment 54 item 8 (a)'s three: e2e/lib.mjs, a new launcher with no existing function edited; e2e/second-open.mjs, new; e2e/README.md, its entry. And frontends/shell/package.json, for one added line and nothing else: the script e2e:second-open, whose command is node e2e/second-open.mjs, after the e2e:reopen line. It is not a dependency, and the lockfile does not change; the reviewer confirms both by diff. Rule (00) counts the file. The ceiling stays Amendment 54 item 3's, the e2e group 425 and every other group 0, now over four files.
+
+3. **The port** is Amendment 54 item 9's line as Amendment 59 corrects it: the port-5400 harness, under the human's approval of 2026-10-11 and its terms, until their word that 5180 is free and a passing listen test on it. Item 8 (b)'s second dev server is read as ADV-2026-11-20-11 item 4 reads it: under the harness the dev server is the harness's, on 5400.
+
+4. **Step 0 and the model.** The standard worker (Amendment 54 item 16). Step 0, the probe of item 8 (b), comes before any suite code, with nothing committed. A failure is stop 9 (item 15), and the custodian sends it to the advisor.
+
+5. **Rule (00) at P4b's dispatch.** No pull request is open, and no node in progress declares any of the four paths. The redaction node, which goes beside P4b (ADV-2026-11-20-04 item 6), declares paths under frontends/shell/src-tauri/ alone in its draft of 2026-10-23, with no e2e README entry; the architect's re-read against main confirms its list before its code.
+
+6. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.

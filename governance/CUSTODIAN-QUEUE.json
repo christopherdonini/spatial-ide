@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-20T15:18:33.900Z",
-  "plan_hash": "18d26509e0531824cc3c3f0b865315468de91bccee5e5624c3286223080eb805",
+  "generated_at": "2026-11-20T15:39:13.947Z",
+  "plan_hash": "37473d2fa2dbd1add4f121e799371d692ebad23dea964a098876ed4d6d963960",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -192,6 +192,25 @@
         "done": null
       },
       "summary": "PLACED 2026-11-12 by the human's message of 2026-11-12 (13:07Z), item 5 (e) (state/directives/2026-11-12-s1-fix-open-a-c-s6b-now-pr-b-class-9-now-1c-five-308-c1-words-platform-reports-order-no-git-stash.md, line 48): the stall report (state/consults/2026-11-11-platform-recentre-stall-read-and-profile.md, a reading and not Authority) stays beside the architect's read, and the stalls stay S3; its three proposed observations are one S3 node behind the fix. NEXT: after the fix's merge, its form."
+    },
+    {
+      "id": "session-log-token-redaction-rests-on-page-code",
+      "title": "The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-16",
+        "done": null
+      },
+      "summary": "LIFTED 2026-11-20 (ADV-2026-11-19-35 item 1 (f), its P4 read as P4a by ADV-2026-11-20-04 item 6): P4a merged and recorded (the 1c form, Amendment 64); beside P4b if rule (00) finds no shared path; the architect re-reads the form of 2026-10-23 against main first, with the control characters and the picker doc, and what changed goes to the advisor; no code before. PLACED 2026-11-19 (ADV-2026-11-19-35): in slot 1 once P4 has merged, beside P5 if P5 declares no src-tauri path, else after P5; the architect re-reads the form of 2026-10-23 against main after P4 merges; depends_on unchanged until then. RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-2 (i), OPEN-3 (a). The piece waits for 1c step 1's merge. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 5: OPEN-1 yes, the human's typed word: tauri's test feature as a dev-dependency, the PR body listing the Cargo.lock diff and naming any crate it adds; OPEN-4 (a). OPEN-2 and OPEN-3 were not answered and stay the human's. Before: FORM DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-session-log-token-redaction-rests-on-page-code-architect-draft.md): the full form (section 21a's guarantee head: state.rs's never-written comment made true by code for the page's lines); DataPlaneHandle holds the data plane's Session in place of the token string, and binding_log_session_event passes level and message through Session::redact before the append; K-1 and K-2 through the real IPC, one mutation each; no protocol/ edit; at most 180 lines over 4 files. OPEN-1 (the test's route: tauri's test feature under dev-dependencies, a red line), OPEN-2 (the origin self-check's lines left unredacted and named) and OPEN-3 (level redacted too) are the human's. OPEN-4, the custodian's under rule (00): (a), the first natural gap with no 1c step holding src-tauri paths in progress or awaiting merge, the first being after step 1's PR merges and before step 2 dispatches; the depends_on is lifted then. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 2: graded S2; binding_log_session_event runs Session::redact on the text before it appends; a test shows a token in the page's text never reaches the log. The custodian's call under rule (00): after 1c's src-tauri group merges (1c's section 2.7 edits commands.rs), not inside 1c; its dependency reads the whole node until that group's merge is recorded. Its form is drafted ahead. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it."
     },
     {
       "id": "shell-e2e-publish-audit-log-follows-app-dirs",
@@ -480,28 +499,6 @@
         "done": null
       },
       "summary": "PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 6 of 7, still after 1c. Before: PROPOSED 2026-11-05 by the custodian, from the drift-sweep triage of area D (state/consults/2026-11-05-drift-sweep-areas-c-d-triage-architect.md, D1 to D6, and C2's README lines; the platform sweep state/consults/2026-11-03-platform-drift-sweep-area-d.md): confirmed by reading on main: kernel/README.md's admission-class sum, with its claim that in the shipped shell the class never refuses, and engine/src/pool.rs's twin, no longer count the Table's filtered query or record_step's filter admission (D1; pool.rs also cites a paragraph one line off); the stream-lease refusal called unreachable on the natural-completion path in kernel/README.md, engine/README.md and pool.rs, while the kernel's own doc in skp.rs says every pending ticket already holds the lease, and publish leases the same class (D2); engine/README.md restating the uninterruptible-window sentence engine/src/stream.rs withdrew, the publish write being chunked (D3); kernel/src/permission/approval.rs saying a future surface adds a third implementation, which exists, and that the trait has one method (D4); engine/src/lib.rs's measurement scope silent on the clang-cl build of the bundled DuckDB (D5); kernel/src/skp.rs's every Tauri command handler sentence, overbroad (D6); and ADR-036 called Proposed in kernel/README.md's owner's index lines and engine/README.md (C2). Whether the extra admissions overlap in ordinary timing is not decidable by reading; KNOWN-LIMITATIONS tells users the truth. GRADED S2 by the custodian for D1 to D3 (a guarantee or bound a reviewer relies on, stated untrue); D4 to D6 and C2's lines S3, riding. Shares both READMEs with module-readme-moved-form-paths, kernel/README.md with kernel-composed-ceiling-projected-stream and 1c's records, and skp.rs with open-dataset-close-serialised-under-the-catalog-lock and pre-admission-change-detail-braces; one path each under rule (00). Placement the human's.",
-      "blocked_by": [
-        "b2-piece-1c-save-and-reopen"
-      ]
-    },
-    {
-      "id": "session-log-token-redaction-rests-on-page-code",
-      "title": "The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "blocked",
-      "order": null,
-      "budget_minutes": 60,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-16",
-        "done": null
-      },
-      "summary": "PLACED 2026-11-19 (ADV-2026-11-19-35): in slot 1 once P4 has merged, beside P5 if P5 declares no src-tauri path, else after P5; the architect re-reads the form of 2026-10-23 against main after P4 merges; depends_on unchanged until then. RULED 2026-10-23 (state/directives/2026-10-23-clicks-245-246-247-sort-window-fix-before-port-2-covering-case-route-1-244-c1-milestone-4-and-1c-open-items-ruled.md): OPEN-2 (i), OPEN-3 (a). The piece waits for 1c step 1's merge. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-open-items-ruled-verify-cites-pin-covering-case-port-2-session-log-test-feature-v0-2-findings-graded.md), item 5: OPEN-1 yes, the human's typed word: tauri's test feature as a dev-dependency, the PR body listing the Cargo.lock diff and naming any crate it adds; OPEN-4 (a). OPEN-2 and OPEN-3 were not answered and stay the human's. Before: FORM DRAFTED AHEAD 2026-10-23 (state/consults/2026-10-23-session-log-token-redaction-rests-on-page-code-architect-draft.md): the full form (section 21a's guarantee head: state.rs's never-written comment made true by code for the page's lines); DataPlaneHandle holds the data plane's Session in place of the token string, and binding_log_session_event passes level and message through Session::redact before the append; K-1 and K-2 through the real IPC, one mutation each; no protocol/ edit; at most 180 lines over 4 files. OPEN-1 (the test's route: tauri's test feature under dev-dependencies, a red line), OPEN-2 (the origin self-check's lines left unredacted and named) and OPEN-3 (level redacted too) are the human's. OPEN-4, the custodian's under rule (00): (a), the first natural gap with no 1c step holding src-tauri paths in progress or awaiting merge, the first being after step 1's PR merges and before step 2 dispatches; the depends_on is lifted then. Before: RULED 2026-10-23 (state/directives/2026-10-23-weekend-covering-case-s1-session-log-redaction-s2-governance-and-docs-order-v0-2-scope-port-2-approved.md), item 2: graded S2; binding_log_session_event runs Session::redact on the text before it appends; a test shows a token in the page's text never reaches the log. The custodian's call under rule (00): after 1c's src-tauri group merges (1c's section 2.7 edits commands.rs), not inside 1c; its dependency reads the whole node until that group's merge is recorded. Its form is drafted ahead. Before: PROPOSED 2026-10-16 by the custodian, for the human's triage: candidate 2 of the boundary inventory (state/consults/2026-10-16-boundary-inventory-architect.md, Candidates for triage). The comment in frontends/shell/src-tauri/src/state.rs says the token is never written to the session log; binding_log_session_event in commands.rs appends the page's text as given, and Session::redact in protocol/data-plane/src/session.rs is called only by its own test. The custodian confirmed the redact callers by search at b88b1d2f; nothing reproduced. A candidate until graded; the inventory does not grow to fix it.",
       "blocked_by": [
         "b2-piece-1c-save-and-reopen"
       ]
