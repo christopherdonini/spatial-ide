@@ -1685,11 +1685,14 @@ export default function App() {
     // JSX below mounts for *this* `admitted.dataset` (keyed on it), for this manager's whole
     // lifetime -- 1:1, never reassigned later even if `canvasRef.current` is.
     const canvas = canvasRef.current;
-    // B2 piece 1c (O-17, V3): a reopen's saved view, when it applies, is written to this open's canvas once, before its first look.
+    // B2 piece 1c (O-17, V3): a reopen's saved view, when it applies, is taken here and written to this open's canvas once, right after the
+    // first look's call in each branch below (Amendment 60). Never before that call: the candidate arm's `reissueUnrestricted` resets the
+    // fit for its generation before its first await, and a reset after the write would let the first look's data fit the camera.
     const reopenView = reopenViewRef.current;
+    let savedView: { centre: [number, number]; zoom: number } | null = null;
     if (reopenView !== null && reopenView.dataset === admitted.dataset) {
       reopenViewRef.current = null;
-      canvas?.applyView?.(reopenView.view);
+      savedView = reopenView.view;
     }
     if (canvas === null) {
       // Unreachable today: React's commit order re-points a `ref` at its new instance in the
@@ -1829,6 +1832,8 @@ export default function App() {
       // initial issue uses, immediately, not debounced (see this module's own doc comment for why
       // this is what establishes the tile grid's own anchor).
       reportViewportOutcome(session.reissueUnrestricted(null, activeFilterRef.current), admitted.dataset);
+      // O-17: after the call, in this turn: its reset of the fit has run, and none of its data can be drawn before this write.
+      if (savedView !== null) canvas?.applyView?.(savedView);
 
       return () => {
         viewportDebounceRef.current?.cancel();
@@ -2023,6 +2028,9 @@ export default function App() {
     // ref rather than hardcoding `null` keeps this call uniform with the other two issue sites
     // instead of a special case that would silently stop being true if that ordering ever changed.
     reportViewportOutcome(issueViewportQuery(null, null, activeFilterRef.current), admitted.dataset);
+    // O-17: the same place as the candidate arm's, after the first look's call in this turn. This arm's call resets no fit
+    // (`ViewportStreamManager.requestViewport`), so the place keeps one order for both arms and is not needed by this one.
+    if (savedView !== null) canvas?.applyView?.(savedView);
 
     return () => {
       debounced.cancel();
