@@ -379,3 +379,19 @@ Each stop is reported, and the custodian sends it to the advisor.
 ## §13 Amendments
 
 *(Opens empty; append-only.)*
+
+## Amendment 1 — K-3's two mutations, as ADV-2026-11-20-20 item 1 reads them (class 5), before any code
+
+*2026-11-20, by the custodian, under the advisor's ruling ADV-2026-11-20-20, filed under state/directives/ by its id: the advisor's words under the delegation of 2026-11-13, never the human's.*
+
+1. **K-3's mutations** (section 4; the ruling's item 1). Mutation (a) removes the U+FFFD replacement from `append` and keeps the LF escape of both texts: it goes red at the hidden-character check. Mutation (b) applies the whole rule to `message` alone and writes `level` raw: it goes red at the line count. K-3 asserts the line count first. Section 4's words for mutation (a) are read by this item. Class 5.
+2. **The build rules** of sections 8 item 10, 9.2 and 10.2 reach this node (the ruling's item 2), and are standing for every piece with a worker and a reviewer.
+3. **P5** (section 10.3; the ruling's item 3). If P5's declared files hold a src-tauri path while this node is in flight, P5's dispatch waits for this node's merge.
+4. **Section 2.4 (a)** (the ruling's item 4). The clause on a folder already chosen stands. The gates read it against the code as every clause, and a finding that it is untrue goes to the advisor unreworded.
+5. **The class** (the header; the ruling's item 6) rests on ADV-2026-11-19-35 item 1 (d), whatever the week of ADV-2026-11-16-06 comes to.
+6. The note's points (d), (e), (h) and (i) need no ruling (the ruling's item 5).
+7. Superseded: section 4's wording of mutation (a), by item 1. Nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.
