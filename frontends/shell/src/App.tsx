@@ -693,8 +693,8 @@ export function sessionEndReasonOf(code: string): SessionEndReason {
  *
  * **What it sets, and what each is for:**
  * - the typed status (`sessionEnded`), rendered through `RefusalBlock` in the `attention.sessionEnded` slot --
- *   which is what makes `refusalGuidance("engine.source_changed")` (`formatRefusal.ts:70-83`)
- *   actually reach an eye, since `RefusalBlock.tsx:25` is the only product dispatcher of it;
+ *   which is what makes `refusalGuidance("engine.source_changed")` (`formatRefusal.ts`'s `refusalGuidance`)
+ *   actually reach an eye, since `RefusalBlock.tsx`'s `guidance` line is the only product dispatcher of it;
  * - the ref the hover latch reads (`latchedHoverReadout`, `pick.ts`), set synchronously rather than
  *   through React state so a hover arriving in the same tick is already refused;
  * - the hover readout itself, immediately, so a readout standing from before the change is replaced
@@ -2019,14 +2019,15 @@ export default function App() {
     );
     viewportDebounceRef.current = debounced;
 
-    // The first look is unfiltered: `describe` establishes no dataset extent to aim a viewport at
+    // The first look has no box: `describe` establishes no dataset extent to aim a viewport at
     // (SKP-V0.md's C1), so the canvas's own fit-to-bounds-on-open is what puts the camera somewhere
-    // the data actually is. Issued immediately, not debounced -- there is nothing yet to coalesce.
-    // Reads `activeFilterRef.current` too (design section: "all three issue sites read the REF at
-    // issue time") -- always `null` here in practice, since a fresh admission's own
-    // `admitAndResetStaleUiState` call already cleared it before this effect re-runs, but reading the
-    // ref rather than hardcoding `null` keeps this call uniform with the other two issue sites
-    // instead of a special case that would silently stop being true if that ordering ever changed.
+    // the data actually is, unless a reopen's saved view applies (O-17, the write below). Issued
+    // immediately, not debounced -- there is nothing yet to coalesce. Reads `activeFilterRef.current`
+    // too (design section: "all three issue sites read the REF at issue time"). At a fresh open it is
+    // `null`, since `handleAdmitted`'s own `admitAndResetStaleUiState` call cleared it before this
+    // effect re-runs; at a reopen it is the file's filter, or the one its clauses combine to, which
+    // `handleReopened` sets after that call in the same turn (B2 piece 1c, O-16), so the first look
+    // runs under the saved filter.
     reportViewportOutcome(issueViewportQuery(null, null, activeFilterRef.current), admitted.dataset);
     // O-17: the same place as the candidate arm's, after the first look's call in this turn. This arm's call resets no fit
     // (`ViewportStreamManager.requestViewport`), so the place keeps one order for both arms and is not needed by this one.

@@ -16,9 +16,10 @@ export interface FormattedRefusal {
  *
  * **The one exception is a reopen's refusal** (B2 piece 1c, Amendment 54 item 5 (j)): its message and
  * field values can repeat text read from a project file, so the reopen's run passes what this function
- * returns through `project/shownText.ts`'s bound before it is shown or logged. Control and direction
- * characters there are replaced, and a text over the bound is cut and marked as cut. The code and the
- * field names are untouched, and this function itself still changes nothing.
+ * returns through `project/shownText.ts`'s bound before the run shows it or logs it. Control and
+ * direction characters there are replaced, and a text over the bound is cut and marked as cut. The
+ * Console's row of the `open_project` call is not bounded: it shows the refusal whole (Amendment 54
+ * item 13). The code and the field names are untouched, and this function itself still changes nothing.
  *
  * NOTE (reviewer gate, admission-remediation cut): a `remediationIsCut2` boolean field used to
  * live here (cut-1 holdover naming a flow that did not exist yet). It was already unread by every
