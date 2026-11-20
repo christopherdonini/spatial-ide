@@ -3804,3 +3804,76 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 51 — P3b-2's closing, before PR 340's merge request: the commits, the gates, the departures as ruled, the counts (class 8), the runs and the series at the head, CI, main since the merge base, what is not covered, and the notes to the advisor
+
+*Written by the custodian, 2026-11-20, before PR 340's merge request. References and hashes only. Nothing below is a quotation.*
+
+1. **The head and the commits.** H = 231b32cc388b293dc6030f5f92c8b044c85c663a on `cut/b2-piece-1c-p3b-2`, cut from 45ce89da31f9c0e01dd1194de4e77cc38e78317d (Amendment 49 item 1).
+   - The wire half, by the worker on the standard model: d41e2f5e8e00f9b336af9f0880bafe88ad6d8550 and 64bede5cbdc2691476082f929caa0ecc4ac5df83, the tests; 65c4739a3055cb0544b2048e70d1816ba4ae2543, the code. Its report is `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-2-wire-worker-report.md`.
+   - The kernel half, by worker-high on the strongest model: f00748214bf1df29d860dc05286e1812c60452c5, 42a39bce4f9d45808983f557eb6053030bdb52a9, fec9acab3c1b2e0da39d658d5e748032626130c1 and 11963f374aeb83f0936895e4ffb217906717fa30, the tests; e47bc484e3efb2fc899b3a92ab9acdb00efb5def, the code; 8759491f30b346ea9e3be06aebc9ed7b61f276f7, the two attribute lines. Its reports are `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-2-kernel-worker-stop-report.md` (Amendment 50) and `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-2-kernel-worker-report.md`.
+   - W-7's split, by the worker on the standard model, a test change only (ADV-2026-11-19-34): 63950d3668ea618988b2faa6aebb3da1d4aca9c8. Its report is `state/consults/2026-11-19-b2-piece-1c-save-and-reopen-p3b-2-w-7-worker-report.md`.
+   - Main taken in, records only: ddd74c349091832ada443e78ae867fa4ad79371b, whose second parent is 9537543aebb2f0d77e443beb43135a1bc0b6b36f.
+   - The correction, by the worker on the standard model (ADV-2026-11-20-01 item 8; ADV-2026-11-20-02): c759c2cc12c1e2c3167b54ad70be44bd9f9cac77, the docs, comment lines only; then H, the test change. Its report is `state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p3b-2-correction-worker-report.md`.
+
+2. **The gates.**
+   - Attempt 1, at ddd74c34, both FAIL: `state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p3b-2-gate-architect.md` and `state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p3b-2-gate-reviewer.md` (gate-log 798 and 799), ruled by ADV-2026-11-20-01 and ADV-2026-11-20-02. The reviewer's run for ADV-2026-11-19-35 item 2, (b1) and (b2) each seen to fail on Windows under W-4's mutation, is in its report; ADV-2026-11-19-31 item 3's question on the fixtures is answered there too.
+   - Attempt 2, at H, both PASS WITH NOTES, no clause untrue: `state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p3b-2-gate-architect-2.md`, short (ADV-2026-11-20-01 item 1 (a)), and `state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p3b-2-gate-reviewer-2.md`, on the changed lines (item 1 (b)) (gate-log 800 and 801).
+
+3. **The departures, as ruled.**
+   - ADV-2026-11-19-33 item 2: the two extra tests commits fec9acab and 11963f37, class 1. Its item 2 (ii): at 42a39bce the compile failure had a second cause in the test itself, E0618 in W-7, so that commit's red is not W-7's evidence; W-7's evidence is its mutation at the head.
+   - ADV-2026-11-19-33 item 3: the fix commit 8759491f, its two attribute lines class 9, a third commit class 1. ADV-2026-11-20-01 item 6: the two lines stay; both warnings are there at 65c4739a by the reviewer's line.
+   - ADV-2026-11-19-33 item 4: the hold moved to the background, class 1.
+   - ADV-2026-11-19-34 item 5 (a): run 44633818992, red at 8759491f on Ubuntu in W-7's case (b). Ubuntu's lookup did not answer not found for the recorded name of 278 bytes, and the engine refused the path as `engine.source`. Class 2: the row was predicted to pass on the three platforms. Windows and macOS passed.
+   - ADV-2026-11-19-35 item 2: the W-7 worker's two departures, class 1.
+   - ADV-2026-11-20-01 item 7: the W-7 worker's slip, a second copy of case (a) that its report did not name, class 1; the copy is deleted in H, a test change, class 9.
+   - ADV-2026-11-20-02 item 1: the three kernel doc clauses corrected in c759c2cc, comment lines only, class 9.
+
+4. **The counts, class 8** (ADV-2026-11-19-31 item 1; ADV-2026-11-19-33 item 1; ADV-2026-11-20-01 item 8). By section 2.11's command, both columns, over 9537543a...H: the merge base once ddd74c34 took main in. Over 45ce89da...H the groups are the same, and 644 more lines come only from main's records.
+
+   | Group | As ruled | At 63950d36 (the PR body) | At H | Ceiling (Amendment 45 item 8) |
+   |---|---|---|---|---|
+   | protocol | 469, then 473 | 473 | 480 | 455 |
+   | fixtures | 632 | 632 | 632 | 390 |
+   | literal | 176, in 21 files | 176, in 21 files | 176, in 21 files | 190, in at most 22 files |
+   | kernel product | 318 | 318 | 340 | 285 |
+   | kernel tests | 693 | 727 | 716 | 590 |
+   | src-tauri | 50 | 50 | 56 | 35 |
+   | records | 6 | 6 | 6 | 10 |
+   | **Total** | | 2,382, in 48 files | 2,406, in 49 files | 1,955 |
+
+   - The changes after 63950d36 are the correction's, counted in their groups: kernel product 22 more, kernel tests 11 fewer (the deleted copy), src-tauri 6 more, protocol 7 more. The 49th file is `kernel/src/skp.rs`, Amendment 49 item 7's two clauses.
+   - The lock files are unchanged over the range: the custodian's diff and the series' end state.
+
+5. **Runs at H.**
+   - CI: 12 runs, all success, read at 2026-11-20T02:04:06Z.
+   - The series, the one series report of the PR (ADV-2026-11-16-06), by the tester on the standard model, in 33 shared holds from 2026-11-20T02:31:22Z to 04:06:57Z: `state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p3b-2-series-tester-report.md`.
+     - Both frontends' npm ci and builds; the shell's typecheck and tests, 120 files and 1542 tests passed.
+     - The focused kernel targets of Amendment 43 item 16, spatial-skp and src-tauri: each rc 0.
+     - The debug exe, sha256 9a51e3f342524c9de2795d92aec79f8bfed56c359d2204e875db03b41af93752; the measure exe, sha256 3ab5bcae733b59b60849e7d2488c5cfc3dd1ae3ec083e97e12bd7f60ea25b5b2.
+     - E-FL 4 of 4 and recentre-crossing 6 of 6, verdicts only, no figure claimed.
+     - 22 of 23 e2e suites rc 0. source-changed-post ended rc 3, with S5d INCONCLUSIVE and every other step PASS. It is the outcome that step names inconclusive and never a pass, as at PR B's base series and at the first look's series; the tester ran it once more, with the same lines. It is not counted as a pass.
+     - E-SAVE, the project suite: all twelve steps PASS, the same as at P3b-1's head 4b8d6702 but for the two minted project identities.
+     - The fixtures unchanged by cmp.
+   - Clippy and fmt: the reviewer's attempt-1 runs, reused at attempt 2, as its report says (ADV-2026-11-18-24 item 5 (b)).
+   - The mutations of Amendment 43 items 7 (b) and 8 (b): the workers' observed runs, as their reports give them, and the reviewer's attempt-1 runs, as its report gives them. None is run again at H: by the reviewer's attempt 2, the correction changes comment lines, the deleted copy and the escape alone, and the non-comment lines of the five other files are equal.
+
+6. **Main since the merge base** (ADV-2026-11-14-21 item 6 (a)). The merge base with main is 9537543a. The six commits on main after it, to 1284d536c3a460c464fed3247f40b03d38ed15d4, change 14 paths, none of the PR's 49, so the branch takes nothing more from main.
+
+7. **Not covered, at H:**
+   - Amendment 36 item 9's two live opens; `PathNotUnicode`; a cancel after the engine's open (Amendment 43 item 13).
+   - On CI's Linux, no test shows the cut of `file_name` (ADV-2026-11-19-34 item 5 (b)).
+   - As seen in run 44633818992: a recorded path that the lookup refuses for a reason other than not found gets no `not_found` reply; the engine refuses it, and its message names the recorded path whole (ADV-2026-11-19-34 item 5 (c)).
+   - The reviewer's N4 at PR 339's first gate, as Amendment 49 item 4 (a) names it.
+   - `opened_of`'s four panic sites, as ADV-2026-11-20-01 item 5 names them. Its node is proposed in the next batch, not placed.
+   - N-1 (ADV-2026-11-20-01 item 3): the exception covers the whole error as the host built it, code, message and fields. Stop 10 was not reached. P4's form bounds what the shell shows and logs.
+
+8. **To the advisor, with the merge request:** attempt 2's architect note N-A, by reference to its report, unreworded. The architect does not count it untrue, and ties it to the gap that ADV-2026-11-20-01 item 9 carries for P5. The architect's N-B and the reviewer's N-a to N-c are notes.
+
+9. **Carried.** For P4's form: ADV-2026-11-19-34 item 6, ADV-2026-11-20-01 item 3's bound and item 9's first point, Amendment 49 item 4 (b), and Amendment 50 item 6. For P5's words: ADV-2026-11-20-01 item 9's second point.
+
+10. **Superseded index:** nothing is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
