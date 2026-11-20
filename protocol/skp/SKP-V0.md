@@ -10,9 +10,9 @@ it is not a promise about v1.
 architect-first workflow rule. Three premises in the cut brief were corrected in that review and the
 corrections are recorded here rather than smoothed over (§2).
 
-## 1. The seven commands
+## 1. The eight commands
 
-This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, and the seventh, `save_project` (`skp/0.13`), is §11's.
+This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, the seventh, `save_project` (`skp/0.13`), is §11's, and the eighth, `open_project` (`skp/0.14`), is §12's.
 
 Every request carries the version literal stated in §4 item 3 (`skp/0` at v0). The host compares it with `==` and refuses anything else
 (`skp.version_unsupported`) — see §4 for why nothing richer exists yet. Every response is
@@ -226,8 +226,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
    **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
    projection parameter, on the same shape row-filter's own addition took.
-   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either.
-2. **Transport bindings** — one: Tauri invoke, for the seven commands. **`skp/0.5` adds exactly one
+   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either. **`skp/0.14` (§12) adds an eighth command, `open_project`**: it reopens a saved project and opens the dataset it names.
+2. **Transport bindings** — one: Tauri invoke, for the eight commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
    stdio, no MCP adapter. **`skp/0.6` (§9) adds no binding** — the projection rides the existing
@@ -241,12 +241,12 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.13` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.13`.
-4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's seven
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.14` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.14`.
+4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eight
    commands and cannot adapt to a future kernel.
-5. **Cancellation and progress** — cancellation: yes, for streams and for `open_dataset` (§2, C3).
-   Progress: data-plane batches only. `open_dataset` is cancellable but not progress-reporting.
+5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset` and for `open_project` (§2, C3; §12.3).
+   Progress: data-plane batches only. `open_dataset` and `open_project` are cancellable but not progress-reporting.
    **v0.1 (§7) adds a named shortfall to this item, not a new gap**: for a filtered scan whose
    predicate matches late, "progress: data-plane batches only" can mean *zero* batches for a long
    time — see §7's own shortfall paragraph.
@@ -275,7 +275,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
    Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
    generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
-   turn it off, and no request or response on any of the seven commands mentions it. No other
+   turn it off, and no request or response on any of the eight commands mentions it. No other
    server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §5. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
@@ -1155,6 +1155,17 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 - **What did not change.** The values `written` and `withheld` and the reply shape are as before. `protocol/data-plane/` has an empty diff.
 - **Where the sentences are.** §11.2's `history_mark` paragraph and §11.3's "Every save" bullet are brought current in place.
 
+### skp/0.14 — `open_project` (B2 piece 1c, step 2, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`, Amendment 43)
+
+**The version's FULL field set, as §8's own discipline requires:** one command and its types, nine codes, two changed messages and one changed code. The other seven commands keep their requests and replies; of these codes and messages, `save_project` can return `skp.project_file_names_another_project`, the changed code and `skp.project_file_refused`'s new message, and `open_dataset` can return `skp.cancel_key_in_use`'s.
+
+- **An eighth command, `open_project`:** request `{skp, folder, cancel_key, answer, relink}`, reply one of `{opened}`, `{question}` and `{not_found}`; §12.2 gives every member. `answer` and `relink` are always present, `null` for none.
+- **Nine new `skp.*` codes:** `skp.project_file_unreadable` (`detail`), `skp.project_machine_record_refused` (`file`, `rule`), `skp.project_known_folders_full` (`project`, `count`), `skp.project_open_elsewhere` (`project`), `skp.project_machine_store_failed` (`detail`), `skp.project_target_unresolvable`, `skp.project_target_through_link` (`locator`, `segment`), `skp.project_target_wrong_kind` (`locator`, `segment`, `expected`) and `skp.project_file_names_another_project` (`project`, `found`). §12.4 and §11.4 list them.
+- **Two messages change, with no field:** `skp.project_file_refused` and `skp.cancel_key_in_use`, which now names both calls that can hold a key.
+- **One code changes:** a machine store file's refusal at `save_project` is `skp.project_machine_record_refused`, where it was `skp.project_file_refused`.
+
+§1 and §4 are updated in place to count eight commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.13"` → `"skp/0.14"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the three shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.14` as an unsupported future version is renumbered to name `skp/0.15`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1269,7 +1280,7 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 
 ### 10.1 Version
 
-`skp` is now compared against `"skp/0.13"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12` and `skp/0.13` entries).
+`skp` is now compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13` and `skp/0.14` entries).
 
 ### 10.2 The wire shape
 
@@ -1324,7 +1335,7 @@ Five new codes, all minted by the host:
 
 ### 11.1 Version
 
-`skp` is compared against `"skp/0.13"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13` entry).
+`skp` is compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13` and `skp/0.14` entries).
 
 ### 11.2 The wire shape
 
@@ -1367,9 +1378,81 @@ Five new codes, all minted by the host:
 | `skp.project_folder_not_given` | *(none)* | `folder` is `null` and no save of this open has chosen a folder |
 | `skp.project_folder_holds_project` | `folder` | a first save into a folder that already holds `project.spatial`; nothing was written |
 | `skp.project_file_unwritable` | `detail` | the project folder cannot be read, or a file of the save (the project file or a file of the project's machine store) could not be read or written |
-| `skp.project_file_refused` | `path`, `rule` | a member of the workspace, of the project file built from it or of a machine store file breaks a rule its reader holds, or the project file there is one the reader refuses, or no reference can be bound to the open; `path` names the member |
+| `skp.project_file_refused` | `path`, `rule` | a member of the workspace or of the project file built from it breaks a rule its reader holds, or the project file there is one the reader refuses, or no reference can be bound to the open; `path` names the member. From `skp/0.14` a machine store file's refusal is `skp.project_machine_record_refused` (§12.4) |
 | `skp.project_lineage_not_kept_by_this_version` | *(none)* | the project file there records a lineage, which this version does not keep |
+
+From `skp/0.14`, one code more, which a later save can give: `skp.project_file_names_another_project` (`project`, `found`). The project file in the open's folder names another project than the open's own; `found` is the identity it names. Nothing was written, and the file is as it was. No folder and no path crosses.
 
 ### 11.5 Data plane
 
 **Unchanged, empty diff.** `save_project` opens no stream and mints no ticket.
+
+## 12. `open_project`
+
+**B2 piece 1c, step 2** (`kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md` §2.2 and Amendment 43), following ADR-036 and §11. Laid out as §11 is.
+
+### 12.1 Version
+
+`skp` is compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14` entry).
+
+### 12.2 The wire shape
+
+```
+{ skp, folder: string, cancel_key, answer: null | "copy" | "same", relink: null | string }
+    →  { opened } | { question } | { not_found }        (one member, externally tagged)
+
+opened    = { project, dataset: DatasetHandle, session: SessionRef, workspace, view, check, lineage }
+question  = { kind: "copy-or-same" }
+not_found = { file_name: string | null }
+
+workspace = as §11.2
+view      = { state: "applies" } | { state: "saved-in-another-space", basis }
+check     = { observed: [ "size" | "mtime" | "footer-length" | "footer-hash", … ],
+              admission: [ "crs" | "identity", … ] }
+lineage   = { folder_file, previous_file }
+folder_file   = "absent" | "not-read" | "recorded" | "recorded-with-lines-after"
+              | "not-the-recorded-one" | { refused }
+previous_file = null | "absent" | "used" | "not-the-recorded-one" | { refused }
+refused   = { reason: "over-bound", line: n | null, limit } | { reason: "damaged", line }
+          | { reason: "unreadable" } | { reason: "through-link" }
+```
+
+- **`folder`** is the project folder, an absolute UTF-8 path. **`cancel_key`** is client-minted (§3). **`answer`** and **`relink`** are always present, `null` for none; any other `answer` is refused at deserialize, as is every unknown word of this section.
+- **`project`** is the identity of the project that is open: the file's, or a new one after the answer `copy`. `dataset` and `session` are what `open_dataset` returns for the data.
+- **`workspace`** is the project file's, in §11.2's shape, `view` included. **`view`** says whether that saved view applies: `applies` when the space it was saved in equals the space the data is admitted in. Otherwise `basis` names both spaces by identifiers and hashes, and no path. In each identifier in it, every control character is replaced by U+FFFD, and an identifier then over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes.
+- **`check`** states facts and no consequence. `observed` holds the words of the engine's own comparison (`size`, `mtime`, `footer-length`, `footer-hash`) and `admission` holds `crs` and `identity`. Both lists are empty exactly when no compared component differed, which does not say that the file is the same one. Names cross, never a recorded or a present value.
+- **`lineage`** holds two facts about the lineage files and no line of either. `folder_file` is the folder's file against the lineage the project file records; `previous_file` is the one kept on this machine, `null` when there was none to look for. `refused` carries the reason and, where there is one, the line number, and never the rule's text. Where two lines break rules, the first in the file's order is named.
+- **`file_name`** is the last name of the missing file, never a path, and `null` when no location is recorded for the dataset. Every control character in it is replaced by U+FFFD, and a name then over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes.
+
+### 12.3 The contract
+
+- **Two calls, no state between them.** The kernel keeps nothing between the first call and the second. A `question` or a `not_found` is answered by calling again, with `answer` or with `relink`.
+- **`question`** means the folder is not one the machine remembers for the project, and the folder it remembers first still holds a project file of this identity, or one the reader refuses, or cannot be read, it or its project file. Nothing was written. The answer `copy` mints a new identity into this folder; the answer `same` is remembered for this folder.
+- **The data** is found by the project-relative locator the file carries, through the resolver's check, which refuses a locator it cannot resolve; otherwise by the location this machine's store holds for the dataset, and a location that is absent, or whose file is missing, is `not_found`.
+- **A `relink`** is an absolute UTF-8 path to a file the client chose after `not_found`. It replaces the dataset's entry in the machine store whatever the entry held. A client sends one after a `not_found`.
+- **The open** is `open_dataset`'s, with the claims the project file recorded and the request's `cancel_key`. A project is open once at a time within one user's machine store, where its lock is kept: a reopen of a project whose lock another open holds is refused as `skp.project_open_elsewhere`. The lock does not reach another user's store on the same machine.
+- **No reply carries a path.** A refusal may name the request's own `folder` or `relink` as sent, a locator's JSON path and its segment as the project file spells it, a machine-store file by its fixed name, and an identity. One exception: an engine refusal keeps the engine's own message, unedited (§5), and that message may name the path the engine was given.
+- **Cancellable**, through `cancel` and the request's `cancel_key`, as `open_dataset` is, and not progress-reporting. A key that a live `open_dataset` or `open_project` call holds is refused as `skp.cancel_key_in_use`. A cancel that the call sees before the engine's open returned refuses it as `engine.cancelled`. The call looks between its steps, so a `question`, a `not_found` or another refusal already decided can still be the reply. A cancel after the engine's open returned a dataset is not seen: the call goes on as it would with none.
+
+### 12.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.malformed_cancel_key`; `skp.cancel_key_in_use`; `skp.unknown_dataset`; `engine.cancelled`; the engine's refusals of the open, exactly as §5 gives them; and `skp.project_file_refused` and `skp.project_file_unwritable`, as §11.4 gives them. `skp.project_file_refused` here is a member of the project file the reopen reads, or of the document a copy would write, that breaks a rule its reader holds.
+
+Eight new codes, all minted by the host. A ninth, `skp.project_file_names_another_project`, is a refusal of `save_project` and is in §11.4.
+
+| Code | Fields | When |
+|---|---|---|
+| `skp.project_file_unreadable` | `detail` | `project.spatial` could not be read; `detail` is the operating system's error text |
+| `skp.project_machine_record_refused` | `file`, `rule` | `folders.json` or `locations.json` breaks a rule its reader holds |
+| `skp.project_known_folders_full` | `project`, `count` | the machine remembers `count` folders for the project, and no more can be added |
+| `skp.project_open_elsewhere` | `project` | another open holds the project, in this process or in another |
+| `skp.project_machine_store_failed` | `detail` | this machine's store for the project could not be used; `detail` is a file's fixed name, a colon and the error's text, or, from the shell's `open_project` binding when no per-user data directory resolves, `no per-user data directory is available` |
+| `skp.project_target_unresolvable` | `folder`; or `locator` and `segment`; or `locator`; or none | the project folder, or a segment of the data's locator, cannot be resolved; the last form is a data path that is not Unicode |
+| `skp.project_target_through_link` | `locator`, `segment` | a segment of the data's locator is a link, which is not followed |
+| `skp.project_target_wrong_kind` | `locator`, `segment`, `expected` (`folder` or `file`) | a segment of the data's locator is not a folder, or the last is not a regular file |
+
+An engine refusal at a reopen can say "the caller asserted" where the claim was the project file's, and `skp.unknown_dataset` from the reopen's own check after its open says "or never opened this session", which needs a close of a handle the client never received inside one call. Both messages stand as the engine and the host write them.
+
+### 12.5 Data plane
+
+**Unchanged, empty diff.** `open_project` opens no stream and mints no ticket.

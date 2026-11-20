@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! The seven SKP v0 commands: `open_dataset`, `describe`, `viewport_query`, `cancel`,
-//! `close_dataset`, from `skp/0.12` `record_step` and from `skp/0.13` `save_project`. Nothing else
-//! — see `../../SKP-V0.md` §4's named-deferral list.
+//! The eight SKP v0 commands: `open_dataset`, `describe`, `viewport_query`, `cancel`,
+//! `close_dataset`, from `skp/0.12` `record_step`, from `skp/0.13` `save_project` and from `skp/0.14`
+//! `open_project`. Nothing else — see `../../SKP-V0.md` §4's named-deferral list.
 //!
 //! Every struct here is `#[serde(deny_unknown_fields)]` in both directions: adding, removing or
 //! retyping a field is a new `skp` version string, never a tolerant reader (SKP-V0.md §4 item 13).
@@ -767,6 +767,184 @@ pub enum ProjectRelativeLocator {
     Outside,
     NoCanonicalSpelling,
     ThroughLink,
+}
+
+// ---------------------------------------------------------------------------------------------
+// open_project
+// ---------------------------------------------------------------------------------------------
+
+/// **`skp/0.14`.** Reopens a saved project: the kernel reads `project.spatial` in `folder`, opens
+/// the dataset the project names, and replies with the workspace it holds (SKP-V0.md §12).
+///
+/// `folder` is the project folder, an absolute UTF-8 path. `cancel_key` is client-minted, as
+/// `open_dataset`'s is, and names this call for `cancel`. `answer` is `null` at the first call and
+/// is the client's answer to a `question` reply at the second. `relink` is `null`, or the absolute
+/// UTF-8 path of the data file the client chose after a `not_found` reply. Both keys are always
+/// present, `null` for none.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OpenProjectRequest {
+    pub skp: String,
+    pub folder: String,
+    pub cancel_key: String,
+    #[serde(deserialize_with = "key_present")]
+    pub answer: Option<ReopenAnswer>,
+    #[serde(deserialize_with = "key_present")]
+    pub relink: Option<String>,
+}
+
+/// The answer to a `question` reply (see [`ReopenQuestion`]): the client says whether this folder
+/// is a `copy` of the project, which then gets a new identity, or the `same` project, in which case
+/// this folder is recorded beside the first.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ReopenAnswer {
+    Copy,
+    Same,
+}
+
+/// One of three replies, externally tagged: `{"opened": …}`, `{"question": …}` or
+/// `{"not_found": …}`. No reply carries a path.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum OpenProjectResponse {
+    Opened(Box<OpenedProject>),
+    Question(ReopenQuestion),
+    NotFound(ReopenNotFound),
+}
+
+/// A reopened project. `project` is its identity, a new one after the answer `copy`. `dataset` and
+/// `session` are what `open_dataset` returns for the data. `workspace` is the project file's, as
+/// `save_project` takes it. `check` and `lineage` are the kernel's facts and no more.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct OpenedProject {
+    pub project: String,
+    pub dataset: DatasetHandle,
+    pub session: SessionRef,
+    pub workspace: ProjectWorkspace,
+    pub view: ReopenView,
+    pub check: ReopenCheck,
+    pub lineage: ReopenLineage,
+}
+
+/// Whether the saved view applies to the reopened data. `basis` names the space the view was saved
+/// in and the space the data is admitted in, by identifiers, and holds no path. In each identifier,
+/// every control character is replaced by U+FFFD, and one then over 256 bytes is cut on a
+/// character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "state", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum ReopenView {
+    Applies {},
+    SavedInAnotherSpace { basis: String },
+}
+
+/// What differs between the project file's reference to the data and the data as opened. Both
+/// lists are empty exactly when the kernel found no change. Only names cross, never a recorded or
+/// a present value.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReopenCheck {
+    pub observed: Vec<ObservedChange>,
+    pub admission: Vec<AdmissionChange>,
+}
+
+/// A component of the file's observation that differs, in the engine's own words
+/// (`engine/src/descriptor.rs`, `differing_components`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum ObservedChange {
+    Size,
+    Mtime,
+    FooterLength,
+    FooterHash,
+}
+
+/// A claim of the admission that differs from the one the project file recorded.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum AdmissionChange {
+    Crs,
+    Identity,
+}
+
+/// Two facts about the lineage files of the reopen. No line of a lineage file and no rule text
+/// crosses.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReopenLineage {
+    pub folder_file: FolderLineageFact,
+    #[serde(deserialize_with = "key_present")]
+    pub previous_file: Option<PreviousLineageFact>,
+}
+
+/// The lineage file in the project folder, against the lineage the project file records.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum FolderLineageFact {
+    Absent,
+    /// The project file records no lineage, so the folder's file was not read.
+    NotRead,
+    Recorded,
+    RecordedWithLinesAfter,
+    NotTheRecordedOne,
+    Refused(LineageRefusal),
+}
+
+/// The previous lineage file kept on this machine. `null` where there was none to look for.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum PreviousLineageFact {
+    Absent,
+    Used,
+    NotTheRecordedOne,
+    Refused(LineageRefusal),
+}
+
+/// Why a lineage file was refused whole. Line numbers cross, and rule text does not. Where two
+/// lines break rules, the first in file order is named.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "reason", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum LineageRefusal {
+    /// Over the file's bound when `line` is `null`, else over that line's ceiling.
+    OverBound {
+        #[serde(deserialize_with = "key_present")]
+        line: Option<u64>,
+        limit: u64,
+    },
+    Damaged {
+        line: u64,
+    },
+    Unreadable {},
+    ThroughLink {},
+}
+
+/// This folder is not one that this user's machine store records for the project, and the folder it
+/// records first still holds a project file of this identity, or one the reader refuses, or cannot
+/// be read, it or its project file. Nothing was written. The client asks and calls again with an
+/// `answer`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReopenQuestion {
+    pub kind: ReopenQuestionKind,
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum ReopenQuestionKind {
+    #[serde(rename = "copy-or-same")]
+    CopyOrSame,
+}
+
+/// No file was found for the dataset. `file_name` is the last name of the missing file, never a
+/// path, and `null` when no location is recorded for the dataset. Every control character in it is
+/// replaced by U+FFFD, and a name then over 256 bytes is cut on a character boundary within them
+/// and marked with ` [cut]`, so that it is at most 262 bytes. The client may call again with a
+/// `relink`.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ReopenNotFound {
+    #[serde(deserialize_with = "key_present")]
+    pub file_name: Option<String>,
 }
 
 #[cfg(test)]

@@ -555,3 +555,48 @@ fn a_save_made_before_any_step_binds_the_open_and_a_later_open_saved_elsewhere_k
         assert_eq!(steps[0]["parent"], Value::Null);
     }
 }
+
+/// **K-O27** (the 1c form's Amendment 43 item 7 (b), moved to P3b-2 by item 20's P-5; placed here by
+/// Amendment 49 item 5 (a), since it asserts the wire code). A first save into folder A; a second
+/// open, of another file, saved first into folder B; A's `project.spatial` replaced by B's. The
+/// first open's later save is refused by its own code, naming both identities, and A's bytes are
+/// unchanged.
+///
+/// RECORDED MUTATION: the identity comparison in `Projects::save` removed. Expected failure: the
+/// later save replaces A's file, and this test fails at A's bytes.
+#[test]
+fn a_later_save_into_a_folder_whose_project_file_names_another_project_is_refused_and_the_file_is_kept(
+) {
+    let rig = rig("k-o27");
+    let a = rig.save(rig.wire(Some(&rig.folder), [1.0, 2.0], 0.0));
+    let a = a.expect("A saved");
+    let (other, data) = (
+        rig.dir.join("other"),
+        rig.dir.join("data-b/parcels.parquet"),
+    );
+    std::fs::create_dir_all(&other).expect("folder B");
+    write_f1(&data);
+    let req = OpenDatasetRequest {
+        skp: SKP_VERSION.to_string(),
+        path: data.display().to_string(),
+        cancel_key: "k".to_string(),
+        crs_assertion: None,
+        identity: None,
+    };
+    let second = rig.host.open_dataset(req).expect("open").dataset;
+    let mut wire = rig.wire(Some(&other), [1.0, 2.0], 0.0);
+    wire["dataset"] = json!(second.as_str());
+    let b = rig.save(wire).expect("B saved");
+    let file = rig.folder.join(PROJECT_FILE_NAME);
+    std::fs::copy(other.join(PROJECT_FILE_NAME), &file).expect("A's file replaced by B's");
+    let before = std::fs::read(&file).expect("A's file");
+    let got = rig.save(rig.wire(None, [3.0, 4.0], 1.0));
+    let after = std::fs::read(&file).expect("A's file");
+    assert!(after == before, "A's bytes are unchanged: {got:?}");
+    let e = got.expect_err("refused");
+    assert_eq!(e.code, "skp.project_file_names_another_project", "{e:?}");
+    assert_eq!(
+        (&e.fields["project"], &e.fields["found"]),
+        (&a.project, &b.project)
+    );
+}

@@ -121,5 +121,82 @@
    "history_mark": "withheld",
    "project_relative": "no-canonical-spelling"
   }
+ },
+ {
+  "id": "resp-open-project-opened",
+  "spec": "\u00a712.2 open_project reply, opened",
+  "wire_type": "open_project.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "opened": {
+    "project": "spatial://project/0123456789abcdef0123456789abcdef",
+    "dataset": "ds_0123456789abcdef0123456789abcdef",
+    "session": "sr_0123456789abcdef0123456789abcdef",
+    "workspace": {
+     "filter": null,
+     "clauses": [],
+     "style": {
+      "layer": {
+       "geometry": "polygon"
+      },
+      "style_version": 1
+     },
+     "view": {
+      "centre": [
+       "4143d62040000000",
+       "41324f8040000000"
+      ],
+      "zoom": "c012000000000000"
+     }
+    },
+    "view": {
+     "state": "saved-in-another-space",
+     "basis": "x"
+    },
+    "check": {
+     "observed": [
+      "size"
+     ],
+     "admission": [
+      "crs"
+     ]
+    },
+    "lineage": {
+     "folder_file": {
+      "refused": {
+       "reason": "over-bound",
+       "line": null,
+       "limit": 1
+      }
+     },
+     "previous_file": null
+    }
+   }
+  }
+ },
+ {
+  "id": "resp-open-project-question",
+  "spec": "\u00a712.2 open_project reply, question",
+  "wire_type": "open_project.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "question": {
+    "kind": "copy-or-same"
+   }
+  }
+ },
+ {
+  "id": "resp-open-project-not-found",
+  "spec": "\u00a712.2 open_project reply, not_found (file_name is a name or null)",
+  "wire_type": "open_project.response",
+  "expect": "accept",
+  "roundtrip": true,
+  "document": {
+   "not_found": {
+    "file_name": null
+   }
+  }
  }
 ]

@@ -299,3 +299,9 @@ Appended after acceptance, from piece 1c's form (`governance/forms/kernel/B2-1C-
 1. The same holds at the first save of a session that opened the project from its folder. Where the project's record already holds a history another run left, neither history is replaced: the save writes no saved-here mark, and the session's history stays under its own record.
 
 2. When a project has moved (§4), the folder it opened from becomes the first folder, and the folder it moved from is no longer remembered.
+
+## Amendment 4 — piece 1c: the dataset reference identity of a reopened open (b2-piece-1c-save-and-reopen, 2026-11-19)
+
+Appended after acceptance, from piece 1c's form (`governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`, Amendment 43). The words are the advisor's wording, under the delegation of 2026-11-13 (ADV-2026-11-19-26). It completes Amendment 2, item 3, for an open made by a reopen.
+
+1. An open made by reopening a saved project (`Projects::open_project` in `kernel/src/project/mod.rs`) does not keep a dataset reference identity minted for it. Before any step of that open, it takes the identity that the project file's dataset entry carries (`StepRecorder::reopened` in `kernel/src/session_history.rs`). The history's header and each step's `data.dataset` then carry the file's identity, and a save of that open writes the same identity back. This holds after the answer `copy` too: the project's identity is then new, and the dataset's is still the file's. For every other open, Amendment 2, item 3, stands as written.

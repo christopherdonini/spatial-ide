@@ -555,6 +555,7 @@ pub fn run() {
             commands::close_dataset,
             commands::record_step,
             commands::save_project,
+            commands::open_project,
             commands::binding_data_plane_attach,
             commands::binding_log_session_event,
             commands::binding_pick_file,

@@ -1,0 +1,16 @@
+{
+  "opened": {
+    "project": "spatial://project/0123456789abcdef0123456789abcdef",
+    "dataset": "ds_00112233445566778899aabbccddeeff",
+    "session": "sr_00112233445566778899aabbccddeeff",
+    "workspace": {
+      "filter": {"predicate": "zone = 'civic'", "dialect": "duckdb-expr/0"},
+      "clauses": [{"text": "zone = 'civic'", "enabled": true}],
+      "style": {"style_version": 1, "layer": {"geometry": "polygon", "fill_color": {"literal": "#4285f4"}, "fill_opacity": {"literal": 0.35}, "outline_color": {"literal": "#000000"}, "outline_width": {"literal": 1.5}}},
+      "view": {"centre": ["4143d62040000000", "41324f8040000000"], "zoom": "c012000000000000"}
+    },
+    "view": {"state": "applies"},
+    "check": {"observed": [], "admission": []},
+    "lineage": {"folder_file": "absent", "previous_file": null}
+  }
+}

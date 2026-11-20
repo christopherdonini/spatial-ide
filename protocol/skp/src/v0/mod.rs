@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! SKP v0 — seven commands, no more. See `../../SKP-V0.md`.
+//! SKP v0 — eight commands, no more. See `../../SKP-V0.md`.
 
 pub mod codec;
 pub mod commands;
@@ -120,4 +120,17 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields` both
 /// directions, `==` unchanged, the fixtures updated in the same commit as the literal bump
 /// (`SKP-V0.md` §8's `skp/0.13` entry).
-pub const SKP_VERSION: &str = "skp/0.13";
+///
+/// `skp/0.14` (B2 piece 1c, step 2, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`): an eighth
+/// command, `open_project` (`SKP-V0.md` §12), its request and its three-member reply, and nine new
+/// `skp.*` refusal codes: `project_file_unreadable`, `project_machine_record_refused`,
+/// `project_known_folders_full`, `project_open_elsewhere`, `project_machine_store_failed`,
+/// `project_target_unresolvable`, `project_target_through_link`, `project_target_wrong_kind` and
+/// `project_file_names_another_project`. `project_file_refused` and `cancel_key_in_use` take new
+/// messages. The other seven commands keep their requests and replies. Of these codes and messages,
+/// `save_project` can return `project_file_names_another_project`, `project_machine_record_refused`
+/// where it returned `project_file_refused`, and `project_file_refused`'s new message, and
+/// `open_dataset` can return `cancel_key_in_use`'s; `protocol/data-plane/` has an empty diff. Same
+/// discipline again: `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in
+/// the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.14` entry).
+pub const SKP_VERSION: &str = "skp/0.14";

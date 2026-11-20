@@ -98,10 +98,14 @@ impl SkpError {
         )
     }
 
+    /// `open_dataset` or `open_project`: the cancel key already names a live call of either, so
+    /// this call is refused.
     pub fn cancel_key_in_use(key: &str) -> Self {
         Self::protocol_with_fields(
             "cancel_key_in_use",
-            format!("cancel key `{key}` already names a live `open_dataset` call"),
+            format!(
+                "cancel key `{key}` already names a live `open_dataset` or `open_project` call"
+            ),
             [("cancel_key", key.to_string())],
         )
     }
@@ -196,13 +200,15 @@ impl SkpError {
         )
     }
 
-    /// `save_project`: a member of the project file, or of a file the save keeps for it, breaks a
-    /// rule its reader holds, so the save is not made. `path` names the member and `rule` the
-    /// rule.
+    /// A member of a project file breaks a rule its reader holds, so the save is not made or the
+    /// reopen is refused. `save_project`: the project file built from the workspace, or the one
+    /// there now. `open_project`: the project file it reads, or the document a copy would write.
+    /// `path` names the member and `rule` the rule. A file of this machine's store is
+    /// [`SkpError::project_machine_record_refused`]'s, not this code's.
     pub fn project_file_refused(path: &str, rule: &str) -> Self {
         Self::protocol_with_fields(
             "project_file_refused",
-            format!("the project file would break a rule its reader holds: {path}: {rule}"),
+            format!("the project file's reader refuses it: {path}: {rule}"),
             [("path", path.to_string()), ("rule", rule.to_string())],
         )
     }
@@ -213,6 +219,166 @@ impl SkpError {
         Self::protocol(
             "project_lineage_not_kept_by_this_version",
             "project.spatial records a lineage, which this version of the application does not keep",
+        )
+    }
+
+    /// `save_project`: a later save found that `project.spatial` in the open's folder names another
+    /// project than the open's own. Nothing was written. `project` is the open's identity and
+    /// `found` the identity the file names; neither is a path.
+    pub fn project_file_names_another_project(project: &str, found: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_file_names_another_project",
+            format!(
+                "the folder's project.spatial names another project, {found}, and was not replaced"
+            ),
+            [
+                ("project", project.to_string()),
+                ("found", found.to_string()),
+            ],
+        )
+    }
+
+    /// `open_project` (`skp/0.14`): `project.spatial` in the folder could not be read. `detail` is
+    /// the operating system's error text alone.
+    pub fn project_file_unreadable(detail: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_file_unreadable",
+            format!("project.spatial cannot be read: {detail}"),
+            [("detail", detail.to_string())],
+        )
+    }
+
+    /// `save_project` and `open_project`: a file of this machine's store for the project,
+    /// `folders.json` or `locations.json`, breaks a rule its reader holds. `file` names the file
+    /// and `rule` the rule.
+    pub fn project_machine_record_refused(file: &str, rule: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_machine_record_refused",
+            format!("{file}: {rule}"),
+            [("file", file.to_string()), ("rule", rule.to_string())],
+        )
+    }
+
+    /// `open_project`: this machine's store already remembers `count` folders for `project`, and
+    /// holds no more. Nothing was written.
+    pub fn project_known_folders_full(project: &str, count: usize) -> Self {
+        Self::protocol_with_fields(
+            "project_known_folders_full",
+            format!("{project} remembers {count} folders, and no more can be added"),
+            [
+                ("project", project.to_string()),
+                ("count", count.to_string()),
+            ],
+        )
+    }
+
+    /// `open_project`: another open holds the project, in this process or in another, so the
+    /// reopen took no lock. `project` is the identity.
+    pub fn project_open_elsewhere(project: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_open_elsewhere",
+            format!("{project} is already open"),
+            [("project", project.to_string())],
+        )
+    }
+
+    /// `open_project`: this machine's store for the project (its folder, its lock or one of its
+    /// two files) could not be used. `detail` is the file's fixed name, a colon and the error's
+    /// text. The shell's binding also returns this when no per-user data directory resolves.
+    pub fn project_machine_store_failed(detail: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_machine_store_failed",
+            format!("this machine's store for the project could not be used: {detail}"),
+            [("detail", detail.to_string())],
+        )
+    }
+
+    /// `open_project`: the project folder, as the request spelled it, cannot be resolved.
+    pub fn project_target_folder_unresolvable(folder: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_unresolvable",
+            format!("{folder} cannot be resolved"),
+            [("folder", folder.to_string())],
+        )
+    }
+
+    /// `open_project`: a segment of the data's project-relative locator cannot be resolved, because
+    /// it is missing or cannot be read. `locator` is the locator's JSON path in the project file
+    /// and `segment` the name the file spells.
+    pub fn project_target_segment_unresolvable(locator: &str, segment: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_unresolvable",
+            format!("{locator}: {segment} cannot be resolved"),
+            [
+                ("locator", locator.to_string()),
+                ("segment", segment.to_string()),
+            ],
+        )
+    }
+
+    /// `open_project`: the data's locator is not in canonical form.
+    pub fn project_target_not_canonical(locator: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_unresolvable",
+            format!("{locator}: not canonical"),
+            [("locator", locator.to_string())],
+        )
+    }
+
+    /// `open_project`: the project folder could not be resolved at the check of the locator.
+    pub fn project_target_locator_folder_unresolvable(locator: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_unresolvable",
+            format!("{locator}: the folder cannot be resolved"),
+            [("locator", locator.to_string())],
+        )
+    }
+
+    /// `open_project`: the data's path is not valid Unicode. No field and no path crosses.
+    pub fn project_target_path_not_unicode() -> Self {
+        Self::protocol(
+            "project_target_unresolvable",
+            "the data's path is not valid Unicode",
+        )
+    }
+
+    /// `open_project`: a segment of the data's locator is a link, which is not followed.
+    pub fn project_target_through_link(locator: &str, segment: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_through_link",
+            format!("{locator}: {segment} is a link"),
+            [
+                ("locator", locator.to_string()),
+                ("segment", segment.to_string()),
+            ],
+        )
+    }
+
+    /// `open_project`: a segment of the data's locator that must be a folder is not one.
+    /// `expected` is `folder`.
+    pub fn project_target_not_a_folder(locator: &str, segment: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_wrong_kind",
+            format!("{locator}: {segment} is not a folder"),
+            [
+                ("locator", locator.to_string()),
+                ("segment", segment.to_string()),
+                ("expected", "folder".to_string()),
+            ],
+        )
+    }
+
+    /// `open_project`: the last segment of the data's locator must be a regular file and is not
+    /// one. `expected` is `file`.
+    pub fn project_target_not_a_regular_file(locator: &str, segment: &str) -> Self {
+        Self::protocol_with_fields(
+            "project_target_wrong_kind",
+            format!("{locator}: {segment} is not a regular file"),
+            [
+                ("locator", locator.to_string()),
+                ("segment", segment.to_string()),
+                ("expected", "file".to_string()),
+            ],
         )
     }
 }

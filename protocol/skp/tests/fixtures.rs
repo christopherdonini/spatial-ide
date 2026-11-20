@@ -489,7 +489,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
     let request =
         |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
             serde_json::json!({
-                "skp": "skp/0.13", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "skp": "skp/0.14", "dataset": "ds_00112233445566778899aabbccddeeff",
                 "folder": folder,
                 "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
             })
@@ -554,6 +554,347 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
             "{name}: the constructor and the fixture differ"
         );
     }
+}
+
+/// `skp/0.14`, `open_project`: the three requests below and the five reply fixtures round trip,
+/// each spelling a lineage fact can take is the one SKP-V0.md section 12 gives, and each new
+/// `skp.*` error fixture is what the matching `SkpError` constructor produces, so the text a client
+/// reads and the file cannot drift apart. The constructors with no fixture of their own are checked
+/// for their code and their fields.
+///
+/// The requests are held here and not under `tests/data/`, as `save_project`'s are: the shell's
+/// `renderTruth.test.ts` reads every `v0-<command>-request*.json` there and has no entry for this
+/// command yet.
+///
+/// Mutation: `#[serde(rename = "not-found")]` on `OpenProjectResponse::NotFound`. Expected failure:
+/// this test fails by name, at `v0-open_project-response-not_found`.
+#[test]
+fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_constructors_build() {
+    use serde_json::{json, Value};
+    let request = |answer: Value, relink: Value| {
+        json!({"skp": "skp/0.14", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+               "answer": answer, "relink": relink})
+    };
+    for (what, wire) in [
+        ("a first call", request(Value::Null, Value::Null)),
+        ("an answer", request(json!("copy"), Value::Null)),
+        (
+            "an answer and a re-link",
+            request(json!("same"), json!("C:/data/parcels.parquet")),
+        ),
+    ] {
+        let parsed: OpenProjectRequest = serde_json::from_value(wire.clone())
+            .unwrap_or_else(|e| panic!("{what}: does not deserialize: {e}"));
+        assert_eq!(&serde_json::to_value(&parsed).unwrap(), &wire, "{what}");
+        assert_eq!(parsed.skp, SKP_VERSION, "{what}");
+    }
+
+    for name in [
+        "v0-open_project-response-opened",
+        "v0-open_project-opened-lineage",
+        "v0-open_project-response-question",
+        "v0-open_project-response-not_found",
+        "v0-open_project-response-not_found-unrecorded",
+    ] {
+        round_trip::<OpenProjectResponse>(name);
+    }
+    let reply = |name: &str| serde_json::from_value::<OpenProjectResponse>(fixture(name)).unwrap();
+    assert!(matches!(
+        reply("v0-open_project-response-opened"),
+        OpenProjectResponse::Opened(_)
+    ));
+    assert!(matches!(
+        reply("v0-open_project-response-question"),
+        OpenProjectResponse::Question(_)
+    ));
+    match reply("v0-open_project-response-not_found") {
+        OpenProjectResponse::NotFound(n) => {
+            assert_eq!(n.file_name.as_deref(), Some("parcels.parquet"))
+        }
+        other => panic!("not_found decoded as {other:?}"),
+    }
+    match reply("v0-open_project-response-not_found-unrecorded") {
+        OpenProjectResponse::NotFound(n) => assert_eq!(n.file_name, None),
+        other => panic!("not_found decoded as {other:?}"),
+    }
+
+    // Every spelling the two lineage facts take, in a reply built from the first fixture.
+    let lineage = |folder_file: Value, previous_file: Value| {
+        let mut v = fixture("v0-open_project-response-opened");
+        v["opened"]["lineage"] =
+            json!({"folder_file": folder_file, "previous_file": previous_file});
+        v
+    };
+    let refusals = [
+        json!({"reason": "over-bound", "line": 7, "limit": 4096}),
+        json!({"reason": "over-bound", "line": null, "limit": 33554432}),
+        json!({"reason": "damaged", "line": 3}),
+        json!({"reason": "unreadable"}),
+        json!({"reason": "through-link"}),
+    ];
+    let mut wires = Vec::new();
+    for fact in [
+        "absent",
+        "not-read",
+        "recorded",
+        "recorded-with-lines-after",
+        "not-the-recorded-one",
+    ] {
+        wires.push(lineage(json!(fact), Value::Null));
+    }
+    for fact in ["absent", "used", "not-the-recorded-one"] {
+        wires.push(lineage(json!("absent"), json!(fact)));
+    }
+    for why in refusals {
+        wires.push(lineage(
+            json!({"refused": why.clone()}),
+            json!({"refused": why}),
+        ));
+    }
+    for wire in wires {
+        let parsed: OpenProjectResponse = serde_json::from_value(wire.clone())
+            .unwrap_or_else(|e| panic!("{wire}: does not deserialize: {e}"));
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), wire);
+    }
+
+    let project = "spatial://project/0123456789abcdef0123456789abcdef";
+    let locator = "$.datasets[0].resource.locators[0].at";
+    for (name, built) in [
+        (
+            "v0-error-project_file_unreadable",
+            SkpError::project_file_unreadable(
+                "The system cannot find the file specified. (os error 2)",
+            ),
+        ),
+        (
+            "v0-error-project_file_refused",
+            SkpError::project_file_refused(
+                "$.workspace.filter",
+                "the filter is not what the enabled clauses combine to",
+            ),
+        ),
+        (
+            "v0-error-project_machine_record_refused",
+            SkpError::project_machine_record_refused(
+                "folders.json",
+                "$ (line 1): a duplicate key `first`",
+            ),
+        ),
+        (
+            "v0-error-project_known_folders_full",
+            SkpError::project_known_folders_full(project, 256),
+        ),
+        (
+            "v0-error-project_open_elsewhere",
+            SkpError::project_open_elsewhere(project),
+        ),
+        (
+            "v0-error-project_machine_store_failed",
+            SkpError::project_machine_store_failed("open.lock: Access is denied. (os error 5)"),
+        ),
+        (
+            "v0-error-project_target_unresolvable",
+            SkpError::project_target_segment_unresolvable(locator, "data"),
+        ),
+        (
+            "v0-error-project_target_through_link",
+            SkpError::project_target_through_link(locator, "data"),
+        ),
+        (
+            "v0-error-project_target_wrong_kind",
+            SkpError::project_target_not_a_regular_file(locator, "parcels.parquet"),
+        ),
+        (
+            "v0-error-project_file_names_another_project",
+            SkpError::project_file_names_another_project(
+                project,
+                "spatial://project/fedcba9876543210fedcba9876543210",
+            ),
+        ),
+    ] {
+        round_trip::<SkpError>(name);
+        assert_eq!(
+            serde_json::to_value(&built).unwrap(),
+            fixture(name),
+            "{name}: the constructor and the fixture differ"
+        );
+    }
+
+    // The constructors with no fixture of their own: their code, and the names of their fields.
+    for (built, code, fields) in [
+        (
+            SkpError::project_target_folder_unresolvable("C:/Projects/parcels"),
+            "skp.project_target_unresolvable",
+            vec!["folder"],
+        ),
+        (
+            SkpError::project_target_not_canonical(locator),
+            "skp.project_target_unresolvable",
+            vec!["locator"],
+        ),
+        (
+            SkpError::project_target_locator_folder_unresolvable(locator),
+            "skp.project_target_unresolvable",
+            vec!["locator"],
+        ),
+        (
+            SkpError::project_target_path_not_unicode(),
+            "skp.project_target_unresolvable",
+            vec![],
+        ),
+        (
+            SkpError::project_target_not_a_folder(locator, "data"),
+            "skp.project_target_wrong_kind",
+            vec!["expected", "locator", "segment"],
+        ),
+        (
+            SkpError::cancel_key_in_use("reopen-1"),
+            "skp.cancel_key_in_use",
+            vec!["cancel_key"],
+        ),
+    ] {
+        assert_eq!(built.code, code);
+        assert_eq!(
+            built.fields.keys().map(String::as_str).collect::<Vec<_>>(),
+            fields
+        );
+    }
+    assert_eq!(
+        SkpError::project_target_not_a_folder(locator, "data").fields["expected"],
+        "folder"
+    );
+    let in_use = SkpError::cancel_key_in_use("reopen-1").message;
+    assert!(
+        in_use.contains("`open_dataset`") && in_use.contains("`open_project`"),
+        "the cancel key refusal names both calls: {in_use}"
+    );
+}
+
+/// `skp/0.14`, `open_project`: the request's `answer` and the reply's lineage facts, `observed`
+/// and `admission` words, `view` state and members are closed. An unknown `answer`, lineage fact,
+/// `observed` word or `admission` word, and an absent `answer` or `relink` key, are each refused at
+/// deserialize, with the other closed sets (SKP-V0.md section 4 item 13) beside them.
+///
+/// Mutation: `#[serde(other)]` on the folder-lineage enum. Expected failure: this test fails by
+/// name, at the unknown folder-lineage fact.
+#[test]
+fn the_open_project_closed_sets_refuse_any_other_value() {
+    use serde_json::{json, Value};
+    let call = |answer: Value, relink: Value| {
+        json!({"skp": "skp/0.14", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+               "answer": answer, "relink": relink})
+    };
+    let bad_request = |wire: Value, what: &str| {
+        assert!(
+            serde_json::from_value::<OpenProjectRequest>(wire).is_err(),
+            "{what}: must be refused at deserialize"
+        );
+    };
+    for answer in [json!("ask"), json!("Copy"), json!(""), json!(1)] {
+        bad_request(
+            call(answer.clone(), Value::Null),
+            &format!("answer {answer}"),
+        );
+    }
+    bad_request(call(Value::Null, json!(1)), "a relink that is not text");
+    for key in ["answer", "relink", "folder", "cancel_key"] {
+        let mut wire = call(Value::Null, Value::Null);
+        wire.as_object_mut().unwrap().remove(key);
+        bad_request(wire, &format!("a request without `{key}`"));
+    }
+    let mut extra = call(Value::Null, Value::Null);
+    extra["extra"] = json!(true);
+    bad_request(extra, "a request with an extra key");
+
+    let base = fixture("v0-open_project-response-opened");
+    let refused = |wire: Value, what: &str| {
+        assert!(
+            serde_json::from_value::<OpenProjectResponse>(wire).is_err(),
+            "{what}: must be refused at deserialize"
+        );
+    };
+    let set = |pointer: &str, value: Value| {
+        let mut v = base.clone();
+        *v.pointer_mut(pointer).unwrap() = value;
+        v
+    };
+    let without = |parent: &str, key: &str| {
+        let mut v = base.clone();
+        v.pointer_mut(parent)
+            .unwrap()
+            .as_object_mut()
+            .unwrap()
+            .remove(key);
+        v
+    };
+    let folder = "/opened/lineage/folder_file";
+    let previous = "/opened/lineage/previous_file";
+    for wire in ["mystery", "Absent", "recorded_with_lines_after", "used"] {
+        refused(
+            set(folder, json!(wire)),
+            &format!("folder-lineage fact {wire}"),
+        );
+    }
+    for wire in ["mystery", "not-read", "recorded"] {
+        refused(
+            set(previous, json!(wire)),
+            &format!("previous-lineage fact {wire}"),
+        );
+    }
+    refused(
+        without("/opened/lineage", "previous_file"),
+        "no previous_file key",
+    );
+    for why in [
+        json!({"reason": "mystery"}),
+        json!({"reason": "unreadable", "line": 1}),
+        json!({"reason": "over-bound", "limit": 1}),
+        json!({"reason": "damaged"}),
+    ] {
+        refused(
+            set(folder, json!({"refused": why.clone()})),
+            &format!("refusal {why}"),
+        );
+    }
+    refused(
+        set("/opened/check/observed", json!(["ctime"])),
+        "an observed word",
+    );
+    refused(
+        set("/opened/check/observed", json!(["Size"])),
+        "an observed word in another case",
+    );
+    refused(
+        set("/opened/check/admission", json!(["geometry"])),
+        "an admission word",
+    );
+    refused(
+        set("/opened/check/admission", json!(["size"])),
+        "an observed word as an admission word",
+    );
+    refused(without("/opened", "view"), "no view");
+    refused(
+        set("/opened/view", json!({"state": "mystery"})),
+        "a view state",
+    );
+    refused(
+        set("/opened/view", json!({"state": "applies", "basis": "x"})),
+        "a basis on an applying view",
+    );
+    refused(
+        set("/opened/view", json!({"state": "saved-in-another-space"})),
+        "no basis",
+    );
+    let mut extra = base.clone();
+    extra["opened"]["path"] = json!("C:/data/parcels.parquet");
+    refused(extra, "an extra member of opened");
+    refused(json!({"question": {"kind": "ask"}}), "a question kind");
+    refused(json!({"not_found": {}}), "not_found without file_name");
+    refused(json!({"closed": {}}), "a member the reply does not have");
+    refused(
+        json!({"question": {"kind": "copy-or-same"}, "not_found": {"file_name": null}}),
+        "two members",
+    );
 }
 
 /// `skp/0.2`: `engine.identity_unusable` gains a `candidate_columns` field (NEXT-CUT.md P0) — the
@@ -631,13 +972,14 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.13` (`save_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
-/// test was `skp_version_is_skp_0_12` before that piece, `skp_version_is_skp_0_11` before piece 1b
-/// and `skp_version_is_skp_0_10` before the lines cut, PL-5).
-/// Mutation: the literal back to `"skp/0.12"`. Expected failure: this test fails by name.
+/// `skp/0.14` (`open_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
+/// test was `skp_version_is_skp_0_13` before that part, `skp_version_is_skp_0_12` before piece 1c,
+/// `skp_version_is_skp_0_11` before piece 1b and `skp_version_is_skp_0_10` before the lines cut,
+/// PL-5).
+/// Mutation: the literal back to `"skp/0.13"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_13() {
-    assert_eq!(SKP_VERSION, "skp/0.13");
+fn skp_version_is_skp_0_14() {
+    assert_eq!(SKP_VERSION, "skp/0.14");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row

@@ -1,0 +1,19 @@
+{
+  "opened": {
+    "project": "spatial://project/0123456789abcdef0123456789abcdef",
+    "dataset": "ds_00112233445566778899aabbccddeeff",
+    "session": "sr_00112233445566778899aabbccddeeff",
+    "workspace": {
+      "filter": null,
+      "clauses": [],
+      "style": {"style_version": 1, "layer": {"geometry": "polygon", "fill_color": {"literal": "#4285f4"}}},
+      "view": {"centre": ["4143d62040000000", "41324f8040000000"], "zoom": "c012000000000000"}
+    },
+    "view": {"state": "saved-in-another-space", "basis": "the view was saved in one space, and the data is admitted in another"},
+    "check": {"observed": ["size", "mtime", "footer-length", "footer-hash"], "admission": ["crs", "identity"]},
+    "lineage": {
+      "folder_file": {"refused": {"reason": "over-bound", "line": null, "limit": 33554432}},
+      "previous_file": {"refused": {"reason": "damaged", "line": 3}}
+    }
+  }
+}
