@@ -4337,3 +4337,23 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 56 — P4a's first brief at its head: stop 3 closed by one more declared test edit, the strings file and the camera tests' file recorded (ADV-2026-11-20-07); three files join item 7 (a)'s list before their code (ADV-2026-11-20-08) (class 9)
+
+1. **The loop's edit (I3, class 9), by ADV-2026-11-20-07 item 1.** In the test of `project/saveProject.test.ts` that saves with each `project_relative` judgment, the loop's list loses `through-link` and keeps `carried` and `outside`. Nothing else of that test changes: its name, its message and its other assertions stay. T-16 asserts the whole list for `through-link`: `SAVED_NOTICE`, then O-9's place, and nothing after. The second brief makes the edit in its tests' commit, before O-9's code. The reviewer confirms by diff that the loop's change is that one word, and that T-16 fails at the tests' commit. Item 7 (a)'s declared edits of existing tests are now three: T-15's, the pinned list's and this one.
+2. **The strings file (class 8), by ADV-2026-11-20-07 item 2.** `project/reopenNotices.ts` is 120 lines at the first brief's head, against item 3's 90. Nothing was cut to fit. The shell product group's ceiling of 820 is what the part is held to. The closing records it.
+3. **The camera write's tests (class 1), by ADV-2026-11-20-07 item 3.** They are added to `canvas/WorkingCanvas.wiring.test.tsx`, an existing file beside the product file, not the file the first brief's step 0 named. The closing lists it.
+4. **Three files join item 7 (a)'s list (class 9), by ADV-2026-11-20-08,** declared here before any of their code. Each counts in the shell product group.
+   - `admission/formatRefusal.ts`: its doc alone, for item 5 (j)'s exception. No code line changes.
+   - `admission/RefusalBlock.tsx`: an optional prop that withholds the guidance and, if the worker shows the owner's place inside the block, an optional prop for that. With neither given, the block renders as it does on main.
+   - `console/ConsolePanel.tsx`: the same optional prop, passed on a row whose command is `open_project`, and nothing else. If it takes more than that, the worker leaves the file, names the case as not covered, and it goes to the advisor.
+   - No other caller of the block changes. The reviewer confirms by diff that each renders as before.
+   - The existing tests of these files stay unedited (stop 3). New tests may be added to `admission/RefusalBlock.test.tsx` and `admission/formatRefusal.test.ts`, each beside its product file.
+   - The guidance is withheld only for item 5 (g)'s codes, those whose guidance names the user's own assertion, as the second brief's step 0 lists them. Every other code keeps its guidance at a reopen. T-11 asserts both sides, and gains the case of the Console's `open_project` row.
+   - The doc's new words are the worker's, read by both gates.
+5. **For both gates, by ADV-2026-11-20-07 item 4.** The camera member goes through `fitToExtent` unreported, and the box it shows reaches `onViewShown` once. Both gates read this against item 5 (h) and T-17's row. A clause of this form that is untrue of the code as built goes to the advisor unreworded, as does one about the three files' changes.
+6. **Records.** The first brief's two hand-backs are filed with P4a's records (Amendment 55 item 3).
+
+Read the last amendment first.
+
+Nothing above is edited.
