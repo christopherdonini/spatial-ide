@@ -302,6 +302,65 @@ export async function attachOrLaunchExe(exePath, { timeoutMs = 300_000 } = {}) {
   return { browser, page, launched: true, stop: () => stopSession(browser, true, child) };
 }
 
+async function cdpVersion(baseUrl) {
+  try {
+    const res = await fetch(`${baseUrl}/json/version`);
+    return res.ok ? await res.json() : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * B2 piece 1c P4b (Amendment 54 item 8, Amendment 66): app B, a second process beside the app `attachOrLaunch` started (A). B is the debug exe that A's `tauri dev` built
+ * (`$CARGO_TARGET_DIR/debug/spatial-ide-shell.exe`, or `exePath`), started while A is up, with a WebView2 data folder of its own (`dataFolder`), without `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, and A's environment otherwise,
+ * `LOCALAPPDATA` included, so both processes share one machine store. It starts no dev server: its page comes from A's, on localhost:5180. It has no CDP port of its own: the exe
+ * carries the overlay's port, and a port set through the browser-arguments variable is ignored (the file-top comment). So A must hold `CDP_PORT` on 127.0.0.1 first, and B's browser
+ * then answers on the IPv6 loopback at the same number (ADV-2026-11-20-18 item 1). Both are checked, and a failure is a launcher failure, never a skip: (a) A answers on 127.0.0.1 and
+ * nothing answers on [::1] before B starts; (b) B answers on [::1] and its `webSocketDebuggerUrl` names a different browser than A's.
+ */
+export async function attachSecondApp(dataFolder, { exePath, timeoutMs = 120_000 } = {}) {
+  const v4 = `http://127.0.0.1:${CDP_PORT}`;
+  const v6 = `http://[::1]:${CDP_PORT}`;
+  const exe = exePath ?? join(process.env.CARGO_TARGET_DIR ?? join(SHELL_DIR, "src-tauri", "target"), "debug", "spatial-ide-shell.exe");
+  if (!existsSync(exe)) throw new Error(`attachSecondApp: launcher failure: exe not found at ${exe}`);
+  const browserOf = (v) => String(v?.webSocketDebuggerUrl).split("/").pop();
+  if ((await cdpVersion(v4)) === null) throw new Error(`attachSecondApp: launcher failure (a): app A does not answer on ${v4}`);
+  if ((await cdpVersion(v6)) !== null) throw new Error(`attachSecondApp: launcher failure (a): something already answers on ${v6}`);
+
+  mkdirSync(OUT_DIR, { recursive: true });
+  const logFd = openSync(join(OUT_DIR, "second-app.log"), "a");
+  const env = { ...process.env, WEBVIEW2_USER_DATA_FOLDER: dataFolder };
+  delete env.WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS;
+  const child = spawn(exe, [], { cwd: join(SHELL_DIR, "src-tauri"), shell: false, env, detached: true, windowsHide: true, stdio: ["ignore", logFd, logFd] });
+  const spawnErrorPromise = new Promise((_resolve, reject) => {
+    child.on("error", (err) => reject(new Error(`attachSecondApp: launcher failure: failed to spawn "${exe}": ${err.message} -- see e2e/out/second-app.log`)));
+  });
+  child.unref();
+
+  const up = await Promise.race([waitForCdpUp(v6, timeoutMs), spawnErrorPromise]);
+  if (!up) {
+    await killTree(child.pid);
+    throw new Error(`attachSecondApp: launcher failure (b): app B never answered on ${v6} within ${timeoutMs}ms -- see e2e/out/second-app.log`);
+  }
+  const [a, b] = [await cdpVersion(v4), await cdpVersion(v6)];
+  if (a === null || b === null || browserOf(a) === browserOf(b)) {
+    await killTree(child.pid);
+    throw new Error(`attachSecondApp: launcher failure (b): the endpoints are not two browsers (A ${browserOf(a)}, B ${browserOf(b)})`);
+  }
+  const browser = await chromium.connectOverCDP(v6);
+  const page = await findAppPage(browser);
+  return {
+    browser,
+    page,
+    pid: child.pid,
+    stop: async () => {
+      await browser.close().catch(() => {});
+      await killTree(child.pid);
+    },
+  };
+}
+
 async function stopSession(browser, launched, child) {
   // `Browser.close()` on a CDP-attached browser disconnects rather than closing the real browser
   // process (Playwright's own documented behavior for `connectOverCDP`) -- safe to call
