@@ -454,3 +454,32 @@ describe("U-FL4: the view the canvas shows (open-first-look-fills-fit-view, the 
     expect(shown(), "after a settled tick that moved the origin").toEqual(onViewportChanged.mock.calls[1][0]);
   });
 });
+
+describe("T-17: the camera write (B2 piece 1c, Amendment 54 O-17)", () => {
+  // RECORDED MUTATION for T-17: in `applyView` (WorkingCanvas.tsx) the camera's target is the saved centre as it stands, the frame origin not subtracted.
+  // Expected failure: `currentView` answers the centre plus the origin, not the saved centre.
+  it("the camera write applies the saved view through the frame origin and marks the fit done", () => {
+    const onViewportChanged = vi.fn<WorkingCanvasProps["onViewportChanged"]>();
+    const onViewShown = vi.fn<NonNullable<WorkingCanvasProps["onViewShown"]>>();
+    const { ref, push } = mount({ onViewportChanged, onViewShown });
+    // A fit first, so that the frame origin is not the saved centre's.
+    act(() => ref.current!.fitToBbox!({ xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_100, ymax: 1_200_100 }));
+    onViewportChanged.mockClear();
+    onViewShown.mockClear();
+
+    const centre: [number, number] = [2_600_321.123456789, 1_200_654.987654321];
+    const zoom = 6.123456789012345;
+    act(() => ref.current!.applyView!({ centre, zoom }));
+
+    const held = ref.current!.currentView!()!;
+    expect(Object.is(held.centre[0], centre[0]), "centre x, bit for bit").toBe(true);
+    expect(Object.is(held.centre[1], centre[1]), "centre y, bit for bit").toBe(true);
+    expect(Object.is(held.zoom, zoom), "zoom, bit for bit").toBe(true);
+    expect(onViewportChanged, "the write reports no viewport").not.toHaveBeenCalled();
+    expect(onViewShown, "and shows no fitted box").not.toHaveBeenCalled();
+
+    push(); // the first look's data arrives: no auto-fit follows the write
+    const after = ref.current!.currentView!()!;
+    expect(Object.is(after.centre[0], centre[0]) && Object.is(after.centre[1], centre[1]) && Object.is(after.zoom, zoom), "no auto-fit after it").toBe(true);
+  });
+});

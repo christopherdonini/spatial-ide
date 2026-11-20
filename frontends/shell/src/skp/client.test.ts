@@ -10,6 +10,7 @@ vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 import { consoleRecorder, isSkpRequestEntry } from "../console/recorder";
 import { recordStep, SkpCallError, viewportQuery } from "./client";
+import { openProject } from "./client";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, type SkpError } from "./types";
 
 /**
@@ -184,5 +185,36 @@ describe("call() records every SKP request at the console's one capture site", (
     expect(entry.outcome).toBe("threw");
     expect(entry.error).toBe("network unreachable");
     expect(entry.refusal).toBeUndefined();
+  });
+});
+
+/**
+ * B2 piece 1c, Amendment 54 T-1: `openProject` (`skp/0.14`, the eighth command) goes through `call()`, the console's one capture site.
+ * RECORDED MUTATION for T-1: `openProject` calls `invoke` directly. Expected failure: no console entry follows the call.
+ */
+describe("openProject (Amendment 54 T-1)", () => {
+  it("openProject sends the eighth command through the one capture site", async () => {
+    invokeMock.mockReset().mockResolvedValueOnce({ question: { kind: "copy-or-same" } });
+    const before = consoleRecorder.entries().length;
+
+    const reply = await openProject("C:/projects/parcels", "k_1", null, null);
+
+    expect(reply).toEqual({ question: { kind: "copy-or-same" } });
+    expect(invokeMock).toHaveBeenCalledWith("open_project", {
+      request: { skp: "skp/0.14", folder: "C:/projects/parcels", cancel_key: "k_1", answer: null, relink: null },
+    });
+    const entry = consoleRecorder.entries()[before]!;
+    if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
+    expect(entry.command).toBe("open_project");
+    expect(entry.request).toBe(invokeMock.mock.calls[0]![1].request);
+    expect(entry.outcome).toBe("ok");
+  });
+
+  it("an answer and a relink are sent as given, and the keys are never omitted", async () => {
+    invokeMock.mockReset().mockResolvedValueOnce({ not_found: { file_name: null } });
+    await openProject("C:/projects/parcels", "k_2", "copy", "C:/data/a.parquet");
+    const request = invokeMock.mock.calls[0]![1].request as Record<string, unknown>;
+    expect(request.answer).toBe("copy");
+    expect(request.relink).toBe("C:/data/a.parquet");
   });
 });
