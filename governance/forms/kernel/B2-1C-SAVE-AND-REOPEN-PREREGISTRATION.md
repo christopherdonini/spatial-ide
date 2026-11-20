@@ -3767,3 +3767,40 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 50 — P3b-2's second worker at step 0: its two stops ruled (ADV-2026-11-19-32), the save's unit test's two places, the workspace a third exception, the helper on each identifier of `basis` and on `file_name`, one new test row; and the wire half's overrun (ADV-2026-11-19-31)
+
+*Written by the custodian, 2026-11-19, from ADV-2026-11-19-31 and ADV-2026-11-19-32, on main before P3b-2's second worker resumes. References only. Nothing below is a quotation. Both rulings are filed under `state/directives/`; where this amendment's wording and a ruling's differ, the ruling stands.*
+
+1. **The wire half.** The first worker handed back at 65c4739a3055cb0544b2048e70d1816ba4ae2543, its tests commits before its product commit and pushed with it. Two of its ceilings in Amendment 49 item 6 (d) were passed: protocol, and fixtures and protocol tests. By ADV-2026-11-19-31:
+   - (a) the overrun stands as class 8, as counted, and the closing amendment records the counts in both numstat columns; nothing is cut or packed;
+   - (b) the second worker's ceilings are unchanged;
+   - (c) the reviewer's brief carries the ruling's item 3 question on the fixtures group, and anything outside it goes to the advisor before the merge request;
+   - (d) the merge request gives the step's totals with these counts (the ruling's item 4).
+
+2. **The second worker's two stops.** It stopped at step 0 with nothing written, on stop 3 and on stop 10. Its findings went to the advisor and both are ruled by ADV-2026-11-19-32. Its step-0 report is filed with the piece's records at the gates.
+
+3. **Stop 3** (the ruling's item 1), class 9. In the unit test of the `tests` module of `kernel/src/project/mod.rs` that maps each save failure to its own code, the `MachineRecordRefused` case's expected code and the later assertion on its field change as the ruling's item 1 (a) gives them. Nothing else in that test changes. The worker names both places in its report. Any other failing assertion of that test, or any other existing test, is stop 3 again. The two assertions of `skp.project_file_refused` in `kernel/tests/project_save_skp.rs` stay as they are.
+
+4. **Stop 10** (the ruling's items 2 to 8).
+   - (a) `workspace` is a third named exception and crosses whole (item 3).
+   - (b) In `view_state`, Amendment 45 item 2's helper is applied to the identifier of each space it names, the saved one and the admitted one, before the text of `basis` is built, and not to the whole text (item 4). The worker confirms from `space_of` that the admitted space's provenance and definition are a closed word and a hash; if they are not, it stops and that goes to the advisor.
+   - (c) The helper is applied to the last name of `file_name` before the reply is built (item 5).
+   - (d) One new test row in `kernel/tests/project_reopen_skp.rs`, named by the worker, with the two cases of the ruling's item 6. Its mutation is W-4's, predicted red in both cases with W-4's three. A case the reader refuses, or one that cannot be built, is a stop.
+   - (e) The docs of `ReopenView` and `ReopenNotFound` in `protocol/skp/src/v0/commands.rs`, and the lines for `basis` and `file_name` in section 12 of `protocol/skp/SKP-V0.md`, each gain the bound, in the worker's words, class 9, read by both gates. Those two files join the second worker's files for these lines alone (item 7).
+   - (f) Stop 10 reads as the ruling's item 8 gives it.
+
+5. **Counts** (item 9). Items 3 and 4 here count in the section 2.11 group of each file, inside the ceilings as they stand. An overrun is reported as counted, and nothing is cut or packed.
+
+6. **For P4's form** (item 10): how the shell shows and logs workspace text that a reopen read from a file. It joins P4's strings, with ADV-2026-11-19-30 item 5 and E-SECOND's polls.
+
+7. **Superseded index:**
+   - Amendment 45 item 2 (d)'s stop 10, by item 4 (f) here;
+   - Amendment 45 item 2 (e)'s two exceptions gain `workspace`;
+   - Amendment 45 item 5's allowed test edits gain item 3's two places;
+   - Amendment 49 item 6 (b)'s files for the second worker gain the two protocol files, for item 4 (e)'s lines alone.
+   - Nothing else is superseded.
+
+Read the last amendment first.
+
+Nothing above is edited.
