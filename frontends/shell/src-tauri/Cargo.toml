@@ -95,11 +95,6 @@ spatial-engine = { path = "../../../engine", features = ["fixture"] }
 # for THIS crate's own test build (Cargo's per-crate feature unification, the same
 # `spatial-engine`/`fixture` precedent above) -- it activates no crate that was not already compiled.
 tokio = { version = "1", features = ["macros"] }
-# `tauri::test`'s mock runtime, for `commands.rs`'s tests of the session log's two bindings: tauri's
-# own `test` feature, for test builds only, as `spatial-engine`/`fixture` and `tokio`/`macros` are
-# above (OPEN-1 (a) of `governance/forms/frontends/SESSION-LOG-TOKEN-REDACTION-PREREGISTRATION.md`).
-# The feature enables no optional dependency of tauri's, so it adds no crate to `Cargo.lock`.
-tauri = { version = "2", features = ["test"] }
 
 # DuckDB built as the root workspace builds it: the root's `[profile.dev.package.libduckdb-sys]`
 # does not reach this crate, which is its own workspace. Without `debug = false` here,
