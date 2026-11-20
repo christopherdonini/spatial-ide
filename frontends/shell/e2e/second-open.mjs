@@ -7,12 +7,12 @@
 // Both reopen through the DEV hook `e2eOpenProjectFolder`, whose answer `admitted` is the kernel's `opened`.
 //
 // **E-SECOND.** A saves a project into folder P; B's reopen of P is refused as `skp.project_open_elsewhere` with S9's other-window place and its run ended; A opens another file; B then
-// reopens P every 250 ms for at most 40 tries (10 s) until `admitted`. Each refused try must show S9's other-window place. At the bound the step fails by name with the last code, and says whether
-// the line `close_dataset` writes when its release thread does not start is in A's log (`e2e/out/app.log`, from the byte where this run's launch began), or that no log could be read.
+// reopens P for at most 40 tries, with 250 ms after each refused try, until `admitted`. Each refused try must show S9's other-window place. At the bound the step fails by name with the last code, and says
+// of the file the launcher opens for A's output (`e2e/out/app.log`, read from the byte where this run's launch began) one of three things: how many bytes it read and whether the line `close_dataset` writes when its release thread does not start is in them; that it read 0 bytes, that the log is empty and that the suite cannot tell from it whether the line was written; or that no log could be read.
 // **E-CRASH-UNLOCK.** B opens another file, A reopens P, A's process tree is killed (`session.stop()`, which ends in `taskkill /T /F`), and B reopens P: `admitted` within the same bound.
 // The tries and elapsed milliseconds are printed as evidence, never a measurement claim (docs/08; ADR-018).
 //
-// **The store is a scratch folder,** as `project.mjs` does: `LOCALAPPDATA` is set before the launch; the suite launches its own app, refuses one already listening, and removes what it made.
+// **The store is a scratch folder,** as `project.mjs` does: `LOCALAPPDATA` is set before the launch; the suite launches its own app, refuses one already listening, and at the end tries to remove its three scratch folders (the store, folder P and B's WebView2 data folder) and prints each one it could not remove (B's WebView2 data folder has been one, with EPERM).
 //
 // RECORDED MUTATIONS: entries are added by the commit that observes them.
 

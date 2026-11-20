@@ -313,7 +313,7 @@ async function cdpVersion(baseUrl) {
 
 /**
  * B2 piece 1c P4b (Amendment 54 item 8, Amendment 66): app B, a second process beside the app `attachOrLaunch` started (A). B is the debug exe that A's `tauri dev` built
- * (`$CARGO_TARGET_DIR/debug/spatial-ide-shell.exe`, or `exePath`), started while A is up, with a WebView2 data folder of its own (`dataFolder`) and A's environment otherwise,
+ * (`$CARGO_TARGET_DIR/debug/spatial-ide-shell.exe`, or `exePath`), started while A is up, with a WebView2 data folder of its own (`dataFolder`), without `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS`, and A's environment otherwise,
  * `LOCALAPPDATA` included, so both processes share one machine store. It starts no dev server: its page comes from A's, on localhost:5180. It has no CDP port of its own: the exe
  * carries the overlay's port, and a port set through the browser-arguments variable is ignored (the file-top comment). So A must hold `CDP_PORT` on 127.0.0.1 first, and B's browser
  * then answers on the IPv6 loopback at the same number (ADV-2026-11-20-18 item 1). Both are checked, and a failure is a launcher failure, never a skip: (a) A answers on 127.0.0.1 and
