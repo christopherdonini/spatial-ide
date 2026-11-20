@@ -444,7 +444,7 @@ pub fn run() {
             );
             let data_plane_handle = DataPlaneHandle {
                 port: running.addr.port(),
-                token: running.session.token_for_delivery().to_string(),
+                session: running.session.clone(),
             };
 
             // B2 piece 1b: the session history's recorder, built where `SkpHost` is, over the same

@@ -14,10 +14,12 @@
 //!   command catalog and from any future conformance suite (SKP-V0.md §4 item 1).
 //!
 //! **This file contains no logic** beyond decode → call one `SkpHost`/state method → serialize
-//! (`close_dataset` also starts [`Projects::release_ended`], after the host's close) — docs/02's
-//! "frontends: clients only, no logic" applied to the Rust half of a client. `lib.rs` lists every
-//! command below in its `tauri::generate_handler!` call; adding one here without adding it there is
-//! a command JS can never reach, which is the reason there is exactly one list.
+//! (`close_dataset` also starts [`Projects::release_ended`], after the host's close, and
+//! `binding_log_session_event` passes the page's text through the data plane's `Session::redact`
+//! before the append) — docs/02's "frontends: clients only, no logic" applied to the Rust half of a
+//! client. `lib.rs` lists every command below in its `tauri::generate_handler!` call; adding one
+//! here without adding it there is a command JS can never reach, which is the reason there is
+//! exactly one list.
 
 use std::sync::{Arc, Mutex};
 
@@ -245,7 +247,7 @@ pub fn binding_data_plane_attach(state: State<'_, DataPlaneHandle>) -> DataPlane
         url: format!("ws://127.0.0.1:{}/stream", state.port),
         subprotocols: [
             spatial_data_plane::session::SUBPROTOCOL.to_string(),
-            format!("tok.{}", state.token),
+            format!("tok.{}", state.session.token_for_delivery()),
         ],
     }
 }
@@ -254,9 +256,21 @@ pub fn binding_data_plane_attach(state: State<'_, DataPlaneHandle>) -> DataPlane
 /// persisted to a log that outlives the session. This is the persistence half; the visible half is
 /// a JS-side banner. `level` is free text (`"error"`, `"unhandledrejection"`, `"watchdog"`, …), not
 /// a closed enum — instrument surface owes no protocol.
+///
+/// Both `level` and `message` are the page's text, and each passes through the data plane's
+/// `Session::redact` before `SessionLog::append`: every occurrence of the session token's exact
+/// text becomes `<redacted>`, so a page line carrying the credential `binding_data_plane_attach`
+/// hands out (`tok.<hex>`) is written as `tok.<redacted>`. The token in any other form is not
+/// caught (`SessionLog`'s doc).
 #[tauri::command]
-pub fn binding_log_session_event(state: State<'_, SessionLog>, level: String, message: String) {
-    state.append(&level, &message);
+pub fn binding_log_session_event(
+    log: State<'_, SessionLog>,
+    handle: State<'_, DataPlaneHandle>,
+    level: String,
+    message: String,
+) {
+    let session = &handle.session;
+    log.append(&session.redact(&level), &session.redact(&message));
 }
 
 /// One entry of the pinned, in-tree CRS definition catalog (ADR-026 decision 1(a)), as handed to
@@ -322,10 +336,11 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
 /// The title of the native project-folder picker: S2, a placeholder.
 const PROJECT_FOLDER_PICKER_TITLE: &str = "[P6 placeholder] Choose the project folder";
 
-/// The OS folder picker for `save_project`'s first save. **Not SKP**, for the same reason as
-/// [`binding_pick_file`]: `save_project` takes a folder already chosen, and how the caller got one
-/// is UI. The path never comes from the page: the dialog is native, and `None` means the operator
-/// cancelled.
+/// The OS folder picker for a project folder: the folder of an open's first save (`save_project`),
+/// and the folder a reopen opens (`open_project`). **Not SKP**, for the same reason as
+/// [`binding_pick_file`]: both commands take a folder already chosen, and how the caller got one is
+/// UI. The folder this returns never comes from the page: the dialog is native, and `None` means
+/// the operator cancelled.
 #[tauri::command]
 pub async fn binding_pick_project_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
