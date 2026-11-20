@@ -4499,3 +4499,64 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 63 — P4a's closing at 51fed8a5, before PR 341's merge: both gates at c60327e8 closed on their words by ADV-2026-11-20-15 with no re-gate; the series; the class 1, 5 and 8 rows
+
+*Written by the custodian, 2026-11-20, at PR 341's head 51fed8a55340c554eb03aa126e4472de49032533. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates, at c60327e87c8990f8fdb430fcf9b734eb1393a46e,** both on the strongest model (ADV-2026-11-18-02 item 2).
+   - The architect: FAIL on the words of one doc sentence only (section 31). Its report is state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p4a-gate-architect.md, sha256 37ff364d7cebe8dbeab10b3b793bff853acf1f4711da64537970024dbd76f2a4.
+   - The reviewer: PASS WITH NOTES. Its report is state/consults/gates/2026-11-20-b2-piece-1c-save-and-reopen-p4a-gate-reviewer.md, sha256 d5d2ef2adca0d715c84dd7d7d22e8188fa8e2fc0965fed538492301fef491860.
+   - Both close the code's correctness and its evidence.
+
+2. **The words, as ADV-2026-11-20-15 rules them,** filed as state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-15-p4as-gate-words-the-architects-f-1-and-d-1-the-reviewers-d3-to-d5-no-gate-re-runs.md (the PASTES file's sha256 18fce855e7eefb5393dd4c2c7f56501d6c2550018e04f7967dd4d3a0bf006f0d).
+   - They were applied in one commit, 51fed8a55340c554eb03aa126e4472de49032533, by the standard worker: state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4a-words-worker-report.md. Its parent is c60327e8. It changes 4 files, 18 lines in and 16 out. Each file is byte-equal to the custodian's file, built by script from the gated head and the reports' words.
+   - F-1, the architect's words, whole, for the exception paragraph of formatRefusal.ts (item 1). The reviewer's D2 is not applied, and F-1 closes it.
+   - D-1, the architect's words: App.tsx's two cites by symbol name (item 2).
+   - D3, the reviewer's words: the comment above the baseline arm's first look in App.tsx (item 3).
+   - D4, the reviewer's words: the header of the reopen suite (item 4).
+   - D5, the reviewer's two replacements in the e2e README's line (item 5).
+   - No gate re-runs (item 11), under the human's message of 2026-11-13 on a gate closed on wording. The architect's only blocking findings were wording. The head differs from c60327e8 in the four files and the ruled lines alone. This amendment records the closing.
+
+3. **Class 1, D6** (item 6). E-REOPEN's R8 reads its row for the answer same by a poll. The poll starts right after the click and ends at a harness bound of 60 s. Amendment 54 item 9 is not edited. If that poll fails, it goes to the advisor with the ring's label, as a stop 13 does.
+
+4. **Class 5, Amendment 58 item 5's first point** (item 8). The kernel refuses a project file whose filter is not what its enabled clauses combine to. So the arm of handleReopened that applies a saved filter when the file holds no clauses is not reached from a file the kernel admits. It stays as built, a guard, with no node.
+
+5. **Class 5, under Amendment 54 item 13** (item 9, the architect's N-3). A reopen of a project that a running export of this window still holds shows S9's other place. Ordinary use reaches it while the export runs. No test covers it. Whether that place's advice fits this case, or a limitation item says it, is carried for P5's words, by the advisor.
+
+6. **Class 8, D1** (item 7).
+   - Step 2 as a whole, by the reviewer's count at P4a's work head daac1b62, before main was taken in. By PR: 331 gives 682, 332 gives 754, 333 gives 244, 334 gives 198, 337 gives 2,209, 339 gives 357, 340 gives 2,406 and P4a gives 2,177. That is 9,027 lines against the step's Total of 5,170, and 86 distinct files against 75.
+   - P4a's groups at the final head, counted as the reviewer counted, by the form's section 2.11 command with the form's path excluded, from c60327e8's second parent ffd451b7513defe87dd1402081389ca75a1a425a to 51fed8a5. The shell product 866 lines (820 in, 46 out) against 820; its strings file 122 against 90; the shell tests 847 (842 in, 5 out) against 690; e2e 484 against 485, within; every other group 0. P4a's total is 2,197 lines in 31 files.
+   - The words add 20 lines and no file, so the step stands at 9,047 lines and 86 files at 51fed8a5.
+   - Nothing is cut. Each later part's closing restates the step's figures.
+
+7. **Runs at 51fed8a5.**
+   - CI: 6 runs, all success, read at 2026-11-20T12:33:41Z. The PR holds no Rust file, so no Rust workflow runs and no clippy run is owed (ADV-2026-11-18-24 item 5 (b)).
+   - The series, the one series report of the PR (ADV-2026-11-16-06), by the tester on the standard model, on the port-5400 harness, in 30 shared holds from 2026-11-20T12:43:14Z to 2026-11-20T14:20:51Z: state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4a-series-tester-report.md.
+     - Both frontends' npm ci and builds; the shell's typecheck and tests, 123 files and 1570 tests passed.
+     - The debug exe, sha256 bd5d4fe67a050b137af890404aebf51f36ec5bb2666959e1557f448480b05b73; the measure exe, sha256 0721278f92893150b3175ddbdf60cd145af71e2a9ea69c517511a7c1e3c32900.
+     - E-FL 4 of 4 and recentre-crossing 6 of 6, verdicts only, no figure claimed.
+     - 23 of 24 e2e suites rc 0, by their logs. E-REOPEN's ten rows, R1 to R9 and E-CHANGED, PASS, R8's row for the answer same among them.
+     - source-changed-post ended rc 3, with S5d INCONCLUSIVE and every other step PASS. It is the outcome that step names inconclusive and never a pass, as at PR B's base series, the first look's series and P3b-2's. The tester did not run it again. It is not counted as a pass.
+     - E-SAVE, the project suite: all twelve steps PASS, the same as at P3b-2's head 231b32cc but for the two minted project identities.
+     - The fixtures unchanged by cmp; the four lock files unchanged.
+   - This project's hold lines in the machine log on 2026-11-20, read at 2026-11-20T14:27:55Z: 104 holds, no two overlapping (ADV-2026-11-16-08 item 4).
+
+8. **Main since the merge base** (ADV-2026-11-14-21 item 6 (a)). The merge base with main is ffd451b7513defe87dd1402081389ca75a1a425a. The 5 commits on main after it, to d61d09529c29813d9d5fbd0f083a4c22b43339b1, change 21 paths, none of the PR's 31. This amendment's commit adds records and the form alone. So the branch takes nothing more from main, and main is not merged into it (ADV-2026-11-20-15 item 11 (b)).
+
+9. **To the advisor, with the merge request, unreworded** (ADV-2026-11-19-06 items 5 and 6). The series report's Result line gives the reopen suite's rows as eleven; by the log they are ten. Its count of runs, 24, names the suites alone; with the two measure-exe runs they are 26. The report is filed as written. Its S5d line is a byte-exact prefix of the log's line, which goes on with its evidence field.
+
+10. **Carried** (item 10).
+    - The handle left open when describe fails after opened, so that the project's lock stays held: to the daily batch, with a node proposed.
+    - The architect's N-7, a stale cite in a publish test that this part's edit made stale: to the docs lane.
+
+11. **Departures.**
+    - The words worker once tried a foreground sleep. The harness refused it, and nothing ran.
+    - The custodian's words brief, as sent, held one blank line more than its file; no word differed.
+    - The custodian's series brief named the measure exe's place on D: but its command set no build folder, as P3b-2's brief did not. The exe was built in the worktree's own ignored target on C:, 2,972 MB, and the tester copied it to the place named, equal by sha256. That target goes with the worktree after the merge (ADV-2026-11-14-09 and -11).
+
+12. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
