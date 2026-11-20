@@ -4695,3 +4695,21 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 69 — E-SECOND on main at PR 342's merge commit: the second-open suite rc 0, both rows PASS; P4b's worktree swept
+
+*Written by the custodian, 2026-11-20. References and hashes only. Nothing below is a quotation.*
+
+1. **The run** (Amendment 68 item 2; the merge verdict). The standard tester ran the second-open suite once at the merge commit b7926b92, on 5180 through the suite's own launch, in one shared hold granted with no wait. It ended rc 0, with two rows PASS and none FAIL. In E-SECOND, B's first try was refused with the other window's place, and B was admitted on its first try after A opened another file. In E-CRASH-UNLOCK, B was admitted on its second try after A's process tree was killed. Nothing was re-run, and no mutation was run. The log's file time is 2026-11-20T20:08:46Z. The report is state/consults/2026-11-20-b2-piece-1c-save-and-reopen-p4b-on-main-tester-report.md.
+
+2. **What it shows.** E-SECOND passes on main, as the verdict owed. The reopen's plan node stays in progress: P5, the words, is still to come.
+
+3. **As before.** A's log, e2e/out/app.log, was 0 bytes (Amendment 67 item 3). The suite printed that B's WebView2 data folder could not be removed, with EPERM. It stays a warning (Amendment 67 item 9). After the run, no process's command line named the piece's build or test data folder.
+
+4. **The sweep** (ADV-2026-11-14-11). P4b's worktree, its build folder and its test data folder, with the folder that warning named, were removed by 2026-11-20T20:56:29Z. The branch is merged, and the worktree was clean at the merge commit.
+
+5. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
