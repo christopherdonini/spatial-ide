@@ -621,25 +621,14 @@ fn a_copy_answer_whose_data_is_not_found_writes_nothing_and_its_second_call_keep
 /// refusal, not `not_found`; so on Linux the cut of `file_name` is shown by no test. (b2) On every
 /// platform: a recorded data path whose last name is short and holds U+0085 (a control character
 /// that Windows, macOS and Linux all accept in a file name: Linux forbids only `/` and NUL, NTFS
-/// only characters below U+0020 and its reserved ones, APFS likewise), the file missing:
-/// `not_found`, with a `file_name` holding no control character, holding U+FFFD, and not ending
-/// with the cut's mark.
+/// only characters below U+0020 and its reserved ones; for macOS this rests on CI's run alone), the
+/// file missing: `not_found`, with a `file_name` holding no control character, holding U+FFFD, and
+/// not ending with the cut's mark.
 ///
 /// RECORDED MUTATION: W-4's (c), the bounding helper returns its input. Expected failure: (a)'s
 /// `basis`, (b1)'s `file_name` (Windows and macOS) and (b2)'s `file_name` (with W-4's three cases).
 #[test]
 fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_control_character() {
-    let a = rig("w-7a");
-    a.inside();
-    let identifier = format!("\"identifier\": \"\\u0001{}\"", "E".repeat(4_095));
-    a.edit("\"identifier\": \"EPSG:2056\"", &identifier);
-    let reply = a.reopen(&a.folder, Value::Null, None).expect("opened");
-    let view = &reply["opened"]["view"];
-    assert_eq!(view["state"], "saved-in-another-space", "{reply}");
-    let basis = view["basis"].as_str().expect("a basis");
-    assert!(!basis.chars().any(char::is_control), "{basis:?}");
-    assert!(basis.len() < 1_024, "basis is {} bytes", basis.len());
-
     let a = rig("w-7a");
     a.inside();
     let identifier = format!("\"identifier\": \"\\u0001{}\"", "E".repeat(4_095));
@@ -671,7 +660,7 @@ fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_co
     let c = rig("w-7c");
     let (project, data) = c.outside();
     let file = read_project(&std::fs::read(c.file()).expect("the file")).expect("read");
-    let odd = data.with_file_name("parcels.parquet");
+    let odd = data.with_file_name("par\u{85}cels.parquet");
     let bytes = locations_to_bytes(file.dataset.uri(), &odd).expect("a recorded path");
     std::fs::write(c.machine_file(&project, LOCATIONS), bytes).expect("written");
     let reply = c.reopen(&c.folder, Value::Null, None).expect("not found");
