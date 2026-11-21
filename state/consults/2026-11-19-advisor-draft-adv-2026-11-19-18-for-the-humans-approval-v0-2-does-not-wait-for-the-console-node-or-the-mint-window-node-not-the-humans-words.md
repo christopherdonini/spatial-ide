@@ -15,3 +15,5 @@ v0.2 does not wait for two fixes that came out of the first-look piece. Each get
 2. A rare timing case (`untiled-reissue-holds-earlier-look-handle-until-mint`). If a filter change lands at the moment the previous load is finishing, the new view may not be filled until I pan or zoom, and the status line can say the view is complete. It gets a KNOWN-LIMITATIONS item before v0.2 is tagged.
 
 If I want either fix in v0.2 after all, I will say so.
+
+*Approved, 2026-11-21: the human's typed message of 09:45Z approves this draft by its id (`state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md`); from then its text is the human's words. Nothing above is edited.*

@@ -13,3 +13,5 @@ To the custodian, 2026-11-20.
 3. The piece's first step finds which of the two works. The pull request names it: the version and where it is downloaded from, or the image label. It shows a run in which DuckDB was compiled, not restored from the cache, and the job passed.
 4. Nothing else changes in what CI installs. No change to `.cargo/config.toml`, to the Rust toolchain, to a dependency or to a lockfile.
 5. The advisor classes and places the piece, and its merge check reads the pull request against this message.
+
+*Approved, 2026-11-21: the human's typed message of 09:45Z approves this draft by its id (`state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md`); from then its text is the human's words. Nothing above is edited.*

@@ -17,3 +17,5 @@ One existing test pins the settings file: `the_notification_hook_matches_only_th
 2. `scripts/hooks/hooks.test.mjs` joins the piece's files, for that change alone.
 
 3. Nothing else in ADV-2026-11-18-06 changes. It still costs nothing.
+
+*Approved, 2026-11-21: the human's typed message of 09:45Z approves this draft by its id (`state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md`); from then its text is the human's words. Nothing above is edited.*

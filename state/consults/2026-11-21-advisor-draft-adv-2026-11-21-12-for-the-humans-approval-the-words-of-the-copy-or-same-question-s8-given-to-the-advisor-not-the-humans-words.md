@@ -9,3 +9,5 @@ Draft for Chris's approval.
 To the custodian, 2026-11-21. The words of the copy-or-same question.
 
 The form for saving and reopening a project marks the words of one question as mine: the question the app asks when it opens a project that this machine remembers in another folder, with its three choices (S8). I give those words to the advisor like the other strings the app shows. Its ruling on them stands as mine, and I can overturn it like any other.
+
+*Approved, 2026-11-21: the human's typed message of 09:45Z approves this draft by its id (`state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md`); from then its text is the human's words. Nothing above is edited.*
