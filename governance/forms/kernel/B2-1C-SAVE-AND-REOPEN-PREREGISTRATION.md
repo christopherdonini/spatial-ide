@@ -4739,3 +4739,27 @@ Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file,
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 71 — P5's closing at 88b04ead, before its merge request: attempt 1 FAIL on words, ADV-2026-11-21-07 and -08, attempt 2 PASS WITH NOTES, N1 and N2 closed by ADV-2026-11-21-09; the class 1 and 3 rows; the size
+
+*Written by the custodian, 2026-11-21, after P5's gate and its last correction, before its merge request, by ADV-2026-11-21-09 item 5. References only; nothing below is a quotation.*
+
+1. **The gate** (item 5 (a)). Attempt 1 read P5 at 4f09194c and ended FAIL on words alone, with F1 to F4 and D1 to D7 (state/consults/gates/2026-11-21-b2-piece-1c-save-and-reopen-p5-gate-reviewer.md). The advisor ruled on them in ADV-2026-11-21-07 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-07-p5s-gate-f1-to-f4-hold-three-sentences-replaced-one-correction-commit-attempt-2-d6-met-by-the-closing.md) and ADV-2026-11-21-08 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-08-the-gates-two-notes-ad5s-folder-into-the-correction-item-19s-comment-to-the-docs-lane.md). The standard worker made the two correction commits: 3ab6217b, the three sentences of -07 items 1 to 3 with D1 to D5 and D7; and 5560e831, the clause of -08 item 1. Attempt 2 read those commits at 5560e831 and ended PASS WITH NOTES, with no Correctness or Evidence finding (state/consults/gates/2026-11-21-b2-piece-1c-save-and-reopen-p5-gate-reviewer-attempt-2.md). Its N1 and N2 are closed by the words of ADV-2026-11-21-09 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-09-p5s-n1-and-n2-words-ruled-one-commit-after-5560e831-no-re-gate-the-closing-one-amendment.md), applied by the standard worker in one commit, 88b04ead, with no gate reading it again (its item 4). The custodian's script found that commit one commit on 5560e831, KNOWN-LIMITATIONS.md alone, the two replacements made and nothing else (state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p5-correction-3-worker-report.md).
+
+2. **Class 1** (item 5 (b)). The reviewer did not run the shell's checks again. It reused the worker's run at 4f09194c: npm ci in the bundle viewer and the shell, the bundle viewer's build and the shell's npm run verify, each with exit 0, the shell's tests 1570 passed (state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p5-words-apply-worker-report.md). This is the reuse ADV-2026-11-21-07 item 6 names. The three later commits change Markdown files alone, and no shell run is owed for them (-07 item 7, -08 item 2). Amendment 70 item 2's Tests line, where it says the checks are run again by the reviewer, is superseded by this row.
+
+3. **Class 3, the advisor's** (item 5 (c)). ADV-2026-11-21-06 items 19 and 22 name a formatter and a format check, and so does Amendment 70 item 2's Tests line. The shell has neither: its verify script is the typecheck, the build, the checks and the tests, and that is the run the worker made.
+
+4. **Class 3, the advisor's** (item 5 (d)). Attempt 1 found four statements untrue in the words ADV-2026-11-21-06 ruled. F1, in item 62, was replaced by ADV-2026-11-21-07 item 1. F2, in item 75, was replaced by -07 item 2. F3 and F4, in item 74, were replaced by -07 item 3.
+
+5. **The size** (item 5 (e)). At 88b04ead against P5's base af3cd53c: 64 changed lines in the four files of Amendment 70 item 2's Scope. KNOWN-LIMITATIONS.md has 35 added and 7 removed, the walkthrough 12 and 4, the Console's registry 2 and 2, and the kernel's README 1 and 1. Counted commit by commit, the four commits change 64, 18, 2 and 4 lines, 88 in all. Both counts are under Amendment 70's 100 (ADV-2026-11-21-07 item 8).
+
+6. **Carried** (item 5 (f)). The comment on the registry's row naming the slots goes to the docs lane, with the next piece that edits surfaceRegistry.ts (ADV-2026-11-21-08 item 3). R8 and R11 stay carried as Amendment 70 item 3 has them: R8 to the next piece that edits the protocol's spec under both gates, and R11 to P6.
+
+7. **The PR.** PR 344, cut/1c-p5-words at 88b04ead, out of draft. CI at that head was read at 2026-11-21T07:28:17Z: 6 runs, all completed with success.
+
+8. **Superseded:** the clause of Amendment 70 item 2's Tests line named in row 2.
+
+Read the last amendment first.
+
+Nothing above is edited.
