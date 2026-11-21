@@ -4713,3 +4713,29 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 70 — P5's five lines before its code, by ADV-2026-11-21-06: the words ruled, R8 carried, R11 carried to P6, a locator corrected
+
+*Written by the custodian, 2026-11-21, before any of P5's changes. References only; nothing below is a quotation. The five lines in item 2 are the form P5 is gated on.*
+
+1. **The ruling.** ADV-2026-11-21-06, the advisor's under the delegation of 2026-11-13, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-06-p5s-words-ruled-seven-texts-changed-r8-out-of-p5-q1-to-q6-answered-four-files.md, rules P5's words on the drafter's packet (state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p5-words-draft-worker-report.md): seven texts changed by the advisor, the others as drafted, Q1 to Q6 answered.
+
+2. **P5's class** is the five-line form and the reviewer alone, its words the advisor's (ADV-2026-11-16-10 R1 (b)). Its five lines:
+
+```
+Authority: PLAN node b2-piece-1c-save-and-reopen, step 2, piece P5; its class by ADV-2026-11-16-10 R1 (b); its words by ADV-2026-11-21-06 items 8 to 22 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-06-p5s-words-ruled-seven-texts-changed-r8-out-of-p5-q1-to-q6-answered-four-files.md), on the drafter's report (state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p5-words-draft-worker-report.md); reuse index: three misses, no prior art recorded for known limitations wording, operator walkthrough part or two users project store (tools/reuse.mjs in the read-only reuse clone at 89bbac37, run for the drafter's brief).
+Scope: 4 files: KNOWN-LIMITATIONS.md (items 4 and 10, the last sentence of each On-main paragraph and each comment; item 62's title line, paragraph line and comment; new items 69 to 75, each with its comment); frontends/shell/MANUAL-WALKTHROUGH.md (Part AD: its heading, its intro, its Before paragraph, rows AD2 to AD5, the log's lead-in and its rows for AD2 to AD5); frontends/shell/src/console/surfaceRegistry.ts (the effect text of binding_pick_project_folder); kernel/README.md (the Declared limits line); declared line budget <= 100 changed lines by §21c's counting, the drafter's count about 60 before the comments; PLAN.yaml and this form's records excluded.
+Change: the words ruled in ADV-2026-11-21-06 items 8 to 20 are applied, each block copied by script from the filed ruling, with the comments of its item 21, the item numbers and their cross-references re-taken at P5's base if they have moved; no other line changes.
+Tests+mutation: none added or changed (words, and one string of the Console's registry); the shell's format check, typecheck and tests pass with item 19's string, run by the worker and again by the reviewer; the reviewer reads every clause of items 8 to 20 against the code at P5's head, first the parts the advisor did not read (item 22), and a clause it finds untrue goes to the advisor unreworded.
+Out-of-scope: none of ADR / security / wire / guarantee is touched: no ADR file, nothing under protocol/ (R8's bullet is out, ADV-2026-11-21-06 item 3), no code but the one effect text, no dependency; the strings the walkthrough rows give as P6 placeholders stay placeholders.
+```
+
+3. **Carried** (ADV-2026-11-21-06 item 24). R8's bullet for section 12.3 of the protocol's spec leaves P5. It is carried on this form to the next piece that edits that file under both gates, where the architect, whose note it answers, reads it (item 3). R11 is carried to the human's sight of S9's other line at P6 (item 7).
+
+4. **A locator corrected** (class 3). S4-LOCK is ADV-2026-11-20-05 item 5, not ADV-2026-11-20-04 item 5 as the custodian's brief to the drafter gave it; the drafter's report says so.
+
+5. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
