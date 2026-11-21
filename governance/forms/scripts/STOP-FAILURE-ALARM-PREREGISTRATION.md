@@ -126,3 +126,55 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 7 — 2026-11-21 — closing: merged by the advisor; the verdict's two notes; from which session the hook acts
+
+*Written by the custodian after the merge. References only, and the settings diff's text in item 3.*
+
+1. **The merge.** PR 347, head 2039dfb1e6e7636a0d405955675b2eeeb66cb7ff, merged by the advisor by merge commit d4681ab55a537bf4b4e54cd7496b3fea38fa945f at 2026-11-21T16:44:52Z by GitHub. Main's CI at the merge commit: 4 runs, all success, read at 2026-11-21T16:49:21Z. The verdict, MERGE, is filed at state/consults/merge-checks/PR-347-2039dfb1e6e7.md.
+
+2. **A word in Amendment 5, item 1** (a class 3 correction, the verdict's first note). In Amendment 5 item 1, `error field` reads `error_details` field: the error type stayed `rate_limit`.
+
+3. **The settings diff's text** (check (c), ADV-2026-11-18-22 item 4; the verdict's second note). The diff of the settings file from main before the merge, c4b5643b, to the merge commit, 767 bytes, sha256 fcc83680765c6b3480eadf60c29d574e0a09e98f73272fa42dc2f868d8fa8616. It equals the diff that the merge request carried and that attempt 1's check (c) read:
+
+```diff
+diff --git a/.claude/settings.json b/.claude/settings.json
+index b4f86a6f..30c18dfc 100644
+--- a/.claude/settings.json
++++ b/.claude/settings.json
+@@ -77,7 +77,7 @@
+     ],
+     "Notification": [
+       {
+-        "matcher": "quota_auto_resume_stale|quota_auto_resume_disabled",
++        "matcher": "quota_auto_resume_stale|quota_auto_resume_disabled|quota_auto_resume_fired",
+         "hooks": [
+           {
+             "type": "command",
+@@ -86,6 +86,17 @@
+           }
+         ]
+       }
++    ],
++    "StopFailure": [
++      {
++        "hooks": [
++          {
++            "type": "command",
++            "command": "node \"$CLAUDE_PROJECT_DIR/scripts/hooks/notify-stop-failure.mjs\"",
++            "timeout": 15
++          }
++        ]
++      }
+     ]
+   }
+ }
+```
+
+4. **From which session the hook acts** (ADV-2026-11-18-22 item 9; the verdict's line after the merge). The custodian's session of this period, da685a21, loaded its settings before the merge, and so has not loaded the merged settings. The hook acts from the first custodian session started after the merge commit, at the next handover of the lease or the next new session, whichever comes first. Until then a turn of the custodian that ends on an error from the service sends no message.
+
+5. **The node.** stop-failure-alarm is done in this commit, with the evidence {pr: 347}.
+
+Read the last amendment first.
+
+Nothing above is edited.
