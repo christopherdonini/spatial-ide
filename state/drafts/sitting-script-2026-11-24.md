@@ -12,7 +12,16 @@
 - For Parts W and AB: a window of 1366 by 768, set with DevTools' device toolbar; Z4 needs 1024 by 640. Narrator for Z3, Task Manager for AA3.
 - For R1 alone: its own Before list (Part R), which uses a debug build and Part H's 5 GB fixture.
 
-**Starting the app.** From the repository root: `npm --prefix frontends/shell run tauri dev`. If the shell's packages are not installed yet, run `npm --prefix frontends/shell ci` and `npm --prefix renderer/bundle-viewer ci` once first. The app opens its own window; close it to stop.
+**Starting the app.** Sit at this laptop's main checkout, the folder `C:\dev\spatial-ide`. From that folder, run these two commands, in this order:
+
+```
+npm --prefix renderer/bundle-viewer run build
+npm --prefix frontends/shell run tauri dev
+```
+
+Run the first once, before the first start: it builds the map viewer that the app carries inside it, and it took 5.3 seconds when the tester ran it on 2026-11-21. The second starts the app; use it again for every later start. The first start also compiles the app, so its window takes much longer to appear than at later starts. When the app has started, a window titled Spatial IDE is open, with an Open GeoParquet… button in the Layers region and no dataset on the map (Part A, row A1). Close the window to stop the app. If either folder's packages have never been installed on this laptop, run `npm --prefix frontends/shell ci` and `npm --prefix renderer/bundle-viewer ci` once first.
+
+*The custodian's note, 2026-11-21: this paragraph replaces the first one, which gave only the second command. The start check of ADV-2026-11-21-16 item 7 stopped before the start: the shell's build needs the bundle viewer's record `viewer-asset-hashes.json`, which only the viewer's own build writes (the tester's report, `state/consults/2026-11-21-operator-sitting-queue-start-check-tester-report.md`; the advisor's ruling ADV-2026-11-21-24, `state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-24-the-script-start-gets-the-viewer-build.md`). The time is the tester's one run, `state/consults/2026-11-21-operator-sitting-queue-viewer-build-timing-tester-report.md`. Nothing else in the script changed.*
 
 **Where you type an answer.** In the custodian's session, as a message, each answer led by its row or item id (for example: AD3: cancelled before the file came back). Answers on wording (N1 to N8, the Extent row, the 37 strings, OPEN-3, OPEN-5, entry 79, R1 and the split) are yours to type in your own words or as yes, or as accepted as it stands. The custodian files your messages as you typed them and writes the walkthrough's result logs from them.
 
