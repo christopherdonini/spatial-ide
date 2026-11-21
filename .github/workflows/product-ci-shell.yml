@@ -167,7 +167,7 @@ concurrency:
 jobs:
   shell:
     name: typecheck · build · vitest · cargo test
-    runs-on: windows-2022
+    runs-on: windows-latest
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -188,11 +188,27 @@ jobs:
           key: windows-latest-shell
           workspaces: "frontends/shell/src-tauri"
 
+      - name: Install LLVM 23.1.6 from the LLVM release, sha256 checked (probe)
+        shell: pwsh
+        run: |
+          $url = 'https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.6/LLVM-23.1.6-win64.msi'
+          $want = '81f7eb520ca698eb2d5cd8bc4b8f24f7add9ed66ed40a6f722a6e6f060737c00'
+          $msi = Join-Path $env:RUNNER_TEMP 'LLVM-23.1.6-win64.msi'
+          Invoke-WebRequest -Uri $url -OutFile $msi
+          $got = (Get-FileHash -Algorithm SHA256 -Path $msi).Hash.ToLower()
+          if ($got -ne $want) { throw "LLVM installer sha256 mismatch: got $got, want $want" }
+          $p = Start-Process -FilePath msiexec.exe -ArgumentList '/i', $msi, '/qn', '/norestart', 'INSTALLDIR=C:\LLVM23' -Wait -PassThru
+          if ($p.ExitCode -ne 0) { throw "msiexec exit code $($p.ExitCode)" }
+          $bin = 'C:\LLVM23\bin'
+          if (-not (Test-Path (Join-Path $bin 'clang-cl.exe'))) { $bin = 'C:\Program Files\LLVM\bin' }
+          Add-Content -Path $env:GITHUB_PATH -Value $bin
+          & (Join-Path $bin 'clang-cl.exe') --version
+
       - name: Probe - clang-cl and MSVC toolsets (probe only, never part of the fix)
         shell: pwsh
         run: |
           clang-cl --version
-          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC" | ForEach-Object { $_.FullName }
+          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" | ForEach-Object { $_.FullName }
 
       # RELEASE-0.1 items 2/3: the shell's own `npm run build` now has a `prebuild` step
       # (`scripts/generateNotice.mjs`) that reads `renderer/bundle-viewer/dist-metafile.json` —
