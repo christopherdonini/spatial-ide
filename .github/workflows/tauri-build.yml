@@ -49,17 +49,10 @@ jobs:
           toolchain: "1.100.0"
 
       - uses: Swatinem/rust-cache@v2
-        if: false
         with:
           # The key keeps its old name, `windows-latest-shell-tauri-build`, though the job runs on `windows-2022`.
           key: windows-latest-shell-tauri-build
           workspaces: "frontends/shell/src-tauri"
-
-      - name: Evidence - clang-cl and MSVC toolsets (evidence only, undone by the next commit)
-        shell: pwsh
-        run: |
-          clang-cl --version
-          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" | ForEach-Object { $_.FullName }
 
       # Same precondition `product-ci-shell.yml`'s own `shell` job states: the viewer must be
       # built before the shell's own `prebuild` step (notice generation) and before

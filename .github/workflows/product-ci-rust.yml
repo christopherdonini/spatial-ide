@@ -220,16 +220,8 @@ jobs:
       # Keyed on the lockfile: the vendored C++ tree is rebuilt only when a dependency moves, which
       # is the whole cost this workflow has to manage.
       - uses: Swatinem/rust-cache@v2
-        if: ${{ runner.os != 'Windows' }}
         with:
           key: ${{ matrix.os }}-workspace
-
-      - name: Evidence - clang-cl and MSVC toolsets (evidence only, undone by the next commit)
-        if: ${{ runner.os == 'Windows' }}
-        shell: pwsh
-        run: |
-          clang-cl --version
-          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" | ForEach-Object { $_.FullName }
 
       - name: Runner profile (Linux)
         if: ${{ runner.os == 'Linux' }}
