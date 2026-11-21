@@ -26,7 +26,7 @@ permissions:
 jobs:
   build:
     name: tauri build (NSIS, build-only, no signing)
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 60
     steps:
       # Always the ref that triggered the CALLING run (`github.ref` is the caller's own ref in a
@@ -48,9 +48,16 @@ jobs:
           toolchain: "1.100.0"
 
       - uses: Swatinem/rust-cache@v2
+        if: false
         with:
           key: windows-latest-shell-tauri-build
           workspaces: "frontends/shell/src-tauri"
+
+      - name: Probe - clang-cl and MSVC toolsets (probe only, never part of the fix)
+        shell: pwsh
+        run: |
+          clang-cl --version
+          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC" | ForEach-Object { $_.FullName }
 
       # Same precondition `product-ci-shell.yml`'s own `shell` job states: the viewer must be
       # built before the shell's own `prebuild` step (notice generation) and before

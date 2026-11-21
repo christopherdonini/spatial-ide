@@ -167,7 +167,7 @@ concurrency:
 jobs:
   shell:
     name: typecheck · build · vitest · cargo test
-    runs-on: windows-latest
+    runs-on: windows-2022
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -183,9 +183,16 @@ jobs:
           toolchain: "1.100.0"
 
       - uses: Swatinem/rust-cache@v2
+        if: false
         with:
           key: windows-latest-shell
           workspaces: "frontends/shell/src-tauri"
+
+      - name: Probe - clang-cl and MSVC toolsets (probe only, never part of the fix)
+        shell: pwsh
+        run: |
+          clang-cl --version
+          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC" | ForEach-Object { $_.FullName }
 
       # RELEASE-0.1 items 2/3: the shell's own `npm run build` now has a `prebuild` step
       # (`scripts/generateNotice.mjs`) that reads `renderer/bundle-viewer/dist-metafile.json` —
