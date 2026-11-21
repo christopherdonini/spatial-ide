@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2dcf20618ed5d4aacf5be5c5db0645b9ce14a3966c351475099ce7537c86748b`) at `2026-11-21T09:59:51.641Z`.
+Generated from `PLAN.yaml` (sha256 `1667916ebdcfd568d2786bf3059b7130480b2b25cb08a152281d1b997f6ada9b`) at `2026-11-21T10:31:22.552Z`.
 
 ## 1. Next
 
@@ -54,6 +54,7 @@ Generated from `PLAN.yaml` (sha256 `2dcf20618ed5d4aacf5be5c5db0645b9ce14a3966c35
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **stop-failure-alarm** — The stop alarm: a StopFailure hook tells the human by Telegram when a turn of the custodian ends on an error from the service, and the Notification hook also forwards quota_auto_resume_fired (the human's approval of ADV-2026-11-18-06; ADV-2026-11-18-22) — evidence: branch `cut/stop-failure-alarm`
+- **ci-windows-duckdb-compiles-on-the-current-image** — CI on Windows compiles DuckDB again on the current image, by one of the two approved routes, a pinned LLVM 22 or newer or a pinned image label, in the three workflows with a Windows job (the human approval of ADV-2026-11-20-25) — evidence: branch `cut/ci-windows-duckdb-compiles`
 
 ## 6. Proposed / unscheduled
 

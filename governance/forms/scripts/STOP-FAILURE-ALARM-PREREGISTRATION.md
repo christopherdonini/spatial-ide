@@ -26,3 +26,23 @@ The closing amendment records checks (a) to (d) with their evidence, the reviewe
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — 2026-11-21 — the human's approval of ADV-2026-11-18-25: check (d) in its new words, the seventh file; the piece resumes
+
+*Written by the custodian before the test's change is made. References only; nothing below is a quotation.*
+
+1. **The approval.** The human's typed message of 2026-11-21 at 09:45Z approves ADV-2026-11-18-25 by its id, filed at state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md. By the approval, its text below its rule is the human's words. It keeps the approval of ADV-2026-11-18-06 and changes check (d).
+
+2. **Class, place and procedure** are the advisor's ruling ADV-2026-11-21-13 item 5, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-13-the-humans-four-approvals-placed-the-ci-piece-in-slot-1-the-stop-alarm-resumes-item-68-meets-the-limitation-s8-joins-p6.md: the piece is not paused, and what follows is ADV-2026-11-18-26 item 4 (a) to (e), then ADV-2026-11-18-22 items 5, 6 and 8. It runs beside the CI piece and P6, under the cap, and never takes a place that a merge request, a stop, the CI piece or a P6 group waits for.
+
+3. **The seventh file.** Scope gains scripts/hooks/hooks.test.mjs, for one change and no other: in the test the_notification_hook_matches_only_the_two_quota_types, the two expected values (the hook keys gain StopFailure; the Notification matcher gains quota_auto_resume_fired) and one comment line above the test saying why. The test keeps its name. It is a commit of its own, by the worker, on cut/stop-failure-alarm (ADV-2026-11-18-26 item 4 (a)). The block on sight for an existing hook test excepts this one change and no other (item 4 (e)). The files are 7 and the declared line budget gains 3 changed lines.
+
+4. **Check (d) in its new words.** Every other hook test passes unchanged. The one test of item 3 changes in its two expected values alone. The whole hooks suite, node --test over scripts/hooks with its test files, is run at the test's commit, and its count is shown in this form by the next amendment (item 4 (c)). The same run at the head goes in the closing amendment.
+
+5. **The merge.** By ADV-2026-11-21-13 item 5 (d), the approval of ADV-2026-11-18-06 as changed by ADV-2026-11-18-25 is the human's typed approval naming the live checks. Before the merge request, each of the four checks is shown in this form, and the human's line for check (b) is filed.
+
+6. **Superseded:** the words of check (d) in the five lines, by item 4; nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.

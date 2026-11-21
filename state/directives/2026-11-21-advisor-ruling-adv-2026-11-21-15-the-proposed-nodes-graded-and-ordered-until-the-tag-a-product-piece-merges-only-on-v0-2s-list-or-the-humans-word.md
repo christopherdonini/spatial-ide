@@ -1,0 +1,32 @@
+# The advisor's ruling ADV-2026-11-21-15, under the human's delegation of 2026-11-13, not the human's words: the batch's proposed nodes, the Console piece and the mint-window piece graded and ordered: until v0.2 is tagged, a piece that changes what the product does merges only if it is on v0.2's list or the human says so; tests and tooling merge as they close, the launcher node first; the product pieces built in order, their merges held
+
+*Filed byte for byte by the custodian as the advisor's ruling under the delegation (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 3), never as the human's words: PASTES/ADV-2026-11-21-15.md in the advisory folder, 5337 bytes, sha256 6dcb433db2dc876437a85d37df131b5ac7e3b5811f9c6b767fa7f3329230b2e3, last modified at 2026-11-21T10:05:09Z by the file system; the advisor's message naming it received at 2026-11-21T10:05:15.792Z by the custodian's transcript (its queue record); read again at this filing (2026-11-21T10:31:18Z), equal. Nothing is changed.*
+
+---
+
+Advisor's ruling under the delegation of 2026-11-13.
+
+ADV-2026-11-21-15, to the custodian, 2026-11-21. The proposed nodes of your batch's item 7, with the Console piece and the mint-window piece: graded and ordered, as ADV-2026-11-20-30 item 3 and ADV-2026-11-21-13 item 4 (c) owed. Read by me: your batch of 09:30Z and my own rulings that each node comes from. I read no code for this; each grade is as far as those rulings read, and a node's first step may change it. The figures of your batch go to the human's digest as given.
+
+1. **One rule first: what merges before v0.2 is tagged.** What a release contains is the human's. Until the tag, a piece that changes what the product does merges only if it is on v0.2's list or the human says so. Pieces that change tests, e2e suites, scripts, CI or records alone merge as they close. A product piece outside the list may be built and gated on its branch; its merge request waits for the tag or for the human's word, and I tell them when one is ready. The human's approval of ADV-2026-11-19-18 says the same of its two fixes.
+
+2. **Order of places.** Never ahead of a merge request, a stop, the CI piece, P6's group or the stop alarm. Under the cap of ADV-2026-11-18-01 and -02, which is unchanged. Each node is named by you when it is placed.
+
+3. **Tests and tooling, mergeable as they close:**
+   - (i) **The launcher node (your (c)): first.** Graded moderate in kind and wide in reach: no fault of the product is shown, but every e2e series runs through this launch, its evidence and its laptop hours with it. Its first step is a read, no form, by the tester on a quiet machine, changing no tracked file, answering in this order: why the fill is 2 to 2.5 times slower under the suites' own launch than in the harness's filed runs (what differs between the two launches: the build profile, the dev server, the flags, the window); what the launch spends of the 900 s watchdog and why the shell crate is built again after a flagged pre-build; why A's log is empty. Its report comes to me before any fix, and I class the fix then. N2, N-1 and N1 of P4b join the fix, not the read. The two standing rules stay until it is read.
+   - (ii) **The flaky scripts test (your (j)): second.** Minor in kind, but it sits in the gate of every records commit. Five-line form, the reviewer alone, the standard worker, the scripts' test file alone: first the failure message says what it saw; its cause follows when it shows again.
+   - (iii) **The tests' fixed temp folder (your (i)) and the cancel test (your (h)): third, as two nodes.** Both minor. (i) is a five-line piece: a folder of the test run's own. (h) starts with a read of why the instrumentation and the test disagreed at 624eb45c; no fix before its report.
+   - (iv) **The manifest for the test executables (your (b)): last of all.** Minor, tests alone. Its first step is the architect's design note, which says whether it needs a dependency or changes the shipped exe. If either, it goes to the human and nothing is built before their word.
+
+4. **Product pieces, built in this order, each merge held by item 1:**
+   - (i) **The Console piece (limitation 67).** Moderate in kind and wide in reach: the Console is where a user sees what the app sent, and one load now pushes the earlier entries out. First the architect's design note with its options and what each does to item 67's words; it comes to me before a form. Its class is set then.
+   - (ii) **The mint-window piece** (`untiled-reissue-holds-earlier-look-handle-until-mint`). Serious in kind and rare in reach, as graded. Full form, both gates, as ruled. Limitation 68 stays until it merges.
+   - (iii) **The lock or handle left held when `describe` fails after `opened` (your (g)), then `opened_of`'s four panic sites (your (d)).** Both moderate in kind: at a reopen the project's lock stays held until the session ends or the app is closed. (g) is rare in reach as read; (d) is not reachable with a file the reader accepts, by both gates of that part. Two nodes, the same lead: lead-data drafts each preregistration, and the class is set at the form (a new refusal on the wire makes it full class). (d) carries the reviewer's note on `opened_of`'s doc.
+   - (iv) **A re-link after a refusal at the recorded place (your (f)).** Minor in kind, since limitation 73 declares it and putting the file back is the way out; it is what a user meets when a data file inside the project folder is moved. Full form, both gates: it changes section 12.3 of the SKP spec. It is the piece that carries R8's bullet for that section (ADV-2026-11-21-06 item 3).
+   - (v) **The `folder` not checked absolute (your (e)).** Minor and narrow, as graded. Its first read is ADV-2026-11-20-30 item 2.
+
+5. **Not nodes:** the docs lane's items of your item 8 stay in the docs lane, each with the next piece that edits its file. The comment on the Console registry's row goes with the Console piece if that piece edits `console/surfaceRegistry.ts`, otherwise with P6's later group for that file.
+
+6. **What I tell the human:** item 1, the order of item 4, and that any of item 4's pieces joins v0.2 only on their word.
+
+7. Nothing here is reserved. If the first step of a node shows a product fault that a user can meet in ordinary use and no limitation declares, it comes to me at once and I regrade it.

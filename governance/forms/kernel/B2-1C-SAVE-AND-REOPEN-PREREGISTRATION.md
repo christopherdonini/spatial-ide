@@ -4779,3 +4779,29 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 73 — P6's first group, the reopen's 37 strings, before its code, by ADV-2026-11-21-14: the words stand, the marks come off, Part AD by script
+
+*Written by the custodian, 2026-11-21, before any of the group's changes. References only; nothing below is a quotation. The five lines in item 2 are the form the group is gated on.*
+
+1. **The rulings.** ADV-2026-11-21-14, the advisor's under the delegation of 2026-11-13, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-14-p6s-cut-one-group-now-the-reopens-37-strings-words-stand-marks-off-part-ad-by-script-the-rest-after-the-sitting.md, cuts P6 on the inventory's two reports (state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p6-strings-inventory-evidence-reader-report.md and state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p6-strings-inventory-part-2-worker-report.md): one group now, the reopen's own 37 strings, kind (a) of its item 1. S8 is among them by the human's approval of ADV-2026-11-21-12, filed at state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md. By ADV-2026-11-21-13 item 1, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-13-the-humans-four-approvals-placed-the-ci-piece-in-slot-1-the-stop-alarm-resumes-item-68-meets-the-limitation-s8-joins-p6.md, the group starts when that approval is on main.
+
+2. **The group's class** is the five-line form and the reviewer alone, with the standard worker (ADV-2026-11-21-14 item 7). Its five lines:
+
+```
+Authority: PLAN node b2-piece-1c-save-and-reopen, step 2, P6's first group; its cut, words, comments, runs and review by ADV-2026-11-21-14 items 1 to 8 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-14-p6s-cut-one-group-now-the-reopens-37-strings-words-stand-marks-off-part-ad-by-script-the-rest-after-the-sitting.md), on the inventory's reports (state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p6-strings-inventory-evidence-reader-report.md; state/consults/2026-11-21-b2-piece-1c-save-and-reopen-p6-strings-inventory-part-2-worker-report.md); S8 by the human's approval of ADV-2026-11-21-12 (state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md); reuse index: three misses, no prior art recorded for placeholder string mark removal, ui string wording ruling or walkthrough row mark (tools/reuse.mjs in the read-only reuse clone at 89bbac37, exit 1 each, run by the custodian for this amendment).
+Scope: at most 7 files: frontends/shell/src/project/reopenNotices.ts (its 24 marked literals and its comments); frontends/shell/src/project/saveProject.ts (its 8 marked literals and its comments); frontends/shell/src/admission/AdmissionPanel.tsx (the Open project control's 2 texts and their comment); frontends/shell/src/layout/actionRegistry.ts (the labels of project.save and project.open and their comments, the labels and comments of layer.revealStyle and layer.revealTable unchanged); frontends/shell/src-tauri/src/commands.rs (the folder picker's title and its comment); frontends/shell/MANUAL-WALKTHROUGH.md (Part AD, the two changes of item 4 of the ruling, by script); and a test file only under item 5 of the ruling; declared line budget <= 100 changed lines by §21c's counting; PLAN.yaml and this form's records excluded.
+Change: in each of the 37 literals the mark and the one space after it are removed from its start and nothing else in it changes (item 2); the comments say whose wording each string is, as item 3 has it, and the header of reopenNotices.ts names the human's approval of ADV-2026-11-21-12 by its filed directive; Part AD gets item 4's two changes and nothing else, the file's sha256 after them the one item 4 names.
+Tests+mutation: no test is added; the shell's verify at the group's head, run by the worker; a test that fails because it holds a marked text of this group has that text changed and nothing else, listed in the report, and a test that asserts the mark as a rule goes to the advisor (item 5); the worker searches frontends/shell/e2e for the 37 texts' words, and a suite that holds one is run once by the tester after the change, else the report says none is owed; the reviewer checks the diff against items 2 to 4 by script and by reading, reads the comments, and reads against the code at the head the clauses of the eleven strings step 1 built (item 6), a clause it finds untrue going to the advisor unreworded.
+Out-of-scope: none of ADR / security / wire / guarantee is touched: no kernel, engine or protocol file, no dependency; every other marked string keeps its words and its mark until the sitting has been held (item 9), the walkthrough's 23 marks outside Part AD and Part AD's four notes on strings for sight among them.
+```
+
+3. **After it merges** (item 8), step 2's P6 is the human's sight of these strings at the sitting, in Part AD, and nothing else; the group's closing records it here.
+
+4. **Item 10 of the ruling** asks two things of a later batch and rules nothing: what the POINTS form's two refusals listed as marked are, and where the covering-case form's texts went.
+
+5. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
