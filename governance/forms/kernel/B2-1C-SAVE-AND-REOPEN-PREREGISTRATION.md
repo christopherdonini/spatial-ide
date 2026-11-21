@@ -4763,3 +4763,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 72 — PR 344 merged at 9775a3c4 by the advisor's merge; main's CI there; what step 2 still waits for
+
+1. **Merged.** The advisor's verdict on PR 344 at 88b04ead is MERGE, filed at state/consults/merge-checks/PR-344-88b04ead34e9.md. The advisor merged it by merge commit 9775a3c49cc6f067c50170a294d8cf38d176d6c6, at 2026-11-21T07:59:56Z (the grant, item 5).
+
+2. **Main's CI at the merge commit:** 5 workflow runs and their 9 jobs, each completed success, read at 2026-11-21T08:19:40Z.
+
+3. **Step 2's pieces of code and words** are all merged, P1a to P5. E-SECOND passed on main (Amendment 69). By Amendment 54 item 18, the step still waits for its operator Part, P0 and OP1 to OP6, run after the step's code as section 9 orders it. It also waits for P6, the strings Amendment 54 item 12 places under it, which the app still shows with the P6 placeholder marking, with R11 (Amendment 70 item 3). Step 3 is outside v0.2.
+
+4. **The plan node** stays in progress.
+
+5. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.

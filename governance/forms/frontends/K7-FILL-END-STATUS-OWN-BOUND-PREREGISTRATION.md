@@ -21,3 +21,29 @@ By that ruling's item 7, the advisor's two leads in ADV-2026-11-21-03 item 8 wer
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — the closing at 23f04d93, before its merge request: the gate PASS WITH NOTES, D1 and D2 closed by ADV-2026-11-21-10 with no re-gate; the two runs standing for the head; the size (class 8); N1 carried
+
+*Written by the custodian, 2026-11-21, after the gate and the comment commit, before the merge request, by ADV-2026-11-21-10 item 4 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-10-k7s-d1-and-d2-closed-with-the-reviewers-words-five-blocks-one-commit-no-re-gate-a-watchdog-end-is-a-stop.md). References only; nothing below is a quotation.*
+
+1. **The gate** (item 4 (a)). The reviewer read the fix at 9aa34054 and ended PASS WITH NOTES, with no Correctness or Evidence finding (state/consults/gates/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-gate-reviewer.md). Its D1 and D2, on comments, are closed by the ruling's five blocks, the reviewer's words, applied by the standard worker in one commit, 23f04d93, with no gate reading it again (item 4). The custodian's script found that commit one commit on 9aa34054, regression.mjs alone, every changed line a comment line, and the file byte-equal to the ruling's build (state/consults/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-step-2-comments-worker-report.md). The worker ran node --check on the file, exit 0, and nothing else (item 2).
+
+2. **The two runs** (item 4 (b)), at 9aa34054, under the suites' own launch on port 5180, by the tester on a quiet machine (state/consults/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-step-2-evidence-tester-report.md). Run (a) had no failed row, and K7 passed in 159.5 s. Run (b), with one character of K7_SETTLED_PARTIAL_TEXT changed in the worktree, failed K7 at its new bound, its line naming the product's sentence and 0 tiles queued. The change was reverted to an empty porcelain. The two runs stand for the head, whose commit changes no line of code (item 3).
+
+3. **The tester's report** (item 4 (c)). The gate's R1 to R4 are corrected in the filing note of the tester's report: the outer timeout it names, its port checks listing IPv4 only, the frontends log's redirect, and run (a)'s K7 line, cut short in the report. The logs are the record.
+
+4. **The size** (item 4 (d)). At 23f04d93 against the base af3cd53c: 33 lines in and 15 out in regression.mjs, 48 in all, against the form's 40. At 9aa34054 it stood at 39. The re-wrapped comments touch lines the fix had not touched. The excess is class 8, the gate's own words, and needs no further ruling at that count.
+
+5. **Class 3, the record.** The Change line's clause that a passing step cannot reach K7's outer timeout is stronger than the code, by the gate's D1. The comment at the head says what holds: a passing step reaches it only if the waits' poll overshoot and the page calls with no bound of their own take 30 s or more together (ADV-2026-11-21-10 item 1 (e)).
+
+6. **Carried** (item 4 (e)). N1 goes to the proposed launcher node's first question, beside the slowness (ADV-2026-11-21-05 item 8). The whole-run watchdog of 900 s is armed before the launch, and run (a) used about 704 to 717 s of it.
+
+7. **Standing** (items 5 and 6). Until the launcher node is read, a run of regression.mjs that the whole-run watchdog ends is a stop for the advisor, with how long the launch took, and is not read as a failed row. From this fix's merge, K7 is an ordinary row again, and ADV-2026-11-21-03 item 11 ends (ADV-2026-11-21-05 item 9).
+
+8. **The PR.** PR 345, cut/k7-fill-end-status-bound at 23f04d93, out of draft. CI at that head was read at 2026-11-21T08:19:31Z: 6 runs, all completed with success.
+
+9. **Superseded:** the Change line's clause named in row 5, as row 5 reads it.
+
+Read the last amendment first.
+
+Nothing above is edited.
