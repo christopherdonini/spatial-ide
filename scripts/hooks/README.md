@@ -331,7 +331,7 @@ file; a directory git cannot read).
 
 ## StopFailure — `notify-stop-failure.mjs`
 
-Added by the human's approval of ADV-2026-11-18-06 (items 1 to 3; `AUTONOMY.md` §38 Part C). The
+Added 2026-11-18 by the human's approval of ADV-2026-11-18-06 (items 1 to 3; `state/directives/2026-11-18-the-humans-message-adv-2026-11-18-06-approved-a-stop-failure-hook-that-tells-the-human-when-a-turn-ends-on-a-service-error.md`; `AUTONOMY.md` §38 Part C). The
 hook listens for the StopFailure event, with no matcher, so every error type the event names is
 covered. It reads the hook's JSON from stdin and sends one Telegram message through
 `sendTelegramDeduped` (`telegram.mjs`): that the session stopped on an error, the `error` value, the
@@ -344,3 +344,7 @@ no token variable and prints none. In a cloud session it exits at once. It alway
 Not proven (the approval's item 6): that the app raises this event when a usage limit is reached.
 `notify-stop-failure.test.mjs` runs the script on the documentation's example input
 (`fixtures/stop-failure-input.json`), every run a dry run.
+
+The same approval (item 3) adds `quota_auto_resume_fired` to the Notification hook's matcher: it is now `quota_auto_resume_stale|quota_auto_resume_disabled|quota_auto_resume_fired`, three quota types. The **Matcher** paragraph of the Notification section above, which names two, reads so from this section's merge; it is not edited. Nor is the header comment of `notify-telegram.mjs`, which also names two: this piece changes no existing hook script (ADV-2026-11-18-22 item 3).
+
+If the hook's input holds no `error` field, the message carries the word `unknown` where the error type stands.
