@@ -26,7 +26,8 @@ permissions:
 jobs:
   build:
     name: tauri build (NSIS, build-only, no signing)
-    runs-on: windows-latest
+    # The human approved the Windows image change (ADV-2026-11-20-25); the advisor's route is ADV-2026-11-21-18.
+    runs-on: windows-2022
     timeout-minutes: 60
     steps:
       # Always the ref that triggered the CALLING run (`github.ref` is the caller's own ref in a
@@ -49,6 +50,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
+          # The key keeps its old name, `windows-latest-shell-tauri-build`, though the job runs on `windows-2022`.
           key: windows-latest-shell-tauri-build
           workspaces: "frontends/shell/src-tauri"
 
