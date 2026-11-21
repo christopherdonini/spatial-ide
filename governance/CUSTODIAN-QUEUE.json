@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-21T08:19:41.992Z",
-  "plan_hash": "03b28e3cf0f15dc8ef881c36056ca4d3efb47de3cab7515f77e23cc9b3ff5339",
+  "generated_at": "2026-11-21T08:57:38.505Z",
+  "plan_hash": "1e14e75fa8158db0354396f09c930f7d29e4c8fad65a0ee49949a444ac0eb21b",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -727,28 +727,6 @@
       },
       "summary": "LANDED 2026-11-12: merged with 1c step 1 as PR #307 (9398efc6, the human's click), in ffc039d1, where the 1c form's Amendments 7 and 8 placed it; its consumer is milestone 4's PR B. It stays in progress until 1c's node is done: its gate is 1c's form, and a done node binds that form's claimed tests, steps 2 and 3's among them. Before: RULED 2026-11-11 by the human's message of 2026-11-11 (state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md), item 1: OPEN-7-1 (a), in P2's one commit under P2's version (the 1c form's Amendment 8). Before: PLACED 2026-10-23 by the human (the 2026-10-23 directive's Milestone 4 line, OPEN-18 (b), and its Piece 1c line, OPEN-A2 (b)): inside 1c step 1 by class 9, declared in that form's Amendment 7; its commit place is OPEN-7-1 there. Its consumer is milestone 4's PR B (§2.3 (h); PB-R2), whose merge waits for it on main (round 8). It is done with step 1's merge, {pr} set only in that done commit. Before: PROPOSED 2026-10-21 by the custodian, from milestone 4's OPEN-4 (A′), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md) and carried by ADR-036's pre-acceptance block (adr-036-pre-acceptance-block). The option's text (state/consults/2026-10-21-b1-shell-half-milestone-4-architect-draft.md, OPEN-4): a small data-lane piece widens record_step before milestone 4's PR B merges, or the widening is the first commit of 1c's step 1. It touches protocol/ (that draft's overlap section), so rule (00) keeps it apart from 1c's protocol/ steps. Which of the two is the human's; the human places it.",
       "evidence_label": "branch `cut/b2-piece-1c-save-and-reopen`"
-    },
-    {
-      "id": "k7-residency-status-after-zoom-out-under-the-suite-launch",
-      "title": "K7 of the regression suite under the suites' own launch: after the fifteen zoom-out notches the residency status is absent where the partial-view sentence is expected, in 4 of 4 runs at 0cc509fe and at the base d7f27ef8, where the port-5400 harness passed 3 of 4; whether the launch or the product, read first",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/k7-fill-end-status-bound"
-      },
-      "dates": {
-        "opened": "2026-11-21",
-        "done": null
-      },
-      "summary": "CLOSED 2026-11-21 at 23f04d93: D1 and D2 closed by ADV-2026-11-21-10 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-10-k7s-d1-and-d2-closed-with-the-reviewers-words-five-blocks-one-commit-no-re-gate-a-watchdog-end-is-a-stop.md) with no re-gate; PR 345, CI green; the closing is the form's Amendment 1; the merge check next. Before: BUILT AND GATED 2026-11-21 at 9aa34054: the tester's two runs as ADV-2026-11-21-05 item 5 predicts, (a) no failed row, (b) K7 failing at its new bound and reverted (state/consults/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-step-2-evidence-tester-report.md); the reviewer PASS WITH NOTES (state/consults/gates/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-gate-reviewer.md), D1 and D2 in comments to the advisor. Before: STEP 2 PLACED 2026-11-21 (ADV-2026-11-21-05, state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-05-k7-the-steps-wait-at-fault-its-own-60-s-bound-the-nodes-second-step-the-slowness-to-the-launcher-node.md): the step's wait at fault, no fault of the product shown; K7's re-read of the status gets its own bound of 60 s, one file, on the five-line form governance/forms/frontends/K7-FILL-END-STATUS-OWN-BOUND-PREREGISTRATION.md, the reviewer alone; the slowness to the launcher node, not placed. Before: READ 1 2026-11-21 (state/consults/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-read-1-tester-report.md): the partial-view sentence came 11.6 and 13.9 s after the last notch in two helper runs, past the step's 10 s re-read; the fill ran about twice as slow as in the harness's filed runs, its cause not shown; to the advisor before any fix. Before: PLACED 2026-11-21 by the advisor's ruling ADV-2026-11-21-03 items 6 to 11 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-03-k7-ruled-not-the-pieces-equal-rows-its-node-placed-in-slot-2.md): in slot 2 while P5 waits, named by the custodian; not on v0.2's list by that placing. A failed row on main: K7 failed in every run under the suites' own launch, three at 0cc509fe and one at the base d7f27ef8, and passed three of four under the port-5400 harness. Its first step is a read with no tracked file changed, class none, by the tester on high effort: the five questions of item 7, (a) what differs between the launches, (b) the status line over a longer bound and each notch's settle, (c) whether the notches end at the same view, (d) when K7 last passed under the suites' own launch, (e) whether the product can end a settle after a zoom-out with no status, or the step's wait is at fault. At most four launches, helpers in scratch, no suite file edited, quiet runs after the redaction piece's. If (e) is the product, it goes to the advisor at once. Until the node is done, K7 is read in other series by comparison with main and recorded in their closings.",
-      "evidence_label": "branch `cut/k7-fill-end-status-bound`"
     },
     {
       "id": "stop-failure-alarm",

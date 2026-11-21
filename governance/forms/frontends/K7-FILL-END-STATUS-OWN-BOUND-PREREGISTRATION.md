@@ -47,3 +47,19 @@ By that ruling's item 7, the advisor's two leads in ADV-2026-11-21-03 item 8 wer
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — PR 345 merged at 89238a20 by the advisor's merge; main's CI there; K7 an ordinary row again
+
+1. **Merged.** The advisor's verdict on PR 345 at 23f04d93 is MERGE, filed at state/consults/merge-checks/PR-345-23f04d93253c.md. The advisor merged it by merge commit 89238a20f5f16adf206e9cd3aefc7ec45e583e44, at 2026-11-21T08:50:43Z (the grant, item 5).
+
+2. **Main's CI at the merge commit:** 4 workflow runs and their 6 jobs, each completed success, read at 2026-11-21T08:57:37Z.
+
+3. **From this merge** K7 is an ordinary row again, and ADV-2026-11-21-03 item 11 has ended (ADV-2026-11-21-05 item 9). The rule of ADV-2026-11-21-10 item 5 stands until the launcher node is read.
+
+4. **The plan node** is done, its evidence the PR.
+
+5. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.

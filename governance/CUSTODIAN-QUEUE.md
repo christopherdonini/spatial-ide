@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `03b28e3cf0f15dc8ef881c36056ca4d3efb47de3cab7515f77e23cc9b3ff5339`) at `2026-11-21T08:19:41.992Z`.
+Generated from `PLAN.yaml` (sha256 `1e14e75fa8158db0354396f09c930f7d29e4c8fad65a0ee49949a444ac0eb21b`) at `2026-11-21T08:57:38.505Z`.
 
 ## 1. Next
 
@@ -53,7 +53,6 @@ Generated from `PLAN.yaml` (sha256 `03b28e3cf0f15dc8ef881c36056ca4d3efb47de3cab7
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **k7-residency-status-after-zoom-out-under-the-suite-launch** — K7 of the regression suite under the suites' own launch: after the fifteen zoom-out notches the residency status is absent where the partial-view sentence is expected, in 4 of 4 runs at 0cc509fe and at the base d7f27ef8, where the port-5400 harness passed 3 of 4; whether the launch or the product, read first — evidence: branch `cut/k7-fill-end-status-bound`
 - **stop-failure-alarm** — The stop alarm: a StopFailure hook tells the human by Telegram when a turn of the custodian ends on an error from the service, and the Notification hook also forwards quota_auto_resume_fired (the human's approval of ADV-2026-11-18-06; ADV-2026-11-18-22) — evidence: branch `cut/stop-failure-alarm`
 
 ## 6. Proposed / unscheduled
