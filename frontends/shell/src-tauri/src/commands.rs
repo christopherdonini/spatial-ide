@@ -812,9 +812,11 @@ mod tests {
     /// scan** (an aliased import, a call split across lines or unusual spacing would defeat it),
     /// and it says nothing about callers **outside** this file (`lib.rs` and `pool_poll.rs` call
     /// `append` with the host's own lines, and are out of its reach by design). As in the
-    /// precedent, only `//` lines are skipped as comments, so a commented-out call or any other
-    /// type's `.append(` is a false offender, noise rather than a silent pass. It shows the call is
-    /// written, not what it writes: K-1 to K-3 show that.
+    /// precedent, only a line that starts with `//` is skipped as a comment, so a call inside a
+    /// `/* */` block, or any other type's `.append(`, is a false offender, noise rather than a
+    /// silent pass. A call written in path form, `SessionLog::append(&log, ..)`, holds no
+    /// `.append(` and is not seen. It shows the call is written, not what it writes: K-1 to K-3
+    /// show that.
     #[test]
     fn the_session_log_binding_calls_append_redacted_and_no_other_line_here_calls_append() {
         let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/commands.rs");
