@@ -4843,3 +4843,27 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 76 — 2026-11-21 — P6's first group closed: the three comments in the reviewer's words, the size, the slip, the two cases; CI at the new head
+
+*Written by the custodian after the advisor's ruling ADV-2026-11-21-17, under the human's delegation of 2026-11-13, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-17-p6s-first-group-n1-to-n3-in-one-commit-of-the-reviewers-words-no-gate-reads-it-again-92-of-100-the-slip-the-advisors-n6-to-the-docs-lane.md. References and hashes only; nothing below is a quotation.*
+
+1. **The gate and its report.** The reviewer alone read cut/1c-p6-group-1 at b42ccb3e and ended PASS, with three Documentation findings and three for the advisor (Amendment 75; state/consults/gates/2026-11-21-b2-piece-1c-save-and-reopen-p6-group-1-gate-reviewer.md). The ruling closes them as items 2 to 4 below.
+
+2. **The commit of the ruling's item 1.** 13e1a7e9c5ff3dc78fb80c2ac3ec6686d78ecc51 on cut/1c-p6-group-1, over b42ccb3e7060d7179822ee21c7661ca2699bb18b, by the standard worker, by script: the comments of N1 to N3 replaced by the report's words, 4 lines added and 4 removed in actionRegistry.ts, saveProject.ts and reopenNotices.ts. No gate reads it again, and no run of the shell's verify is owed for comment lines. The custodian's check (sha256 c7bf310e1c0f9b1cb83fb2e5b14f4912b782401f2e6a37635081353844d5bcd7), run in the worktree at the new head: its parent is b42ccb3e; the three files alone, and comment lines alone; N1's line and N2's two lines byte-equal to the report's; N3's clause replaced in place, the rest of its line unchanged; and the check of the 37 literals and the walkthrough at the new head, CHECK OK. It ended CHECK OK with exit 0 (its output, sha256 58e85ed29fe1326bdb980e9066d44f4bbc9e86a87b317306613afd5635de0b2c), and again at this filing.
+
+3. **The size (item 2).** The merged diff's counts at the new head equal those at b42ccb3e: the three comments were lines the group had already changed. By section 21c's counting, which counts code and tests, it is 92 of Amendment 73's budget of 100, and the reviewer's reading holds; with the walkthrough's ten lines it is 102. No class row is owed.
+
+4. **N5 (item 3).** The slip is the advisor's, class 3: two of the eleven strings that ADV-2026-11-21-14 item 6 gives to step 1, O-9 and O-19b's label, were built at P4a-2 with the words of ADV-2026-11-20-05 item 2, and both gates of PR 341 read them; the same error in two comments is what N1 and N2 corrected. The reviewer read all eleven. ADV-2026-11-21-14 is not changed.
+
+5. **N6 (item 4), the two cases as the report has them.** (a) S4, the notice that the project was not saved, shows on a panic of the save, and a panic in the history step or after the replace would come after the project file was written. (b) S7, the notice that the folder already holds a project, shows when anything at all is at the target's name in the picked folder, an object that is not a project among them. By the report neither is met in ordinary use. No comment is added in this piece: each goes to the docs lane with the next piece that edits saveProject.ts, whose reviewer reads the words, and a later read that finds one met goes to the advisor.
+
+6. **CI at the new head.** At 13e1a7e9, read at 2026-11-21T13:13:18Z: 2 runs, all completed with success, the shell run's 2 jobs among them, the Windows tauri build included. The other workflows do not run on this commit by their path filters; at b42ccb3e all four passed (Amendment 75 item 5).
+
+7. **After the merge.** Step 2's P6 is the human's sight in Part AD, and nothing else (ADV-2026-11-21-14 item 8).
+
+8. **Next.** The pull request, then the merge request with the merge base, the main commit and the changed paths.
+
+Read the last amendment first.
+
+Nothing above is edited.
