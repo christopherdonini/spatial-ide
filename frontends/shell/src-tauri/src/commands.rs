@@ -245,7 +245,7 @@ pub fn binding_data_plane_attach(state: State<'_, DataPlaneHandle>) -> DataPlane
         url: format!("ws://127.0.0.1:{}/stream", state.port),
         subprotocols: [
             spatial_data_plane::session::SUBPROTOCOL.to_string(),
-            format!("tok.{}", state.token),
+            format!("tok.{}", state.session.token_for_delivery()),
         ],
     }
 }
@@ -254,9 +254,20 @@ pub fn binding_data_plane_attach(state: State<'_, DataPlaneHandle>) -> DataPlane
 /// persisted to a log that outlives the session. This is the persistence half; the visible half is
 /// a JS-side banner. `level` is free text (`"error"`, `"unhandledrejection"`, `"watchdog"`, …), not
 /// a closed enum — instrument surface owes no protocol.
+///
+/// Both `level` and `message` are the page's text, and each passes through the data plane's
+/// `Session::redact` before `SessionLog::append`: every occurrence of the session token's exact
+/// text becomes `<redacted>`, so a page line carrying the credential `binding_data_plane_attach`
+/// hands out (`tok.<hex>`) is written as `tok.<redacted>`. The token in any other form is not
+/// caught (`SessionLog`'s doc).
 #[tauri::command]
-pub fn binding_log_session_event(state: State<'_, SessionLog>, level: String, message: String) {
-    state.append(&level, &message);
+pub fn binding_log_session_event(
+    log: State<'_, SessionLog>,
+    handle: State<'_, DataPlaneHandle>,
+    level: String,
+    message: String,
+) {
+    log.append_redacted(&handle.session, &level, &message);
 }
 
 /// One entry of the pinned, in-tree CRS definition catalog (ADR-026 decision 1(a)), as handed to
@@ -322,10 +333,11 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
 /// The title of the native project-folder picker: S2, a placeholder.
 const PROJECT_FOLDER_PICKER_TITLE: &str = "[P6 placeholder] Choose the project folder";
 
-/// The OS folder picker for `save_project`'s first save. **Not SKP**, for the same reason as
-/// [`binding_pick_file`]: `save_project` takes a folder already chosen, and how the caller got one
-/// is UI. The path never comes from the page: the dialog is native, and `None` means the operator
-/// cancelled.
+/// The OS folder picker for a project folder: the folder of an open's first save (`save_project`),
+/// and the folder a reopen opens (`open_project`). **Not SKP**, for the same reason as
+/// [`binding_pick_file`]: both commands take a folder already chosen, and how the caller got one is
+/// UI. The folder this returns never comes from the page: the dialog is native, and `None` means
+/// the operator cancelled.
 #[tauri::command]
 pub async fn binding_pick_project_folder(app: tauri::AppHandle) -> Result<Option<String>, String> {
     let (tx, rx) = tokio::sync::oneshot::channel();
@@ -688,4 +700,164 @@ pub async fn binding_publish_prepare_e2e_destination(
     })
     .await
     .map_err(|e| format!("binding_publish_prepare_e2e_destination panicked: {e}"))
+}
+
+// -------------------------------------------------------------------------------------------
+// Tests: what the session log's binding writes, through the `SessionLog` method its body calls,
+// and a scan of this file for that call
+// -------------------------------------------------------------------------------------------
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    use spatial_data_plane::session::REDACTED;
+    use spatial_data_plane::Session;
+
+    use crate::state::SessionLog;
+
+    /// A real `Session` of its own and a real `SessionLog` in a fresh folder of its own, made as
+    /// `publish.rs`'s `workspace` makes one: the log's file name has one-second resolution
+    /// (`SessionLog::open`).
+    fn session_log(name: &str) -> (Session, SessionLog) {
+        let dir = std::env::temp_dir()
+            .join("spatial-ide-shell-session-log-tests")
+            .join(name);
+        let _ = std::fs::remove_dir_all(&dir);
+        let log = SessionLog::open(&dir).unwrap();
+        let session = Session::with_origin("http://tauri.localhost".to_string()).unwrap();
+        (session, log)
+    }
+
+    /// A line after its `<unix-ms>` stamp and the space, its LF kept.
+    fn after_stamp(line: &str) -> &str {
+        let (ms, rest) = line.split_once(' ').unwrap();
+        assert!(!ms.is_empty() && ms.bytes().all(|b| b.is_ascii_digit()));
+        rest
+    }
+
+    /// What no line may hold but its final LF: a Unicode Cc, a Bidi_Control character, U+2028 or
+    /// U+2029.
+    fn hidden(c: char) -> bool {
+        c.is_control()
+            || matches!(
+                c,
+                '\u{061C}' | '\u{200E}' | '\u{200F}' | '\u{202A}'..='\u{202E}'
+            )
+            || matches!(c, '\u{2066}'..='\u{2069}' | '\u{2028}' | '\u{2029}')
+    }
+
+    // Each test checks `leaks_into` with `assert!` before any `assert_eq!` on a line, so that a
+    // failure prints no token.
+
+    #[test]
+    fn a_token_in_the_pages_message_never_reaches_the_session_log() {
+        let (session, log) = session_log("k1");
+        let credential = format!("tok.{}", session.token_for_delivery());
+        let message = format!("offered {credential}, then {credential}.");
+        log.append_redacted(&session, "error", &message);
+        let text = std::fs::read_to_string(&log.path).unwrap();
+        assert!(!session.leaks_into(&text));
+        let lines: Vec<&str> = text.split_inclusive('\n').collect();
+        assert_eq!(lines.len(), 1);
+        let expected = format!("error offered tok.{REDACTED}, then tok.{REDACTED}.\n");
+        assert_eq!(after_stamp(lines[0]), expected);
+    }
+
+    #[test]
+    fn a_token_in_the_pages_level_never_reaches_the_session_log() {
+        let (session, log) = session_log("k2");
+        let credential = format!("tok.{}", session.token_for_delivery());
+        let level = format!("watchdog:{credential}:end");
+        log.append_redacted(&session, &level, "the page's message");
+        let text = std::fs::read_to_string(&log.path).unwrap();
+        assert!(!session.leaks_into(&text));
+        let lines: Vec<&str> = text.split_inclusive('\n').collect();
+        assert_eq!(lines.len(), 1);
+        let expected = format!("watchdog:tok.{REDACTED}:end the page's message\n");
+        assert_eq!(after_stamp(lines[0]), expected);
+    }
+
+    #[test]
+    fn a_control_character_in_the_pages_text_never_breaks_the_session_log_line() {
+        let (session, log) = session_log("k3");
+        let credential = format!("tok.{}", session.token_for_delivery());
+        let level = "lv\r\u{7}\u{202E}\u{2028}\nend";
+        let message = format!("msg\r\u{7}\u{202E}\u{2028}\n{credential}");
+        log.append_redacted(&session, level, &message);
+        log.append_redacted(&session, "info", "a plain line, as before");
+        let text = std::fs::read_to_string(&log.path).unwrap();
+        // The line count first: two lines, each ending in its one LF.
+        assert_eq!(text.matches('\n').count(), 2);
+        assert!(text.ends_with('\n'));
+        assert!(!session.leaks_into(&text));
+        let lines: Vec<&str> = text.split_inclusive('\n').collect();
+        for line in &lines {
+            assert!(!line[..line.len() - 1].chars().any(hidden));
+        }
+        let r = '\u{FFFD}';
+        let expected = format!("lv{r}{r}{r}{r}\\nend msg{r}{r}{r}{r}\\ntok.{REDACTED}\n");
+        assert_eq!(after_stamp(lines[0]), expected);
+        assert_eq!(after_stamp(lines[1]), "info a plain line, as before\n");
+    }
+
+    /// K-4: a presence scan of this file, after `tests/sole_caller_scan.rs`. It reads
+    /// `src/commands.rs` from the crate's manifest folder at the test's run, as that file reads
+    /// `src/publish.rs`, and looks only at the lines above this module's `#[cfg(test)]` and
+    /// `mod tests {` pair. It shows that `binding_log_session_event`'s lines, from its `fn` line to
+    /// the first line that is `}` alone, hold the call of `SessionLog::append_redacted` with the
+    /// handle's session and the page's two texts, and that no other line calls `.append(`.
+    ///
+    /// The precedent's two limits, restated rather than assumed: this is a **line-oriented text
+    /// scan** (an aliased import, a call split across lines or unusual spacing would defeat it),
+    /// and it says nothing about callers **outside** this file (`lib.rs` and `pool_poll.rs` call
+    /// `append` with the host's own lines, and are out of its reach by design). As in the
+    /// precedent, only a line that starts with `//` is skipped as a comment, so a call inside a
+    /// `/* */` block, or any other type's `.append(`, is a false offender, noise rather than a
+    /// silent pass. A call written in path form, `SessionLog::append(&log, ..)`, holds no
+    /// `.append(` and is not seen. The presence check fails the other way: the call's text inside
+    /// a `/* */` block or a string literal, on a line of the binding's, meets it. That is a silent
+    /// pass, and K-1 to K-3 do not catch it, since they call the method and not the binding. It
+    /// shows the call is written, not what it writes: K-1 to K-3 show that.
+    #[test]
+    fn the_session_log_binding_calls_append_redacted_and_no_other_line_here_calls_append() {
+        let path = Path::new(env!("CARGO_MANIFEST_DIR")).join("src/commands.rs");
+        let text = std::fs::read_to_string(&path).unwrap();
+        let lines: Vec<&str> = text.lines().collect();
+        let tests_at = lines
+            .windows(2)
+            .position(|w| w[0].trim() == "#[cfg(test)]" && w[1].trim() == "mod tests {")
+            .expect("commands.rs has no `#[cfg(test)]` and `mod tests {` pair");
+        let product = &lines[..tests_at];
+        let code = |line: &str| !line.trim_start().starts_with("//");
+
+        let start = product
+            .iter()
+            .position(|l| l.contains("pub fn binding_log_session_event("))
+            .expect("commands.rs no longer defines binding_log_session_event");
+        let end = start
+            + product[start..]
+                .iter()
+                .position(|l| *l == "}")
+                .expect("binding_log_session_event has no closing `}` line");
+        let call = "log.append_redacted(&handle.session, &level, &message)";
+        assert!(
+            product[start..end]
+                .iter()
+                .any(|l| code(l) && l.contains(call)),
+            "binding_log_session_event's body no longer calls {call}"
+        );
+
+        let offenders: Vec<String> = product
+            .iter()
+            .enumerate()
+            .filter(|(_, l)| code(l) && l.contains(".append("))
+            .map(|(n, l)| format!("commands.rs:{}: {}", n + 1, l.trim()))
+            .collect();
+        assert!(
+            offenders.is_empty(),
+            "a line of commands.rs outside its tests calls append:\n{}",
+            offenders.join("\n")
+        );
+    }
 }
