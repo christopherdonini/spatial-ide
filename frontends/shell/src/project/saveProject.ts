@@ -12,8 +12,8 @@
  *   or whose picker was cancelled, leaves the next save to ask again. A reopened open is adopted (`adopt`): the kernel holds its folder already.
  * - **The view is the canvas's.** `view` comes from `WorkingCanvasHandle.currentView`; with none, nothing is sent (`NO_VIEW_NOTICE`).
  * - **A selection made by clicking is not saved.** The workspace has no member for it; a save with one standing says so (`SELECTION_NOTICE`).
- * - **Every string here is the advisor's wording under the human's delegation of 2026-11-13**: the words the worker of step 1 wrote, taken as the
- *   app's words by ADV-2026-11-21-14 item 2.
+ * - **Every string here is the advisor's wording under the human's delegation of 2026-11-13**: `THROUGH_LINK_NOTICE` (O-9) from ADV-2026-11-20-05
+ *   item 2, and the others the words the worker of step 1 wrote, taken as the app's words by ADV-2026-11-21-14 item 2.
  */
 
 import { encodeHexF64 } from "../skp/codec";

@@ -86,7 +86,7 @@ export const ACTIONS: readonly ActionEntry[] = [
   // The labels are P6 placeholders, so marked; the words are the bar's `/colour` and `/table`.
   { id: "layer.revealStyle", label: "[P6 placeholder] Colour by", chord: null, bareKey: null, scopeWords: null, command: "colour", takes: "nothing" },
   { id: "layer.revealTable", label: "[P6 placeholder] Table", chord: null, bareKey: null, scopeWords: null, command: "table", takes: "nothing" },
-  // O-19b: the label (the advisor's wording under the human's delegation of 2026-11-13, ADV-2026-11-21-14 item 2) and the bar's word, as the save's is (ADV-2026-11-20-05 item 6).
+  // O-19b: the label (the advisor's wording under the human's delegation of 2026-11-13, ADV-2026-11-20-05 item 2) and the bar's word, as the save's is (ADV-2026-11-20-05 item 6).
   { id: "project.open", label: "Open project", chord: null, bareKey: null, scopeWords: null, command: "open-project", takes: "nothing" },
 ];
 

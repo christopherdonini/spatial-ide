@@ -4,7 +4,7 @@
 /**
  * B2 piece 1c, Amendment 54 item 12: the owner's places for a reopen, and the builders that fill their slots. Every text is the advisor's wording
  * under the human's delegation of 2026-11-13, from ADV-2026-11-20-05 item 2, or for W-STYLE and O-18 from ADV-2026-11-20-09 item 2, copied from
- * those rulings by script, and ADV-2026-11-21-14 item 2 takes them as the app's words. S8 is the human's approval of ADV-2026-11-21-12, filed at
+ * those rulings by script, and ADV-2026-11-21-14 item 2 takes them as the app's words. S8's words are the advisor's by the human's approval of ADV-2026-11-21-12, filed at
  * state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md. A text states the owner's consequence and repeats no
  * engine or kernel fact: engine messages state engine facts, owners state consequences.
  *
