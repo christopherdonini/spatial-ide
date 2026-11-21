@@ -185,8 +185,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          # The key keeps its old name, `windows-latest-shell`, though the job runs on `windows-2022`.
-          key: windows-latest-shell
+          # The key names the image; the human approved the rename (ADV-2026-11-21-21).
+          key: windows-2022-shell
           workspaces: "frontends/shell/src-tauri"
 
       # RELEASE-0.1 items 2/3: the shell's own `npm run build` now has a `prebuild` step

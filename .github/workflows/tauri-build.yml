@@ -50,8 +50,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          # The key keeps its old name, `windows-latest-shell-tauri-build`, though the job runs on `windows-2022`.
-          key: windows-latest-shell-tauri-build
+          # The key names the image; the human approved the rename (ADV-2026-11-21-21).
+          key: windows-2022-shell-tauri-build
           workspaces: "frontends/shell/src-tauri"
 
       # Same precondition `product-ci-shell.yml`'s own `shell` job states: the viewer must be
