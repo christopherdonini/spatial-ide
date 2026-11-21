@@ -71,3 +71,24 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — 2026-11-21 — built: the key commit and its cold-build run; the checklist before the gate
+
+*Written by the custodian before the gate. References only; nothing below is a quotation.*
+
+1. **The commit.** 3e41a14b378e9040d7749573f1584a95a385048d over 0ce16549, by the custodian, by script: in product-ci-shell.yml and tauri-build.yml alone, the shell job's written Rust cache key is windows-2022-shell and the tauri build's is windows-2022-shell-tauri-build, and beside each one comment line names the approval in place of the line saying the key keeps its old name. Two files, two lines changed in each; nothing else (ADV-2026-11-21-22 item 4; Amendment 3 item 2).
+
+2. **The checklist** (ADV-2026-11-21-20 item 3).
+   - (a) The runs: the cold builds at the commit, one run of the shell workflow, run 44922808108 on GitHub, which holds the shell job and the tauri build. No test is added, changed or removed.
+   - (b) The run, at 3e41a14b, event push, created 2026-11-21T16:07:21Z, conclusion success, both jobs passed. The shell job, job 136902305747: on the image windows-2022 version 20261111.635; its Rust cache step under the key windows-2022-shell found no cache; libduckdb-sys v1.10505.0 compiled in the step that builds and tests the Tauri backend; no line holds STL1000. The tauri build, job 136902306088: the same image version; under the key windows-2022-shell-tauri-build no cache found; libduckdb-sys compiled; no line holds STL1000. Output: the run page and its job logs on GitHub; the custodian's copies of the two job logs, outside the repository, sha256 prefixes e84098e0d34f53f5 and e3408233f9d297c2.
+   - (c) No mutation is owed: no test is in the diff.
+   - (d) Reused runs: none.
+   - (e) CI at the head 3e41a14b: two runs, the ported notices and the shell workflow, both success, read at 2026-11-21T16:37:11Z.
+
+3. **One difference from the evidence commit.** This run had the image version 20261111.635. The evidence commit's runs had 20261116.370.1 (Amendment 2 item 2). Both were under the label windows-2022, and GitHub chose the version.
+
+4. **Next.** The reviewer alone (ADV-2026-11-21-13 item 3 (a)); then the pull request, its body linking the run, and the merge request.
+
+Read the last amendment first.
+
+Nothing above is edited.
