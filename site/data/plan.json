@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-21T17:56:11.173Z",
-  "plan_hash": "baed7be1f36aa68540bb6172e9aaf8f073cb52895409d515ad5519b10f264786",
+  "generated_at": "2026-11-21T19:19:06.791Z",
+  "plan_hash": "4400a1f64baf20db23cfad192644d2dd6855adb46ea411cce5b91c288554d2bb",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12336,7 +12336,7 @@
       "kind": "task",
       "lane": "platform",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -12345,16 +12345,16 @@
       },
       "gate": "governance/forms/root/CI-WINDOWS-DUCKDB-COMPILES-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/ci-windows-duckdb-compiles"
+        "pr": 348
       },
       "budget_minutes": 180,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "GATE PASS WITH NOTES 2026-11-21: the reviewer at 3e41a14b; D1, a documentation finding, closed by Amendment 5; the pull request next. Before: BUILT 2026-11-21: the key commit 3e41a14b; its cold-build run passed both jobs, no cache found and libduckdb-sys compiled in each; the checklist in Amendment 4; the reviewer next. Before: APPROVED 2026-11-21: the human approved ADV-2026-11-21-21, filed at state/directives/2026-11-21-the-humans-message-adv-2026-11-21-21-approved-and-the-alarm-test-line.md; the form's Amendment 3; the key commit after 0ce16549 next, then the cold builds, the checklist and the reviewer (ADV-2026-11-21-22 item 4). Before: STOPPED 2026-11-21 at 0ce16549: the shell job and the tauri build fail to link with caches restored under the two kept keys, built on the other image; the evidence commit green with the cache off; the key rename drafted for the human as ADV-2026-11-21-21 (ADV-2026-11-21-22); nothing changes until their line; slot 1 to the sitting script (the form's Amendment 2). Before: PROBED 2026-11-21: both routes compiled DuckDB and passed the three Windows jobs with the cache off, windows-2022 at a8f79cab and LLVM 23.1.6 at 157c2878 on cut/ci-windows-duckdb-probe, never merged (state/consults/2026-11-21-ci-windows-duckdb-compiles-on-the-current-image-probe-worker-report.md; the form's Amendment 1); the report to the advisor before the fix. Before: PLACED 2026-11-21 in slot 1 by ADV-2026-11-21-13 item 3, on the human approval of ADV-2026-11-20-25 (the message of 09:45Z, state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md): the five-line form, the reviewer alone, the standard worker. Step 1 probes on cut/ci-windows-duckdb-probe, never merged; its report goes to the advisor before the fix is committed. Not on the list v0.2 waits for. ADV-2026-11-20-24 stands until it merges.",
+      "summary": "DONE 2026-11-21: merged by the advisor (PR 348, 1cefb63f), main green; the closing Amendment 6. Before: GATE PASS WITH NOTES 2026-11-21: the reviewer at 3e41a14b; D1, a documentation finding, closed by Amendment 5; the pull request next. Before: BUILT 2026-11-21: the key commit 3e41a14b; its cold-build run passed both jobs, no cache found and libduckdb-sys compiled in each; the checklist in Amendment 4; the reviewer next. Before: APPROVED 2026-11-21: the human approved ADV-2026-11-21-21, filed at state/directives/2026-11-21-the-humans-message-adv-2026-11-21-21-approved-and-the-alarm-test-line.md; the form's Amendment 3; the key commit after 0ce16549 next, then the cold builds, the checklist and the reviewer (ADV-2026-11-21-22 item 4). Before: STOPPED 2026-11-21 at 0ce16549: the shell job and the tauri build fail to link with caches restored under the two kept keys, built on the other image; the evidence commit green with the cache off; the key rename drafted for the human as ADV-2026-11-21-21 (ADV-2026-11-21-22); nothing changes until their line; slot 1 to the sitting script (the form's Amendment 2). Before: PROBED 2026-11-21: both routes compiled DuckDB and passed the three Windows jobs with the cache off, windows-2022 at a8f79cab and LLVM 23.1.6 at 157c2878 on cut/ci-windows-duckdb-probe, never merged (state/consults/2026-11-21-ci-windows-duckdb-compiles-on-the-current-image-probe-worker-report.md; the form's Amendment 1); the report to the advisor before the fix. Before: PLACED 2026-11-21 in slot 1 by ADV-2026-11-21-13 item 3, on the human approval of ADV-2026-11-20-25 (the message of 09:45Z, state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md): the five-line form, the reviewer alone, the standard worker. Step 1 probes on cut/ci-windows-duckdb-probe, never merged; its report goes to the advisor before the fix is committed. Not on the list v0.2 waits for. ADV-2026-11-20-24 stands until it merges.",
       "dates": {
         "opened": "2026-11-21",
-        "done": null
+        "done": "2026-11-21"
       }
     }
   ]

@@ -106,3 +106,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 6 — 2026-11-21 — merged; main green; the closing
+
+*Written by the custodian after the merge. References only; nothing below is a quotation.*
+
+1. **The merge.** The advisor merged PR 348 at 3e41a14b by merge commit 1cefb63f, at 2026-11-21T18:45:53Z by GitHub. The verdict, MERGE: state/consults/merge-checks/PR-348-3e41a14b378e.md. Main's CI at the merge commit: 5 runs, all success, read at 2026-11-21T19:18:22Z.
+
+2. **What ends with it.** ADV-2026-11-20-24 stood until this merge (ADV-2026-11-21-13 item 3 (g)); from the first run on main after it, a red Windows job is a red job again (the verdict's closing paragraph).
+
+3. **Left as it is.** The probe branch cut/ci-windows-duckdb-probe was never merged and has no pull request; it stays (the advisor's message with the verdict). The reviewer's note N4, the comment in kernel/tests/session_history.rs that names CI's windows-latest job, goes to the docs lane after the sitting; N1 asks for no change (the verdict, item 3).
+
+4. **The node** is done with this amendment.
+
+Read the last amendment first.
+
+Nothing above is edited.

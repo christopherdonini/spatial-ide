@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-21T17:56:10.935Z",
-  "plan_hash": "baed7be1f36aa68540bb6172e9aaf8f073cb52895409d515ad5519b10f264786",
+  "generated_at": "2026-11-21T19:19:06.500Z",
+  "plan_hash": "4400a1f64baf20db23cfad192644d2dd6855adb46ea411cce5b91c288554d2bb",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -727,28 +727,6 @@
       },
       "summary": "LANDED 2026-11-12: merged with 1c step 1 as PR #307 (9398efc6, the human's click), in ffc039d1, where the 1c form's Amendments 7 and 8 placed it; its consumer is milestone 4's PR B. It stays in progress until 1c's node is done: its gate is 1c's form, and a done node binds that form's claimed tests, steps 2 and 3's among them. Before: RULED 2026-11-11 by the human's message of 2026-11-11 (state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md), item 1: OPEN-7-1 (a), in P2's one commit under P2's version (the 1c form's Amendment 8). Before: PLACED 2026-10-23 by the human (the 2026-10-23 directive's Milestone 4 line, OPEN-18 (b), and its Piece 1c line, OPEN-A2 (b)): inside 1c step 1 by class 9, declared in that form's Amendment 7; its commit place is OPEN-7-1 there. Its consumer is milestone 4's PR B (§2.3 (h); PB-R2), whose merge waits for it on main (round 8). It is done with step 1's merge, {pr} set only in that done commit. Before: PROPOSED 2026-10-21 by the custodian, from milestone 4's OPEN-4 (A′), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md) and carried by ADR-036's pre-acceptance block (adr-036-pre-acceptance-block). The option's text (state/consults/2026-10-21-b1-shell-half-milestone-4-architect-draft.md, OPEN-4): a small data-lane piece widens record_step before milestone 4's PR B merges, or the widening is the first commit of 1c's step 1. It touches protocol/ (that draft's overlap section), so rule (00) keeps it apart from 1c's protocol/ steps. Which of the two is the human's; the human places it.",
       "evidence_label": "branch `cut/b2-piece-1c-save-and-reopen`"
-    },
-    {
-      "id": "ci-windows-duckdb-compiles-on-the-current-image",
-      "title": "CI on Windows compiles DuckDB again on the current image, by one of the two approved routes, a pinned LLVM 22 or newer or a pinned image label, in the three workflows with a Windows job (the human approval of ADV-2026-11-20-25)",
-      "lane": "platform",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 180,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/ci-windows-duckdb-compiles"
-      },
-      "dates": {
-        "opened": "2026-11-21",
-        "done": null
-      },
-      "summary": "GATE PASS WITH NOTES 2026-11-21: the reviewer at 3e41a14b; D1, a documentation finding, closed by Amendment 5; the pull request next. Before: BUILT 2026-11-21: the key commit 3e41a14b; its cold-build run passed both jobs, no cache found and libduckdb-sys compiled in each; the checklist in Amendment 4; the reviewer next. Before: APPROVED 2026-11-21: the human approved ADV-2026-11-21-21, filed at state/directives/2026-11-21-the-humans-message-adv-2026-11-21-21-approved-and-the-alarm-test-line.md; the form's Amendment 3; the key commit after 0ce16549 next, then the cold builds, the checklist and the reviewer (ADV-2026-11-21-22 item 4). Before: STOPPED 2026-11-21 at 0ce16549: the shell job and the tauri build fail to link with caches restored under the two kept keys, built on the other image; the evidence commit green with the cache off; the key rename drafted for the human as ADV-2026-11-21-21 (ADV-2026-11-21-22); nothing changes until their line; slot 1 to the sitting script (the form's Amendment 2). Before: PROBED 2026-11-21: both routes compiled DuckDB and passed the three Windows jobs with the cache off, windows-2022 at a8f79cab and LLVM 23.1.6 at 157c2878 on cut/ci-windows-duckdb-probe, never merged (state/consults/2026-11-21-ci-windows-duckdb-compiles-on-the-current-image-probe-worker-report.md; the form's Amendment 1); the report to the advisor before the fix. Before: PLACED 2026-11-21 in slot 1 by ADV-2026-11-21-13 item 3, on the human approval of ADV-2026-11-20-25 (the message of 09:45Z, state/directives/2026-11-21-the-humans-message-four-drafts-approved-s8s-words-to-the-advisor-the-ci-change-v0-2-without-the-console-and-mint-window-nodes-the-stop-alarms-check-d.md): the five-line form, the reviewer alone, the standard worker. Step 1 probes on cut/ci-windows-duckdb-probe, never merged; its report goes to the advisor before the fix is committed. Not on the list v0.2 waits for. ADV-2026-11-20-24 stands until it merges.",
-      "evidence_label": "branch `cut/ci-windows-duckdb-compiles`"
     }
   ],
   "proposed": [
