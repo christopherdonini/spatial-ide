@@ -184,10 +184,17 @@ jobs:
           toolchain: "1.100.0"
 
       - uses: Swatinem/rust-cache@v2
+        if: false
         with:
           # The key keeps its old name, `windows-latest-shell`, though the job runs on `windows-2022`.
           key: windows-latest-shell
           workspaces: "frontends/shell/src-tauri"
+
+      - name: Evidence - clang-cl and MSVC toolsets (evidence only, undone by the next commit)
+        shell: pwsh
+        run: |
+          clang-cl --version
+          Get-ChildItem "C:\Program Files\Microsoft Visual Studio\*\*\VC\Tools\MSVC\*" | ForEach-Object { $_.FullName }
 
       # RELEASE-0.1 items 2/3: the shell's own `npm run build` now has a `prebuild` step
       # (`scripts/generateNotice.mjs`) that reads `renderer/bundle-viewer/dist-metafile.json` —
