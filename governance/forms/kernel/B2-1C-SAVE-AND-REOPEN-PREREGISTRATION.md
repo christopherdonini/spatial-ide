@@ -4805,3 +4805,21 @@ Out-of-scope: none of ADR / security / wire / guarantee is touched: no kernel, e
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 74 — P6's first group built: the commit, the counts, the size against Amendment 73's budget, the run
+
+*Written by the custodian, 2026-11-21, after the group's commit and before its gate. References and hashes only; nothing below is a quotation.*
+
+1. **The build.** b42ccb3e7060d7179822ee21c7661ca2699bb18b on cut/1c-p6-group-1, over 5aa0cb67591431ebdaa41d4a2bd447c16b76f008 (main at records commit 1121i), by the standard worker: one commit, 6 files, the five source files and the walkthrough. No test file changed. The search of the ruling's item 5 found none of the 37 texts in a test file or an e2e suite, so no e2e run is owed.
+
+2. **The counts, recounted by the custodian at the head.** The marks: reopenNotices.ts 24 to 0, saveProject.ts 8 to 0, AdmissionPanel.tsx 2 to 0, actionRegistry.ts 4 to 2 (layer.revealStyle and layer.revealTable keep theirs), commands.rs 1 to 0. The walkthrough: 36 to 23, and its sha256 at the head is 06d690f14fed1b6e91123da3a76a1257cd75bc7e056ab9a461725c9e9c8544ee, the value of the ruling's item 4.
+
+3. **The size.** 52 lines added and 50 removed: 92 in the five source files and 10 in the walkthrough. Item 2's budget is at most 100 changed lines by §21c's counting, which counts code and tests: the five source files' 92 are inside it. With the walkthrough's 10 counted too, the sum is 102, 2 over. This is disclosed before the gate and the budget is not declared again; the reviewer says which reading holds.
+
+4. **The run.** The worker ran npm ci in renderer/bundle-viewer and in frontends/shell, then npm run verify in frontends/shell, each in a shared hold, on the tree it then committed. Verify ended at 2026-11-21T11:08:51Z with exit 0, its vitest run passing 123 test files and 1570 tests. The reviewer reuses the run, or reproduces what it doubts.
+
+5. **Next.** The reviewer alone (the ruling's item 6), then the merge request. After the merge, step 2's P6 is the human's sight in Part AD (item 8).
+
+Read the last amendment first.
+
+Nothing above is edited.

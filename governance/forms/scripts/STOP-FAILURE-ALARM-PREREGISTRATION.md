@@ -46,3 +46,17 @@ The closing amendment records checks (a) to (d) with their evidence, the reviewe
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-21 — check (d)'s count at the test's commit (ADV-2026-11-18-26 item 4 (c))
+
+*Written by the custodian after the test's commit. References and hashes only; nothing below is a quotation.*
+
+1. **The test's commit.** 1d944d84528962ac1550ec6992918a1de646316a on cut/stop-failure-alarm, by the worker, over 74ba9d352fe0101c14136769a9c46718d8cef125. It holds scripts/hooks/hooks.test.mjs alone, 3 lines added and 2 removed: the change of Amendment 1 item 3 and nothing else. The branch differs from main by 7 files, 183 lines added and 3 removed, inside Amendment 1 item 3's budget.
+
+2. **The count (item 4 (c)).** The whole hooks suite, node --test over scripts/hooks with its test files, run by the custodian in the branch's worktree at 1d944d84528962ac1550ec6992918a1de646316a with an empty porcelain, on Node v24.18.1, ended at 2026-11-21T11:05:57Z: exit 0; tests 198, pass 198, fail 0, cancelled 0, skipped 0, todo 0. The worker's run on the same tree before its commit gave the same count. The same run at the head goes in the closing amendment (Amendment 1 item 4).
+
+3. **Next.** The reviewer reads the branch whole, the test's commit with the rest (item 4 (d)); then ADV-2026-11-18-22 items 5, 6 and 8, in that order.
+
+Read the last amendment first.
+
+Nothing above is edited.
