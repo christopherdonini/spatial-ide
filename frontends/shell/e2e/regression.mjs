@@ -1763,10 +1763,19 @@ const K7_MIN_RESTORED_NON_BG_FRACTION = 0.02; // the SAME "something is actually
 // ruled, entry 45 (1), per its doc comment), this copy must move with it,
 // and this step failing loudly is how that gets noticed.
 const K7_SETTLED_PARTIAL_TEXT = "Filling has finished for this view — some areas were not loaded; pan or zoom to load them.";
-// Re-review should-fix 3: the bound the status assertion re-reads `.residency-status` under, once the
-// notch loop is done. The SAME 10s magnitude each notch's own settle wait already uses -- a BOUND, not
-// a timing claim and not a duration this step reports (ADR-018).
+// A 10s bound for status reads, the SAME magnitude each notch's own settle wait uses; K7's own re-read
+// once the notch loop is done waits under `K7_FILL_END_STATUS_TIMEOUT_MS` instead. A BOUND, not a
+// timing claim and not a duration this step reports (ADR-018).
 const K7_STATUS_SETTLE_TIMEOUT_MS = 10_000;
+// A bound, no claim about how fast the product fills (ADR-018). Longer than 10s: the status line is silent
+// while tiles are tracked, the queue holds up to 512 tiles, and the read in
+// state/consults/2026-11-21-k7-residency-status-after-zoom-out-under-the-suite-launch-read-1-tester-report.md
+// saw the declared sentence come after the 10s bound. The wait ends as soon as the sentence shows.
+const K7_FILL_END_STATUS_TIMEOUT_MS = 60_000;
+// K7's outer timeout: 2 "Zoom to layer" settles of 45s + `K7_ZOOM_OUT_NOTCHES` notch settles of 10s + the
+// status re-read + the 15s hover read = 315s, plus 30s for the unbounded page calls (arm readback,
+// `canvasRect`, `doWheel`, per-notch probes, refusal check, pointer move, `capturePixels`) = 345s.
+const K7_STEP_TIMEOUT_MS = 2 * 45_000 + K7_ZOOM_OUT_NOTCHES * 10_000 + K7_FILL_END_STATUS_TIMEOUT_MS + 15_000 + 30_000;
 
 async function stepK7(page, consoleHandle) {
   // The shipped default arm, asserted per this step rather than inherited (the same non-pinning
@@ -1821,14 +1830,18 @@ async function stepK7(page, consoleHandle) {
   const statusRead = await waitForCondition(
     () => page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null),
     (v) => v === K7_SETTLED_PARTIAL_TEXT,
-    K7_STATUS_SETTLE_TIMEOUT_MS
+    K7_FILL_END_STATUS_TIMEOUT_MS
   );
   const settledStatus = statusRead.last;
   if (settledStatus !== K7_SETTLED_PARTIAL_TEXT) {
+    const queued = await withTimeout(
+      page.evaluate(() => window.__SPATIAL_E2E__.residencyQueuedTileCount?.() ?? "hook not registered"),
+      K7_STATUS_SETTLE_TIMEOUT_MS, "K7 queued-tile read").then(String, (e) => `not readable: ${e?.message ?? e}`);
     throw new Error(
       `K7: expected .residency-status after the last zoom-out notch to be the declared partial-view status ` +
         `verbatim (residencyStatus.ts's SETTLED_PARTIAL_WITHIN_BUDGET_TEXT) but it was ${JSON.stringify(settledStatus)} (per-notch snapshot ` +
-        `at the end of the loop: ${JSON.stringify(lastStatus)}); expected ${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)}`
+        `at the end of the loop: ${JSON.stringify(lastStatus)}); expected ${JSON.stringify(K7_SETTLED_PARTIAL_TEXT)}` +
+        `; tiles still queued at the bound: ${queued}`
     );
   }
 
@@ -2087,7 +2100,7 @@ function tileMintOutcomesSince(sessionLogPath, sinceMs) {
  * settled, so a reading surviving all of that is a tile that genuinely never minted, never one
  * still mid-retry. `stepFind` reads the result only in its `observed` summary, never in a branch
  * condition.
- * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound K7's own status re-read uses; a bound, not a
+ * `K7_STATUS_SETTLE_TIMEOUT_MS` is the same bound the other status reads here use; a bound, not a
  * timing claim (ADR-018). A `null` reading (session log unreachable) settles immediately -- there
  * is nothing to poll for. */
 async function settledUnmintedTilesSince(sessionLogPath, sinceMs) {
@@ -2115,7 +2128,7 @@ function coveringTruncatedSince(consoleHandle, sinceIndex) {
  * (the within-budget one or the settled-partial one), so a transient reading on the way there can
  * never decide the assertion. Returns whatever the last reading was if neither ever appears --
  * the caller reports that as the failure it is. `K7_STATUS_SETTLE_TIMEOUT_MS` is the SAME bound
- * K7's own status re-read already uses; a bound, not a timing claim (ADR-018). */
+ * the other status reads here use; a bound, not a timing claim (ADR-018). */
 async function settledResidencyStatus(page) {
   const settled = await waitForCondition(
     () => page.evaluate(() => document.querySelector(".residency-status")?.textContent ?? null),
@@ -2548,7 +2561,7 @@ async function main() {
   // Same knob/pattern as `debug-session.mjs`'s watchdog: unref'd, fires only if the process
   // is otherwise still alive, backstops the 2026-08-12 ~16h-hang class of bug and anything
   // else in this file that ends up wedged for an unanticipated reason.
-  // 900s since K7 joined the run (entry 60's own step, bounded at 240s of its own): the whole-run
+  // 900s since K7 joined the run (entry 60's own step, bounded at 345s of its own): the whole-run
   // watchdog has to stay ABOVE the sum this file's steps can legitimately spend, or a slow-but-
   // working run dies here instead of reporting. 900_000 is the same default `filter-panel.mjs` and
   // `admission-remediation.mjs` already carry. A bound, not a timing claim (ADR-018).
@@ -2689,11 +2702,11 @@ async function main() {
     // zoom-OUT notches from a "Zoom to layer" fit on the shipped default -- the ordinary gesture that
     // reached the unbounded covering enumeration this cut's fix bounds (`MAX_COVERING_TILES`). Its
     // own composition: two "Zoom to layer" clicks (each settling under a 45s bound), 15 notches each
-    // settling under a 10s bound, one 10s status re-read (re-review should-fix 3), one 15s hover read
+    // settling under a 10s bound, one 60s status re-read (re-review should-fix 3), one 15s hover read
     // -- each of those a BOUND rather than a timing claim (ADR-018), none of them a duration this step
-    // reports. 240s is the outer backstop for a wedged page, not the sum of the inner bounds (whose
-    // worst case would exceed it; the step fails loudly on whichever bound it reaches first).
-    await runStep("K7", 240_000, () => stepK7(page, consoleHandle));
+    // reports. `K7_STEP_TIMEOUT_MS` is the sum of those bounds plus headroom (its own comment adds
+    // them up), so a passing step cannot reach it.
+    await runStep("K7", K7_STEP_TIMEOUT_MS, () => stepK7(page, consoleHandle));
     // CURSOR' (entry 89 §4.3): a hover (no button) and a short drag, each read against the live
     // canvas element's own `style.cursor` -- two pointer moves, one down/up, both well inside a
     // generous outer bound.
@@ -2702,7 +2715,7 @@ async function main() {
     // both findings and why this step runs after K7. Its composition: one filtered scan of the fixture
     // this run already has open, two "Zoom to layer" clicks (each settling under `clickZoomToLayer`'s
     // own 45s bound), `FIND_ZOOM_OUT_NOTCHES` wheel notches each settling under a 30s bound, and one
-    // status re-read under K7's own `K7_STATUS_SETTLE_TIMEOUT_MS`. 300s is the outer backstop for a
+    // status read under `K7_STATUS_SETTLE_TIMEOUT_MS` (10s). 300s is the outer backstop for a
     // wedged page -- the same one `filter-panel.mjs` gives its own FIND' -- not the sum of the inner
     // bounds, and not a duration this step reports (ADR-018).
     await runStep("FIND'", 300_000, () => stepFind(page, consoleHandle));
