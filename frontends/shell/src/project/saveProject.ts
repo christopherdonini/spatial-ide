@@ -12,7 +12,8 @@
  *   or whose picker was cancelled, leaves the next save to ask again. A reopened open is adopted (`adopt`): the kernel holds its folder already.
  * - **The view is the canvas's.** `view` comes from `WorkingCanvasHandle.currentView`; with none, nothing is sent (`NO_VIEW_NOTICE`).
  * - **A selection made by clicking is not saved.** The workspace has no member for it; a save with one standing says so (`SELECTION_NOTICE`).
- * - **Every string here is a P6 placeholder**, marked as the shell marks them. None is the human's wording.
+ * - **Every string here is the advisor's wording under the human's delegation of 2026-11-13**: `THROUGH_LINK_NOTICE` (O-9) from ADV-2026-11-20-05
+ *   item 2, and the others the words the worker of step 1 wrote, taken as the app's words by ADV-2026-11-21-14 item 2.
  */
 
 import { encodeHexF64 } from "../skp/codec";
@@ -23,22 +24,22 @@ import type { StyleState } from "../style/document";
 export { pickProjectFolder } from "../skp/dialog";
 
 /** S3: the saved notice. */
-export const SAVED_NOTICE = "[P6 placeholder] The project was saved.";
+export const SAVED_NOTICE = "The project was saved.";
 /** S5: the project file was written and the session history took no `saved-here` mark (`history_mark: "withheld"`). */
-export const MARK_WITHHELD_NOTICE = "[P6 placeholder] The session history holds no saved-here mark for this save.";
+export const MARK_WITHHELD_NOTICE = "The session history holds no saved-here mark for this save.";
 /** S18: the data is inside the project folder, and its path has no canonical spelling on this machine (`project_relative: "no-canonical-spelling"`); the project will not find that file on another machine. */
 export const NO_CANONICAL_SPELLING_NOTICE =
-  "[P6 placeholder] The data is inside the project folder, but its path has no canonical spelling on this machine. The project will not find that file on another machine.";
+  "The data is inside the project folder, but its path has no canonical spelling on this machine. The project will not find that file on another machine.";
 /** O-9 (B2 piece 1c, Amendment 54 item 12): the data is inside the project folder, and the path it was opened by reaches it through a link (`project_relative: "through-link"`); the project will not find that file on another machine. */
-export const THROUGH_LINK_NOTICE = "[P6 placeholder] The data is inside the project folder, but the path it was opened by reaches it through a link. The project will not find that file on another machine.";
+export const THROUGH_LINK_NOTICE = "The data is inside the project folder, but the path it was opened by reaches it through a link. The project will not find that file on another machine.";
 /** S6: the selection notice at save. */
-export const SELECTION_NOTICE = "[P6 placeholder] A selection made by clicking is not saved.";
+export const SELECTION_NOTICE = "A selection made by clicking is not saved.";
 /** S7: the first save went to a folder that already holds a project. */
-export const FOLDER_HOLDS_PROJECT_NOTICE = "[P6 placeholder] The folder already holds a project.";
+export const FOLDER_HOLDS_PROJECT_NOTICE = "The folder already holds a project.";
 /** S23: the not-saved notice for a save with no view from the canvas. It states the consequence only. */
-export const NO_VIEW_NOTICE = "[P6 placeholder] The project was not saved.";
+export const NO_VIEW_NOTICE = "The project was not saved.";
 /** S4: the not-saved notice, with the kernel's message. */
-export const notSavedNotice = (message: string): string => `[P6 placeholder] The project was not saved: ${message}`;
+export const notSavedNotice = (message: string): string => `The project was not saved: ${message}`;
 
 /** The code of the kernel's refusal of a first save into a folder that holds a project. */
 const FOLDER_HOLDS_PROJECT_CODE = "skp.project_folder_holds_project";

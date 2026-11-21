@@ -330,8 +330,8 @@ pub async fn binding_pick_file(app: tauri::AppHandle) -> Result<Option<String>, 
     Ok(picked.map(|p| p.to_string()))
 }
 
-/// The title of the native project-folder picker: S2, a placeholder.
-const PROJECT_FOLDER_PICKER_TITLE: &str = "[P6 placeholder] Choose the project folder";
+/// The title of the native project-folder picker: S2, the advisor's wording under the human's delegation of 2026-11-13 (ADV-2026-11-21-14 item 2).
+const PROJECT_FOLDER_PICKER_TITLE: &str = "Choose the project folder";
 
 /// The OS folder picker for a project folder: the folder of an open's first save (`save_project`),
 /// and the folder a reopen opens (`open_project`). **Not SKP**, for the same reason as

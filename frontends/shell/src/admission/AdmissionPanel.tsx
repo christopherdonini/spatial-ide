@@ -302,9 +302,9 @@ function takeSlot(slot: { current: string | null }, pick: () => Promise<string |
 /** A fresh `cancel_key` for one call. */
 const newCancelKey = (): string => (typeof crypto.randomUUID === "function" ? crypto.randomUUID() : `open-${Date.now()}-${Math.random()}`);
 
-/** O-19a: the Open project control's two texts, idle and opening (P6 placeholders; the advisor's words, ADV-2026-11-20-05 item 2). */
-const OPEN_PROJECT_IDLE = "[P6 placeholder] Open project…";
-const OPEN_PROJECT_OPENING = "[P6 placeholder] Opening project…";
+/** O-19a: the Open project control's two texts, idle and opening (the advisor's wording under the human's delegation of 2026-11-13, ADV-2026-11-20-05 item 2). */
+const OPEN_PROJECT_IDLE = "Open project…";
+const OPEN_PROJECT_OPENING = "Opening project…";
 
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
