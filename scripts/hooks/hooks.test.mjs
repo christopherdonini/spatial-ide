@@ -1428,12 +1428,13 @@ const repoRoot = path.resolve(here, '..', '..');
 const readSettings = () => JSON.parse(fs.readFileSync(path.join(repoRoot, '.claude', 'settings.json'), 'utf8'));
 
 // RECORDED MUTATION, observed at bcc20bba (applied, run, reverted, each alone): idle_prompt restored in the matcher -> this test fails at the matcher assert.equal: 'idle_prompt|quota_auto_resume_stale|quota_auto_resume_disabled' where 'quota_auto_resume_stale|quota_auto_resume_disabled' is expected; the PreToolUse entry restored (the merge base's file) -> it fails at the keys assert.deepEqual: 'PreToolUse' is the extra first key.
+// The stop alarm (the human's approval of ADV-2026-11-18-25): the hook keys gain StopFailure and the matcher gains quota_auto_resume_fired; the name stays, though three quota types now match, because an earlier form claims this test by name.
 test('the_notification_hook_matches_only_the_two_quota_types', () => {
   const settings = readSettings();
-  assert.deepEqual(Object.keys(settings.hooks), ['Stop', 'PreCompact', 'SessionStart', 'Notification']);
+  assert.deepEqual(Object.keys(settings.hooks), ['Stop', 'PreCompact', 'SessionStart', 'Notification', 'StopFailure']);
   const entries = settings.hooks.Notification;
   assert.equal(entries.length, 1);
-  assert.equal(entries[0].matcher, 'quota_auto_resume_stale|quota_auto_resume_disabled');
+  assert.equal(entries[0].matcher, 'quota_auto_resume_stale|quota_auto_resume_disabled|quota_auto_resume_fired');
   assert.deepEqual(entries[0].hooks, [
     { type: 'command', command: 'node "$CLAUDE_PROJECT_DIR/scripts/hooks/notify-telegram.mjs"', timeout: 15 },
   ]);
