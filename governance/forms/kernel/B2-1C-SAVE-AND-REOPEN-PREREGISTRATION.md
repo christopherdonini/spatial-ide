@@ -4867,3 +4867,15 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 77 — 2026-11-21 — P6's first group merged
+
+*Written by the custodian after the merge. References and hashes only; nothing below is a quotation.*
+
+1. **The merge.** The advisor merged PR 346 from its head 13e1a7e9 at ad2088a8 (2026-11-21T13:51:37Z by GitHub), on its verdict MERGE, filed at state/consults/merge-checks/PR-346-13e1a7e9c5ff.md. Main's CI at the merge commit: 6 runs, all completed with success, read at 2026-11-21T14:20:41Z.
+
+2. **What follows** (ADV-2026-11-21-14 item 8): step 2's P6 is the human's sight of these strings in Part AD at the sitting, and nothing else. The sitting script is assembled at ad2088a8 (ADV-2026-11-21-16 items 2 and 5).
+
+Read the last amendment first.
+
+Nothing above is edited.

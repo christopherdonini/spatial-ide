@@ -37,3 +37,21 @@ That the chosen route holds on the next image GitHub publishes. A pinned version
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-21 — the fix, the evidence and its undoing; the stop at R; the key rename drafted for the human
+
+*Written by the custodian after the worker's stop. References only; nothing below is a quotation.*
+
+1. **The commits** (ADV-2026-11-21-18 items 2 and 3), on cut/ci-windows-duckdb-compiles, with no pull request: 132a0a7e, the fix, 12 lines added and 6 removed in the three workflows; 96a7c36c, the Rust cache off in the Windows jobs and a step printing Clang and the MSVC toolsets; 0ce16549, that commit undone by a revert. The fix's tree equals the head's. The worker's report: state/consults/2026-11-21-ci-windows-duckdb-compiles-fix-worker-report.md.
+
+2. **At the evidence commit** (item 4), the three Windows jobs passed on the label windows-2022, image version 20261116.370.1, each with its cache step skipped, libduckdb-sys compiled and no line holding STL1000: the shell job, the tauri build and the Rust workspace's Windows entry. Clang 20.1.8; the MSVC toolsets 14.29.30133 and 14.44.35207. Ubuntu and macOS passed.
+
+3. **At the head, the stop.** The Rust workspace passed: its key follows the label, so no cache was found and it built afresh. The shell job and the tauri build failed in the link with a cache restored under each kept key, built on the other image: unresolved standard-library symbols from the restored libduckdb_sys library, LNK2019 and LNK1120. Nothing was re-run, deleted or changed after it.
+
+4. **The advisor's ruling ADV-2026-11-21-22**, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-22-the-ci-stop-waits-for-the-humans-key-rename.md: the reading stands; renaming the two keys lies outside the human's approval of ADV-2026-11-20-25 and is drafted for them as ADV-2026-11-21-21 (state/consults/2026-11-21-advisor-draft-adv-2026-11-21-21-the-two-cache-keys-name-the-image-not-the-humans-words.md); until their line is filed nothing changes on the branch, and no cache is deleted; slot 1 goes to the sitting script meanwhile.
+
+5. **Next.** On the human's approval: an amendment before the key commit, the commit, the two cold builds as evidence, the checklist of ADV-2026-11-21-20 item 3, and the reviewer (ADV-2026-11-21-22 item 4). Without it, the piece goes back to the advisor.
+
+Read the last amendment first.
+
+Nothing above is edited.

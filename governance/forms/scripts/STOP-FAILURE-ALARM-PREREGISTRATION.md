@@ -76,3 +76,27 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — 2026-11-21 — the words in one commit; the gate, attempt 2, PASS; a class 1 departure; the four live checks as they stand
+
+*Written by the custodian after attempt 2 and before the TEST message. References only; nothing below is a quotation.*
+
+1. **The ruling.** The advisor's ruling ADV-2026-11-21-19, under the human's delegation of 2026-11-13, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-19-the-stop-alarm-a-gate-reads-the-words-one-commit-then-the-reviewers-second-attempt-then-live-check-b-n5-in-the-advisors-sentence.md: a gate reads the words; one commit of the report's words and one sentence of the advisor's; the hooks suite at the new head; the reviewer's second attempt, limited to that commit; then live check (b). The advisor's ruling ADV-2026-11-21-20, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-20-the-humans-message-to-the-advisor-in-force-to-2026-11-28-documentation-findings-no-fail-an-evidence-checklist-five-figures.md, leaves it standing as sent by its item 6: the commit already held the advisor's sentence, and attempt 2 had run and ended, before that ruling arrived.
+
+2. **The commit.** 2039dfb1e6e7636a0d405955675b2eeeb66cb7ff over 1d944d84, by the standard worker, by script (state/consults/2026-11-21-stop-failure-alarm-gate-words-worker-report.md): F1's paragraph and the advisor's sentence for N5 appended at the end of the README's new section, each a paragraph of its own; N1's line in place of that section's first line, nothing reflowed; F2's bullet in place of the (xii) bullet of section 38's Part C, Parts A and B untouched; N2's line in place of the comment line above the hook test, still one line. 7 lines added and 3 removed in three files. The settings file, the script, its test, its fixture and notify-telegram.mjs are byte-equal to 1d944d84.
+
+3. **A class 1 departure.** Amendment 1 item 3 named one commit on hooks.test.mjs; this is a second, by the ruling's item 2. Its cause is the custodian's: Amendment 1 item 3 gave the worker words saying why the expected values changed, not that the name stays because an earlier form claims it, so the gate's N2 asked for the line again.
+
+4. **The suite at the new head** (the ruling's item 3, the gate's N3). The hooks suite, run once at 2039dfb1, its head, command and exit code recorded in a file beside its output: exit 0; 198 tests, 198 pass, none failed, cancelled, skipped or left to do, as at 1d944d84.
+
+5. **The gate, attempt 2.** The reviewer alone read the commit and ended PASS (state/consults/gates/2026-11-21-stop-failure-alarm-gate-reviewer-attempt-2.md): each text byte-equal to its source and where the ruling puts it; every clause true against the code and the approvals; the byte-equal check exit 0; the suite's record reused. Its N1 is this amendment. Its N2, not blocking, for the advisor: the advisor's sentence is true and says less than the code, which also writes the word unknown for an error field that is null and puts it in the dedupe key; and an input whose cwd is not a string sends nothing, reached only by malformed input from the app.
+
+6. **N4 stays** (the ruling's item 5). notify-telegram.mjs is unchanged; its correction is on the human's list.
+
+7. **The four live checks as they stand.** (a) The new tests pass, 5 of 5, and both mutations were caught (attempt 1). (c) The settings file differs from main by the StopFailure block and the third matcher type alone (attempt 1), byte-equal since. (d) Every other hook test passes unchanged: 198 of 198 at 2039dfb1 (item 4). (b) Next: the one TEST message, sent by the custodian with the script at its final text; its time goes to the advisor, and the human's line is filed before the merge request.
+
+8. **Next.** The TEST message; the human's line; then the pull request, and the merge request with section 38's and the README's words.
+
+Read the last amendment first.
+
+Nothing above is edited.
