@@ -100,3 +100,15 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — 2026-11-21 — live check (b): the one TEST message
+
+*Written by the custodian after the message was sent. References only; nothing below is a quotation.*
+
+1. **The message.** Sent once by the custodian at 2026-11-21T14:48:53Z, ended at 2026-11-21T14:48:54Z: the script at 2039dfb1, its final text, in its worktree, reading a scratch copy of the fixture whose error field alone was changed to begin with TEST (sha256 b1d6009962851e2ce49cde4d16558b221e1d99617931b05b908669278046cd03). Exit 0, nothing on stderr; the dedupe state written in the worktree's ignored folder under the key stop-failure:rate_limit; the worktree's tracked files unchanged.
+
+2. **The four live checks.** (a), (c) and (d) as Amendment 4 item 7 records them; (b) is this message. The time went to the advisor, who asks the human for their line, filed before the merge request (ADV-2026-11-18-22 item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.
