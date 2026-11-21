@@ -133,8 +133,8 @@ const CLASS_B_ROWS = [
     class: "B",
     command: "binding_pick_project_folder",
     effect:
-      "opens the native OS folder picker so the operator can choose the project folder at an open's first " +
-      "save, before save_project is called; the picker's own answer supplies the folder, never a script's.",
+      "opens the native OS folder picker so the operator can choose the project folder, at an open's first " +
+      "save before save_project is called or at a reopen before open_project is called; the picker's own answer supplies the folder, never a script's.",
     citation: BINDING_LOCAL_CITATION,
   },
   {
