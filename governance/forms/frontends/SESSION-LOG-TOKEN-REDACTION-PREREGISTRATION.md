@@ -463,3 +463,114 @@ A test whose credential is anything other than `tok.` followed by the real sessi
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — K7 at 0cc509fe and at the base, the words commits fe138916 and b3b449cf, and both gates, as ADV-2026-11-20-28 to -30 and ADV-2026-11-21-01 to -04 rule them (classes 2 and 5)
+
+*2026-11-21, by the custodian, under the advisor's rulings ADV-2026-11-20-28, -29 and -30 and ADV-2026-11-21-01 to -04, filed as state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-28-k7-failed-at-the-head-one-re-run-alone-the-reviewers-question-on-the-residency-status.md, state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-29-k7-again-one-run-on-a-quiet-machine-then-one-at-the-base.md, state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-30-the-daily-batch-read-item-7-e-a-node-not-placed.md, state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-01-k7-after-the-steps-one-more-run-at-the-base-then-the-reviewer.md, state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-02-the-architects-d1-and-n3-one-replacement-in-k-4s-doc.md, state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-03-k7-ruled-not-the-pieces-equal-rows-its-node-placed-in-slot-2.md and state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-04-the-reviewers-gate-stands-d-1-closed-by-one-more-replacement-question-8s-when-unmeasured.md: the advisor's words under the delegation of 2026-11-13, never the human's. The words of this amendment are the custodian's, except the two lines of item 10, which are the reviewer's.*
+
+1. **The runs of regression.mjs** (section 9.3), under the suites' own launch on 5180, by the Sonnet tester. They are reported in state/consults/2026-11-21-session-log-token-redaction-rests-on-page-code-e2e-k7-runs-tester-reports.md.
+   - At 0cc509fe, K7 failed in three runs, in 152.5, 159.8 and 160.1 seconds; the third was on a quiet machine. Every other row passed in each.
+   - At the base d7f27ef8, the first launch reached no step: the launch was still building the shell crate when the suite's attach wait ended. The second, on a quiet machine, reached its steps: K7 failed in 159.5 seconds, and the same rows passed and failed as at 0cc509fe.
+   - The four earlier times of K7 (130.7, 133.7 and 140.2 seconds, passed; 157.1 seconds, failed) were all under the port-5400 harness.
+   - The failed runs stay on the record as failed runs (ADV-2026-11-20-28 item 2; ADV-2026-11-21-03 item 1).
+
+2. **Recorded as wrong, and as run more than once** (ADV-2026-11-20-28 item 2; ADV-2026-11-20-29 item 10; ADV-2026-11-21-03 item 1).
+   - P5 was wrong, class 2.
+   - regression.mjs was run more than once where section 9.3 says once, class 5. The runs were the first failed run, the re-run of ADV-2026-11-20-28 item 1, and the runs ordered by ADV-2026-11-20-29 and ADV-2026-11-21-01.
+   - The session log's counts of each run are what that run showed.
+
+3. **K7 is not this piece's** (ADV-2026-11-21-03 items 1 to 5; class 5 by that ruling).
+   - For regression.mjs, section 9.3's pass is read as no row fails at the head that passes at the base. I7 was reached, and is closed by that ruling.
+   - The three source-changed routes ran at 0cc509fe, once each (item 2 of that ruling), and every step passed, S5d included; so nothing ran at the base. Their session logs hold no redacted line: these routes send no page line that carries the credential.
+   - ADV-2026-11-20-29 items 8 and 9 end. K7's own node is placed in slot 2 by ADV-2026-11-21-03 item 6, and is not this piece's.
+
+4. **The architect's gate** at 0cc509fe: PASS WITH NOTES, filed as state/consults/gates/2026-11-20-session-log-token-redaction-rests-on-page-code-gate-architect.md. It stays as it ended at 0cc509fe (ADV-2026-11-21-02 item 4).
+
+5. **K-4's doc, the first replacement** (class 5; ADV-2026-11-21-02 items 1 to 3 and 6).
+   - The architect's D1 is right: a call commented out with two slashes is skipped by K-4's filter, so it is no offender. Its note N3 is right too: a call in path form holds no method-call text and passes the absence scan.
+   - Both are closed by one replacement of words in K-4's doc, in the advisor's words. The standard worker made it in the doc-only commit fe138916 on 0cc509fe, and ran the lib tests (80 passed) and the fmt check (exit 0). The commit's one file is byte-equal, by script, to the file at 0cc509fe with the ruling's replacement. The report is state/consults/2026-11-21-session-log-token-redaction-rests-on-page-code-words-2-worker-report.md.
+   - N3 is a limit of K-4's absence scan that Amendment 2 item 3's words do not state, class 5. The scan is not changed.
+   - The custodian's brief gave the numstat as 6 and 4. Git counts 5 and 3, as the old and new text share their first line.
+
+6. **The runs at 0cc509fe count** as runs of the piece while every later commit changes comments only. The e2e worktree stays at 0cc509fe (ADV-2026-11-21-02 item 5; class 5).
+
+7. **Carried elsewhere.**
+   - The precedent's sentence in the scan test goes to the docs lane (ADV-2026-11-21-02 item 7).
+   - Why the suite's launch built the shell crate again after the pre-build goes with the launcher node of the daily batch's item 7 (c) (ADV-2026-11-21-01 item 6).
+   - The WebView2 version, 157.0.4341.60, was seen outside the logs, from the process list (ADV-2026-11-21-01 item 7).
+
+8. **The reviewer's gate** at fe138916, on the strongest model: PASS WITH NOTES, filed as state/consults/gates/2026-11-21-session-log-token-redaction-rests-on-page-code-gate-reviewer.md. It found no Correctness, Security or Evidence finding. It made the six mutations again, each red by name, and found clippy and fmt clean in the changed files. It carried the question of ADV-2026-11-20-28 item 4, and its brief the K7 facts of ADV-2026-11-21-01 item 4 and ADV-2026-11-21-03 item 3. The gate stands (ADV-2026-11-21-04 item 6).
+
+9. **K-4's doc, the second replacement: the reviewer's D-1** (class 5; ADV-2026-11-21-04 items 1 and 2).
+   - K-4's presence check is met by the call's text inside a block comment or a string literal on a line of the binding's. That is a silent pass, and K-1 to K-3 do not catch it, since they call the method and not the binding. The reviewer showed it with a seventh mutation, outside its brief: with the binding's one call in a block comment, all 80 lib tests passed.
+   - It is closed by one more replacement of words in K-4's doc, in the advisor's words. The standard worker made it in the doc-only commit b3b449cf on fe138916, and ran the lib tests (80 passed) and the fmt check (exit 0). The commit's one file is byte-equal, by script, to the file at fe138916 with the ruling's replacement. The report is state/consults/2026-11-21-session-log-token-redaction-rests-on-page-code-words-3-worker-report.md.
+   - The check itself is not changed, and no gate reads the commit again.
+
+10. **Question 8, on the residency status** (ADV-2026-11-21-04 item 3). In the reviewer's words, the two lines byte-copied by script from its report's section 8:
+
+````
+- So on *whether* the page shows the status: nothing in the diff can change it.
+- On *when*: the added CPU time is spent on the main thread, so it can delay other main-thread work by that much (the dispatch of later IPC requests, for example). I did not measure that time, and I claim no number (docs/08).
+````
+
+   The when is unmeasured, and not shown to be zero. No measure is ordered. The advisor gives a reason, which is not a measurement: the suite's rows are equal at the head and at the base, K7's time among them, and the write and flush the binding already did on that thread are I/O.
+
+11. **The reviewer's notes** (ADV-2026-11-21-04 item 4). N1 stays: the early line break in the doc (c) is in the advisor's words of ADV-2026-11-20-26, and fmt accepts it. N2 is recorded: the tests remove their folders at their start and not at their end, so after a leaking mutation run a test session's token stays in its folder until the next run. That token is minted in memory for that test's own Session, no server holds it, and it opens nothing once the test ends. The folders are not changed.
+
+12. **The custodian's slip** (ADV-2026-11-21-04 item 6). The custodian launched the records commit 1120aq while the reviewer's gate was reading the main checkout. Its staged files put ADV-2026-11-21-02 and -03 in front of the reviewer, beyond the facts ADV-2026-11-21-01 item 4 allowed its brief, and it read both whole. The gate stands: its answer to question 8 rests on the sources it names. From now on no records commit runs while a gate reads the main checkout.
+
+13. **The merge request** comes after the closing, the next amendment (ADV-2026-11-21-03 item 4; ADV-2026-11-21-04 item 8). ADV-2026-11-20-24 item 4 (b) still applies to its head.
+
+14. **Superseded:** section 9.3's pass for regression.mjs, read as item 3 reads it. Nothing else.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 5 — the closing at b3b449cf, before its PR: both gates closed with no re-gate; the count (class 8); CI; the e2e and the redaction
+
+*Written by the custodian, 2026-11-21, at the branch's head b3b449cf439c1386c57e00e3f47ebd085516192f, on cut/session-log-token-redaction. References and hashes only. Nothing below is a quotation.*
+
+1. **The gates.**
+   - The architect, at 0cc509fe8ff3c04177206512b96b35c854f4c086: PASS WITH NOTES. Its report is state/consults/gates/2026-11-20-session-log-token-redaction-rests-on-page-code-gate-architect.md, sha256 a6515b8ae1a35a31380c18d207937ea0fecdb9e1a57bb52095369f897c3cc540.
+   - The reviewer, at fe1389162a3210c6bcf7166c5f3c6cc62adec42d: PASS WITH NOTES. Its report is state/consults/gates/2026-11-21-session-log-token-redaction-rests-on-page-code-gate-reviewer.md, sha256 4cd0d5141dda808b1668f8e7791ebf71c2ef4e602f90b0bff111ca664d6019b1.
+   - Neither has a blocking finding.
+
+2. **The head and the gated heads.** b3b449cf's parent is fe138916, whose parent is 0cc509fe. From 0cc509fe to b3b449cf only commands.rs changes, 7 lines in and 3 out, in the two doc-only commits of Amendment 4 items 5 and 9. No gate re-runs (ADV-2026-11-21-02 item 4; ADV-2026-11-21-04 item 2). The advisor compares the head with both gated heads by script at the merge check.
+
+3. **Class 8, the count** at b3b449cf, by section 7's commands from B = d7f27ef8.
+   - commands.rs 179 and 7, state.rs 64 and 6, lib.rs 1 and 1, Cargo.toml none: 258, against the ceiling of 230, over by 28.
+   - It is recorded as counted, and nothing was cut or packed. The earlier counts are Amendment 3 item 7's; the reviewer counted 256 at fe138916.
+   - The branch's paths from the merge base are the three source files alone. The diffs of every Cargo.lock, Cargo.toml, package.json and package-lock.json are empty, so no dependency changed (P2; section 8 item 5 as Amendment 3 item 6 reads it).
+
+4. **Section 9.3 at b3b449cf.**
+   - CI: 4 workflow runs, each completed success, read at 2026-11-21T02:04:46Z. The shell run's 2 jobs succeeded on windows-latest; they run the crate's cargo test and npm run verify. Governance CI runs the scripts node tests, verify cites, quotes and test-claims, and the plan's verify.
+   - The lib tests at b3b449cf, by the words worker: 80 passed.
+   - The e2e: the regression and source-changed suites at 0cc509fe count (Amendment 4 items 1, 3 and 6).
+
+5. **The e2e and the redaction** (ADV-2026-11-21-04 item 7). The three routes' session logs hold no redacted line, since no page line in them carries the credential. So the e2e gives no positive evidence of the redaction. K-1 to K-3 give it.
+
+6. **The predictions.** P1 held: each mutation went red by name, by the workers and again by the reviewer at fe138916. P2 held. P3 held: the 76 existing lib tests and the scan test pass unedited, and npm run verify passes in CI. P4 held: K-3's plain line. P5 was wrong, class 2 (Amendment 4 item 2). P6 does not hold: section 7's ceiling is exceeded, class 8 (item 3).
+
+7. **Main since the merge base** (ADV-2026-11-14-21 item 6 (a)). The merge base with main is d7f27ef8b41869b2e89fcb849ca20f5244cc9e0b. The 10 commits on main after it, to 50fe7e3aed31d88ef84d91a899c0eb6ef71548f4, change 27 paths, none of the PR's 3. This amendment's commit adds records and forms alone. So the branch takes nothing more from main, and main is not merged into it.
+
+8. **This project's hold lines** in the machine log on 2026-11-21: 16 holds, no two overlapping, read at 2026-11-21T02:04:47Z (ADV-2026-11-16-08 item 4).
+
+9. **To the advisor, with the merge request, unreworded** (ADV-2026-11-19-06 items 5 and 6). The third words worker's report held two hold-line project values and the machine script's path, masked at its filing. The reviewer's report masks its own paths and hold values, and nothing in it was masked by the custodian. The reviewer's seventh mutation was outside its brief, and is the ground of D-1 (Amendment 4 item 9).
+
+10. **Carried.**
+    - The K7 node, in slot 2 (ADV-2026-11-21-03 items 6 to 11).
+    - The scan test's precedent sentence, to the docs lane (ADV-2026-11-21-02 item 7).
+    - The shell crate's rebuild under the suite's launch, to the launcher node (ADV-2026-11-21-01 item 6).
+    - Route (i), to the daily batch (Amendment 2 item 10); the clippy warning in publish.rs, to the daily batch (Amendment 3 item 8).
+
+11. **Departures.**
+    - The reviewer's gate: its own mutation script once failed safe on an anchor, changing nothing, and was rewritten. That is its one errored call.
+    - The third words worker: the machine paragraph of the custodian's brief names the hold script as <M> and does not give its path. The worker took the path from the session's memory notes. The fault is the brief's. One Edit call errored.
+    - The second words worker: one Edit and one Monitor call errored (its report, Amendment 4 item 5).
+
+12. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.

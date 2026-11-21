@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `16d497270cdd69fcba8279c36a20296c07fd0247b07519ac5fd6415d8010456c`) at `2026-11-21T01:01:11.751Z`.
+Generated from `PLAN.yaml` (sha256 `47f2c536c3f62e3c4bdce5c30914855ad9ee5a08c7844b5ea3bd28914e036296`) at `2026-11-21T02:04:47.617Z`.
 
 ## 1. Next
 
@@ -16,6 +16,7 @@ Generated from `PLAN.yaml` (sha256 `16d497270cdd69fcba8279c36a20296c07fd0247b075
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (lane `shell`, order null, budget 0 min)
+- **k7-residency-status-after-zoom-out-under-the-suite-launch** — K7 of the regression suite under the suites' own launch: after the fifteen zoom-out notches the residency status is absent where the partial-view sentence is expected, in 4 of 4 runs at 0cc509fe and at the base d7f27ef8, where the port-5400 harness passed 3 of 4; whether the launch or the product, read first (lane `shell`, order null, budget 90 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
