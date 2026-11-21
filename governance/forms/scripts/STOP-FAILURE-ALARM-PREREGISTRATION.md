@@ -112,3 +112,17 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 6 — 2026-11-21 — the human's line for live check (b)
+
+*Written by the custodian. References only; nothing below is a quotation.*
+
+1. **Their line.** The human typed in the custodian's session at 2026-11-21T15:32:03Z the TEST message's text as it reached them, the second line of their message filed at state/directives/2026-11-21-the-humans-message-adv-2026-11-21-21-approved-and-the-alarm-test-line.md. The advisor's ruling ADV-2026-11-21-23, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-23-the-humans-second-line-is-the-alarm-line.md, items 1 and 2: it is their line for live check (b), and it shows the message arrived. Amendment 5 records the message, its time and the script's commit, 2039dfb1; this amendment adds their line by its directive, since nothing above is edited.
+
+2. **The script since.** Unchanged since the TEST message: the branch head is still 2039dfb1, in its worktree and on GitHub. If it changes before the merge, check (b) is made again (ADV-2026-11-18-22 item 6 (c)).
+
+3. **Next.** The pull request and the merge request, with section 38's and the README's words, the four live checks as this form shows them, and the settings diff (ADV-2026-11-21-23 item 3).
+
+Read the last amendment first.
+
+Nothing above is edited.

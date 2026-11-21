@@ -55,3 +55,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-21 — the human's approval of ADV-2026-11-21-21; the key commit next
+
+*Written by the custodian before the key commit. References only; nothing below is a quotation.*
+
+1. **The approval.** The human approved ADV-2026-11-21-21 in the custodian's session at 2026-11-21T15:32:03Z, filed at state/directives/2026-11-21-the-humans-message-adv-2026-11-21-21-approved-and-the-alarm-test-line.md, the draft's text below their message. The advisor's ruling ADV-2026-11-21-23, filed at state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-23-the-humans-second-line-is-the-alarm-line.md, item 4: the order of ADV-2026-11-21-22 item 4 stands and starts with this amendment.
+
+2. **The commit, to come, one after 0ce16549.** In product-ci-shell.yml and tauri-build.yml alone: the shell job's written Rust cache key becomes windows-2022-shell and the tauri build's becomes windows-2022-shell-tauri-build; beside each, the comment line saying the key keeps its old name is replaced by one comment line naming the approval. Nothing else changes; no cache is deleted; no reset, amend or rebase (ADV-2026-11-21-13 item 3).
+
+3. **The evidence.** The runs at that commit: in each of the two jobs the log shows the cache not found, libduckdb-sys compiled and the job passed. The pull request's body links them.
+
+4. **Then** the checklist of ADV-2026-11-21-20 item 3 in a build amendment, and the reviewer alone (ADV-2026-11-21-13 item 3 (a)).
+
+Read the last amendment first.
+
+Nothing above is edited.
