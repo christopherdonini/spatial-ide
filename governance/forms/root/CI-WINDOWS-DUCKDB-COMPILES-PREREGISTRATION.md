@@ -92,3 +92,17 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — 2026-11-21 — the gate: PASS WITH NOTES; D1 closed by the reviewer's words
+
+*Written by the custodian after the gate. Item 2 is the reviewer's words for its finding D1, applied as given and nothing else with them (ADV-2026-11-21-20 item 2 (b) and (d)). References only otherwise.*
+
+1. **The gate.** The reviewer read cut/ci-windows-duckdb-compiles at 3e41a14b and ended PASS WITH NOTES; its report is at state/consults/gates/2026-11-21-ci-windows-duckdb-compiles-gate-reviewer.md. Its six checks passed, and the merged diff is 22 changed lines. Its one must-fix finding, D1, is documentation-only.
+
+2. **D1, the image version.** Amendment 4 items 2 (b) and 3 took version 20261111.635, which is the version of the job's Runner Image Provisioner (Hosted Compute Agent), for the image's version. Jobs 136902305747 and 136902306088 ran on the image windows-2022, version 20261116.370.1, the same version the evidence commit's runs had, so item 3's difference does not exist. Proof: the "Runner Image" group in each job's log (`gh run view --job <id> --log`).
+
+3. **Next.** The pull request: its body names what the approval's item 3 asks, the image label and version, Visual Studio, the two toolsets and Clang, and links the evidence runs, as the report's note N3 lists. Then the merge request, which names D1 and this amendment.
+
+Read the last amendment first.
+
+Nothing above is edited.
