@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `47f2c536c3f62e3c4bdce5c30914855ad9ee5a08c7844b5ea3bd28914e036296`) at `2026-11-21T02:04:47.617Z`.
+Generated from `PLAN.yaml` (sha256 `a82be597a4a0b9553d196af28d6af9ebcff934a2ceee605d5dc5cc14e452dc54`) at `2026-11-21T04:13:31.601Z`.
 
 ## 1. Next
 
@@ -54,7 +54,6 @@ Generated from `PLAN.yaml` (sha256 `47f2c536c3f62e3c4bdce5c30914855ad9ee5a08c784
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **session-log-token-redaction-rests-on-page-code** — The session token never reaching the session log rests on page code: binding_log_session_event appends page-supplied text verbatim, the page holds the token, and the data plane's Session::redact has only a test caller — evidence: branch `cut/session-log-token-redaction`
 - **stop-failure-alarm** — The stop alarm: a StopFailure hook tells the human by Telegram when a turn of the custodian ends on an error from the service, and the Notification hook also forwards quota_auto_resume_fired (the human's approval of ADV-2026-11-18-06; ADV-2026-11-18-22) — evidence: branch `cut/stop-failure-alarm`
 
 ## 6. Proposed / unscheduled

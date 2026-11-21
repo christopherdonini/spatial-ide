@@ -574,3 +574,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — PR 343 merged at 85adddaf by the advisor's merge; main's CI there; two notes to the daily batch
+
+1. **Merged.** The advisor's verdict on PR 343 at b3b449cf is MERGE, filed at state/consults/merge-checks/PR-343-b3b449cf439c.md. The advisor merged it by merge commit 85adddaf8456c2b38fa73173181cd61fcedf4484, at 2026-11-21T03:35:02Z (the grant, item 5).
+
+2. **Main's CI at the merge commit:** 6 workflow runs, each completed success, read at 2026-11-21T04:13:26Z. The shell run's 2 jobs succeeded on windows-latest (ADV-2026-11-20-24 item 4).
+
+3. **Carried to the daily batch,** by the verdict's item 3: the architect's N4 (the tests' fixed folder under the temp directory) and N6 (a doc sentence under protocol/, for the docs lane).
+
+4. **The plan node** is done, its evidence the PR.
+
+5. **Superseded:** nothing.
+
+Read the last amendment first.
+
+Nothing above is edited.
