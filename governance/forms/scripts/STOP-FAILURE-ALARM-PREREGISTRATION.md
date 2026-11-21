@@ -60,3 +60,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-21 — the gate, attempt 1: FAIL on words only; the findings to the advisor
+
+*Written by the custodian after the gate, before any correction. References only; nothing below is a quotation.*
+
+1. **The gate.** The reviewer read cut/stop-failure-alarm at 1d944d84 and ended FAIL (state/consults/gates/2026-11-21-stop-failure-alarm-gate-reviewer.md). Its checks found the scope and the budget, check (c), check (a) with both mutations caught, check (d) by the custodian's run, and the approval's items 1 to 4 met by the code. No finding is on the code, and none on the evidence.
+
+2. **Blocking, on words only** (AUTONOMY section 31). F1: the Matcher paragraph of the hooks README's Notification section names two quota types, untrue once the matcher names three; the reviewer's words are a paragraph appended to the new section. F2: Part B (vii) of section 38 says that nothing else is sent, untrue once the StopFailure message is sent; the reviewer's words replace the branch's own (xii) bullet, and no line of Part A or Part B is edited. Neither sentence is the human's wording.
+
+3. **Documentation, must-fix.** N1: the first line of the README's new section is undated and does not name the approval's file. N2: the comment line above the one hook test says what changed and by whose approval, but not that the name stays because an earlier form claims it by name, as the human's approval of ADV-2026-11-18-25 asks; Amendment 1 item 3 gave the worker only the words saying why, so the gap is the custodian's. N3: the custodian's suite file records neither its command nor its exit code; the closing run records both. N4: the header comment of notify-telegram.mjs names two quota types; that file is blocked on sight (ADV-2026-11-18-22 item 3), so it goes to the advisor, and F1's words record it meanwhile. N5: input with no error field sends the word unknown, which no record states.
+
+4. **Next.** The findings go to the advisor for a ruling on how they close: who applies the words, in how many commits, and whether a gate reads them again. Live check (b) waits for that ruling. Nothing on the branch changes before it.
+
+Read the last amendment first.
+
+Nothing above is edited.

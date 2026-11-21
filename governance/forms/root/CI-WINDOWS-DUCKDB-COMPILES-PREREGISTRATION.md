@@ -21,3 +21,19 @@ That the chosen route holds on the next image GitHub publishes. A pinned version
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — 2026-11-21 — the probes: both routes work; the report to the advisor before the fix
+
+*Written by the custodian after the probes, before any fix. References only; nothing below is a quotation.*
+
+1. **The probes** (ADV-2026-11-21-13 item 3 (c)), on cut/ci-windows-duckdb-probe, never merged. Probe 1 at a8f79cab ran the three Windows jobs on the image label windows-2022. Probe 2 at 157c2878 ran them on windows-latest with LLVM 23.1.6 installed from the LLVM project's release, its sha256 checked in the step against the value written there. In each, the Rust cache step was skipped, DuckDB was compiled, and all three Windows jobs passed with no STL1000 line (the worker's report, state/consults/2026-11-21-ci-windows-duckdb-compiles-on-the-current-image-probe-worker-report.md).
+
+2. **Read by the custodian.** At each probe commit, three runs, all completed with success; the six Windows jobs passed, each on the label the report gives, their cache steps skipped; the installer's size and digest equal to the release's asset listing.
+
+3. **What the report gives for item 3 (c).** LLVM 23.1.6, the release's Windows installer, checked by the sha256 of the release's asset digest, since the release notes give none; windows-2022 with Visual Studio 2022 17.14.37906.3 and Clang 20.1.8; the events that start each workflow; each Windows job's time without the cache, about 3 to 6 minutes longer on the LLVM route. Not shown: the MSVC toolset folders of windows-2022, which the probe's listing stopped short of.
+
+4. **Next.** The report goes to the advisor before the fix. The fix takes one route, not both, by the human's approval of ADV-2026-11-20-25; which one is the advisor's to say.
+
+Read the last amendment first.
+
+Nothing above is edited.

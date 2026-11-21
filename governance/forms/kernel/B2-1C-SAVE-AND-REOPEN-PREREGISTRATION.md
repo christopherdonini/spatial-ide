@@ -4823,3 +4823,23 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 75 — 2026-11-21 — P6's first group: the gate PASS; three comments to fix; the size; CI green at the build
+
+*Written by the custodian after the gate. References only; nothing below is a quotation.*
+
+1. **The gate.** The reviewer read cut/1c-p6-group-1 at b42ccb3e and ended PASS, with no Correctness or Evidence finding (state/consults/gates/2026-11-21-b2-piece-1c-save-and-reopen-p6-group-1-gate-reviewer.md). It read the custodian's check script and ran it, CHECK OK with exit 0, read every line of the diff, and found the eleven strings of ADV-2026-11-21-14 item 6 true against the code in ordinary use.
+
+2. **Documentation, must-fix, all source comments in the worker's wording.** N1: the comment on O-19b's label names ADV-2026-11-21-14 item 2, where the label's words are ADV-2026-11-20-05 item 2's. N2: the header of saveProject.ts says every string there is the step 1 worker's words, untrue of the through-link notice, O-9, whose words are ADV-2026-11-20-05 item 2's. N3: the header of reopenNotices.ts calls S8 the approval, where the approval gave S8's words to the advisor. The report gives the reviewer's replacement words for each, checked clause by clause.
+
+3. **The size** (Amendment 74 item 3). By the text of section 21c the walkthrough is neither code nor a test, so the count is 92 and Amendment 73's budget holds. The other reading gives 102 (the gate's N4), the advisor's to take; either is inside section 21c's own bounds.
+
+4. **For the advisor, no rewording.** N5: two of the eleven strings, O-9 and O-19b's label, were built at P4a-2 under ADV-2026-11-20-05 item 2, not by step 1, as ADV-2026-11-21-14 item 6 has it; the reviewer read them anyway. N6: two cases outside ordinary use, named for the strings' source comments (AUTONOMY section 31 (c)): a panic after the project file is written, and a non-project object at the target's name.
+
+5. **CI at the build.** At b42ccb3e, read at 2026-11-21T12:09:28Z: 4 runs, all completed with success; the shell run's two jobs, the Windows tauri build among them, passed.
+
+6. **Next.** The findings go to the advisor for a ruling on how they close; the PR follows.
+
+Read the last amendment first.
+
+Nothing above is edited.
