@@ -35,7 +35,7 @@ name: Product CI — Rust workspace
 #
 # ## Runner choice
 #
-# **Three matrix entries.** `windows-latest` is the reference profile in `CLAUDE.md` (Windows 10 /
+# **Three matrix entries.** `windows-2022` is the reference profile in `CLAUDE.md` (Windows 10 /
 # MSVC / WebView2), and every claim this repository makes is scoped to it. `ubuntu-24.04` is pinned
 # to a version, not to `ubuntu-latest`: that pins the OS release only, and the image's contents can
 # still change from run to run. `macos-latest` is not pinned: the label pins nothing, so it names
@@ -198,7 +198,9 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: windows-latest
+          # The human approved the Windows image change (ADV-2026-11-20-25); the advisor's route is ADV-2026-11-21-18.
+          - os: windows-2022
+            # The job name is kept as it was, so the check keeps its name; the job runs on `windows-2022`.
             job_name: "cargo test --workspace (windows-latest)"
           - os: ubuntu-24.04
             job_name: "L1 portable correctness · cargo test --workspace (ubuntu-24.04)"

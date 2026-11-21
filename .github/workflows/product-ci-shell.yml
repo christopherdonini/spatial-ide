@@ -11,13 +11,13 @@ name: Product CI — shell
 # working directories, lockfiles, and cache keys, and this one — uniquely among the three — needs
 # both a Node toolchain and a Rust one in the same job.
 #
-# ## Why `windows-latest`, unlike the viewer's `ubuntu-latest`
+# ## Why `windows-2022`, unlike the viewer's `ubuntu-latest`
 #
 # The viewer workflow's own reasoning ("pure TypeScript with no native surface of its own") does not
 # reach here: this job builds `frontends/shell/src-tauri`, a Tauri crate whose reference profile is
 # Windows/WebView2 (CLAUDE.md), and `tauri` on Linux needs webkit2gtk system packages this repository
 # has never validated. Splitting the Node half onto `ubuntu-latest` would double checkout and install
-# to save nothing, since the Rust half still needs `windows-latest`.
+# to save nothing, since the Rust half still needs `windows-2022`.
 #
 # ## What a green run here means, stated narrowly (product-ci-rust.yml's own discipline, repeated)
 #
@@ -167,7 +167,8 @@ concurrency:
 jobs:
   shell:
     name: typecheck · build · vitest · cargo test
-    runs-on: windows-latest
+    # The human approved the Windows image change (ADV-2026-11-20-25); the advisor's route is ADV-2026-11-21-18.
+    runs-on: windows-2022
     timeout-minutes: 60
     steps:
       - uses: actions/checkout@v4
@@ -184,7 +185,8 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
         with:
-          key: windows-latest-shell
+          # The key names the image; the human approved the rename (ADV-2026-11-21-21).
+          key: windows-2022-shell
           workspaces: "frontends/shell/src-tauri"
 
       # RELEASE-0.1 items 2/3: the shell's own `npm run build` now has a `prebuild` step
