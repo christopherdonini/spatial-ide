@@ -1,0 +1,51 @@
+# The human's message of 2026-11-22 (02:58Z): the idle time before the sitting used; a failure of a test that ran is a finding, the cancel tests' node first; subagent compaction in the two hooks; the Guardian and Monitor, a draft first; a property-testing trial, a draft of the pins first
+
+*Filed verbatim by the custodian from the session transcript: the human's message is the user record of 2026-11-22T02:58:16.223Z (UTC), after its queue record (enqueue) at 2026-11-22T02:58:16.100Z; 9459 bytes, sha256 f9ac4fcdf834255b4325004746bb8e3d28e9486c8e57b7d1f13cfb0ff4cd29c9, byte-copied by script, with one final newline added. The message is addressed to the custodian; by its first line the advisor reads it as filed. Nothing is changed.*
+
+---
+
+To the custodian, 2026-11-22. The advisor reads this as filed, places the pieces and sets each one's class.
+
+0. Use the idle time.
+You are waiting for the sitting of Tuesday 24 November. The work below no longer waits for the tag: it starts now.
+Priority. Sitting and release work comes first, the fixtures due by Monday 18:00 UTC included (ADV-2026-11-21-27), even when it does not show as new slot work. When release or sitting work needs the slot or the machine, start no further run and yield at the next safe checkpoint.
+Isolation. Use an isolated worktree and build output; verify they do not resolve to the sitting checkout's target or fixtures. Nothing here touches the main checkout's build, the sitting script or its test files.
+Standing. The cap of ADV-2026-11-18-01 and -02, the machine's rules and my message of 2026-11-21 on wording findings stand.
+Merges. No change to code that ships in the app, and no change to a lockfile, merges before the tag: such a piece is prepared and gated now and merges after it. A piece gated before the tag is checked for intervening changes before its eventual merge. The hook piece and the Guardian piece may merge before the tag.
+Order. Send me the two reserved drafts first: 2(b) and the dependency draft of 3. While they wait for my approval by id, advance 1 and 2(a). No slot idles on my approval.
+
+1. Flaky tests: a green re-run does not close a finding. In force now.
+An unexpected failure of a test that actually ran is a finding. Record the test, revision, failing assertion and run evidence in the existing ledger. Open one investigation node per distinct failure; attach recurrences to it. Deliberately red tests and mutations are evidence, not findings.
+The existing re-run before deciding whether to revert stays. "Do not revert" and "the failure is explained" are separate decisions. No runner, a job cancelled before any step ran, or a GitHub outage is not a test failure; ADV-2026-11-18-19 and ADV-2026-11-15-06 stand.
+Do not make a failing assertion green by adding a retry, sleep, longer timeout or skip. Waiting with a deadline for a real completion signal is not the same as retrying a failed assertion. A fix names the cause and shows why it addresses it.
+If the investigation exhausts its budget, record what remains unexplained and what guarantee would lose coverage. Keep the reliable assertions. Removing or replacing an unreliable assertion requires an explicit, recorded decision; budget exhaustion is not grounds for silently deleting a test.
+Inventory the existing assertion-retry wrappers once, now, and give each distinct failure a node.
+First node, started now: the cancel tests with ATTEMPTS = 5 in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs. At 624eb45c on November 19 the first failed on all five attempts and the re-run passed; its own failure message says to treat that as a real regression. Start from the cause its comment gives: engine/src/cancel.rs publishes the cancel flag before it stamps CANCELLATION_REQUESTED. Keep two questions apart: whether cancellation reached the producer, and the order of the two trace stamps.
+A plain swap of the two lines is not enough. Preserve both trace promises: a repeated cancellation stamps at most once, and dropping a stream that completed normally does not manufacture a cancellation request. Preserve both producer-reach checks. Use a controlled interleaving where feasible to show the old order fails and the fix passes. Report the repeated-run count as supporting evidence, not proof by itself. If the fix closes it, remove both wrappers in the same piece. This piece touches the engine, so it merges after the tag.
+
+2. Two governance pieces, in the governance lane, started now.
+(a) Subagent compaction. The advisor places it.
+When agent_id is present, scripts/hooks/session-resume.mjs emits no output. scripts/hooks/precompact-flush.mjs allows compaction, does not judge or change the custodian's freshness or block state, and records one diagnostic line naming the agent type. Parent-session behaviour stays unchanged. This message is my approval of exactly that change to those two scripts and their tests. No settings change; anything beyond it comes to me as a draft.
+Cite the changelog line you rely on for agent_id and agent_type reaching compaction hooks, with its version; do not claim when the hooks first fired. Confirm the running custodian's version after my restart.
+While writing the fix, exercise the actual hook entry points with parent and subagent events against temporary state. Assert the output, decision and state effects, not just what a helper returns. After my restart, distinguish that test evidence from a genuinely observed subagent compaction. If none has occurred, say live unverified; do not force one just to obtain a mark.
+(b) Guardian and Monitor. Mine under item 4(c).
+Today the Guardian registers its refusals for Bash, PowerShell, Write, Edit and NotebookEdit only; a command run through Monitor is not checked. Until this piece is live, nobody runs a push, a merge or a delete through Monitor.
+Send me the draft first, with its live checks and the exact commands I must run to update the installed mod. I approve it by id; I update and restart myself. While it waits, move on to 1 or 2(a).
+Register the same shell decision for a Monitor command as for Bash, and include Monitor in the refusal log's target map. A commandless ws watch remains allowed.
+In the draft, list every tool of the installed version that can run a command or write a file, and mark each one checked, not checked or not verified. That list is a report: this piece changes Monitor only, and anything else it shows comes to me as a separate proposal.
+During development, test through the registered handler: cover G1, G7, G8 and G9 with inert fixtures, including force-push, merge and target-clean refusals; also cover a harmless command and a commandless watch. Establish the Monitor call's real shape on the installed version and build the fixtures from that, not from an assumed shape. Assert whether execution continued and what the refusal log recorded.
+The Guardian's files are changed on the piece's own branch, the way its last change was, never in the installed copy. If a standing rule or the Guardian itself stops that, send me the change as a patch file and I apply it myself.
+After my approval, the merge, my update and my restart, make exactly these two live checks in the custodian's session: a Monitor call for git push --force --dry-run origin HEAD:refs/heads/guardian-monitor-probe is refused by Guardian G1 and logged with tool Monitor; a Monitor call for echo guardian-monitor-probe runs. A refusal by Git or another permission layer does not prove Guardian worked: if another layer refuses first, record the check as inconclusive and do not loosen that layer to get the mark. No real force-push, merge or clean.
+
+3. One property-testing trial, in whichever slot is free. The filler queue's pause otherwise stays.
+proptest for Rust and fast-check for the shell's TypeScript are proposed dev-dependencies only. Send me now a draft under item 4(c) with the exact pins. Resolve against disposable copies of the current manifests and lockfiles, without installing packages, running lifecycle scripts, or changing a project lockfile. The draft lists additions, removals and version changes, with licences for the proposed versions. Do not add anything to the project before my approval. If the delta changes before merge, bring the difference back to me. The form is written and gated now; the tests merge after the tag.
+The form names three properties:
+Re-centre: with the world point and intended camera view held fixed, changing the frame origin stays within RECENTER_BUDGET_PX over the declared supported domain. Name the units, zoom/drift bounds and pixel metric. Exercise the path the shell uses; a test of the threshold formula alone does not establish that the map stayed put.
+Data-plane wire format: name the production parser and the writer/reader pair for the same message direction. Check separately that bounded arbitrary bytes do not panic the parser, and that valid generated messages written by the producer are read back with the expected fields and payload.
+Architect's choice: one small property with a clear expected result independent of the implementation under test. Name it in the form before coding.
+Bound both case count and input size. Show each property failing by name on a deliberate break, then revert it and show green. Preserve the seed and minimized input for an unexpected failure; once reproduced, commit the input as a fixed regression. Count product defects separately from generator or test defects.
+After one month of CI runs, give me a short consult: what the trial found, what CI time it added, and whether shrinking and replay earned their cost over our existing dependency-free seeded campaigns. Only then do I decide whether to extend it to Save and Reopen.
+
+Testing while writing the code: run the smallest test that exercises the changed behaviour while the worker can still use the result. For a behavioural fix, show it red for the intended reason and green after the fix. Use an installed-session check only for a claim that depends on the installed integration. This adds no permanent watcher, full-suite-on-edit rule, or extra gate.
+
+One line per piece in the daily batch. Anything of mine comes as a draft with an id.
