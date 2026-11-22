@@ -80,8 +80,8 @@ import type { RequestOutcome } from "../streaming/viewportStreamManager";
  * - the first look's own `Completed` terminal, when no plan has run this generation: the untiled
  *   sink (`issueUntiledQuery`, below) plans the box the canvas then shows (`shownViewportBbox`) by
  *   calling `handleViewportChange` itself, not through the debounce. It plans nothing there for the
- *   terminal of a look the session no longer holds (`wasCurrent`; the sink's comment names the one
- *   window where an earlier look is still held), after a self-cancel (an operator Cancel with a frame,
+ *   terminal of a look that is not current (`wasCurrent`: the session no longer holds it, or a later
+ *   reissue has begun, `untiledLookGeneration`), after a self-cancel (an operator Cancel with a frame,
  *   or `stop()`'s teardown cancel), while a relinquish stands, once the session is stopped or ended,
  *   while a viewport change is pending (that change plans instead), or with no frame or no shown box.
  * With no input, and when the look admitted geometry, that box is the look's own auto-fit, so the
@@ -246,6 +246,8 @@ export interface CandidateArmSession {
    * comment). The tile grid FRAME itself is never re-derived (`establishGridFrame`'s own "no-op past
    * the first call" contract) -- only residency and the fit anchor reset, matching the module's own
    * fresh-anchor bookkeeping for a NEW generation.
+   * Resolves `{ kind: "superseded" }` when a later call began before this one's ticket and attach
+   * returned: that ticket is cancelled through `cancel`, and no stream is started for it.
    */
   reissueUnrestricted: (bbox: Bbox | null, filter: Filter | null) => Promise<RequestOutcome>;
   /** Cancels the current stream a session's own initial/reissued untiled query may still be minting
@@ -477,11 +479,15 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
    * untiled query starts this count over. */
   let untiledRowsSeen = 0;
   /** The initial/reissued untiled stream's own handle, if one is currently running -- so `stop()`
-   * can cancel it (mirrors `ViewportStreamManager.stop`'s own `supersedeCurrent`, simplified: this
-   * session issues at most one untiled stream at a time, never superseding a still-running one with
-   * another -- `reissueUnrestricted` is only ever called after a full clear, which does not itself
-   * need to race a still-in-flight untiled stream in practice). */
+   * can cancel it (mirrors `ViewportStreamManager.stop`'s own `supersedeCurrent`, simplified). A
+   * reissue neither cancels nor clears it: it is reassigned only at the new look's mint, so between a
+   * reissue and that mint it still names the earlier look. Whether a look is current is read from
+   * this handle and `untiledLookGeneration` together. */
   let untiledStreamHandle: string | null = null;
+  /** The untiled look generation. Its only writer is `reissueUnrestricted`, which raises it once its
+   * session-ended check passes, before any await. `issueUntiledQuery` captures it first: a look whose
+   * captured value differs is not current, and a ticket minted after it moved is cancelled unstarted. */
+  let untiledLookGeneration = 0;
   /** Piece 1 (residency-debt cut 1b, entry 35): tile keys of every untiled stream this session has
    * itself cancelled (`relinquishFill`'s own frame-exists cancel, below, and `stop()`'s teardown
    * cancel) -- the untiled-stream analogue of `TileViewportStreamManager`'s own `selfCancelledHandles`
@@ -1290,6 +1296,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   }
 
   async function issueUntiledQuery(bbox: Bbox | null, filter: Filter | null): Promise<RequestOutcome> {
+    const lookGeneration = untiledLookGeneration; // before any await: this look's own generation
     if (stopped) return { kind: "stopped" };
     // Viewport-residency cut P3i-c (gap G-B): mirrors `ViewportStreamManager.requestViewport`'s own
     // `traceViewportQuery` call -- always-on render-trace (never instrument-gated), fired on this
@@ -1319,6 +1326,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       await skpCancel(stream).catch(() => {});
       return { kind: "session-ended" };
     }
+    // The latches first, then the generation, as baseline's `requestViewport` orders them: a later
+    // reissue began while this ticket was minted, so it is cancelled and its stream never started.
+    if (lookGeneration !== untiledLookGeneration) {
+      await skpCancel(stream).catch(() => {});
+      return { kind: "superseded" };
+    }
     untiledStreamHandle = stream;
     syncScanLiveness(); // P5f should-fix 3: the untiled first-look/reissue stream just became outstanding
     let nextSeq = 0;
@@ -1328,7 +1341,8 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
     const sink: StreamSink = {
       onOpen: () => {},
       onBatch: (batchPayload) => {
-        if (untiledStreamHandle !== stream) return; // superseded by a later reissue
+        // Superseded by a later reissue: before its mint the session still holds this handle, so the generation decides.
+        if (untiledStreamHandle !== stream || lookGeneration !== untiledLookGeneration) return;
         // Viewport-residency cut P3i (RESIDENCY-PREREGISTRATION.md §12 Amendment 15): DEV-only --
         // this session IS the manager for the untiled "first look" stream (no separate
         // `TileViewportStreamManager` object owns it), so this is the earliest client-observable
@@ -1354,8 +1368,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // stream. `wasCurrent` is what lets the accounting below (and the M-1 re-emit) tell "this
         // generation's own terminal" apart from "a superseded generation's late arrival" -- gated on
         // it, per the reviewer, rather than only on the self-cancel set (which never held this handle
-        // in the orphan case either).
-        const wasCurrent = untiledStreamHandle === stream;
+        // in the orphan case either). The generation term covers the window before the new look's
+        // mint, where the session still holds this look's handle although a later reissue has begun.
+        const wasCurrent = untiledStreamHandle === stream && lookGeneration === untiledLookGeneration;
         if (untiledStreamHandle === stream) untiledStreamHandle = null;
         // **P3b §2a(iii): the third sink, and the reason it needed its own test.** Before this
         // line, `isSessionEndedTerminal` (`isSourceChangedTerminal`, renamed §2d) was called at
@@ -1426,7 +1441,14 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // `observedUnion` that describes a frame that never actually moved. The genuine bootstrap path
         // (no self-cancel, or a self-cancel before any frame ever existed -- `stop()` during bootstrap)
         // is unchanged: P5f complex-gate should-fix 4's own establishment point still runs there.
-        if (!(wasSelfCancelled && manager.gridFrame !== null)) {
+        // The generation comes first: a look's terminal may establish the frame only while its own
+        // generation is current. An earlier look's terminal, before or after the new look's mint,
+        // establishes nothing, because `latestUnionedExtent` then holds only what the newer generation
+        // admitted (the reissue resets it, and the `onBatch` term drops this look's later batches),
+        // never this look's own union. Within the current generation the rule above stands, so a
+        // self-cancel before any frame (`stop()` during the bootstrap) still establishes it from the
+        // look's own union.
+        if (lookGeneration === untiledLookGeneration && !(wasSelfCancelled && manager.gridFrame !== null)) {
           establishFrameFromExtent(latestUnionedExtent);
         }
         // Architect re-verification, viewport-residency cut P6b, item 2b: the two-terminal
@@ -1465,10 +1487,12 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // when the last tile ended while this look ran, it found the view not settled, so with nothing
         // else outstanding this is the settling moment. Before any plan, only a failure speaks: nothing
         // else would ever settle the bar, so it says what is left.
-        // Not covered (AUTONOMY §31), timing inside one request round trip: an earlier look whose
-        // terminal arrives after a reissue but before the new look's ticket is minted is read as current;
-        // if a plan ran and its tiles ended in that window, the status can read settled until the new
-        // look's first batch or its terminal recomputes it.
+        // An earlier look is never read as current once a reissue has begun: `wasCurrent` also compares
+        // the look's own generation with `untiledLookGeneration`, so its terminal, before or after the new
+        // look's mint, plans nothing, emits no status and records no failure here. Not covered (AUTONOMY
+        // §31), timing inside one request round trip: with a frame, a Cancel between a reissue and its
+        // mint cancels the earlier look, which the session still holds, and not the new one (it is
+        // `relinquishFill`'s frame-gated `cancelUntiledStream()`, which reads `untiledStreamHandle`).
         if (wasCurrent && !wasSelfCancelled && !relinquishedReEmitted && (hasPlanned || terminal.kind !== "Completed")) {
           if (hasPlanned) {
             emitResidencyStatus();
@@ -1488,12 +1512,8 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         // blocks acts on a terminal, and S1's has read `hasPlanned` before `handleViewportChange` sets it.
         // A Completed look with no plan this generation plans the box the canvas shows, called directly
         // so its tiles are tracked before the `syncScanLiveness()` below: no scan reset between look and fill.
-        // Not covered (AUTONOMY §31), the same window as S1's: an earlier look's Completed terminal that
-        // arrives after a reissue but before the new look's ticket is minted is read as current, and can
-        // plan the pre-fit view under the new filter (`untiled-reissue-holds-earlier-look-handle-until-mint`).
-        // That plan sets `hasPlanned`, so the new look's own terminal plans nothing: its fit view is asked
-        // for at the next camera change, and until then the status S1 recomputes there can read settled
-        // for the pre-fit view's cells.
+        // Term (i) carries the generation (S1's comment above), so an earlier look's Completed terminal
+        // inside the mint window plans nothing, and the new look's own terminal plans its fit view.
         if (
           wasCurrent && // (i)
           !wasSelfCancelled && // (ii)
@@ -1727,6 +1747,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // Checked FIRST, before the clear and before the filter is recorded, so an Apply after the
       // latch changes nothing at all.
       if (sessionEnded) return { kind: "session-ended" };
+      untiledLookGeneration += 1; // before any await: every earlier look stops being current here
       currentFilter = filter;
       cancelViewportDebounce();
       // S2: see `suppressNestedSupersededEmit`'s own doc comment above -- this guard exists solely so
