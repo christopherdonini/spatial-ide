@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T04:37:01.355Z",
-  "plan_hash": "6fce223f6469a8690b79841b54ee22ea0617d7653a0f9f0bb51f784633c1b264",
+  "generated_at": "2026-11-22T05:11:06.750Z",
+  "plan_hash": "086af0ff34c186be8788350d151983b128214b6d32d7d50338da65640459901f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12370,9 +12370,9 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md",
       "evidence": null,
-      "budget_minutes": 240,
+      "budget_minutes": 480,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
@@ -12388,7 +12388,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -12396,7 +12396,9 @@
         "minutes": 0
       },
       "gate": "governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/subagent-compaction-hooks"
+      },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,

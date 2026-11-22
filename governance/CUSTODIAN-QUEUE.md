@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `6fce223f6469a8690b79841b54ee22ea0617d7653a0f9f0bb51f784633c1b264`) at `2026-11-22T04:37:01.065Z`.
+Generated from `PLAN.yaml` (sha256 `086af0ff34c186be8788350d151983b128214b6d32d7d50338da65640459901f`) at `2026-11-22T05:11:06.563Z`.
 
 ## 1. Next
 
@@ -8,7 +8,7 @@ Generated from `PLAN.yaml` (sha256 `6fce223f6469a8690b79841b54ee22ea0617d7653a0f
 
 ## 2. Ready
 
-- **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) (lane `engine`, order null, budget 240 min)
+- **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) (lane `engine`, order null, budget 480 min)
 - **large-utf8-and-utf8-view-attribute-columns** — LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327) (lane `engine`, order null, budget 60 min)
 - **lod-tier-test-sweep-keeps-lock-until-folder-removed** — The test tier-folder sweep removes a finished run lock file only when that run folder is gone, so a folder it could not remove is tried again by a later sweep (the architect O2 at PR 326; filler entry 19) (lane `engine`, order null, budget 30 min)
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there (lane `kernel-protocol`, order null, budget 60 min)
@@ -21,7 +21,6 @@ Generated from `PLAN.yaml` (sha256 `6fce223f6469a8690b79841b54ee22ea0617d7653a0f
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
-- **subagent-compaction-hooks-quiet-for-subagents** — When a subagent compacts, scripts/hooks/session-resume.mjs prints nothing and scripts/hooks/precompact-flush.mjs allows it with one diagnostic line naming the agent type, the custodian state left alone (the human message of 2026-11-22, item 2 (a)) (lane `governance`, order null, budget 90 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
 - **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) (lane `platform`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
@@ -60,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `6fce223f6469a8690b79841b54ee22ea0617d7653a0f
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **subagent-compaction-hooks-quiet-for-subagents** — When a subagent compacts, scripts/hooks/session-resume.mjs prints nothing and scripts/hooks/precompact-flush.mjs allows it with one diagnostic line naming the agent type, the custodian state left alone (the human message of 2026-11-22, item 2 (a)) — evidence: branch `cut/subagent-compaction-hooks`
 
 ## 6. Proposed / unscheduled
 

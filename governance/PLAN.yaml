@@ -7610,9 +7610,9 @@ nodes:
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md
     evidence: null
-    budget_minutes: 240
+    budget_minutes: 480
     generation: 1
     felt_verdict: false
     entries: []
@@ -7623,12 +7623,12 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/subagent-compaction-hooks}
     budget_minutes: 90
     generation: 1
     felt_verdict: false

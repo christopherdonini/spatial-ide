@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T04:37:01.065Z",
-  "plan_hash": "6fce223f6469a8690b79841b54ee22ea0617d7653a0f9f0bb51f784633c1b264",
+  "generated_at": "2026-11-22T05:11:06.563Z",
+  "plan_hash": "086af0ff34c186be8788350d151983b128214b6d32d7d50338da65640459901f",
   "priorities_approved": true,
   "next": {
     "id": "cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers",
@@ -9,7 +9,7 @@
     "phase": "prototype",
     "status": "ready",
     "order": null,
-    "budget_minutes": 240,
+    "budget_minutes": 480,
     "needs_human": {
       "kind": "none",
       "minutes": 0
@@ -29,7 +29,7 @@
       "phase": "prototype",
       "status": "ready",
       "order": null,
-      "budget_minutes": 240,
+      "budget_minutes": 480,
       "needs_human": {
         "kind": "none",
         "minutes": 0
@@ -268,25 +268,6 @@
         "done": null
       },
       "summary": "PLACED 2026-11-11 by the human's message of 2026-11-11 (17:25Z) (state/directives/2026-11-11-adr-035-and-adr-029-notes-in-the-humans-words-table-as-consult-s3-waiting-on-you-open-questions.md), item 3: a small governance piece, S3, five-line, after what is queued. Until it lands, the custodian's closing message stays the full list of what waits on the human. NEXT: its five-line form, after the pieces queued at 2026-11-11."
-    },
-    {
-      "id": "subagent-compaction-hooks-quiet-for-subagents",
-      "title": "When a subagent compacts, scripts/hooks/session-resume.mjs prints nothing and scripts/hooks/precompact-flush.mjs allows it with one diagnostic line naming the agent type, the custodian state left alone (the human message of 2026-11-22, item 2 (a))",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 90,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22."
     },
     {
       "id": "macos-normalization-roots-uncanonicalized",
@@ -804,6 +785,28 @@
       },
       "summary": "LANDED 2026-11-12: merged with 1c step 1 as PR #307 (9398efc6, the human's click), in ffc039d1, where the 1c form's Amendments 7 and 8 placed it; its consumer is milestone 4's PR B. It stays in progress until 1c's node is done: its gate is 1c's form, and a done node binds that form's claimed tests, steps 2 and 3's among them. Before: RULED 2026-11-11 by the human's message of 2026-11-11 (state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md), item 1: OPEN-7-1 (a), in P2's one commit under P2's version (the 1c form's Amendment 8). Before: PLACED 2026-10-23 by the human (the 2026-10-23 directive's Milestone 4 line, OPEN-18 (b), and its Piece 1c line, OPEN-A2 (b)): inside 1c step 1 by class 9, declared in that form's Amendment 7; its commit place is OPEN-7-1 there. Its consumer is milestone 4's PR B (§2.3 (h); PB-R2), whose merge waits for it on main (round 8). It is done with step 1's merge, {pr} set only in that done commit. Before: PROPOSED 2026-10-21 by the custodian, from milestone 4's OPEN-4 (A′), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md) and carried by ADR-036's pre-acceptance block (adr-036-pre-acceptance-block). The option's text (state/consults/2026-10-21-b1-shell-half-milestone-4-architect-draft.md, OPEN-4): a small data-lane piece widens record_step before milestone 4's PR B merges, or the widening is the first commit of 1c's step 1. It touches protocol/ (that draft's overlap section), so rule (00) keeps it apart from 1c's protocol/ steps. Which of the two is the human's; the human places it.",
       "evidence_label": "branch `cut/b2-piece-1c-save-and-reopen`"
+    },
+    {
+      "id": "subagent-compaction-hooks-quiet-for-subagents",
+      "title": "When a subagent compacts, scripts/hooks/session-resume.mjs prints nothing and scripts/hooks/precompact-flush.mjs allows it with one diagnostic line naming the agent type, the custodian state left alone (the human message of 2026-11-22, item 2 (a))",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 90,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/subagent-compaction-hooks"
+      },
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22.",
+      "evidence_label": "branch `cut/subagent-compaction-hooks`"
     }
   ],
   "proposed": [
