@@ -7737,3 +7737,20 @@ nodes:
     entries: []
     summary: "PARKED 2026-11-22 by ADV-2026-11-22-15 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-15-the-manifest-node-parked-until-after-the-tag-no-draft-to-the-human-route-t-neither-started-nor-measured-a-read-first.md) until after the tag: the design note filed; route T needs the human for a dependency feature and for shipped code, and nothing of it is built or measured; the read of its item 3 waits behind the other nodes and the product forms. Before: DESIGN NOTE 2026-11-22: proposed by ADV-2026-11-20-22 item 4 (state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-22-the-redaction-stop-route-ii-one-sessionlog-method-k-4-a-presence-scan-no-dev-dependency-line.md), placed last of ADV-2026-11-21-15 item 3 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-15-the-proposed-nodes-graded-and-ordered-until-the-tag-a-product-piece-merges-only-on-v0-2s-list-or-the-humans-word.md); the architect design note (state/consults/2026-11-22-shell-test-executables-manifest-design-note-architect.md) recommends route T, a rustc-link-arg-tests line in build.rs, the tauri test feature on the dev-dependency and one handler function drawn out of run, full form and both gates, and says it goes to the human: a dependency line and code of the shipped exe; nothing is built before their word."
     dates: {opened: 2026-11-22, done: null}
+  - id: console-stream-lane-limitation-67
+    title: "The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: unscheduled
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: none
+    evidence: null
+    budget_minutes: 480
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "FORM COMMITTED 2026-11-22: governance/forms/frontends/CONSOLE-STREAM-LANE-PREREGISTRATION.md, a full form with both gates (ADV-2026-11-22-17 item 2), from the architect fifth draft (state/consults/2026-11-22-console-stream-lane-full-form-architect-draft-5.md); M-CB2 dropped by ADV-2026-11-22-26 item 2; next its architect form gate; the build after PASS, the tests commit first; the MEASURE run after the sitting of 2026-11-24; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
+    dates: {opened: 2026-11-22, done: null}

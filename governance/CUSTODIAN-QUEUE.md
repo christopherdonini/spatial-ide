@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `53965d8317a82fa0abf1802df9e297ceb74ddbd7c6278134d2783051c728fb7f`) at `2026-11-22T16:53:51.523Z`.
+Generated from `PLAN.yaml` (sha256 `a5d2ea17bff5867535bc6168cfa30543cb52a2711d6a66690dd356e36d042fc6`) at `2026-11-22T17:12:14.289Z`.
 
 ## 1. Next
 
@@ -162,3 +162,4 @@ Generated from `PLAN.yaml` (sha256 `53965d8317a82fa0abf1802df9e297ceb74ddbd7c627
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
 - **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete (phase `prototype`) — ambition, never queued
 - **shell-test-executables-carry-the-common-controls-manifest** — The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4) (phase `prototype`) — ambition, never queued
+- **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) (phase `prototype`) — ambition, never queued
