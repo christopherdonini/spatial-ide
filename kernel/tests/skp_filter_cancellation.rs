@@ -111,8 +111,9 @@ async fn connect(dp: &RunningDataPlane) -> Client {
 /// on `cancel.is_cancelled()`, mirroring the pattern the three existing sites already use.
 ///
 /// The presence checks and the stamp-order assertion are separate: `CancelToken::cancel_inner`
-/// stamps `CANCELLATION_REQUESTED` before it publishes the flag a producer loads, so the producer's
-/// `PRODUCER_CANCELLED` cannot precede it, and equal offsets pass.
+/// stamps `CANCELLATION_REQUESTED` before it publishes the flag a producer loads, so, under the
+/// clock assumption ADR-018's note of 2026-11-22 states, the producer's `PRODUCER_CANCELLED` is
+/// not stamped earlier, and equal offsets pass.
 #[tokio::test(flavor = "multi_thread")]
 async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan() {
     const FEATURES: usize = 2_000_000;

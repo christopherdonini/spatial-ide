@@ -108,7 +108,7 @@ fn an_observer_spinning_on_the_flag_never_stamps_before_the_request() {
                 while !token.is_cancelled() {
                     spins = spins.wrapping_add(1);
                     assert!(
-                        spins % 1024 != 0 || Instant::now() < deadline,
+                        !spins.is_multiple_of(1024) || Instant::now() < deadline,
                         "the observer's spin saw no published flag within {I3_SPIN_DEADLINE:?}"
                     );
                 }
@@ -194,6 +194,6 @@ fn a_cancel_after_a_drop_of_the_same_token_stamps_no_request() {
         trace
             .segment_ms(trace::CANCELLATION_REQUESTED, trace::PRODUCER_CANCELLED)
             .is_none(),
-        "a span opening on the request exists for a token whose drop came first"
+        "a segment opening on the request is derivable for a token whose drop came first"
     );
 }

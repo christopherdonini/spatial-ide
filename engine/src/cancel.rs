@@ -143,12 +143,13 @@ impl CancelToken {
     /// interrupt's error can already tell why it happened.
     ///
     /// Stamps [`trace::CANCELLATION_REQUESTED`](crate::trace::CANCELLATION_REQUESTED), when a trace
-    /// is running, at most once per token, under the token's `transition` lock and **before the flag
-    /// is published**, so the stamp precedes every observer that loads the flag. It is the **first
-    /// of the three cancellation instants**, and the only one the canceller itself can stamp. The
-    /// other two belong to whoever owns the operation: `cancel_observed` (the worker stopped
-    /// advancing — what `docs/08` budgets) and `cancel_acknowledged` (the operation quiescent).
-    /// A latency quoted without naming which pair of instants it spans is not a latency.
+    /// is running, at most once per token, under the token's `transition` lock and **before the
+    /// flag is published**, so the stamp happens before every load of the flag that finds it set.
+    /// It is the **first of the three cancellation instants**, and the only one the canceller
+    /// itself can stamp. The other two belong to whoever owns the operation: `cancel_observed` (the
+    /// worker stopped advancing — what `docs/08` budgets) and `cancel_acknowledged` (the operation
+    /// quiescent). A latency quoted without naming which pair of instants it spans is not a
+    /// latency.
     pub fn cancel(&self) {
         self.cancel_inner(true);
     }

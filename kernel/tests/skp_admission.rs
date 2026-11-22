@@ -759,8 +759,10 @@ async fn opening_a_source_with_no_crs_key_is_admitted_under_the_format_default()
 /// **Two questions, two assertions, one run.** Whether the cancel *reached* the producer is the
 /// presence checks below. Whether the two stamps are in order is the one ordering assertion after
 /// them: `CancelToken::cancel_inner` (`engine/src/cancel.rs`) stamps `CANCELLATION_REQUESTED`
-/// before it publishes the flag a producer loads, so the producer's `PRODUCER_CANCELLED` cannot
-/// precede it. Equal offsets pass.
+/// before it publishes the flag a producer loads, so, under the clock assumption ADR-018's note of
+/// 2026-11-22 states, this producer's `PRODUCER_CANCELLED` is not stamped earlier. Equal offsets
+/// pass. A `PRODUCER_CANCELLED` from another test running in this binary lands in the same
+/// process-wide trace and is not excluded.
 #[tokio::test(flavor = "multi_thread")]
 async fn cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock() {
     let path = fixture("cancel", 200_000);
