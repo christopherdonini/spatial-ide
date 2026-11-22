@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7125648382c42c2cd639a09e8740e3aa56cde0707d92d18f16031b459027fb17`) at `2026-11-22T20:57:24.705Z`.
+Generated from `PLAN.yaml` (sha256 `7fcb9e77bbb344e8557deafe973170c75d46b35c65c2efb61f0061f7b4274062`) at `2026-11-22T21:22:25.246Z`.
 
 ## 1. Next
 
@@ -140,6 +140,7 @@ Generated from `PLAN.yaml` (sha256 `7125648382c42c2cd639a09e8740e3aa56cde0707d92
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
 - **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) (phase `prototype`) — never queued until placed
+- **relink-after-refusal-at-the-recorded-place** — After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

@@ -257,3 +257,191 @@ Assertions only:
 After the merge, lead-data writes the owner's-index pointer (`kernel/README.md`, Project save row).
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9)
+
+### Amendment 1 — 2026-11-22 — after the architect's form gate (attempt 1, PASS WITH NOTES): its nine Documentation findings, and the advisor's rulings on OPEN-1 to OPEN-4
+
+Written after the gate's outcome was seen. The words of D-1 to D-9 are the architect's, from its report (`state/consults/gates/2026-11-22-opened-of-panic-sites-free-the-lock-form-gate-architect.md`), copied by the custodian's script, each old text checked to occur once above. The rulings of item 2 are the advisor's, ADV-2026-11-22-40 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-40-node-d-open-1-to-open-4-the-unwind-guard-the-seam-accepted-s-panic-unchanged-for-the-advisors-reason-d-5s-words.md`), under the human's delegation of 2026-11-13, not the human's words. There is no re-read (ADV-2026-11-22-40 item 5).
+
+#### 1. The gate's Documentation findings
+
+Each new text replaces its old text above, read in place.
+
+**D-1** (the architect's place: §0, Callers, third bullet).
+
+Old:
+
+````text
+- The 18 direct `open_project` callers (`kernel/tests/project_reopen.rs`, `kernel/tests/project_lock_crash.rs`, and the one in mod.rs) never call `opened_of`.
+````
+
+New:
+
+````text
+- Of the 18 direct `open_project` calls, the 17 in `kernel/tests/project_reopen.rs` and `kernel/tests/project_lock_crash.rs` never reach `opened_of`; the 18th is `open_project_command`'s own (:905), the one path that does.
+````
+
+**D-2** (the architect's place: §1, After the week).
+
+Old:
+
+````text
+§21c's bound also requires "no new user-visible behaviour" (:351), and a reopen that is now not refused after such a panic is new behaviour.
+````
+
+New:
+
+````text
+§21c's size bound is also crossed: §7's estimate, about 200 changed lines, passes its 150 (:350). Its behaviour bound (:351) is not relied on, since no accepted file reaches the change.
+````
+
+**D-3** (the architect's place: §1, Unchanged).
+
+Old:
+
+````text
+`protocol/skp/src/v0/commands.rs:699-869`
+````
+
+New:
+
+````text
+`protocol/skp/src/v0/commands.rs:699-920`
+````
+
+**D-4** (the architect's place: §1 May not claim; §8 item 6).
+
+Old:
+
+````text
+- anything about a panic elsewhere in `open_project`;
+````
+
+New:
+
+````text
+- anything about a panic elsewhere in `open_project`;
+- that the process survives a panic inside the guard's own close: a second panic during the unwind aborts it, and the operating system then frees the lock (`kernel/src/project/store.rs:221-223`);
+````
+
+Old:
+
+````text
+6. The guard releasing on a path that is not an unwind; a lock held when the guard runs.
+````
+
+New:
+
+````text
+6. The guard releasing on a path that is not an unwind; a lock held when the guard runs; an `unwrap`, `expect` or `panic!` added on the guard's path.
+````
+
+**D-5** (the architect's place: §2 item 4, the doc words and their clause check).
+
+Old:
+
+````text
+   "The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the view's state; the check's names; and the two lineage facts, with no text of a lineage file's lines and no rule text: a refusal carries a line number where it has one. It panics if the style does not write again as canonical JSON, or if the check names a word the wire has none for. No file the reader accepts reaches either, and [`Projects::reply_of`] closes the dataset and frees the lock if one fires."
+````
+
+New:
+
+````text
+   "The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the view's state; the check's names; and the two lineage facts, with no text of a lineage file's lines, no rule text and no error text: a refusal carries a line number where it has one. It panics if the style does not write again as canonical JSON, if that JSON does not read back, or if the check names a word the wire has none for. No file the reader accepts reaches any of these, and [`Projects::reply_of`] closes the dataset and frees the lock if one fires."
+````
+
+Old:
+
+````text
+   - "no rule text": `Damaged { line, .. }` drops it (:1055). This matches SKP-V0 §12.2 (`protocol/skp/SKP-V0.md:1424`).
+````
+
+New:
+
+````text
+   - "no rule text and no error text": `Damaged { line, .. }` drops the rule (:1055) and `Unreadable { .. }` the operating system's error (:1056). This matches SKP-V0 §12.2 (`protocol/skp/SKP-V0.md:1424`).
+````
+
+Old:
+
+````text
+   - "No file the reader accepts reaches either": §0, Reachability.
+````
+
+New:
+
+````text
+   - "No file the reader accepts reaches any of these": §0, Reachability.
+````
+
+**D-6** (the architect's place: §2 item 3).
+
+Old:
+
+````text
+3. **`open_project_command`'s doc** (:889-893) gains one sentence: a panic while the `opened` reply is built closes the reopened dataset and frees its lock before the panic leaves the call.
+````
+
+New:
+
+````text
+3. **`open_project_command`'s doc** (:889-893) gains one sentence: a panic while the `opened` reply is built closes the reopened dataset and frees its lock before the panic leaves the call. `release_ended`'s doc (:247-258), which names its callers, gains `reply_of`'s guard among them.
+````
+
+**D-7** (the architect's place: §4, K-D1).
+
+Old:
+
+````text
+each case reopens, which itself proves the previous case freed the lock
+````
+
+New:
+
+````text
+each case reopens; since `open_project` runs `release_ended` before it takes the lock (:780), that reopen shows only that the previous case closed the dataset, and (iv) is what shows the lock free
+````
+
+**D-8** (the architect's place: §4, the wiring into `open_project_command`).
+
+Old:
+
+````text
+Mutation **M2:** drop the `thread::panicking()` condition. K-D2 fails at the catalog assertion.
+````
+
+New:
+
+````text
+Mutation **M2:** drop the `thread::panicking()` condition. K-D2 fails at the catalog assertion.
+
+Mutation **M5:** the `Reopen::Opened` arm calls `opened_of(*o)` in place of `self.reply_of(*o)`. No test fails, since K-D1 and K-D2 call `reply_of` directly. It is observed as `cargo build --locked -p spatial-kernel --lib` warning that `reply_of` is never used, which the unmutated build does not warn, and recorded with the warning's text and the commit in a `RECORDED MUTATION:` doc line.
+````
+
+**D-9** (the architect's place: §8 item 1).
+
+Old:
+
+````text
+1. Any diff outside `kernel/src/project/mod.rs`, this form, PLAN and records.
+````
+
+New:
+
+````text
+1. Any diff outside `kernel/src/project/mod.rs`, this form, `governance/PLAN.yaml`, `governance/CUSTODIAN-QUEUE.*`, `site/**` and `state/**`, the set §7 excludes from the count.
+````
+
+#### 2. OPEN-1 to OPEN-4 (ADV-2026-11-22-40 items 1 to 4)
+
+- OPEN-1: (A), the unwind guard, as §2 has it (item 1).
+- OPEN-2: accepted, its product caller proved as D-8 above has it (item 2).
+- OPEN-3: S-PANIC's words do not change in this piece (item 3). The reason the draft's note gave is replaced by the advisor's: "the piece proves the release for a panic while the reply is built and claims nothing for any other, so it does not change what the notice withholds".
+- OPEN-4: accepted; the doc words are D-5's above (item 4).
+
+#### 3. The class and the order
+
+The class is full, with both gates (ADV-2026-11-22-40 item 6). The build starts when this amendment is on main and a place is free. Before the build, the custodian tells the advisor of D-4, D-7 and D-8 (ADV-2026-11-22-40 item 5): D-4 adds a line to what may not be claimed and a clause to §8 item 6, D-7 changes the reason K-D1 gives, and D-8 adds the mutation M5. The merge request comes after the tag.
+
+Read the last amendment first.
+
+Nothing above is edited.
