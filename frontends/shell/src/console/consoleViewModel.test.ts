@@ -6,12 +6,20 @@ import { describe, expect, it } from "vitest";
 import {
   buildRowViewModel,
   CONSOLE_STANDING_HEADER,
+  consoleLabelText,
   groupConsecutiveEntries,
   standingHeaderModel,
   type ClassBRowViewModel,
   type ClassCRowViewModel,
 } from "./consoleViewModel";
-import type { BindingCommandEntry, ConsoleEntry, GuiActionEntry, SkpRequestEntry } from "./recorder";
+import {
+  ConsoleRecorder,
+  MAX_CONSOLE_ENTRIES,
+  type BindingCommandEntry,
+  type ConsoleEntry,
+  type GuiActionEntry,
+  type SkpRequestEntry,
+} from "./recorder";
 
 function skpEntry(seq: number, command: string, request: unknown = { skp: "skp/0.3" }): SkpRequestEntry {
   return { seq, kind: "skp-request", command, request, outcome: "ok" };
@@ -138,5 +146,47 @@ describe("buildRowViewModel", () => {
     const entry = guiEntry(0, "style.notARealAction");
     const vm = buildRowViewModel(entry);
     expect(vm.kind).toBe("unclassified");
+  });
+});
+
+describe("consoleLabelText (known limitation 67: the label shows both drop counts)", () => {
+  it("VL1: with nothing dropped the label is the count alone, singular for one", () => {
+    expect(consoleLabelText({ count: 0, droppedStream: 0, droppedOther: 0 })).toBe("Console — 0 actions");
+    expect(consoleLabelText({ count: 1, droppedStream: 0, droppedOther: 0 })).toBe("Console — 1 action");
+    expect(consoleLabelText({ count: 5, droppedStream: 0, droppedOther: 0 })).toBe("Console — 5 actions");
+  });
+
+  it("VL2: with drops it shows the total and each lane's share, stream first", () => {
+    expect(consoleLabelText({ count: 256, droppedStream: 45, droppedOther: 5 })).toBe(
+      "Console — 256 actions (50 dropped: 45 of data requests, cancels and log lines; 5 of other entries)"
+    );
+  });
+
+  it("VL3: two runs of one other-kind entry whose stream separators are dropped show as one group", () => {
+    const recorder = new ConsoleRecorder();
+    recorder.recordGuiAction("tool.set"); // A
+    recorder.record({ i: 0 }, "viewport_query");
+    recorder.recordGuiAction("tool.set"); // B
+    for (let i = 0; i < MAX_CONSOLE_ENTRIES; i++) recorder.record({ i }, "viewport_query");
+
+    const groups = groupConsecutiveEntries(recorder.entries());
+
+    expect(groups[0]!.entries.map((e) => e.seq)).toEqual([0, 2]);
+  });
+
+  it("VL3': two runs of one stream entry whose other-kind separator is dropped show as one group", () => {
+    const recorder = new ConsoleRecorder();
+    recorder.record({ i: 0 }, "viewport_query");
+    recorder.record({ i: 1 }, "viewport_query");
+    recorder.recordGuiAction("tool.set"); // G
+    recorder.record({ i: 2 }, "viewport_query");
+    recorder.record({ i: 3 }, "viewport_query");
+    for (let i = 0; i < MAX_CONSOLE_ENTRIES; i++) recorder.recordGuiAction("mode.set");
+
+    const entries = recorder.entries();
+    const groups = groupConsecutiveEntries(entries);
+
+    expect(entries.some((e) => e.kind === "gui-action" && e.action === "tool.set")).toBe(false);
+    expect(groups[0]!.entries.map((e) => e.seq)).toEqual([0, 1, 3, 4]);
   });
 });
