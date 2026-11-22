@@ -7661,7 +7661,7 @@ nodes:
     order: null
     depends_on: []
     needs_human: {kind: ruling, minutes: 5}
-    gate: none
+    gate: governance/forms/root/PROPERTY-TESTING-TRIAL-PREREGISTRATION.md
     evidence: null
     budget_minutes: 360
     generation: 1
