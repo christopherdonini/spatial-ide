@@ -254,3 +254,13 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — 2026-11-22 — class 1: no types file at 2.1.330 (ADV-2026-11-22-25 item 1)
+
+1. **The read.** By ADV-2026-11-22-25 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-25-pr-357s-gate-notes-the-types-file-may-be-read-r11-and-monitor-the-humans-m-e1-lists-the-utc-day-folder.md`) item 1, the custodian listed, by one read-only Bash call at 2026-11-22T16:48:29.974Z (by its transcript), with no `claude` command, no agent and no write, the folder Amendment 1 names, `tools/mods/spatial-guardian/.claude-plugin/`, in the main checkout at the merge commit 6c0f1eee238e8a10859d71862f421afd95afda33 and in the worktree `C:/dev/wt/guardian-monitor`. Each holds only `plugin.json`, 261 bytes, and no `types/` folder. So no file of the kind the v0 form read at 2.1.288 exists at 2.1.330 where Amendment 1 says it was, and nothing is read of a Monitor event. The live checks M-E1 and M-E2 settle the call's shape (ADV-2026-11-22-25 item 1, its last point).
+
+2. **The merge.** PR 357 was merged by the advisor at the merge commit 6c0f1eee238e8a10859d71862f421afd95afda33, its verdict filed at `state/consults/merge-checks/PR-357-269b0532bc12.md`. The main checkout was fast-forwarded to it; M-E1 and M-E2 follow the human's restart of the custodian's session, M-E1 with the UTC day folder listed before and after and not within two minutes of midnight UTC (ADV-2026-11-22-25 item 3). Until both are recorded, nothing is pushed, merged or deleted through Monitor (ADV-2026-11-22-12 item 5).
+
+Read the last amendment first.
+
+Nothing above is edited.

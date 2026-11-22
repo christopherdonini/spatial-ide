@@ -633,3 +633,185 @@ It reads this amendment alone, with the rest carried forward (ADV-2026-11-22-16 
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — the architect's attempt 2: its words W1 to W10; FE3 (b); the order of the filing
+
+1. **The attempt.** The architect's attempt 2 on Amendment 1 alone: `state/consults/gates/2026-11-22-untiled-reissue-mint-window-form-gate-architect-attempt-2.md`, PASS WITH NOTES, gate-log row 836, the filed file 23047 bytes, sha256 ba4f8461645b2d066e33c6f52d802ec798312dc5ad6ecc408a700494e0c5a7ca. By ADV-2026-11-22-23 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-23-the-mint-forms-added-test-is-fe3-b-its-mutation-both-terms-amendment-2-holds-the-words-in-full.md`) item 6 there is no further attempt on the form; the build's two gates read the form with both amendments.
+
+2. **The words W1 to W10.** They are the architect's, not the human's and not the advisor's, applied under AUTONOMY §31 (d) with no re-gate. Each new text below is read in place of its old text in Amendment 1. Each old text occurs exactly once in Amendment 1, checked by the custodian's script at this filing. Every old and new text is copied by script from the filed report's section "Replacement words"; each is the text between its fence lines, which are not part of it. The report's clause checks stay in the report.
+
+**W1 (Correctness; item 2.1 (iii)).** Old:
+
+````text
+It is named here and not tested, because no observable differs.
+````
+
+New:
+
+````text
+It is named here and not tested. The one observable that differs is the session log: today this path can write a `candidate-grid-frame-established` line on the earlier look's post-reissue union, and under the piece it writes none. No single mutation can show it, because two terms each prevent it: §2.3 item 4's `onBatch` term leaves the extent null, and §2.3 item 7's conjunct skips the call (item 2.2 (3)).
+````
+
+By ADV-2026-11-22-23 item 3, the clause "named here and not tested" in this new text is read as "named here and tested by FE3 (b)" (item 3 below); its other words stand as the report gives them.
+
+**W2 (Correctness; A2's new text).** Old:
+
+````text
+It still writes its `candidate-untiled-terminal` line, clears the handle it held and syncs scan liveness; only its frame establishment is now gated (Amendment 1, item 2).
+````
+
+New:
+
+````text
+It still writes its `candidate-untiled-terminal` line unless it was self-cancelled, clears the handle when it still holds it, and syncs scan liveness; its frame establishment, like its plan, its status and its accounting (§2.3 item 4), is now gated on its generation (Amendment 1, item 2).
+````
+
+**W3 (Documentation; markup).** A2. Old:
+
+````text
+Old: ``establishFrameFromExtent` still runs for it, unchanged (OPEN-3).`` New:
+````
+
+New:
+
+````text
+Old: `` `establishFrameFromExtent` still runs for it, unchanged (OPEN-3). `` New:
+````
+
+**W3 (Documentation; markup).** N1. Old:
+
+````text
+Old: ``no tile `viewportQuery` `` (the text
+````
+
+New:
+
+````text
+Old: `` no tile `viewportQuery` `` (the text
+````
+
+**W4 (Documentation; A5's clause check).** Old:
+
+````text
+"before or after the mint": the generation rises at the reissue (§2.3 item 2).
+````
+
+New:
+
+````text
+"before or after the new look's mint": the generation rises at the reissue (§2.3 item 2), and the look's own generation is captured before its first await (§2.3 item 3).
+````
+
+**W5 (Documentation; the Cites paragraph).** Old:
+
+````text
+A range marked "pin: hash by the custodian" is to be pinned at that commit.
+````
+
+New:
+
+````text
+The one pinned range, in item 2.1 (i), carries its hash at that commit.
+````
+
+**W6 (Documentation; item 2.4, P3).** Old:
+
+````text
+(d) no longer sees the orphan's frame line, and it asserts only planned lines.
+````
+
+New:
+
+````text
+at (d)'s orphan terminal the extent is null at the base and at the head (the reissue reset it at `:1758`, and sh_3 delivers nothing), so no frame line is written either way, and (d) asserts only planned lines.
+````
+
+**W7 (Documentation; R7′, the drafter's note item 4).** Insertion. Old:
+
+````text
+Clause check: the gate cites `governance/AUTONOMY.md:391`.
+````
+
+New:
+
+````text
+Clause check: the gate cites `governance/AUTONOMY.md:391`.
+
+**R7′ (§10, the architect's attempt 2),** read in place of R7's new text:
+```text
+If that merge changes any tracked file outside `governance/`, `state/`, `site/` and `docs/`, the reviewer makes a narrow read, and §9.3's e2e runs again at the final head (AUTONOMY §22: a change to source, tests, configuration or fixtures reopens the affected verdict).
+```
+````
+
+The report gives this new text as a block followed by the line "followed by a text block containing:" and a second block; here the second block is written inside a text fence after the first, as that line describes.
+
+**W7 (Documentation; R7′, the drafter's note item 4).** Item 1's opening. Old:
+
+````text
+Items 2.4 and 2.5 supersede R3's new text, R13's item 11 and the line R15 keeps, because of the scope addition, not because those words were in error.
+````
+
+New:
+
+````text
+Items 2.4 and 2.5 supersede R3's new text, R13's item 11 and the line R15 keeps, because of the scope addition, not because those words were in error. R7′ supersedes R7's new text, whose trigger was narrower than `governance/AUTONOMY.md:391`.
+````
+
+**W7 (Documentation; R7′, the drafter's note item 4).** The superseded index. Old:
+
+````text
+- R3's new text (by R3′);
+````
+
+New:
+
+````text
+- R3's new text (by R3′);
+- R7's new text (by R7′);
+````
+
+**W8 (Documentation; A8's not-covered list).** Old:
+
+````text
+    - an orphan's terminal still marks the first look's tile partial once the newer look has reached the row limit (`candidateArmSession.ts:1440-1442`, ungated). By reading, the newer look's own terminal records that fact anyway.
+````
+
+New:
+
+````text
+  - **For the item's comment, true by reading and not a §31 (c) case** (ordinary use reaches it): an orphan's terminal still marks the first look's tile partial once the newer look has reached the row limit (`candidateArmSession.ts:1440-1442`, ungated). After the reissue only the newer look's admitted rows count toward that limit (`:1760`, `:1156`, with §2.3 item 4's `onBatch` term), so the mark states a fact about the newer look, which its own terminal records anyway.
+````
+
+**W9 (Documentation; item 2.2 (3)).** Old:
+
+````text
+the term and the conjunct give the same frame on every path the code reaches, because the path in (2) has a null extent.
+````
+
+New:
+
+````text
+the term and the conjunct give the same frame on every path the code reaches: they differ only for a self-cancelled look of an earlier generation while there is no frame, and every such look's terminal reads a null extent, because the only self-cancels that reach a look with no frame are `stop()` and the session's end, whose latches stop any later look from being started (`:1293`, `:1305-1313`, `:1318-1321`, `:1729`) and so from feeding `latestUnionedExtent` after the reissue reset it (`:1758`).
+````
+
+**W10 (Documentation; item 2.1 (iii)'s variant cites).** Old:
+
+````text
+`stop()`'s only caller is the teardown (`:1808-1812`).
+````
+
+New:
+
+````text
+`stop()`'s only caller is the teardown (`:1808-1812`); after the session's end, `reissueUnrestricted` returns at `:1729`, a late mint at `:1318-1321`, and the manager plans nothing (`frontends/shell/src/streaming/tileViewportStreamManager.ts:523`).
+````
+
+3. By ADV-2026-11-22-21 item 3 and ADV-2026-11-22-23: one more test in the tests' commit, FE3 (b), as the architect's attempt 2 gives it in its N-6. sh_1 delivers E1, a reissue is held, sh_1 delivers E2, then stop(), then sh_1 is cancelled. It asserts that no frame is established and that no frame line is written. It is red at the base, with a frame on E2. Its mutation removes both terms together, section 2.3 item 4's onBatch term and section 2.3 item 7's conjunct, because either alone prevents the frame. It is counted inside the addition's ceiling.
+
+4. **The order of the filing.** Amendment 1 was appended to this form in the custodian's records commit 9282833d2408d4ed31e7834fcd9a4b23ea401288, built while the attempt ran and so before its words, which its report asked to be applied before the append; nothing is rewritten, and the attempt read the bytes that were appended (ADV-2026-11-22-23 item 5).
+
+5. **Next.** The build, the tests' commit first; FE1 (a)'s red run goes to the advisor at once; the worker leaves `KNOWN-LIMITATIONS.md` alone until the advisor has approved item 68's words (ADV-2026-11-22-23 item 7).
+
+Read the last amendment first.
+
+Nothing above is edited.
