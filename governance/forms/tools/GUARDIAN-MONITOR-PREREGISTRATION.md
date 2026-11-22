@@ -205,3 +205,26 @@ tools/mods/spatial-guardian/.claude-plugin/types => absent: ENOENT
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — P0b: one Monitor hook line and nothing else changed; the human's approval of ADV-2026-11-22-12
+
+1. **The approval.** The human approved ADV-2026-11-22-12 by typed message (`state/directives/2026-11-22-the-humans-approval-adv-2026-11-22-12-the-guardian-and-monitor-piece-goes-on-without-the-types-its-live-checks-named.md`); the draft it makes theirs is `state/consults/2026-11-22-advisor-draft-adv-2026-11-22-12-the-guardian-and-monitor-piece-after-its-p0-stop-not-the-humans-words.md`. By its item 2 the piece goes on without the types: P0b as section 0 has it, the fixtures as its item 2 (b) says, in its words on what is assumed and not read, and no other `claude` command (its item 2 (c)). By its items 3 and 4 the live checks are the two of ADV-2026-11-22-02 item 6 and the conditional call of its item 3 (b), named by the approval. Its items 5 and 6 stand. Where sections 0, 3 and 5 differ from it, the draft governs.
+
+2. **The P0b record.** In C:/dev/wt/guardian-monitor at 08783d073376686eba767d5a65bb89675bd40b38 the worker wrote the one line of section 2 item 1 and committed it as 1c0d3db6e97e1013849b9dae89f11f04fb069679, pushed; its numstat is `1 0 tools/mods/spatial-guardian/hooks/register.js`. `claude plugin validate tools/mods/spatial-guardian` exited 0; its output, 3337 bytes, sha256 c8ecbacc46abb5d379b15e724b3a899a5b5e8b8e3d634616afb2464aacb71cd9, differs from Amendment 1 item 2's in two lines only, by the custodian's diff of the two, byte for byte:
+
+```
+9c9
+<   ❯ ./register.js hooks: tool.call, tool.call{tool=Bash}, tool.call{tool=PowerShell}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}
+---
+>   ❯ ./register.js hooks: tool.call, tool.call{tool=Bash}, tool.call{tool=Monitor}, tool.call{tool=PowerShell}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}
+11a12
+>   ❯ ./register.js gating hook with .catch: tool.call{tool=Monitor}
+```
+
+   No warning or error names Monitor or the filter; the two warnings are Amendment 1's. No types folder appeared. The worker's report is `state/consults/2026-11-22-guardian-monitor-p0b-worker-report.md`.
+
+3. **No stop.** Section 0 item 5's stops do not hold. Tests may be written once this amendment is committed.
+
+Read the last amendment first.
+
+Nothing above is edited.
