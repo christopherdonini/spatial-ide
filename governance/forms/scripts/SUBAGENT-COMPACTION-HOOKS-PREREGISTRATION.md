@@ -45,3 +45,21 @@ That the installed harness hands these hooks agent_id when a subagent compacts. 
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — merged; main green; the closing
+
+*Written by the custodian after the merge. References only; nothing below is a quotation.*
+
+1. **The merge.** The advisor merged PR 349 at fdd1f545 by merge commit 8a271655, at 2026-11-22T06:09:58Z by GitHub, so the branch commit that a test comment names stays reachable. The verdict, MERGE: state/consults/merge-checks/PR-349-fdd1f545f033.md. Main's CI at the merge commit: 4 runs, all success, read at 2026-11-22T06:16:59Z.
+
+2. **Live unverified.** The two scripts act from the main checkout since its fast-forward to the merge commit. No subagent compaction has been seen, and none was forced. The change stays live unverified until one is seen and its record line read (the advisor's message with the verdict).
+
+3. **The parent's guard.** If a compaction of the custodian's own session ever records the decision allowed-subagent, the parent's guard is off, and that is a stop to the advisor (ADV-2026-11-22-05 item 6; the verdict's closing paragraph). The custodian's compaction that ended at 06:11Z by its transcript ran its PreCompact hook at 06:02:45Z by its record line, before the merge and under the earlier script; that line carries recorded-only. The next compaction is the first under the merged script.
+
+4. **Left as it is.** The hooks README waits for the human's approval of the draft ADV-2026-11-22-06; nothing is written to it before (Amendment 1 item 4). The reviewer's N2 and N3 are test gaps it does not ask to be closed, and N5 is named in the draft as left out (the verdict, item 3).
+
+5. **The node** is done with this amendment, and its worktree is removed at this closing.
+
+Read the last amendment first.
+
+Nothing above is edited.

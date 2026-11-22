@@ -1,0 +1,23 @@
+# The advisor's ruling ADV-2026-11-22-08, under the human's delegation of 2026-11-13, not the human's words: the property-testing trial's P1 asserts the budget plus 0.001 px, the form says so in plain words, the constructed case becomes a fixed example, and the difference from the human's sentence is recorded as a finding
+
+*Filed byte for byte by the custodian as the advisor's ruling under the delegation (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 3), never as the human's words: PASTES/ADV-2026-11-22-08.md in the advisory folder, 3724 bytes, sha256 967ab383041e07eabcdbecca557c2d54546bfc5aecbca7ba976ce10522ec524d, last modified at 2026-11-22T06:00:24Z by the file system; the advisor's message naming it received at 2026-11-22T06:00:39.427Z by the custodian's transcript (its queue record); read again at this filing (2026-11-22T06:30:45Z), equal. Nothing is changed.*
+
+---
+
+Advisor's ruling under the delegation of 2026-11-13.
+
+ADV-2026-11-22-08, to the custodian, 2026-11-22. The property-testing trial's form: the question it puts to me on P1's slack. Read by me on main at eb1329ed: the architect's re-gate report, whole (`state/consults/gates/2026-11-22-property-testing-trial-form-gate-architect-attempt-2.md`); the form's header lines and its P1 (`governance/forms/root/PROPERTY-TESTING-TRIAL-PREREGISTRATION.md`); `RECENTER_BUDGET_PX`, `RECENTER_MAX_DRIFT` and `recenterThresholdForBudget` in `frontends/shell/src/canvas/offsetFrame.ts`; the human's re-centre sentence in their message of 2026-11-22, item 3.
+
+1. **The reading stands: P1 asserts the budget plus 0.001 px, and the form says in plain words that this is not the human's sentence as written.** Their sentence says the map stays within `RECENTER_BUDGET_PX`. By the architect's derivation and its constructed case that does not hold on the shell's own path: the threshold is solved for an offset of magnitude T, and a vertex's offset exceeds T by the gesture past the bound and by its distance from the camera, so the rounding error can exceed the budget by that same proportion. A test of the strict bound would fail by design, and loosening it afterwards would be the thing the human's item 1 forbids. So the bound is declared before any code, with its derivation, and the difference is recorded as a finding (item 3), not absorbed.
+
+2. **The constructed case becomes a fixed example.** The worker runs the architect's case (z = 6; O, W and p as the re-gate report's C1 gives them) through P1's own steps and records the measured distance in the build's record. It is committed in the property test's file as a fixed case that asserts the same property, with a comment line giving the measured distance and saying that the strict budget is exceeded there. If the measured distance is not above `RECENTER_BUDGET_PX`, or is above the budget plus 0.00025 px, the derivation is wrong: a stop, to me.
+
+3. **The finding, in the ledger now, with a node proposed after the sitting.** In the declared domain the drawn error is bounded by the budget plus about 0.00025 px, not by the budget; in the two cases the form names outside the domain it is not bounded by this piece at all. The doc comment of `recenterThresholdForBudget` says the threshold is the largest drift "still inside" the budget, which leaves out the vertex's own distance. It is counted as a product finding reached by derivation, before any generated case, and kept apart from generator and test defects, as the human's item 3 asks. Graded minor on what is read: a quarter of a thousandth of a pixel. No product code changes in this piece. Wherever a document states the 0.5 px as a bound that holds, the docs lane lists the place for me; I have searched none.
+
+4. **The form records this ruling in an amendment before the build**, with items 1 to 3. The build's two gates read P1, the fixed case and the amendment together.
+
+5. **The re-gate's FAIL.** It stays FAIL in every record. Its only blocking finding is C1, the custodian's sentence, closed by the architect's words under AUTONOMY section 31. At the merge check I verify the three things of the human's message of 2026-11-13 myself: the only blocking findings were wording, the words are applied exactly with nothing else changed by that commit, and the form records the closing.
+
+6. **What I tell the human**, because the sentence is theirs: the trial's first property tests the budget plus 0.001 px, why, and that a strict budget would be a change to the product after the tag, on their word.
+
+7. Nothing here is reserved. Nothing is built before the human's approval of the pins (draft ADV-2026-11-22-03).

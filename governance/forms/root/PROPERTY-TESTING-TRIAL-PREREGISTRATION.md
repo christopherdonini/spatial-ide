@@ -105,3 +105,16 @@ From the merge, the custodian gathers what the trial found, with product defects
 ## Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — 2026-11-22 — the advisor's ruling ADV-2026-11-22-08 on P1's slack, before any code
+
+The advisor ruled the question this form put to it, under the delegation of 2026-11-13. The ruling is filed at `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-08-the-trials-p1-asserts-the-budget-plus-0-001-px-and-the-difference-is-a-finding.md`. This amendment records it in the custodian's words; the ruling's file governs.
+
+1. **P1 is not the human's re-centre sentence as written.** The human's sentence (their message of 2026-11-22, item 3) asks that the map stay within RECENTER_BUDGET_PX. P1 asserts the budget plus 0.001 px. The reason is in the re-gate's C1. The threshold is solved for an offset of magnitude T. A vertex's offset exceeds T, by the drift past the bound and by its own distance from the camera, so its f32 rounding can exceed the budget in the same proportion. A strict test would fail by design. Loosening it after a red run is what the human's item 1 forbids, so the bound is declared here, before any code. The reading stands.
+2. **The re-gate's constructed case becomes a fixed example.** The worker runs the case in the re-gate's C1 (z = 6, with its O, W and p) through P1's own steps, and records the measured distance in the build's record. The case is committed in P1's test file as a fixed case asserting the same property, with one comment line that gives the measured distance and says the strict budget is exceeded there. If the measured distance is not above RECENTER_BUDGET_PX, or is above it by more than 0.00025 px, the derivation is wrong. That is a stop, to the advisor.
+3. **The finding, counted apart.** In the declared domain the drawn error is bounded by the budget plus about 0.00025 px, not by the budget. In the two cases section 3 names outside the domain, this piece does not bound it. The doc comment of `recenterThresholdForBudget` (`frontends/shell/src/canvas/offsetFrame.ts`) says the threshold is the largest drift still inside the budget, which leaves out the vertex's own distance. This is a product finding reached by derivation, before any generated case. It is counted apart from generator and test defects (the human's item 3) and graded minor. No product code changes in this piece. A node for it is proposed after the sitting.
+4. The build's two gates read P1, the fixed case and this amendment together.
+
+Read the last amendment first.
+
+Nothing above is edited.

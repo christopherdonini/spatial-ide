@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d56b0f531af9f691c21a42c27c93e9d9d2a87aa4891929ad256c1b4401ca7207`) at `2026-11-22T05:56:16.183Z`.
+Generated from `PLAN.yaml` (sha256 `7de32c384a4bb8cf6b96b50e86b7cf4bdfe5e217d319dba5a9776ef6e9c88b58`) at `2026-11-22T06:30:45.363Z`.
 
 ## 1. Next
 
@@ -59,7 +59,6 @@ Generated from `PLAN.yaml` (sha256 `d56b0f531af9f691c21a42c27c93e9d9d2a87aa48919
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
-- **subagent-compaction-hooks-quiet-for-subagents** — When a subagent compacts, scripts/hooks/session-resume.mjs prints nothing and scripts/hooks/precompact-flush.mjs allows it with one diagnostic line naming the agent type, the custodian state left alone (the human message of 2026-11-22, item 2 (a)) — evidence: branch `cut/subagent-compaction-hooks`
 
 ## 6. Proposed / unscheduled
 

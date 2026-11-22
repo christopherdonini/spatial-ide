@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T05:56:16.374Z",
-  "plan_hash": "d56b0f531af9f691c21a42c27c93e9d9d2a87aa4891929ad256c1b4401ca7207",
+  "generated_at": "2026-11-22T06:30:45.560Z",
+  "plan_hash": "7de32c384a4bb8cf6b96b50e86b7cf4bdfe5e217d319dba5a9776ef6e9c88b58",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12388,7 +12388,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "in-progress",
+      "status": "done",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -12397,16 +12397,16 @@
       },
       "gate": "governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md",
       "evidence": {
-        "branch": "cut/subagent-compaction-hooks"
+        "pr": 349
       },
       "budget_minutes": 90,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22.",
+      "summary": "DONE 2026-11-22: merged by the advisor (PR 349, 8a271655), main green; live unverified until a subagent compaction is seen; the closing Amendment 2. Before: PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22.",
       "dates": {
         "opened": "2026-11-22",
-        "done": null
+        "done": "2026-11-22"
       }
     },
     {

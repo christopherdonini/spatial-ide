@@ -7623,18 +7623,18 @@ nodes:
     kind: task
     lane: governance
     phase: prototype
-    status: in-progress
+    status: done
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md
-    evidence: {branch: cut/subagent-compaction-hooks}
+    evidence: {pr: 349}
     budget_minutes: 90
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22."
-    dates: {opened: 2026-11-22, done: null}
+    summary: "DONE 2026-11-22: merged by the advisor (PR 349, 8a271655), main green; live unverified until a subagent compaction is seen; the closing Amendment 2. Before: PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22."
+    dates: {opened: 2026-11-22, done: 2026-11-22}
   - id: guardian-checks-monitor-commands
     title: "The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02)"
     kind: task
