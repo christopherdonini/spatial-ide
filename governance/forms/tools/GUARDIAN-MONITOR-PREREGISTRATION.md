@@ -240,3 +240,17 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — 2026-11-22 — the gates after the build; the correction; section 2 item 4
+
+1. **The gates.** Section 7's reviewer after the build: `state/consults/gates/2026-11-22-guardian-monitor-after-build-gate-reviewer.md`, PASS WITH NOTES, gate-log row 834, the filed file 13151 bytes, sha256 e5380ffec5bd103efac143fd12291b764cad307a8e16d8c51095397f6df184c7. The architect after the build: `state/consults/gates/2026-11-22-guardian-monitor-after-build-gate-architect.md`, PASS WITH NOTES, gate-log row 835, the filed file 12973 bytes, sha256 e34af65481117701700fedd905b98b72d22ab804e522260b7990c5e131080b0c. Both at b6d8835810e36249097744cff509b59ae8e9771c.
+
+2. **Section 2 item 4** (D2, the reviewer's, which the architect agrees with): Section 2 item 4's "and that Monitor's event shape was read at it" is superseded by ADV-2026-11-22-12 item 2 (b).
+
+3. **The correction.** 269b0532bc1228fa0fac9be75afe062be02815de on `cut/guardian-monitor`, parent b6d8835810e36249097744cff509b59ae8e9771c: D1, D3 and A1 in `tools/mods/spatial-guardian/README.md`, 3 lines, words only. The worker's report: `state/consults/2026-11-22-guardian-monitor-correction-1-worker-report.md`, the filed file 2006 bytes, sha256 e2d8c5a59d3de30c497e9e91d65f74a8d22b0389cbb41aa09f501d4fdfc69f9b.
+
+4. **Next:** out of draft and the merge check, on the human's approval `state/directives/2026-11-22-the-humans-approval-adv-2026-11-22-12-the-guardian-and-monitor-piece-goes-on-without-the-types-its-live-checks-named.md`. Section 5 after the merge.
+
+Read the last amendment first.
+
+Nothing above is edited.
