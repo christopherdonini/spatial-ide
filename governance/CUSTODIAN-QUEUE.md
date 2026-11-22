@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0abe2764ce986f14555b494ece5340295b451bda8708cc21a80c3f88af1796b2`) at `2026-11-22T11:33:23.047Z`.
+Generated from `PLAN.yaml` (sha256 `2d3e799f1ef11aba6d883cd323b3eb39718689cf53ef4bd23e676e4b83ef327a`) at `2026-11-22T11:58:55.607Z`.
 
 ## 1. Next
 
@@ -20,7 +20,6 @@ Generated from `PLAN.yaml` (sha256 `0abe2764ce986f14555b494ece5340295b451bda8708
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) (lane `governance`, order null, budget 240 min)
-- **hooks-readme-subagent-compaction-sentences** — The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06 (lane `governance`, order null, budget 30 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
 - **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) (lane `platform`, order null, budget 60 min)
@@ -58,6 +57,7 @@ Generated from `PLAN.yaml` (sha256 `0abe2764ce986f14555b494ece5340295b451bda8708
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 - **verify-cites-shortened-target-list** — verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3) — evidence: branch `cut/verify-cites-shortened-target`
+- **hooks-readme-subagent-compaction-sentences** — The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06 — evidence: branch `cut/hooks-readme-subagent-sentences`
 
 ## 6. Proposed / unscheduled
 

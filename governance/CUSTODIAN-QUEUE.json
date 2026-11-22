@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T11:33:23.047Z",
-  "plan_hash": "0abe2764ce986f14555b494ece5340295b451bda8708cc21a80c3f88af1796b2",
+  "generated_at": "2026-11-22T11:58:55.607Z",
+  "plan_hash": "2d3e799f1ef11aba6d883cd323b3eb39718689cf53ef4bd23e676e4b83ef327a",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -249,25 +249,6 @@
         "done": null
       },
       "summary": "APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-02 is the human words, its item 4 (a) the typed approval naming the two live checks of its item 6; a full form and both gates (ADV-2026-11-22-01 item 5); it may merge before the tag; next, its form. Before: WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8."
-    },
-    {
-      "id": "hooks-readme-subagent-compaction-sentences",
-      "title": "The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "READY 2026-11-22: the human approved the draft ADV-2026-11-22-06 by their typed message (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md); its two sentences go into scripts/hooks/README.md by the custodian script, byte for byte; the five-line form and the reviewer alone; no script, test or settings file; it may merge before the tag."
     },
     {
       "id": "site-waiting-on-you-lists-open-questions",
@@ -829,8 +810,30 @@
         "opened": "2026-11-22",
         "done": null
       },
-      "summary": "IN PROGRESS 2026-11-22: built at f912819f on cut/verify-cites-shortened-target, PR 351 a draft, 134 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-build-worker-report.md); the reviewer gate next. Before: PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4).",
+      "summary": "IN PROGRESS 2026-11-22: the reviewer gate attempt 1 FAIL at f912819f on C1 alone, a listed entry whose citing file a --files glob leaves out reported unmatched, with D1 to D3 (state/consults/gates/2026-11-22-verify-cites-shortened-target-list-gate-reviewer.md); corrected at 2069eb88, 144 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-correction-1-worker-report.md); the reviewer narrow read next (ADV-2026-11-22-05 item 4). Before: built at f912819f on cut/verify-cites-shortened-target, PR 351 a draft, 134 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-build-worker-report.md); the reviewer gate next. Before: PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4).",
       "evidence_label": "branch `cut/verify-cites-shortened-target`"
+    },
+    {
+      "id": "hooks-readme-subagent-compaction-sentences",
+      "title": "The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/hooks-readme-subagent-sentences"
+      },
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-11-22: the worker dispatched on cut/hooks-readme-subagent-sentences in its own worktree from 90bdeab7, beside the trial build. Before: READY 2026-11-22: the human approved the draft ADV-2026-11-22-06 by their typed message (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md); its two sentences go into scripts/hooks/README.md by the custodian script, byte for byte; the five-line form and the reviewer alone; no script, test or settings file; it may merge before the tag.",
+      "evidence_label": "branch `cut/hooks-readme-subagent-sentences`"
     }
   ],
   "proposed": [
