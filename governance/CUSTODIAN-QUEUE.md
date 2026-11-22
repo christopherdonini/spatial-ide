@@ -1,14 +1,13 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `7de32c384a4bb8cf6b96b50e86b7cf4bdfe5e217d319dba5a9776ef6e9c88b58`) at `2026-11-22T06:30:45.363Z`.
+Generated from `PLAN.yaml` (sha256 `076c0ef368c618f591529414f1894c06f402bd449a5207504a74c12992f75885`) at `2026-11-22T07:04:26.213Z`.
 
 ## 1. Next
 
-- **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) (lane `engine`)
+- **large-utf8-and-utf8-view-attribute-columns** — LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327) (lane `engine`)
 
 ## 2. Ready
 
-- **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) (lane `engine`, order null, budget 480 min)
 - **large-utf8-and-utf8-view-attribute-columns** — LargeUtf8 and Utf8View attribute columns: which shipped path can make the engine emit either type, and what the shell does when it meets one (the architect O3 at PR 327) (lane `engine`, order null, budget 60 min)
 - **lod-tier-test-sweep-keeps-lock-until-folder-removed** — The test tier-folder sweep removes a finished run lock file only when that run folder is gone, so a folder it could not remove is tried again by a later sweep (the architect O2 at PR 326; filler entry 19) (lane `engine`, order null, budget 30 min)
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there (lane `kernel-protocol`, order null, budget 60 min)
@@ -57,6 +56,7 @@ Generated from `PLAN.yaml` (sha256 `7de32c384a4bb8cf6b96b50e86b7cf4bdfe5e217d319
 ## 5. In progress
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
+- **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) — evidence: branch `cut/cancel-stamp-order`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 

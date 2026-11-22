@@ -535,3 +535,75 @@ Made before any code. No outcome has been seen. The gate is `state/consults/gate
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — the architect's attempt 2 on Amendment 1: words and pins only
+
+Made before any code. No outcome has been seen. The words are the architect's, from `state/consults/gates/2026-11-22-cancel-requested-stamp-order-form-gate-architect-attempt-2.md`, applied with no re-gate (ADV-2026-11-22-07 item 4). None is the human's wording.
+
+1. Amendment 1 item 3 records ADV-2026-11-22-07 items 1 (b), 2 and 3, not item 1 alone. Its lead now reads: "ADV-2026-11-22-07 items 1 (b), 2 and 3, as ruled."
+2. Amendment 1 item 4's third bullet resolves both pointers to the wrong ruling item. §1's pointer, about the doc comment above `CANCELLATION_REQUESTED`, resolves to ADV-2026-11-22-07 item 3 (Amendment 1 items 2 (c) and 3); §2.9's pointer, about the kernel note's place, resolves to that ruling's items 1 (b) and 2 (Amendment 1 items 2 (b) and 3).
+3. Amendment 1 item 12's second sentence misplaces `before_stamp`, because today's mark comes after the publication. It now reads: "That is the point inside `transition`, before the publication, just before a call with `stamp` true makes its mark (§2.1 step 3; §2.3)."
+4. Amendment 1 item 9's M5 line predicts passes beyond §4's tests. Its last sentence now reads: "T1 to T4, T6, T8, I1 and I2 pass."
+5. Amendment 1 item 5's second pin leaves out the comparison line. It now reads `scripts/plan/verify-quotes.mjs:802-807` @ 16c896558ac9073f132336f4c9cbcff5b31d8514.
+6. Amendment 1 item 16 changes nothing in §7. Its lead now reads: "It adds to §2."
+7. The draft's filing line places the custodian's added sentence at the end of Amendment 1 item 1's lead; it is the lead's second-to-last sentence. Nothing else differs between the draft and Amendment 1 beyond the three changes that line names (read line by line at the architect's attempt 2; the reviewer's byte comparison is the proof).
+8. *The custodian's pins for Amendment 1's line references, at the commits they name, one full path per hash, added below by script.* The spans byte-copied in Amendment 1 items 6 and 14 are sub-line spans of `state/consults/gates/2026-11-22-cancel-requested-stamp-order-form-gate-architect.md` lines 175 and 262 at eb1329edde00318444f589c136b34c550cae159c, and each carries its line's hash.
+   - `engine/src/trace.rs:370-371 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:b37efc210ccaeefde456ed1bde51775ae945328fb31b47ccac9d1b9dc88939fb`
+   - `scripts/plan/verify-quotes.mjs:663-674 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:68564ca31bd1c771672b2e89b22238459af430b684c710acd477ddbd4b9ee073`
+   - `scripts/plan/verify-quotes.mjs:802-806 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:09c5321dbaffc4de97a1beff936352c6cb490867a6b2359b3bdd593a7f9ce4be`
+   - `engine/src/stream.rs:1981-1993 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:1bd56d7e38c21185ee661e4582b7fadefd3826cd183209dc90b0adf87fd69be3`
+   - `engine/src/stream.rs:2652-2658 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:174c16f3653c8886390bab9e5ae326741a7ea0fbc715c10ccb78846baff50a3f`
+   - `engine/src/stream.rs:2636-2639 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:c6855d330ad4711c0c86874a5586ba66fb2b120db930b379b0f95e67f9bebae3`
+   - `kernel/src/publish/mod.rs:1042-1070 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:29fcf1899a3090b89be6903b9ade4d91d16fc2e4b55eeb55347a982f788391ac`
+   - `engine/src/stream.rs:3264-3272 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:44f8e9f1d81a5479175894c1aea25cc5eda6eb5ea1d977cb1cb1b5f893fea0ff`
+   - `kernel/tests/first_batch_factorial.rs:1382-1385 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:daac1262bb7302ffca9e25aef58d1e80d48c1c3d95207a3b852b1815fc75ace9`
+   - `kernel/tests/first_batch_factorial.rs:1517-1520 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:daac1262bb7302ffca9e25aef58d1e80d48c1c3d95207a3b852b1815fc75ace9`
+   - `engine/src/trace.rs:216-218 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:f91dfe9e32b9fcf3878adec5b4a4dc07818b1136029e86b3ce524ee9590698b1`
+   - `kernel/src/skp.rs:353 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:094db9f631da7d01cf4458af89296d6e83ca4ae2eab18d3d90798440fbe77217`
+   - `kernel/src/skp.rs:392 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:094db9f631da7d01cf4458af89296d6e83ca4ae2eab18d3d90798440fbe77217`
+   - `kernel/src/skp.rs:323 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:f8d7f70f39329e80344a7a13288767770cd5659993360af8386059fe17896cd9`
+   - `kernel/src/skp.rs:370 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:f8d7f70f39329e80344a7a13288767770cd5659993360af8386059fe17896cd9`
+   - `kernel/src/lib.rs:745 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:7010cebaec8201d1599880f71c4cbcc6c1a76b4ce3511bd84f61ec8536f46e07`
+   - `kernel/src/lib.rs:747 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:f21145896067eae89418bdc2e99c7bf1a36b38538438592f0e713c95960446df`
+   - `kernel/src/skp.rs:963 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:250fa99f35835a85929c03c378078227577a2d4a04886abe37152728ade1b698`
+   - `kernel/src/skp.rs:958 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:a363b42bb5165c9010434a195514579d415345b10ad677c84e52f07d8bfef915`
+   - `state/consults/gates/2026-11-22-cancel-requested-stamp-order-form-gate-architect.md:175 @ eb1329edde00318444f589c136b34c550cae159c sha256:31e08d166b797b77548a85172ad846aa6d8b3a2372ed7fdbaead79f1fd4a5782`
+   - `engine/src/cancel.rs:137-141 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:17d825686caee568b67d4d4aaf4b4d3fa79e60010accb68693b73a25424bc000`
+   - `engine/src/trace.rs:312-316 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:a6e715174d8ffeb3af79dad5f792fa3785d1f64d9839d54c1ebf0e523141a43a`
+   - `engine/src/trace.rs:149-165 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:f7ea7d72f1988a8fb1568d5533a112be7debe853530b1f9fbdee7ee9160cf04b`
+   - `engine/src/trace.rs:329-339 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:72cb6e20ff3dded4a83ff1581b36eb55cbfe5906eb7f903715df9f89da3b3ed3`
+   - `engine/src/trace.rs:353-357 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:d56cb59025f9ed7d10ecfde77b4d1969351f37e214e45381a3668109340b2d52`
+   - `engine/src/trace.rs:538-552 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:30580d2a0b28584cde05c1dd38f255a2d3b621cd4f95d60f6b953348916386da`
+   - `engine/src/trace.rs:209-211 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:3c8ca014ea839d66aa337a8b43512b0afbad73ff43cff4ce89538e56275a677e`
+   - `engine/README.md:535 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:41f836437120efcc22e26a2cf504a6ec6e5ca415053ec81e11665b8b467b108a`
+   - `engine/README.md:557 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:78160eed9b5b427099da7bd13569a6254abcac441379e2b198573690d45d9669`
+   - `engine/README.md:544 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:5958fed422a3ce8cbbd3db27be414623d5bbc0a135372ae6840eb579aea398b8`
+   - `engine/src/cancel.rs:326-333 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:8b6c8f1839206133029650526f440c5e701ba1f2dd639332bdc297aa9eccb264`
+   - `engine/src/stream.rs:1373-1374 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:5013e24bb026218d8111b7ac19d021888309ffa1a213276bef8975e9bcf41ed2`
+   - `engine/src/stream.rs:799-803 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:7db8de6d6d89f57dbe07b9abdfe0eac74832b6b470f521c7a0df344cea62bc8a`
+   - `engine/tests/slice.rs:878-883 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:e6b8cd16739ab577e180188ec97dcbd226ddbc1267884af56130845d216e32b8`
+   - `state/consults/gates/2026-11-22-cancel-requested-stamp-order-form-gate-architect.md:262 @ eb1329edde00318444f589c136b34c550cae159c sha256:a40858a0fa44911d565bd4fae3f98e9aed9ac04665a42472791aded186b58700`
+   - `engine/src/cancel.rs:194 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:7244a5da652767cb50daf18433ae479888b88b7edf4e53f7ee52b4bac938e048`
+   - `engine/src/cancel.rs:197 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:a88afad7e8ea0c200495243f38712d91b6483e89711d3e66bdebc342a32466c7`
+   - `engine/src/cancel.rs:135 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:98a279bbbac7b3224c31fe03ac1930353e5a8a383cb1ae6fda32fac0477ec9a5`
+   - `engine/src/cancel.rs:137 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:5f4dbc18d0b2de1f52ba803992308846637ebfa67dfecd220ea7f5b8f1ab73f7`
+   - `engine/src/trace.rs:88 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:ca4aedce41edc82d7097afb1299c606270ec8d2b31fa6a6f78dcdef58991afd7`
+   - `engine/src/trace.rs:303-305 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:414978d427b5a0a1d0796b0e36a4c77702fd417db86e4668c443494e247f4a10`
+   - `engine/src/cancel.rs:100-107 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:7ae03b9ccd360d7c611810675ac411a65c1e6fcd19a66f93c9b79916d972b598`
+   - `engine/src/cancel.rs:129-131 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:50574247d30cd385cdd7acd1f12ebfe8f12aafb010c005f7180c1de641a20f53`
+   - `engine/src/cancel.rs:146-151 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:3c4cac4e9a287205c053dd18e690180ce9b3f7836d4a26f2c1b8aac688ec1b0a`
+   - `scripts/plan/verify-quotes.mjs:802-807 @ 16c896558ac9073f132336f4c9cbcff5b31d8514 sha256:90703f3f1e117459d8c61de3dfb18935e5c43ccbe983d936147bb6dff6150256`
+9. `kernel/README.md` joins the Scope as its tenth file, the owner's index only, pointers only: this form's path in the list of kernel halves of pieces filed elsewhere, and the last-verified line. The worker writes it. The line count is taken by `git diff --numstat origin/main...HEAD` over the ten paths at a named commit; the ceiling stays at 800 and an overrun is class 8. §8 item 11 reads the tenth file as in Scope.
+10. Append to Amendment 1 item 15's residual: "`kernel/tests/skp_filter_cancellation.rs` does not carry this risk: its binary holds one test, so once its wrapper is gone no other stream shares its trace."
+11. **Superseded index.**
+   - §2.8's sentence that no deadline value is added: superseded in part by Amendment 1 item 10 (in place of Amendment 1 item 17's "§2.8: added to by item 10").
+   - §2.9's two proposed texts and their clause table: superseded by Amendment 1 item 2.
+   - §4's C4 line: added to by Amendment 1 item 3.
+   - Amendment 1 items 3, 4, 5, 9, 12, 16 and 17: corrected by items 1 to 6 and this item.
+   - Amendment 1's line references: pinned by item 8.
+     - §7's Scope and Amendment 1 item 3's count: added to by item 9.
+     - Amendment 1 item 15's residual: added to by item 10.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T06:30:45.560Z",
-  "plan_hash": "7de32c384a4bb8cf6b96b50e86b7cf4bdfe5e217d319dba5a9776ef6e9c88b58",
+  "generated_at": "2026-11-22T07:04:26.395Z",
+  "plan_hash": "076c0ef368c618f591529414f1894c06f402bd449a5207504a74c12992f75885",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12363,7 +12363,7 @@
       "kind": "task",
       "lane": "engine",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -12371,12 +12371,14 @@
         "minutes": 0
       },
       "gate": "governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/cancel-stamp-order"
+      },
       "budget_minutes": 480,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-22 by the advisor ruling ADV-2026-11-22-01 item 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 1 (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): full form, both gates; prepared and gated now, merged only after the v0.2 tag. The finding at 624eb45c is in the ledger (1122b). The form keeps two questions apart, whether cancellation reached the producer and the order of the two trace stamps; it keeps both trace promises, a repeated cancellation stamps at most once and cancel_for_drop stamps nothing, and both producer-reach checks; a controlled interleaving where feasible; no plain swap of the two lines. If the fix closes the failure both wrappers go; if not, they stay and the piece goes to the advisor. It replaces the cancel test of ADV-2026-11-21-15 item 3 (iii). Worktree C:/dev/wt/cancel-stamp on cut/cancel-stamp-order from 662ea259, build output D:/wt-targets/cancel-stamp; the isolation check passed on 2026-11-22. The form is being drafted by lead-data.",
+      "summary": "IN PROGRESS 2026-11-22: the form gate closed, the architect attempt 2 PASS WITH NOTES and the form Amendment 2, with kernel/README.md the tenth Scope file (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-09-the-cancel-forms-d-10-points-kernel-readme-a-tenth-file-and-the-residual-names-the-second-binary.md); the build runs on cut/cancel-stamp-order from main after this record, merged only after the v0.2 tag. Before: PLACED 2026-11-22 by the advisor ruling ADV-2026-11-22-01 item 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 1 (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): full form, both gates; prepared and gated now, merged only after the v0.2 tag. The finding at 624eb45c is in the ledger (1122b). The form keeps two questions apart, whether cancellation reached the producer and the order of the two trace stamps; it keeps both trace promises, a repeated cancellation stamps at most once and cancel_for_drop stamps nothing, and both producer-reach checks; a controlled interleaving where feasible; no plain swap of the two lines. If the fix closes the failure both wrappers go; if not, they stay and the piece goes to the advisor. It replaces the cancel test of ADV-2026-11-21-15 item 3 (iii). Worktree C:/dev/wt/cancel-stamp on cut/cancel-stamp-order from 662ea259, build output D:/wt-targets/cancel-stamp; the isolation check passed on 2026-11-22. The form is being drafted by lead-data.",
       "dates": {
         "opened": "2026-11-22",
         "done": null
