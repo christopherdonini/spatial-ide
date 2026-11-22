@@ -7669,3 +7669,20 @@ nodes:
     entries: []
     summary: "PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8."
     dates: {opened: 2026-11-22, done: null}
+  - id: verify-cites-shortened-target-list
+    title: "verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3)"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: ready
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: governance/forms/scripts/VERIFY-CITES-SHORTENED-TARGET-LIST-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4)."
+    dates: {opened: 2026-11-22, done: null}

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `076c0ef368c618f591529414f1894c06f402bd449a5207504a74c12992f75885`) at `2026-11-22T10:02:26.220Z`.
+Generated from `PLAN.yaml` (sha256 `60e1cf0b079cb3472559b6603b5632c709c26054bdda6bcdb76e378632a7caa7`) at `2026-11-22T10:35:20.999Z`.
 
 ## 1. Next
 
@@ -20,6 +20,7 @@ Generated from `PLAN.yaml` (sha256 `076c0ef368c618f591529414f1894c06f402bd449a52
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
+- **verify-cites-shortened-target-list** — verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3) (lane `governance`, order null, budget 120 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
 - **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) (lane `platform`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)

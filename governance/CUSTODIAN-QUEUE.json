@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T10:02:26.220Z",
-  "plan_hash": "076c0ef368c618f591529414f1894c06f402bd449a5207504a74c12992f75885",
+  "generated_at": "2026-11-22T10:35:20.999Z",
+  "plan_hash": "60e1cf0b079cb3472559b6603b5632c709c26054bdda6bcdb76e378632a7caa7",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -249,6 +249,25 @@
         "done": null
       },
       "summary": "PLACED 2026-11-11 by the human's message of 2026-11-11 (17:25Z) (state/directives/2026-11-11-adr-035-and-adr-029-notes-in-the-humans-words-table-as-consult-s3-waiting-on-you-open-questions.md), item 3: a small governance piece, S3, five-line, after what is queued. Until it lands, the custodian's closing message stays the full list of what waits on the human. NEXT: its five-line form, after the pieces queued at 2026-11-11."
+    },
+    {
+      "id": "verify-cites-shortened-target-list",
+      "title": "verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3)",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4)."
     },
     {
       "id": "macos-normalization-roots-uncanonicalized",
