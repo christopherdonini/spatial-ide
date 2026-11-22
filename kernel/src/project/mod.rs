@@ -1600,6 +1600,11 @@ mod tests {
     /// freed its lock. Each case reopens; since `open_project` runs `release_ended` before it takes
     /// the lock, that reopen shows only that the previous case closed the dataset, and (iv) is what
     /// shows the lock free.
+    ///
+    /// RECORDED MUTATION M1: the guard's `Drop` body emptied. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at S1's (ii), "S1: (ii) the catalog holds the dataset".
+    /// RECORDED MUTATION M3: the guard calls only `release_ended`, without the close. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at S1's (ii), "S1: (ii) the catalog holds the dataset".
+    /// RECORDED MUTATION M4: the guard closes only, without `release_ended`. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at S1's (iii), "S1: (iii) `saved` holds its entry".
+    /// RECORDED MUTATION M5, an observation and not a failing test: the `Reopen::Opened` arm calls `opened_of(*o)` in place of `self.reply_of(*o)`. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: no test fails, since this test and K-D2 call `reply_of` directly; `cargo build --locked -p spatial-kernel --lib` warns "method `reply_of` is never used", which the unmutated build does not warn, and every test of `cargo test --locked -p spatial-kernel` passed under the mutation.
     #[test]
     fn a_panic_while_the_opened_reply_is_built_frees_the_lock_and_closes_the_dataset() {
         let rig = rig("k-d1");
@@ -1647,6 +1652,8 @@ mod tests {
 
     /// K-D2 (the same form's §4, S4 of §3): a reply built without a panic keeps the dataset in
     /// the catalog and the lock held.
+    ///
+    /// RECORDED MUTATION M2: the guard's `thread::panicking()` condition dropped. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at its catalog assertion, "the catalog does not hold the dataset".
     #[test]
     fn a_reply_built_without_a_panic_keeps_the_entry_and_the_lock() {
         let rig = rig("k-d2");
