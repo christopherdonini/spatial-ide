@@ -146,7 +146,7 @@ export function isGuiActionEntry(entry: ConsoleEntry): entry is GuiActionEntry {
  *  - the label's two drop counts: `consoleLabelText` in consoleViewModel.ts, called by ConsolePanel in
  *    ConsolePanel.tsx;
  *  - a group of entries closing when its first entry is dropped, and two runs joining when the entries
- *    between them are dropped: `ConsoleGroupRow` in ConsolePanel.tsx, keyed by its first entry's `seq`
+ *    between them are dropped and both runs are still kept: `ConsoleGroupRow` in ConsolePanel.tsx, keyed by its first entry's `seq`
  *    (the group key), over `groupConsecutiveEntries` in consoleViewModel.ts;
  *  - the present clauses' symbols, unchanged: `consoleRecorder.record` in skp/client.ts (every request is
  *    an entry); the `viewportQuery` call in streaming/tileViewportStreamManager.ts (one request for each
@@ -157,9 +157,10 @@ export function isGuiActionEntry(entry: ConsoleEntry): entry is GuiActionEntry {
  * The figure 110 is the count of tile terminals after each first look in the S9 session logs of
  * command-bar.mjs and project.mjs on filter-zoned.parquet, as the architect's diagnosis counts them; it
  * is not a bound. Each terminal is one session-log write and follows one request, so the entries were at
- * least 220: the advisor's reading of the code, not a count from a run. The figure item 67 gives for what
- * one first look adds comes from MEASURE' in e2e/console.mjs; the commit that sets item 67's words names
- * that report's path and commit. Not examined: how many entries a cancelled tile request adds.
+ * least 220: the advisor's reading of the code at e374eb711caaeae4dd898e8ddb49a35d4d80c619, not a count
+ * from a run. The figure item 67 gives for what one first look adds comes from MEASURE' in
+ * e2e/console.mjs; item 67's comment in KNOWN-LIMITATIONS.md names that report's path and commit.
+ * Not examined: how many entries a cancelled tile request adds.
  */
 
 /**

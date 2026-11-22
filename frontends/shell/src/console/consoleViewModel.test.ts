@@ -162,6 +162,9 @@ describe("consoleLabelText (known limitation 67: the label shows both drop count
     );
   });
 
+});
+
+describe("groupConsecutiveEntries after a drop (known limitation 67)", () => {
   it("VL3: two runs of one other-kind entry whose stream separators are dropped show as one group", () => {
     const recorder = new ConsoleRecorder();
     recorder.recordGuiAction("tool.set"); // A

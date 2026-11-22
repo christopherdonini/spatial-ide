@@ -36,8 +36,9 @@
 // cleanly, already used by filter.mjs/filter-panel.mjs/publish.mjs) -- regenerate: `cargo test -p
 // spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored
 // --nocapture`. Reused for every step below: NEXT-CUT.md's "one-click-two-commands" truth (TWOCMD')
-// is about ONE openPath call producing two class-A entries, so this suite only ever opens a dataset
-// once.
+// is about ONE openPath call producing two class-A entries, so the steps before LABEL' share one open.
+// LABEL' opens the file again; the opt-in MEASURE' opens it up to three times to warm up, then it and
+// `100k-happy-path.parquet` once per run.
 //
 // `waitForMountReady`/`withTimeout`/`sleep` are duplicated from regression.mjs/admission-remediation.mjs
 // rather than imported -- this workspace's own established sibling-file convention.
@@ -737,7 +738,7 @@ async function stepGroup(page, consoleHandle) {
   );
   const { items, label } = found.last;
   if (label.count === null || baseline.count === null) {
-    throw new Error(`GROUP': capacity: the Console's label did not parse (baseline ${JSON.stringify(baseline.text)}; now ${JSON.stringify(label.text)})`);
+    throw new Error(`GROUP': label: the Console's label did not parse (baseline ${JSON.stringify(baseline.text)}; now ${JSON.stringify(label.text)})`);
   }
   // No row GROUP' reads that was recorded since its baseline can have been evicted: at most one ring's M entries came
   // since (each ring still holds every entry of its own kind recorded since), or each kind's drops since the baseline
@@ -747,7 +748,7 @@ async function stepGroup(page, consoleHandle) {
   if (R > MAX_CONSOLE_ENTRIES && !(dropO <= room && dropS <= room)) {
     throw new Error(`GROUP': capacity: ${R} entries were recorded since the baseline (label total ${label.total} - ${baseline.total}), more than each ring's ${MAX_CONSOLE_ENTRIES}, and the drops since then, ${dropS} of the stream kind and ${dropO} of the other, are not both within the ${room} each ring held at least`);
   }
-  const capacityBranch = R <= MAX_CONSOLE_ENTRIES ? `R=${R} <= ${MAX_CONSOLE_ENTRIES}` : `R=${R} > ${MAX_CONSOLE_ENTRIES}, but the drops since the baseline, ${dropS} of the stream kind and ${dropO} of the other, are each <= ${room}`;
+  const capacityBranch = R <= MAX_CONSOLE_ENTRIES ? `R=${R} <= ${MAX_CONSOLE_ENTRIES}; the drops since the baseline, ${dropS} of the stream kind and ${dropO} of the other` : `R=${R} > ${MAX_CONSOLE_ENTRIES}, but the drops since the baseline, ${dropS} of the stream kind and ${dropO} of the other, are each <= ${room}`;
   const w = styleWindow(items);
   const rowsIn = items.flatMap((it) => it.rows).filter((r) => r.i >= w.lo && r.i <= w.hi);
   if (!found.ok) {
@@ -847,7 +848,7 @@ async function stepGroup(page, consoleHandle) {
  * `LABEL'` (known limitation 67): the label's drop form, read once for real. Opens `filter-zoned.parquet` again, settles
  * (quiet 3000 ms, bound 45 s), and asserts that the label parses, that D = S + O and that S > 0: a first look adds more
  * data requests, cancels and log lines than the stream ring holds, so the label must show them dropped. Not mutated:
- * under the swap of the two counts (the form's M-11) it passes whenever the other ring has also dropped entries by now.
+ * under the swap of the two counts (M-11 of the Console form, governance/forms/frontends/CONSOLE-STREAM-LANE-PREREGISTRATION.md) it passes whenever the other ring has also dropped entries by now.
  */
 async function stepLabel(page, consoleHandle) {
   const outcome = await callOpenPath(page, FIXTURE_SMALL);
@@ -860,7 +861,7 @@ async function stepLabel(page, consoleHandle) {
 }
 
 // ---------------------------------------------------------------------------------------
-// MEASURE' (known limitation 67; the form's section 6): what one first look adds to each ring, by dataset and window.
+// MEASURE' (known limitation 67; section 6 of the Console form, governance/forms/frontends/CONSOLE-STREAM-LANE-PREREGISTRATION.md, which the form means below): what one first look adds to each ring, by dataset and window.
 // Opt-in (CONSOLE_MEASURE=1) and run after the human's sitting; the figures are lower bounds, not performance claims.
 // ---------------------------------------------------------------------------------------
 
@@ -932,7 +933,7 @@ async function measureReadAfterP1(page, p0, p1, a1) {
     if (r.o2 - o0 > n0 - M) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${r.o2 - o0} entries of the other kind were dropped after P0, more than the ${n0 - M} the other ring held then (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
     if (r.discard || r.clicked > 0) continue;
     const names = r.rows.map(otherKindName).filter((n) => n !== null);
-    if (names.length !== r.a) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${r.o2 - o0} entries of the other kind were dropped after P0, more than the ${n0 - M} the other ring held then, or their count ${names.length} is not ${r.a} (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
+    if (names.length !== r.a) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${names.length} entries of the other kind are among the newest ${r.L}, not the ${r.a} recorded after P0 (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
     const count = (n) => names.filter((x) => x === n).length, toggles = count("toggle");
     if (count("close_dataset") > 1 || count("binding_data_plane_attach") > 1 || count("close_dataset") + count("binding_data_plane_attach") + toggles !== names.length || toggles > r.a - a1) {
       throw new Error(`MEASURE': an entry of the other kind was recorded after P0 that the open does not explain: ${JSON.stringify(names)} (P0: ${JSON.stringify(p0.text)}; P1: ${JSON.stringify(p1.text)}; final: ${JSON.stringify(r.text)})`);
@@ -963,6 +964,7 @@ async function measureRun(page, consoleHandle, dataset, [w, h], run) {
   const p1 = parseConsoleLabel(await labelAfterFrames(page));
   if (!settle.settled) return { ...run, settled: false, p0: p0.text, p1: p1.text };
   if (p1.count === null) throw new Error(`MEASURE': the Console's label could not be read at P1 (${JSON.stringify(p1.text)})`);
+  if (!(p1.total - p0.total > 0)) throw new Error(`MEASURE': a settled run added no entry between P0 and P1 (P0: ${JSON.stringify(p0.text)}; P1: ${JSON.stringify(p1.text)})`);
   const streamAdded = p1.droppedS - p0.droppedS, otherAdded = p1.total - p0.total - streamAdded;
   const after = await measureReadAfterP1(page, p0, p1, otherAdded);
   await setConsoleExpanded(page, false);
