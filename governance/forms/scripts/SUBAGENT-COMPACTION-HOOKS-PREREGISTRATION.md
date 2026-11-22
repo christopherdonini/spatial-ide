@@ -23,3 +23,25 @@ That the installed harness hands these hooks agent_id when a subagent compacts. 
 ### Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — 2026-11-22 — the gate: PASS WITH NOTES; D1, N1 and N4 closed by the reviewer's words; D2 here; D3 to the human as a draft
+
+*Written by the custodian after the gate. The sentence of item 3 is the reviewer's words for its finding D2, applied as given and nothing else with them. References only otherwise.*
+
+1. **The branch.** The worktree, made from 662ea259 (§A), was fast-forwarded to eb47ee33, the main commit that holds this form, before the worker started (the reviewer read the reflog: its report, Preflight). Its commits: T 4407e33f9e6803a96f60461674d3a72730f2742e, S f77c3fa9b0b553e62b192fe5424181b4e26db750, M 66fb4c2b51e540a5aec73529ee65d940959cd95d, and the correction C fdd1f545f0334fb6fbde9ede82a5da0cdd74219c. The merged diff by §21c's counting, three-dot from eb47ee33 at C: 92, 21 and 1 added lines and none removed over the three Scope files, 114 in all, within 140.
+
+2. **The gate.** The reviewer read the branch at 66fb4c2b and ended PASS WITH NOTES; its report is at state/consults/gates/2026-11-22-subagent-compaction-hooks-gate-reviewer.md. Its D1 (the header comment of precompact-flush.mjs), N1 (the newline escape in the subagent branch's append) and N4 (the commit the two mutation comments name) are closed by C with the reviewer's words: C adds four lines and removes four, and the custodian's check by script found each added line equal to the report's words or, for N1, to the escape form the file's own appendRecord uses, and no other line changed. At C the file's 78 tests and CI's whole command of 615 tests pass (the correction worker's runs).
+
+3. **D2, the Tests+mutation line's claim that each new test was shown red before the script change.** Tests (1) and (3) were shown red at 4407e33f for the intended reason and green at 66fb4c2b; tests (2) and (4) pin the parent behaviour and are green at both.
+
+4. **D3, scripts/hooks/README.md.** Its record paragraph and its SessionStart section do not name the subagent branch. The README is outside this form's Scope, and the human's item 2 (a) sends anything beyond the two scripts and their tests to the human as a draft; the reviewer's words for it go to the advisor as that draft with the merge request. Nothing in this piece changes the README.
+
+5. **The version, and live unverified.** The session's transcript records change from 2.1.314 to 2.1.330 at 2026-11-22T02:05:46.587Z, before the human's message (received 2026-11-22T02:58:16.223Z), and carry no later change; §A's reading and the reviewer's agree. No real subagent compaction has been seen: live unverified (§B).
+
+6. **CI.** PR 349 at C: six runs, each success (Governance CI 44988716081 and 44988712665, Exposure scan 44988716083, DCO sign-off 44988716065, Ported notices 44988716140 and 44988712678), read at 2026-11-22T05:26:10Z.
+
+7. **Next.** The pull request out of draft, then the merge request to the advisor, naming this amendment. The piece may merge before the v0.2 tag (ADV-2026-11-22-01 item 4).
+
+Read the last amendment first.
+
+Nothing above is edited.
