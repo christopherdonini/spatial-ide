@@ -88,16 +88,6 @@ async fn connect(dp: &RunningDataPlane) -> Client {
         .0
 }
 
-/// A known instrumentation-ordering race in `engine::cancel::CancelToken::cancel_inner`, not a
-/// failure of cancellation reach — the exact same race `skp_admission.rs`'s own
-/// `cancel_reaches_the_producer_directly_and_is_observed_on_its_own_clock` documents and retries
-/// around; this is the same underlying code path (now with a `WHERE` clause attached), so it is
-/// retried the same way here.
-struct OrderingRaceObserved {
-    requested_nanos: u64,
-    observed_nanos: u64,
-}
-
 /// Cancellation property (brief evidence item F), for a **filtered** scan whose predicate matches
 /// only very late in the physical file (`id` correlates with scan order — the fixture writer
 /// assigns ids in ascending physical row order — so `id > <near max>` is DuckDB's own version of
@@ -119,31 +109,12 @@ struct OrderingRaceObserved {
 /// only the three pre-existing checks (before the loop, before `stream_arrow`, and inside the row
 /// loop) did, none of which this scenario ever reaches. Fixed by marking on both paths, conditional
 /// on `cancel.is_cancelled()`, mirroring the pattern the three existing sites already use.
+///
+/// The presence checks and the stamp-order assertion are separate: `CancelToken::cancel_inner`
+/// stamps `CANCELLATION_REQUESTED` before it publishes the flag a producer loads, so the producer's
+/// `PRODUCER_CANCELLED` cannot precede it, and equal offsets pass.
 #[tokio::test(flavor = "multi_thread")]
 async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan() {
-    const ATTEMPTS: u32 = 5;
-    for attempt in 1..=ATTEMPTS {
-        match cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once().await {
-            Ok(()) => return,
-            Err(race) if attempt < ATTEMPTS => {
-                eprintln!(
-                    "attempt {attempt}/{ATTEMPTS}: known cancel_requested/cancel_observed \
-                     instrumentation race (engine/src/cancel.rs) hit -- requested {} ns, observed \
-                     {} ns; retrying",
-                    race.requested_nanos, race.observed_nanos
-                );
-            }
-            Err(race) => panic!(
-                "known instrumentation race reproduced on every one of {ATTEMPTS} attempts \
-                 (last: requested {} ns, observed {} ns)",
-                race.requested_nanos, race.observed_nanos
-            ),
-        }
-    }
-}
-
-async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
-) -> Result<(), OrderingRaceObserved> {
     const FEATURES: usize = 2_000_000;
     let path = fixture("late-match", FEATURES);
     let handle = dataset_handle();
@@ -272,11 +243,10 @@ async fn cancel_reaches_the_producer_during_a_late_matching_filtered_scan_once(
         "cancel_observed must be stamped -- the producer must notice the interrupt and stop, even \
          mid-scan on a predicate that has not matched anything yet (ADR-018 item 1)",
     );
-    if observed.offset_nanos < requested.offset_nanos {
-        return Err(OrderingRaceObserved {
-            requested_nanos: requested.offset_nanos,
-            observed_nanos: observed.offset_nanos,
-        });
-    }
-    Ok(())
+    assert!(
+        observed.offset_nanos >= requested.offset_nanos,
+        "cancel_observed ({} ns) was stamped before cancel_requested ({} ns)",
+        observed.offset_nanos,
+        requested.offset_nanos
+    );
 }
