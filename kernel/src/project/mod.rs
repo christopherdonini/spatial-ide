@@ -910,8 +910,14 @@ impl Projects {
             Reopen::NotFound { file_name } => OpenProjectResponse::NotFound(ReopenNotFound {
                 file_name: file_name.map(|n| bounded(&n)),
             }),
-            Reopen::Opened(o) => OpenProjectResponse::Opened(Box::new(opened_of(*o))),
+            Reopen::Opened(o) => OpenProjectResponse::Opened(Box::new(self.reply_of(*o))),
         })
+    }
+
+    /// The `opened` reply of a reopen, built by [`opened_of`]. Its one caller is
+    /// [`Projects::open_project_command`]'s `Reopen::Opened` arm.
+    fn reply_of(&self, o: Opened) -> OpenedProject {
+        opened_of(o)
     }
 }
 
@@ -1451,5 +1457,174 @@ mod tests {
             SaveFailure::FolderRequired.to_string(),
             "no folder was given, and this open of the dataset has no project to save to"
         );
+    }
+
+    /// K-D1's and K-D2's watch arm: none is armed, as `crate::skp`'s own `NoWatchArm`, which is
+    /// private to that module, has it.
+    struct ChecksOnly;
+
+    impl spatial_engine::SourceWatchArm for ChecksOnly {
+        fn arm(&self, _: &Path, _: spatial_engine::WatchSink) -> spatial_engine::ArmOutcome {
+            spatial_engine::ArmOutcome::ChecksOnly {
+                reason: "test fixture: no watch armed".to_string(),
+            }
+        }
+    }
+
+    /// A real host, recorder and [`Projects`], with F1 saved into `folder` and closed, and the
+    /// save's lock released, as `kernel/tests/project_reopen_skp.rs`'s `Rig::saved` has it.
+    struct Rig {
+        folder: PathBuf,
+        machine: PathBuf,
+        host: Arc<crate::skp::SkpHost>,
+        projects: Projects,
+    }
+
+    /// The rig, under a temp folder named for `test` alone and removed first. F1 (500 polygons,
+    /// declared LV95, a `zone` column) is written per run and not hash-verified.
+    fn rig(test: &str) -> Rig {
+        let dir = std::env::temp_dir()
+            .join("spatial-ide-project-mod-tests")
+            .join(test);
+        let _ = std::fs::remove_dir_all(&dir);
+        let (folder, machine) = (dir.join("project"), dir.join("machine"));
+        std::fs::create_dir_all(&folder).expect("the project folder");
+        let host = Arc::new(crate::skp::SkpHost::new(
+            Arc::new(crate::Catalog::new()),
+            crate::skp::StreamRegistry::new(),
+            Arc::new(ChecksOnly),
+            crate::skp::session_end_channel().0,
+        ));
+        let recorder = Arc::new(StepRecorder::new(dir.join("sessions"), host.clone()));
+        let projects = Projects::new(machine.clone(), recorder);
+
+        let data = dir.join("outside").join("parcels.parquet");
+        std::fs::create_dir_all(dir.join("outside")).expect("the data folder");
+        let spec = spatial_engine::fixture::FixtureSpec {
+            features: 500,
+            avg_vertices: 12,
+            seed: 1,
+            attributes: spatial_engine::fixture::AttributeMode::CategoricalZone,
+            ..Default::default()
+        };
+        spatial_engine::fixture::write_geoparquet(&data, &spec).expect("F1");
+        let open = OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: data.display().to_string(),
+            cancel_key: "k".to_string(),
+            crs_assertion: None,
+            identity: None,
+        };
+        let handle = host.open_dataset(open).expect("open").dataset;
+        let style = r##"{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#4285f4"},"fill_opacity":{"literal":0.35},"outline_color":{"literal":"#000000"},"outline_width":{"literal":1.5}}}"##;
+        let wire = serde_json::json!({
+            "skp": SKP_VERSION, "dataset": handle.as_str(),
+            "folder": folder.display().to_string(),
+            "workspace": {
+                "filter": null, "clauses": [],
+                "style": serde_json::from_str::<serde_json::Value>(style).expect("JSON"),
+                "view": {
+                    "centre": [HexF64(2_600_000.5).to_hex(), HexF64(1_200_000.25).to_hex()],
+                    "zoom": HexF64(-4.5).to_hex()
+                }
+            }
+        });
+        let req: SaveProjectRequest = serde_json::from_value(wire).expect("the save's request");
+        projects.save_project(req).expect("saved");
+        let (skp, dataset) = (SKP_VERSION.to_string(), handle);
+        host.close_dataset(CloseDatasetRequest { skp, dataset })
+            .expect("closed");
+        projects.release_ended();
+        Rig {
+            folder,
+            machine,
+            host,
+            projects,
+        }
+    }
+
+    impl Rig {
+        /// One reopen of the project folder: what `open_project_command`'s `Reopen::Opened` arm
+        /// receives.
+        fn reopened(&self) -> Opened {
+            match self.projects.open_project(&self.folder, "k", None, None) {
+                Ok(Reopen::Opened(o)) => *o,
+                other => panic!("the reopen did not open: {other:?}"),
+            }
+        }
+
+        /// Whether `saved` holds an entry for `handle`.
+        fn kept(&self, handle: &DatasetHandle) -> bool {
+            let saved = self.projects.saved.lock();
+            let saved = saved.unwrap_or_else(|e| e.into_inner());
+            saved.iter().any(|s| s.dataset == handle.as_str())
+        }
+    }
+
+    /// K-D1 (`governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md`
+    /// §4, S1 to S3 of §3, in order on one rig): a panic at sites 3, 4 and 1 of `opened_of`,
+    /// caught as it leaves [`Projects::reply_of`], has closed the dataset, dropped its entry and
+    /// freed its lock. Each case reopens; since `open_project` runs `release_ended` before it takes
+    /// the lock, that reopen shows only that the previous case closed the dataset, and (iv) is what
+    /// shows the lock free.
+    #[test]
+    fn a_panic_while_the_opened_reply_is_built_frees_the_lock_and_closes_the_dataset() {
+        let rig = rig("k-d1");
+        let differs = |observed, admission| {
+            Some(RefCheck::Differs {
+                observed,
+                admission,
+            })
+        };
+        let (word, none) = (vec!["not-a-wire-word"], Vec::new);
+        let cases = [
+            (
+                "S1",
+                differs(word.clone(), none()),
+                "an observation component the wire has no word for",
+            ),
+            (
+                "S2",
+                differs(none(), word),
+                "an admission claim the wire has no word for",
+            ),
+            ("S3", None, "a style the reader accepted is canonical"),
+        ];
+        for (case, check, message) in cases {
+            let mut o = rig.reopened();
+            match check {
+                Some(check) => o.check = check,
+                None => o.workspace.style.fill_opacity = Value::Literal(f64::NAN),
+            }
+            let (project, handle) = (o.project.clone(), o.dataset.clone());
+            let reply = || rig.projects.reply_of(o);
+            let Err(payload) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(reply)) else {
+                panic!("{case}: (i) the reply was built without a panic");
+            };
+            let text = payload.downcast_ref::<String>().map_or("", String::as_str);
+            assert!(text.contains(message), "{case}: (i) the payload: {text}");
+            let in_catalog = rig.host.catalog().get(handle.as_str()).is_some();
+            assert!(!in_catalog, "{case}: (ii) the catalog holds the dataset");
+            assert!(!rig.kept(&handle), "{case}: (iii) `saved` holds its entry");
+            let probe = store::ProjectLock::try_lock(&rig.machine, &project);
+            assert!(probe.is_ok(), "{case}: (iv) the lock is held: {probe:?}");
+            drop(probe);
+        }
+    }
+
+    /// K-D2 (the same form's §4, S4 of §3): a reply built without a panic keeps the dataset in
+    /// the catalog and the lock held.
+    #[test]
+    fn a_reply_built_without_a_panic_keeps_the_entry_and_the_lock() {
+        let rig = rig("k-d2");
+        let o = rig.reopened();
+        let (project, handle) = (o.project.clone(), o.dataset.clone());
+        let reply = rig.projects.reply_of(o);
+        assert_eq!(reply.dataset, handle, "the reply's dataset");
+        let in_catalog = rig.host.catalog().get(handle.as_str()).is_some();
+        assert!(in_catalog, "the catalog does not hold the dataset");
+        let probe = store::ProjectLock::try_lock(&rig.machine, &project);
+        let held = matches!(probe, Err(LockRefused::Held));
+        assert!(held, "the lock is not held: {probe:?}");
     }
 }
