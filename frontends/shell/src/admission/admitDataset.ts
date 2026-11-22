@@ -4,7 +4,7 @@
 import { logSessionEvent } from "../diagnostics/log";
 import { traceDescribeBounds } from "../diagnostics/renderTrace";
 import { begin, end } from "../diagnostics/watchdog";
-import { describe as describeDataset, openDataset, SkpCallError } from "../skp/client";
+import { closeDataset, describe as describeDataset, openDataset, SkpCallError } from "../skp/client";
 import type { Reopened } from "../project/openProject";
 import type { CrsAssertion, DescribeResponse, IdentityDeclaration, ReopenAnswer } from "../skp/types";
 import { formatRefusal, FormattedRefusal } from "./formatRefusal";
@@ -58,7 +58,7 @@ export async function admitDataset(
     end("open_dataset");
 
     begin("describe");
-    const describeResult = await describeDataset(dataset);
+    const describeResult = await describeOpened(dataset);
     end("describe");
     traceDescribeBounds(dataset, describeResult.extent);
 
@@ -70,6 +70,34 @@ export async function admitDataset(
       logSessionEvent("admission-refused", `${e.skpError.code}: ${e.skpError.message}`);
       return { kind: "refused", refusal: formatRefusal(e.skpError) };
     }
+    throw e;
+  }
+}
+
+/**
+ * How long a `describe` that failed after a handle was returned waits for that handle's close before its error goes on. It caps how long the
+ * error waits. It is under the watchdog's `WATCHDOG_PHASE_TIMEOUT_MS` (5_000 ms, `diagnostics/watchdog.ts`), so the close alone cannot hold the
+ * `describe` phase past it. It is declared, not measured.
+ */
+export const DESCRIBE_FAILED_CLOSE_WAIT_MS = 2_000;
+
+/**
+ * `describe` on a handle that `open_dataset` or `open_project` has just returned (`admitDataset`, `project/openProject.ts`'s `admitProject`).
+ * On any rejection it sends `close_dataset` for that handle, waits until the close settles or `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed since
+ * it was sent, whichever is first, clears its timer, and rejects with the same error it caught. The close's reply and any rejection of it are
+ * dropped, whenever they come; after the bound the close is left running.
+ */
+export async function describeOpened(dataset: string): Promise<DescribeResponse> {
+  try {
+    return await describeDataset(dataset);
+  } catch (e) {
+    const closed = closeDataset(dataset).then(() => {}, () => {});
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const deadline = new Promise<void>((resolve) => {
+      timer = setTimeout(resolve, DESCRIBE_FAILED_CLOSE_WAIT_MS);
+    });
+    await Promise.race([closed, deadline]);
+    clearTimeout(timer);
     throw e;
   }
 }

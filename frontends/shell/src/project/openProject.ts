@@ -15,10 +15,10 @@
  * - **One log line per refusal** (item 5 (l)), the code and the bounded message, beside `admitDataset`'s `admission-refused` line.
  */
 
-import type { AdmissionOutcome, AdmitOptions } from "../admission/admitDataset";
+import { describeOpened, type AdmissionOutcome, type AdmitOptions } from "../admission/admitDataset";
 import { fieldValue, formatRefusal, type FormattedRefusal } from "../admission/formatRefusal";
 import { logSessionEvent } from "../diagnostics/log";
-import { describe as describeDataset, openProject, SkpCallError } from "../skp/client";
+import { openProject, SkpCallError } from "../skp/client";
 import { decodeHexF64 } from "../skp/codec";
 import type { LineageRefusal, ProjectWorkspace, ReopenCheck, ReopenLineage, ReopenView } from "../skp/types";
 import { DEFAULT_STYLE_STATE, readStyleDocument, type StyleState } from "../style/document";
@@ -67,7 +67,7 @@ export async function admitProject(folder: string, cancelKey: string, options: A
     if ("question" in reply) return { kind: "question" };
     if ("not_found" in reply) return { kind: "not_found", fileName: reply.not_found.file_name === null ? null : shownText(reply.not_found.file_name) };
     const { project, dataset, session, workspace, view, check, lineage } = reply.opened;
-    const describe = await describeDataset(dataset);
+    const describe = await describeOpened(dataset);
     return { kind: "admitted", admitted: { dataset, describe, session }, reopened: { project, workspace, view, check, lineage, relinked: relink !== null } };
   } catch (e) {
     if (!(e instanceof SkpCallError)) throw e;
