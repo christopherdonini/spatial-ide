@@ -55,6 +55,35 @@ struct Inner {
     /// Set for exactly the duration of one `execute_guarded` closure. Read by the re-interrupter
     /// thread and by the `is_executing` instrument accessor.
     in_execute: AtomicBool,
+    /// The test build's seams in `cancel_inner` (form §2.3). Absent from the shipped build.
+    #[cfg(test)]
+    seams: Seams,
+}
+
+/// One point in `cancel_inner` where a test can hold, observe or panic. Test build only.
+#[cfg(test)]
+#[derive(Clone, Copy)]
+pub(crate) enum Seam {
+    /// `transition.try_lock()` fails before the call takes the lock.
+    OnContended,
+    /// In the stamping step, whether or not the call stamps, before the mark.
+    BeforeStamp,
+    /// Right after the mark.
+    OnStamp,
+    /// Right after the flag is published.
+    AfterPublish,
+}
+
+/// A seam's action. It runs on the first call that reaches its seam and passes every later call.
+#[cfg(test)]
+#[derive(Default)]
+struct Seams {
+    on_contended: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    before_stamp: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    on_stamp: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    after_publish: Mutex<Option<Box<dyn FnOnce() + Send>>>,
+    /// How many times this token's own stamp decision reached the mark.
+    stamps: std::sync::atomic::AtomicUsize,
 }
 
 /// Clears `Inner::in_execute` when dropped, so an unwind out of the guarded closure cannot leave the
@@ -131,8 +160,18 @@ impl CancelToken {
     /// interval, and `Trace::first` would pick whichever was pushed first rather than the earliest.
     fn cancel_inner(&self, stamp: bool) {
         let already = self.inner.cancelled.swap(true, Ordering::SeqCst);
+        #[cfg(test)]
+        if !already {
+            self.fire(Seam::AfterPublish);
+            self.fire(Seam::BeforeStamp);
+        }
         if stamp && !already {
             crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
+            #[cfg(test)]
+            {
+                self.inner.seams.stamps.fetch_add(1, Ordering::SeqCst);
+                self.fire(Seam::OnStamp);
+            }
         }
         if let Some(h) = self
             .inner
@@ -178,6 +217,46 @@ impl CancelToken {
 
     pub fn is_cancelled(&self) -> bool {
         self.inner.cancelled.load(Ordering::SeqCst)
+    }
+
+    /// Test build only: set this token's action for one seam of `cancel_inner`.
+    #[cfg(test)]
+    pub(crate) fn set_seam(&self, seam: Seam, action: impl FnOnce() + Send + 'static) {
+        *self
+            .seam_slot(seam)
+            .lock()
+            .unwrap_or_else(|e| e.into_inner()) = Some(Box::new(action));
+    }
+
+    /// Test build only: how many times this token's own stamp decision reached the mark.
+    #[cfg(test)]
+    pub(crate) fn stamp_count(&self) -> usize {
+        self.inner.seams.stamps.load(Ordering::SeqCst)
+    }
+
+    #[cfg(test)]
+    fn seam_slot(&self, seam: Seam) -> &Mutex<Option<Box<dyn FnOnce() + Send>>> {
+        let s = &self.inner.seams;
+        match seam {
+            Seam::OnContended => &s.on_contended,
+            Seam::BeforeStamp => &s.before_stamp,
+            Seam::OnStamp => &s.on_stamp,
+            Seam::AfterPublish => &s.after_publish,
+        }
+    }
+
+    /// Test build only. Takes the action out before it runs, so it runs once and never under the
+    /// slot's own mutex.
+    #[cfg(test)]
+    fn fire(&self, seam: Seam) {
+        let action = self
+            .seam_slot(seam)
+            .lock()
+            .unwrap_or_else(|e| e.into_inner())
+            .take();
+        if let Some(action) = action {
+            action();
+        }
     }
 
     /// Run `f` — the call that actually executes a prepared statement — inside the window a bare
@@ -559,5 +638,225 @@ mod tests {
             stmt.query_arrow([]).is_ok(),
             "an interrupt raised while idle does not carry over to the next query"
         );
+    }
+
+    // ---- The request stamp's order and its promises (form §4.1, §4.2). Deterministic: each test
+    // ---- drives the seams of `cancel_inner`, and none reads a trace. ----
+
+    use std::sync::mpsc::{channel, Receiver, Sender};
+
+    /// A seam action that reports it was reached and then holds until released. The wait is bounded
+    /// by `TEST_LIVENESS_DEADLINE` and ends early if the test drops the sender, so a failing test
+    /// never leaves a held thread behind for the full deadline.
+    fn held() -> (impl FnOnce() + Send + 'static, Receiver<()>, Sender<()>) {
+        let (reached_tx, reached_rx) = channel();
+        let (release_tx, release_rx) = channel::<()>();
+        let action = move || {
+            let _ = reached_tx.send(());
+            let _ = release_rx.recv_timeout(TEST_LIVENESS_DEADLINE);
+        };
+        (action, reached_rx, release_tx)
+    }
+
+    /// Wait for a real completion signal; fail by name when the deadline passes.
+    fn await_signal(rx: &Receiver<()>, what: &str) {
+        rx.recv_timeout(TEST_LIVENESS_DEADLINE)
+            .unwrap_or_else(|_| panic!("timed out waiting for: {what}"));
+    }
+
+    /// A seam action that only reports it was reached.
+    fn signal() -> (impl FnOnce() + Send + 'static, Receiver<()>) {
+        let (tx, rx) = channel();
+        (
+            move || {
+                let _ = tx.send(());
+            },
+            rx,
+        )
+    }
+
+    #[test]
+    fn the_request_is_stamped_before_the_flag_is_published() {
+        let t = CancelToken::new();
+        // 0: the stamp seam never ran; 1: the flag was unset at the stamp; 2: it was already set.
+        let seen = Arc::new(std::sync::atomic::AtomicUsize::new(0));
+        {
+            let (probe, seen) = (t.clone(), Arc::clone(&seen));
+            t.set_seam(Seam::OnStamp, move || {
+                let state = if probe.is_cancelled() { 2 } else { 1 };
+                seen.store(state, Ordering::SeqCst);
+            });
+        }
+        t.cancel();
+        assert_ne!(seen.load(Ordering::SeqCst), 0, "the stamp seam never ran");
+        assert_eq!(
+            seen.load(Ordering::SeqCst),
+            1,
+            "the cancelled flag was already published when the request was stamped"
+        );
+    }
+
+    #[test]
+    fn an_observer_that_sees_the_flag_finds_the_request_already_stamped() {
+        let t = CancelToken::new();
+        let (go_tx, go_rx) = channel::<()>();
+        let (done_tx, done_rx) = channel::<()>();
+        let observer = {
+            let t = t.clone();
+            std::thread::spawn(move || {
+                await_signal(&go_rx, "the canceller to publish the flag");
+                let seen = (t.is_cancelled(), t.stamp_count());
+                let _ = done_tx.send(());
+                seen
+            })
+        };
+        t.set_seam(Seam::AfterPublish, move || {
+            let _ = go_tx.send(());
+            let _ = done_rx.recv_timeout(TEST_LIVENESS_DEADLINE);
+        });
+        t.cancel();
+        let (flag, stamps) = observer.join().expect("the observer thread");
+        assert!(
+            flag,
+            "the observer ran after the publication and found the flag unset"
+        );
+        assert_eq!(
+            stamps, 1,
+            "an observer that saw the flag found {stamps} request stamps, not 1"
+        );
+    }
+
+    #[test]
+    fn two_concurrent_cancels_stamp_once_and_the_loser_returns_after_the_stamp() {
+        let t = CancelToken::new();
+        let (hold, a_reached, release_a) = held();
+        t.set_seam(Seam::BeforeStamp, hold);
+        let (contended, b_contended) = signal();
+        t.set_seam(Seam::OnContended, contended);
+
+        let a = {
+            let t = t.clone();
+            std::thread::spawn(move || t.cancel())
+        };
+        await_signal(&a_reached, "A to reach before_stamp");
+        let b = {
+            let t = t.clone();
+            std::thread::spawn(move || {
+                t.cancel();
+                (t.is_cancelled(), t.stamp_count())
+            })
+        };
+        await_signal(&b_contended, "B to find the transition lock held");
+        release_a.send(()).expect("release A");
+        a.join().expect("A");
+        let (flag, stamps) = b.join().expect("B");
+        assert!(flag, "B returned before the flag was published");
+        assert_eq!(stamps, 1, "B returned when {stamps} request stamps existed");
+        assert_eq!(t.stamp_count(), 1, "the two cancels stamped more than once");
+    }
+
+    #[test]
+    fn a_cancel_entering_before_a_drop_stamps_once() {
+        let t = CancelToken::new();
+        let (hold, a_reached, release_a) = held();
+        t.set_seam(Seam::BeforeStamp, hold);
+        let (contended, d_contended) = signal();
+        t.set_seam(Seam::OnContended, contended);
+
+        let a = {
+            let t = t.clone();
+            std::thread::spawn(move || t.cancel())
+        };
+        await_signal(&a_reached, "the cancel to reach before_stamp");
+        let d = {
+            let t = t.clone();
+            std::thread::spawn(move || {
+                t.cancel_for_drop();
+                t.is_cancelled()
+            })
+        };
+        await_signal(&d_contended, "the drop to find the transition lock held");
+        release_a.send(()).expect("release the cancel");
+        a.join().expect("the cancel");
+        assert!(
+            d.join().expect("the drop"),
+            "the drop returned before the flag was set"
+        );
+        assert_eq!(
+            t.stamp_count(),
+            1,
+            "a cancel then a drop stamped other than once"
+        );
+    }
+
+    #[test]
+    fn a_drop_entering_before_a_cancel_stamps_nothing() {
+        let t = CancelToken::new();
+        let (hold, d_reached, release_d) = held();
+        t.set_seam(Seam::BeforeStamp, hold);
+        let (contended, c_contended) = signal();
+        t.set_seam(Seam::OnContended, contended);
+
+        let d = {
+            let t = t.clone();
+            std::thread::spawn(move || t.cancel_for_drop())
+        };
+        await_signal(&d_reached, "the drop to reach before_stamp");
+        let c = {
+            let t = t.clone();
+            std::thread::spawn(move || {
+                t.cancel();
+                t.is_cancelled()
+            })
+        };
+        await_signal(&c_contended, "the cancel to find the transition lock held");
+        release_d.send(()).expect("release the drop");
+        d.join().expect("the drop");
+        assert!(
+            c.join().expect("the cancel"),
+            "the cancel returned before the flag was set"
+        );
+        assert_eq!(t.stamp_count(), 0, "a drop then a cancel stamped a request");
+    }
+
+    #[test]
+    fn a_repeated_cancellation_stamps_once() {
+        let t = CancelToken::new();
+        t.cancel();
+        t.cancel();
+        t.clone().cancel();
+        assert!(t.is_cancelled());
+        assert_eq!(t.stamp_count(), 1, "three cancels stamped other than once");
+    }
+
+    #[test]
+    fn cancel_for_drop_stamps_nothing_and_a_later_cancel_adds_none() {
+        let t = CancelToken::new();
+        t.cancel_for_drop();
+        assert!(t.is_cancelled());
+        assert_eq!(t.stamp_count(), 0, "a drop stamped a request");
+        t.cancel();
+        assert_eq!(
+            t.stamp_count(),
+            0,
+            "a cancel after a drop stamped a request"
+        );
+    }
+
+    #[test]
+    fn a_stamp_that_panics_still_publishes_the_flag() {
+        let t = CancelToken::new();
+        t.set_seam(Seam::OnStamp, || panic!("the stamp panicked"));
+        let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| t.cancel()));
+        assert!(
+            outcome.is_err(),
+            "the seam's panic did not reach the caller"
+        );
+        assert!(
+            t.is_cancelled(),
+            "a stamp that panicked left the token uncancelled"
+        );
+        t.cancel();
+        assert!(t.is_cancelled());
     }
 }
