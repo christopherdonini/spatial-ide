@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a5d2ea17bff5867535bc6168cfa30543cb52a2711d6a66690dd356e36d042fc6`) at `2026-11-22T17:12:14.289Z`.
+Generated from `PLAN.yaml` (sha256 `9aa19f219fd80b39572a250d741d6b83a7c67f5443b619b1822a2ec4f9b167f2`) at `2026-11-22T17:47:30.219Z`.
 
 ## 1. Next
 
@@ -54,6 +54,7 @@ Generated from `PLAN.yaml` (sha256 `a5d2ea17bff5867535bc6168cfa30543cb52a2711d6a
 - **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) — evidence: branch `cut/cancel-stamp-order`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete — evidence: branch `cut/untiled-reissue-mint-window`
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 - **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) — evidence: branch `cut/guardian-monitor`
@@ -160,6 +161,5 @@ Generated from `PLAN.yaml` (sha256 `a5d2ea17bff5867535bc6168cfa30543cb52a2711d6a
 - **mod-worktree-resource-protection** — Worktree and resource protection -- a mod (deferred by the 2026-10-03 mods-roadmap ruling) (phase `prototype`) — ambition, never queued
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
-- **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete (phase `prototype`) — ambition, never queued
 - **shell-test-executables-carry-the-common-controls-manifest** — The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4) (phase `prototype`) — ambition, never queued
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) (phase `prototype`) — ambition, never queued
