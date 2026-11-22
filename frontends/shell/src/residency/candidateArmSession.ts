@@ -247,7 +247,9 @@ export interface CandidateArmSession {
    * the first call" contract) -- only residency and the fit anchor reset, matching the module's own
    * fresh-anchor bookkeeping for a NEW generation.
    * Resolves `{ kind: "superseded" }` when a later call began before this one's ticket and attach
-   * returned: that ticket is cancelled through `cancel`, and no stream is started for it.
+   * returned, unless `stop()` ran or the session ended first, which resolve `stopped` or
+   * `session-ended` as before (the latches are read before the generation): a cancel is requested
+   * for that ticket through `cancel`, and no stream is started for it.
    */
   reissueUnrestricted: (bbox: Bbox | null, filter: Filter | null) => Promise<RequestOutcome>;
   /** Cancels the current stream a session's own initial/reissued untiled query may still be minting
@@ -481,7 +483,9 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
   /** The initial/reissued untiled stream's own handle, if one is currently running -- so `stop()`
    * can cancel it (mirrors `ViewportStreamManager.stop`'s own `supersedeCurrent`, simplified). A
    * reissue neither cancels nor clears it: it is reassigned only at the new look's mint, so between a
-   * reissue and that mint it still names the earlier look. Whether a look is current is read from
+   * reissue and that mint it still names the earlier look, unless that look's own terminal or
+   * `cancelUntiledStream` (a Cancel with a frame, `stop()`, the session's end) has cleared it. Whether a
+   * look is current is read from
    * this handle and `untiledLookGeneration` together. */
   let untiledStreamHandle: string | null = null;
   /** The untiled look generation. Its only writer is `reissueUnrestricted`, which raises it once its
