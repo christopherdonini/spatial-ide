@@ -830,3 +830,77 @@ test('verify-cites: a pinned cite from a moved file to a file moved beside it st
   assertGatedAtPin(res, 'governance/PRECEDENTS.md', prec);
   assertGatedAtPin({ gated: res.gated, advisory: [] }, `governance/forms/root/${O}`, owed);
 });
+
+// The shortened-target list: a listed cite into a file that a later commit shortened is read at its entry's commit.
+const ST = 'scripts/plan/verify-cites-shortened-target.json';
+const STEM = 'scripts/plan/verify-cites-shortened-target.json at ';
+function shortened({ noteRel = 'state/note.md', cite = 'engine/src/pool.rs:5', entry, side = false, listed = true }) {
+  const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n', [noteRel]: `see ${cite}\n` });
+  try {
+    const c1 = gitIn(dir, 'rev-parse', 'HEAD');
+    let other = null;
+    if (side) {
+      gitIn(dir, 'checkout', '-q', '-b', 'side');
+      gitIn(dir, 'commit', '-q', '--allow-empty', '-m', 'side');
+      other = gitIn(dir, 'rev-parse', 'HEAD');
+      gitIn(dir, 'checkout', '-q', '-');
+    }
+    fs.writeFileSync(path.join(dir, 'engine/src/pool.rs'), 'a\n');
+    gitIn(dir, 'commit', '-q', '-a', '-m', 'shorten');
+    if (listed) {
+      fs.mkdirSync(path.join(dir, 'scripts/plan'), { recursive: true });
+      fs.writeFileSync(path.join(dir, ST), JSON.stringify({ $doc: 'test', entries: [entry(other ?? c1, noteRel)] }) + '\n');
+      gitIn(dir, 'add', '-A');
+      gitIn(dir, 'commit', '-q', '-m', 'list');
+    }
+    return { ...runVerifyCites({ repoRoot: dir }), c1, other };
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+}
+const stEntry = (cite) => (commit, p) => ({ path: p, cite, commit });
+
+test('a_listed_cite_past_the_end_of_a_shortened_file_passes_at_its_entrys_commit', () => {
+  const r = shortened({ entry: stEntry('engine/src/pool.rs:5') });
+  assert.deepEqual([r.gated, r.targetErrors], [[], []], JSON.stringify(r));
+});
+
+test('a_listed_cite_past_the_end_at_its_entrys_commit_too_fails_by_name', () => {
+  const r = shortened({ cite: 'engine/src/pool.rs:7', entry: stEntry('engine/src/pool.rs:7') });
+  assert.equal(r.gated.length, 1, JSON.stringify(r));
+  assert.ok(r.gated[0].reason.includes(STEM + r.c1.slice(0, 12)) && /line 7 exceeds/.test(r.gated[0].reason), r.gated[0].reason);
+  assert.deepEqual(r.targetErrors, []);
+});
+
+test('a_listed_cite_whose_commit_is_not_on_heads_history_fails_by_name', () => {
+  const r = shortened({ side: true, entry: stEntry('engine/src/pool.rs:5') });
+  assert.equal(r.gated.length, 1, JSON.stringify(r));
+  assert.ok(r.gated[0].reason.includes(STEM + r.other.slice(0, 12)) && /not an ancestor of HEAD/.test(r.gated[0].reason), r.gated[0].reason);
+});
+
+test('a_shortened_target_entry_outside_state_and_the_forms_fails_by_name', () => {
+  const r = shortened({ noteRel: 'docs/note.md', entry: stEntry('engine/src/pool.rs:5') });
+  assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
+  assert.ok(r.targetErrors[0].includes('docs/note.md') && /state\/ or governance\/forms\//.test(r.targetErrors[0]), r.targetErrors[0]);
+  assert.equal(r.gated.length, 1, JSON.stringify(r.gated));
+});
+
+test('a_shortened_target_entry_whose_commit_is_not_40_hex_digits_fails_by_name', () => {
+  const r = shortened({ entry: (c, p) => ({ path: p, cite: 'engine/src/pool.rs:5', commit: c.slice(0, 12) }) });
+  assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
+  assert.ok(/40 hex digits/.test(r.targetErrors[0]) && r.targetErrors[0].includes(r.c1.slice(0, 12)), r.targetErrors[0]);
+  assert.equal(r.gated.length, 1, JSON.stringify(r.gated));
+});
+
+test('a_shortened_target_entry_whose_cite_resolves_in_the_tree_fails_by_name', () => {
+  const r = shortened({ cite: 'engine/src/pool.rs:1', entry: stEntry('engine/src/pool.rs:1') });
+  assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
+  assert.ok(/resolves in the tree/.test(r.targetErrors[0]) && r.targetErrors[0].includes('engine/src/pool.rs:1'), r.targetErrors[0]);
+  assert.deepEqual(r.gated, []);
+});
+
+test('a_shortened_target_entry_that_matches_no_cite_fails_by_name', () => {
+  const r = shortened({ entry: stEntry('engine/src/pool.rs:3') });
+  assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
+  assert.ok(/matches no unpinned cite/.test(r.targetErrors[0]) && r.targetErrors[0].includes('engine/src/pool.rs:3'), r.targetErrors[0]);
+});
