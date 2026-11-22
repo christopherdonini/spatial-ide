@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `60e1cf0b079cb3472559b6603b5632c709c26054bdda6bcdb76e378632a7caa7`) at `2026-11-22T10:35:20.999Z`.
+Generated from `PLAN.yaml` (sha256 `e3c51224f079159a447cc98fb2c14ae4ef1c82159f7af3fd86d41105de6d9ed1`) at `2026-11-22T11:15:59.300Z`.
 
 ## 1. Next
 
@@ -18,20 +18,16 @@ Generated from `PLAN.yaml` (sha256 `60e1cf0b079cb3472559b6603b5632c709c26054bdda
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (lane `shell`, order null, budget 0 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
+- **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) (lane `measurement`, order null, budget 360 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
+- **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) (lane `governance`, order null, budget 240 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
-- **verify-cites-shortened-target-list** — verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3) (lane `governance`, order null, budget 120 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
 - **posix-backslash-is-inside-and-redaction-label** — The audit log's is_inside and the redaction scan's file label stop treating a backslash as a separator on POSIX, the two sites entry 7b leaves (wave-3 A-1, S3) (lane `platform`, order null, budget 60 min)
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 30 min)
-
-### ruling
-
-- **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) (5 min)
-- **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) (5 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### sitting
 
@@ -60,6 +56,7 @@ Generated from `PLAN.yaml` (sha256 `60e1cf0b079cb3472559b6603b5632c709c26054bdda
 - **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) — evidence: branch `cut/cancel-stamp-order`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **verify-cites-shortened-target-list** — verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3) — evidence: branch `cut/verify-cites-shortened-target`
 
 ## 6. Proposed / unscheduled
 

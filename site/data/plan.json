@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T10:35:21.314Z",
-  "plan_hash": "60e1cf0b079cb3472559b6603b5632c709c26054bdda6bcdb76e378632a7caa7",
+  "generated_at": "2026-11-22T11:15:59.491Z",
+  "plan_hash": "e3c51224f079159a447cc98fb2c14ae4ef1c82159f7af3fd86d41105de6d9ed1",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12378,7 +12378,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "IN PROGRESS 2026-11-22: the form gate closed, the architect attempt 2 PASS WITH NOTES and the form Amendment 2, with kernel/README.md the tenth Scope file (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-09-the-cancel-forms-d-10-points-kernel-readme-a-tenth-file-and-the-residual-names-the-second-binary.md); the build runs on cut/cancel-stamp-order from main after this record, merged only after the v0.2 tag. Before: PLACED 2026-11-22 by the advisor ruling ADV-2026-11-22-01 item 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 1 (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): full form, both gates; prepared and gated now, merged only after the v0.2 tag. The finding at 624eb45c is in the ledger (1122b). The form keeps two questions apart, whether cancellation reached the producer and the order of the two trace stamps; it keeps both trace promises, a repeated cancellation stamps at most once and cancel_for_drop stamps nothing, and both producer-reach checks; a controlled interleaving where feasible; no plain swap of the two lines. If the fix closes the failure both wrappers go; if not, they stay and the piece goes to the advisor. It replaces the cancel test of ADV-2026-11-21-15 item 3 (iii). Worktree C:/dev/wt/cancel-stamp on cut/cancel-stamp-order from 662ea259, build output D:/wt-targets/cancel-stamp; the isolation check passed on 2026-11-22. The form is being drafted by lead-data.",
+      "summary": "IN PROGRESS 2026-11-22: code gate 1 closed at 3f3820c9, the architect and the reviewer both PASS WITH NOTES (state/consults/gates/2026-11-22-cancel-requested-stamp-order-g1-architect.md; state/consults/gates/2026-11-22-cancel-requested-stamp-order-g1-reviewer.md); next, after PR 351 merges, the merge of main, the entries, the words and the clippy line, then the narrow read (ADV-2026-11-22-10 items 4 and 5); the merge request after the tag. Before: the form gate closed, the architect attempt 2 PASS WITH NOTES and the form Amendment 2, with kernel/README.md the tenth Scope file (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-09-the-cancel-forms-d-10-points-kernel-readme-a-tenth-file-and-the-residual-names-the-second-binary.md); the build runs on cut/cancel-stamp-order from main after this record, merged only after the v0.2 tag. Before: PLACED 2026-11-22 by the advisor ruling ADV-2026-11-22-01 item 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 1 (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): full form, both gates; prepared and gated now, merged only after the v0.2 tag. The finding at 624eb45c is in the ledger (1122b). The form keeps two questions apart, whether cancellation reached the producer and the order of the two trace stamps; it keeps both trace promises, a repeated cancellation stamps at most once and cancel_for_drop stamps nothing, and both producer-reach checks; a controlled interleaving where feasible; no plain swap of the two lines. If the fix closes the failure both wrappers go; if not, they stay and the piece goes to the advisor. It replaces the cancel test of ADV-2026-11-21-15 item 3 (iii). Worktree C:/dev/wt/cancel-stamp on cut/cancel-stamp-order from 662ea259, build output D:/wt-targets/cancel-stamp; the isolation check passed on 2026-11-22. The form is being drafted by lead-data.",
       "dates": {
         "opened": "2026-11-22",
         "done": null
@@ -12417,12 +12417,12 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "none",
       "evidence": null,
@@ -12430,7 +12430,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8.",
+      "summary": "APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-02 is the human words, its item 4 (a) the typed approval naming the two live checks of its item 6; a full form and both gates (ADV-2026-11-22-01 item 5); it may merge before the tag; next, its form. Before: WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8.",
       "dates": {
         "opened": "2026-11-22",
         "done": null
@@ -12442,12 +12442,12 @@
       "kind": "task",
       "lane": "measurement",
       "phase": "prototype",
-      "status": "blocked",
+      "status": "ready",
       "order": null,
       "depends_on": [],
       "needs_human": {
-        "kind": "ruling",
-        "minutes": 5
+        "kind": "none",
+        "minutes": 0
       },
       "gate": "governance/forms/root/PROPERTY-TESTING-TRIAL-PREREGISTRATION.md",
       "evidence": null,
@@ -12455,7 +12455,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8.",
+      "summary": "PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8.",
       "dates": {
         "opened": "2026-11-22",
         "done": null
@@ -12467,7 +12467,7 @@
       "kind": "task",
       "lane": "governance",
       "phase": "prototype",
-      "status": "ready",
+      "status": "in-progress",
       "order": null,
       "depends_on": [],
       "needs_human": {
@@ -12475,12 +12475,14 @@
         "minutes": 0
       },
       "gate": "governance/forms/scripts/VERIFY-CITES-SHORTENED-TARGET-LIST-PREREGISTRATION.md",
-      "evidence": null,
+      "evidence": {
+        "branch": "cut/verify-cites-shortened-target"
+      },
       "budget_minutes": 120,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4).",
+      "summary": "IN PROGRESS 2026-11-22: built at f912819f on cut/verify-cites-shortened-target, PR 351 a draft, 134 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-build-worker-report.md); the reviewer gate next. Before: PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4).",
       "dates": {
         "opened": "2026-11-22",
         "done": null
