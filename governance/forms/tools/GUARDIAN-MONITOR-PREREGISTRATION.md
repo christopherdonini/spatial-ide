@@ -228,3 +228,15 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-22 — the build: PR 357; the words of ADV-2026-11-22-12 item 2 (b)
+
+1. **The words.** By ADV-2026-11-22-12 item 2 (b) the form says, byte for byte from line 15 of `state/consults/2026-11-22-advisor-draft-adv-2026-11-22-12-the-guardian-and-monitor-piece-after-its-p0-stop-not-the-humans-words.md`: "That a Monitor event has those fields is assumed, not read." The fields, in the custodian's words: the Monitor call's four input fields `description`, `timeout_ms`, `command` and `ws`, and the event fields the Guardian's handlers already read for a Bash call, the tool's name, the command and the agent's id.
+
+2. **The build.** On `cut/guardian-monitor`: 16c0079a5138bcc17672f6ac25beabe48c9c61d3 (main at 466318621a13f00ae7b1114a4690582be42bdc94 merged in), 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 and b6d8835810e36249097744cff509b59ae8e9771c, pushed; PR 357, a draft. The worker's report: `state/consults/2026-11-22-guardian-monitor-build-worker-report.md`, the filed file 8305 bytes, sha256 d6621a626f2e9f72e0b553319a42a952e26c63b99f3b017537e89f7952ea8a55.
+
+3. **Next:** section 7's reviewer, then the architect after the build. Section 5 after the merge.
+
+Read the last amendment first.
+
+Nothing above is edited.
