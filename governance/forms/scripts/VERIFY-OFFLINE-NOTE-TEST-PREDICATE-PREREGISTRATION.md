@@ -36,3 +36,21 @@ Out-of-scope: ADR none; security none -- one test file, Node's standard library,
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — the gate; the record before the merge check
+
+1. **The single gate:** the reviewer, PASS WITH NOTES at d06c2dfb10b660e0ce0106dbd4b8f06d98902d0c, no Correctness or Evidence finding (`state/consults/gates/2026-11-22-verify-offline-note-test-predicate-gate-reviewer.md`, gate-log row 831). The worker's report is `state/consults/2026-11-22-verify-offline-note-test-predicate-step-b-worker-report.md`. The merged diff is 5 lines, in `scripts/plan/verify.test.mjs` alone; `scripts/plan/verify.mjs` is unchanged.
+
+2. **CI at d06c2dfb10b660e0ce0106dbd4b8f06d98902d0c:** all 8 checks passing, read by the custodian at 2026-11-22T14:46:12Z.
+
+3. **D2, a line number in Amendment 1 item 2,** in the reviewer's words: Amendment 1 item 2's second line number is 192, not 193: at 533c7402275086651c1fd590cd2005eb21cb9dc5, `scripts/plan/verify.mjs` line 192 is the release branch's `if (offline) return [];`.
+
+4. **D1, the cause in the second commit's message.** The branch has two commits, e7c66320 and d06c2dfb10b660e0ce0106dbd4b8f06d98902d0c, and neither is rewritten; the advisor merges by merge commit (the grant, item 5 (b)). The message of d06c2dfb10b660e0ce0106dbd4b8f06d98902d0c gives a shell heredoc as the cause. The record of the cause is this item, in the reviewer's words: The first commit's regular expression lost its backslashes in the edit script's double-quoted JavaScript string (\d read as d), so it matched no PR evidence failure and the test could not fail on one.
+
+5. **The reviewer's N2** (a temporary folder or fixture value holding the fixed text would still trip the predicate; random suffixes cannot) is recorded here and changes nothing.
+
+6. **The merge:** a test of the scripts alone, which merges as it closes (ADV-2026-11-21-15 item 3; the human's item 0 of 2026-11-22 names shipped code and lockfiles). At the merge the ledger finding of the flaky test closes, its cause in the first form's Amendment 2 (ADV-2026-11-22-14).
+
+Read the last amendment first.
+
+Nothing above is edited.
