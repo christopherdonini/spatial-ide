@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `0a3f5ec7afca89e2c445326ad008be0fd5089e67ac06e9c2755f86efbb3b8eff`) at `2026-11-22T18:50:51.520Z`.
+Generated from `PLAN.yaml` (sha256 `451dd81a7a4865909555b62d605897307113f4b3050936345e028cb0c3624e90`) at `2026-11-22T19:11:11.920Z`.
 
 ## 1. Next
 
@@ -56,6 +56,7 @@ Generated from `PLAN.yaml` (sha256 `0a3f5ec7afca89e2c445326ad008be0fd5089e67ac06
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete — evidence: branch `cut/untiled-reissue-mint-window`
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
+- **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 - **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) — evidence: branch `cut/guardian-monitor`
 
@@ -136,6 +137,8 @@ Generated from `PLAN.yaml` (sha256 `0a3f5ec7afca89e2c445326ad008be0fd5089e67ac06
 - **advisor-silence-two-hour-alarm** — Telegram's third alarm: one message when the advisor has not answered the custodian for two hours (the human's item 3 of 2026-11-13, 06:57Z); split from advisor-questions-and-telegram-three-alarms by ADV-2026-11-14-23 item 3 (d) and ADV-2026-11-14-24 item 4 (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
+- **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) (phase `prototype`) — never queued until placed
+- **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
@@ -162,4 +165,3 @@ Generated from `PLAN.yaml` (sha256 `0a3f5ec7afca89e2c445326ad008be0fd5089e67ac06
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
 - **shell-test-executables-carry-the-common-controls-manifest** — The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4) (phase `prototype`) — ambition, never queued
-- **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) (phase `prototype`) — ambition, never queued
