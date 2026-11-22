@@ -16,7 +16,7 @@ use serde_json::{json, Value};
 use spatial_engine::fixture::{write_geoparquet, AttributeMode, FixtureSpec};
 use spatial_kernel::project::file::{read_project, write_project, Lineage, ProjectFile};
 use spatial_kernel::project::store::{
-    locations_to_bytes, KnownFolders, ProjectLock, FOLDERS, LOCATIONS,
+    locations_to_bytes, KnownFolders, LockRefused, ProjectLock, FOLDERS, LOCATIONS,
 };
 use spatial_kernel::project::{ProjectUri, Projects, PROJECT_FILE_NAME};
 use spatial_kernel::session_history::{recover, StepRecorder};
@@ -24,9 +24,9 @@ use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
 use spatial_renderer::canonical::sha256_hex;
 use spatial_skp::v0::{
-    CloseDatasetRequest, DatasetHandle, HexF64, OpenDatasetRequest, OpenProjectRequest,
-    OpenProjectResponse, RecordStepRequest, SaveProjectRequest, SkpError, StepIntent,
-    StyleSetParams, SKP_VERSION,
+    CloseDatasetRequest, DatasetHandle, DescribeRequest, HexF64, OpenDatasetRequest,
+    OpenProjectRequest, OpenProjectResponse, RecordStepRequest, SaveProjectRequest, SkpError,
+    StepIntent, StyleSetParams, SKP_VERSION,
 };
 
 const STYLE: &str = r##"{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#4285f4"},"fill_opacity":{"literal":0.35},"outline_color":{"literal":"#000000"},"outline_width":{"literal":1.5}}}"##;
@@ -668,4 +668,44 @@ fn basis_and_file_name_carry_a_text_read_from_a_file_only_bounded_and_with_no_co
     assert!(!name.chars().any(char::is_control), "{name:?}");
     assert!(name.contains('�'), "{name:?}");
     assert!(!name.ends_with(" [cut]"), "{name:?}");
+}
+
+/// **W-8** (`governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md`
+/// §4.3, the seam pin). A saved project is reopened, and `describe` on its `opened` handle is
+/// refused as `skp.version_unsupported`: of the refusals `SkpHost::describe` gives, this is the only
+/// one that leaves the handle in the catalog (`skp.unknown_dataset` needs it gone). The project's
+/// `open.lock` is then held. After the close of that handle and `release_ended`, in the binding's
+/// order, it can be taken. The kernel is unchanged, so this pins the contract the shell's close
+/// rests on and is not a red/green test.
+///
+/// RECORDED MUTATION: KM1, the close removed and `release_ended` kept. Expected failure: the lock
+/// after the release.
+#[test]
+fn a_reopen_whose_describe_is_refused_holds_its_lock_until_the_opened_handle_is_closed() {
+    let rig = rig("w-8");
+    let project = rig.inside();
+    let uri: ProjectUri = project.parse().expect("an identity");
+    let reply = rig.reopen(&rig.folder, Value::Null, None).expect("opened");
+    let dataset = reply["opened"]["dataset"].clone();
+    let handle: DatasetHandle = serde_json::from_value(dataset).expect("a handle");
+    let skp = "skp/0.0".to_string();
+    let described = rig.host.describe(DescribeRequest {
+        skp,
+        dataset: handle.clone(),
+    });
+    let e = described.expect_err("an unsupported version");
+    assert_eq!(e.code, "skp.version_unsupported", "{e:?}");
+    let held = ProjectLock::try_lock(&rig.machine, &uri);
+    assert!(
+        matches!(held, Err(LockRefused::Held)),
+        "open.lock is held: {held:?}"
+    );
+    rig.close(&handle);
+    rig.projects.release_ended();
+    let free = ProjectLock::try_lock(&rig.machine, &uri);
+    assert!(
+        free.is_ok(),
+        "open.lock is free after the close and the release: {free:?}"
+    );
+    drop(free);
 }
