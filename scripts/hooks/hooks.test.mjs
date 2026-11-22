@@ -1604,7 +1604,7 @@ function subagentRecordLines(dir, sessionId) {
   return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [];
 }
 
-// RECORDED MUTATION, at the commit that adds this line's parent: session-resume.mjs's agent_id check deleted -> this test fails: the stdout is the reading order, not ''.
+// RECORDED MUTATION (run at f77c3fa9, before this comment was added): session-resume.mjs's agent_id check deleted -> this test fails: the stdout is the reading order, not ''.
 test('subagent compaction: session-resume with agent_id prints nothing and exits 0', () => {
   const dir = subagentProject();
   try {
@@ -1630,7 +1630,7 @@ test('subagent compaction: session-resume without agent_id prints the reading or
   }
 });
 
-// RECORDED MUTATION, at the commit that adds this line's parent: precompact-flush.mjs's agent_id branch disabled -> this test fails: "auto: the decision", 'recorded-only' for 'allowed-subagent'.
+// RECORDED MUTATION (run at f77c3fa9, before this comment was added): precompact-flush.mjs's agent_id branch disabled -> this test fails: "auto: the decision", 'recorded-only' for 'allowed-subagent'.
 test('subagent compaction: precompact-flush with agent_id allows, writes no block record and logs one allowed-subagent line', () => {
   const dir = subagentProject();
   try {

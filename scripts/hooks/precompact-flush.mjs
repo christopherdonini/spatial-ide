@@ -8,6 +8,7 @@
 //     allowed whatever the freshness. A fresh ledger is allowed.
 //   - any other `trigger`, or none (an automatic compaction): judged for freshness, recorded, and
 //     always allowed. It never blocks, and it neither reads nor writes the block record above.
+//   - an input that carries agent_id (a subagent's compaction): allowed before the freshness and block checks; checkFreshness is not called, the block record above is neither read nor written, and the record line carries decision allowed-subagent, flushed_at null and a sixth field, agent_type (a string as received, else null).
 // Every call that reaches the decision appends one line to .claude/state/precompact-<session_id>.jsonl
 // (at, trigger, decision, reason, flushed_at). A line that cannot be written leaves the decision as is.
 //
@@ -238,8 +239,7 @@ export function decidePrecompact(input, { projectRoot, now = new Date(), git } =
       });
       const p = recordLogPath(projectRoot, sessionId);
       fs.mkdirSync(path.dirname(p), { recursive: true });
-      fs.appendFileSync(p, `${line}
-`, 'utf8');
+      fs.appendFileSync(p, `${line}\n`, 'utf8');
     } catch (e) {
       console.error(`precompact-flush: could not append the record line (${e.message}); the decision stands.`);
     }
