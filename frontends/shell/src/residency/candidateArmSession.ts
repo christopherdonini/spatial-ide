@@ -999,25 +999,21 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // become visible -- see `suppressNestedSupersededEmit`'s own doc comment (above) for why this call
       // is guarded (an enclosing call site may be about to call `emitResidencyStatus()` again itself).
       //
-      // S-b (re-reviewer gate, residency-debt cut 1b): DEFENSIVE, and UNREACHABLE in production today
-      // -- stated plainly, not implied otherwise. This module's own manager construction has exactly
-      // three call sites that can synchronously recurse into `onTileSuperseded`
+      // S-b (re-reviewer gate, residency-debt cut 1b; corrected at the mint-window piece's build gate):
+      // three call sites in this module can synchronously recurse into `onTileSuperseded`
       // (`ingestAndMaybeEstablishFrame`'s self-cancel, `handleViewportChange`'s re-plan,
-      // `reissueUnrestricted`'s full clear), and every one of them now wraps the one manager call that
-      // can do so in `suppressNestedSupersededEmit = true` for its entire duration (S-a, above) --
-      // `onTileSuperseded` is never invoked from anywhere else in this module (`manager`'s own
-      // `relinquishOutstanding`, `tileViewportStreamManager.ts`, states plainly it "never calls
-      // `onTileSuperseded`" at all). Entry 66 (b)'s second batch adds ONE new producer inside the
-      // manager -- `drainQueueIfRoom`'s drop-at-drain, for a queued tile no longer in view at mint
-      // time -- and it does not widen this: a queued tile can only BE out of view at a drain when the
-      // drain is the one nested inside `onCameraChange`'s own prune (that method's own comment), i.e.
-      // inside `handleViewportChange`'s already-guarded call. So `!suppressNestedSupersededEmit`
-      // still reads `false` at every call site this callback can actually fire from today, and the
-      // emission below never runs. Kept
-      // rather than deleted as the honest fallback for a producer this module does not yet have: if a
-      // future change ever called `onTileSuperseded` from OUTSIDE those three guarded sites, this line
-      // is what keeps the S2 settling-moment obligation from silently going missing for it. TODAY, that
-      // obligation is carried entirely by `onTerminal`'s own identical emit, below.
+      // `reissueUnrestricted`'s full clear), and each wraps the one manager call that can do so in
+      // `suppressNestedSupersededEmit = true` for its entire duration (S-a, above), so the emission
+      // below never runs from them. `manager`'s own `relinquishOutstanding` and `stop` never call
+      // `onTileSuperseded`. Entry 66 (b)'s second batch adds `drainQueueIfRoom`'s drop-at-drain, which
+      // by this comment's first reading finds a queued tile out of view only inside `onCameraChange`'s
+      // own prune, i.e. inside `handleViewportChange`'s already-guarded call. One route is not
+      // guarded: the manager's session end (`TileViewportStreamManager.endSession`, reached through
+      // `notifySessionEnded` from the untiled sink's `onTerminal` and from `App.tsx`'s session-ended
+      // event route, and from a tile's own session-ended terminal or mint refusal) runs `clearAll`,
+      // whose `cancelTileStream` reports each in-flight tile here; when the last tracked tile goes,
+      // the emission below runs once, before `endCandidateSession` clears every tile. Otherwise the S2
+      // settling-moment obligation is carried by `onTerminal`'s own identical emit, below.
       if (!suppressNestedSupersededEmit && manager.trackedTileCount === 0) emitResidencyStatus();
     },
     onTerminal: (tileKey, streamHandle, terminal) => {
