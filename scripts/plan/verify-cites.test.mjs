@@ -860,11 +860,13 @@ function shortened({ noteRel = 'state/note.md', cite = 'engine/src/pool.rs:5', e
 }
 const stEntry = (cite) => (commit, p) => ({ path: p, cite, commit });
 
+// RECORDED MUTATION (M1) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the list lookup removed (`const st = null`) -> fails by name: `a_listed_cite_past_the_end_of_a_shortened_file_passes_at_its_entrys_commit`, `a_listed_cite_past_the_end_at_its_entrys_commit_too_fails_by_name`, `a_listed_cite_whose_commit_is_not_on_heads_history_fails_by_name`, `a_shortened_target_entry_whose_cite_resolves_in_the_tree_fails_by_name`.
 test('a_listed_cite_past_the_end_of_a_shortened_file_passes_at_its_entrys_commit', () => {
   const r = shortened({ entry: stEntry('engine/src/pool.rs:5') });
   assert.deepEqual([r.gated, r.targetErrors], [[], []], JSON.stringify(r));
 });
 
+// RECORDED MUTATION (M2) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the bound in checkPinned dropped (`false &&`) -> fails by name: `a_listed_cite_past_the_end_at_its_entrys_commit_too_fails_by_name`, and six existing pinned-cite tests.
 test('a_listed_cite_past_the_end_at_its_entrys_commit_too_fails_by_name', () => {
   const r = shortened({ cite: 'engine/src/pool.rs:7', entry: stEntry('engine/src/pool.rs:7') });
   assert.equal(r.gated.length, 1, JSON.stringify(r));
@@ -872,12 +874,14 @@ test('a_listed_cite_past_the_end_at_its_entrys_commit_too_fails_by_name', () => 
   assert.deepEqual(r.targetErrors, []);
 });
 
+// RECORDED MUTATION (M3) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the ancestry check removed -> fails by name: `a_listed_cite_whose_commit_is_not_on_heads_history_fails_by_name`, and only this one among the new tests.
 test('a_listed_cite_whose_commit_is_not_on_heads_history_fails_by_name', () => {
   const r = shortened({ side: true, entry: stEntry('engine/src/pool.rs:5') });
   assert.equal(r.gated.length, 1, JSON.stringify(r));
   assert.ok(r.gated[0].reason.includes(STEM + r.other.slice(0, 12)) && /not an ancestor of HEAD/.test(r.gated[0].reason), r.gated[0].reason);
 });
 
+// RECORDED MUTATION (M4) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the filed-record check replaced by `false` -> fails by name: `a_shortened_target_entry_outside_state_and_the_forms_fails_by_name`, and only this one among the new tests.
 test('a_shortened_target_entry_outside_state_and_the_forms_fails_by_name', () => {
   const r = shortened({ noteRel: 'docs/note.md', entry: stEntry('engine/src/pool.rs:5') });
   assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
@@ -885,6 +889,7 @@ test('a_shortened_target_entry_outside_state_and_the_forms_fails_by_name', () =>
   assert.equal(r.gated.length, 1, JSON.stringify(r.gated));
 });
 
+// RECORDED MUTATION (M5) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the 40-hex check replaced by `false` -> fails by name: `a_shortened_target_entry_whose_commit_is_not_40_hex_digits_fails_by_name`, and only this one among the new tests.
 test('a_shortened_target_entry_whose_commit_is_not_40_hex_digits_fails_by_name', () => {
   const r = shortened({ entry: (c, p) => ({ path: p, cite: 'engine/src/pool.rs:5', commit: c.slice(0, 12) }) });
   assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
@@ -892,6 +897,7 @@ test('a_shortened_target_entry_whose_commit_is_not_40_hex_digits_fails_by_name',
   assert.equal(r.gated.length, 1, JSON.stringify(r.gated));
 });
 
+// RECORDED MUTATION (M6) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the resolves-in-the-tree error removed -> fails by name: `a_shortened_target_entry_whose_cite_resolves_in_the_tree_fails_by_name`, and only this one among the new tests.
 test('a_shortened_target_entry_whose_cite_resolves_in_the_tree_fails_by_name', () => {
   const r = shortened({ cite: 'engine/src/pool.rs:1', entry: stEntry('engine/src/pool.rs:1') });
   assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
@@ -899,6 +905,7 @@ test('a_shortened_target_entry_whose_cite_resolves_in_the_tree_fails_by_name', (
   assert.deepEqual(r.gated, []);
 });
 
+// RECORDED MUTATION (M7) at 20df01a366a7ed91a96978717c0594df0b4463cd, applied alone and reverted: the matches-no-cite error removed -> fails by name: `a_shortened_target_entry_that_matches_no_cite_fails_by_name`, and only this one among the new tests.
 test('a_shortened_target_entry_that_matches_no_cite_fails_by_name', () => {
   const r = shortened({ entry: stEntry('engine/src/pool.rs:3') });
   assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
