@@ -225,6 +225,27 @@ function withNote(stderr, note) {
 export function decidePrecompact(input, { projectRoot, now = new Date(), git } = {}) {
   const sessionId = input.session_id ?? 'unknown-session';
 
+  if (input.agent_id) {
+    // A subagent's compaction: allowed, the custodian's state untouched; one diagnostic line, no ledger read.
+    try {
+      const line = JSON.stringify({
+        at: now.toISOString(),
+        trigger: typeof input.trigger === 'string' ? input.trigger : null,
+        decision: 'allowed-subagent',
+        reason: null,
+        flushed_at: null,
+        agent_type: typeof input.agent_type === 'string' ? input.agent_type : null,
+      });
+      const p = recordLogPath(projectRoot, sessionId);
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.appendFileSync(p, `${line}
+`, 'utf8');
+    } catch (e) {
+      console.error(`precompact-flush: could not append the record line (${e.message}); the decision stands.`);
+    }
+    return { decision: 'allow', stderr: 'allow: a subagent compaction (agent_id present); the custodian state is left alone.' };
+  }
+
   if (input.trigger !== 'manual') {
     const judged = checkFreshness(projectRoot, { now, ...(git ? { git } : {}) });
     if (judged.fresh) {

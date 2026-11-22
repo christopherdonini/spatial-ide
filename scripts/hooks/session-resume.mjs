@@ -135,6 +135,7 @@ async function main() {
   } catch {
     input = {};
   }
+  if (input?.agent_id) process.exit(0); // a subagent's compaction: nothing to resume (the custodian's state is not its own)
   try {
     process.stdout.write(buildOutput(resolveProjectRoot(input)));
   } catch (e) {
