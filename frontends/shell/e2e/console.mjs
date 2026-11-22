@@ -42,7 +42,8 @@
 // `waitForMountReady`/`withTimeout`/`sleep` are duplicated from regression.mjs/admission-remediation.mjs
 // rather than imported -- this workspace's own established sibling-file convention.
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -64,11 +65,12 @@ const REGEN_FIXTURE =
 // `MAX_CRS_DEFINITION_BYTES`). Both are load-bearing for COPYTRUNC's own arithmetic below.
 const MAX_ENTRY_RENDER_BYTES = 80_000;
 // REFUSAL'/GROUP' polls (section 7 of the re-aim form): a CEILING on waiting and the poll's mechanism,
-// not latency claims (ADR-018). MAX_CONSOLE_ENTRIES mirrors `console/recorder.ts`'s ring size (the
-// sibling-file convention; this file imports nothing from `src/console/`), for GROUP''s capacity check.
+// not latency claims (ADR-018). MAX_CONSOLE_ENTRIES mirrors `console/recorder.ts`'s `MAX_CONSOLE_ENTRIES`, the size of
+// each of the Console's two rings (the sibling-file convention; this file imports nothing from `src/console/`), for
+// GROUP''s capacity check, LABEL' and MEASURE'.
 const CONSOLE_POLL_BOUND_MS = 5000;
 const CONSOLE_POLL_INTERVAL_MS = 100;
-const MAX_CONSOLE_ENTRIES = 256;
+const MAX_CONSOLE_ENTRIES = 128;
 // The arm this suite runs on is the one that ships (`residency/residencyArm.ts`); nothing here sets one.
 const SHIPPED_ARM = "candidate";
 // Mirrors `crsAssertionState.ts`'s/`engine::crs::MAX_CRS_DEFINITION_BYTES` -- the REAL
@@ -238,13 +240,17 @@ async function pollConsole(read, done) {
   }
 }
 
-/** The console disclosure's label, parsed: `Console — N actions (D dropped)`; `total` = count + dropped. */
+/** The label (known limitation 67), parsed: `Console — N actions`, or with drops `Console — N actions (D dropped: S of data requests, cancels and log lines; O of other entries)`. `count` (N) is null unless the text matches to its end and D = S + O; `dropped` is D, `droppedS` and `droppedO` are S and O; `total` = count + dropped. */
+function parseConsoleLabel(text) {
+  const m = /Console — (\d+) actions?(?: \((\d+) dropped: (\d+) of data requests, cancels and log lines; (\d+) of other entries\))?$/.exec(text);
+  if (!m) return { text, count: null, dropped: 0, droppedS: 0, droppedO: 0, total: null };
+  const [d, sd, od] = [m[2], m[3], m[4]].map((x) => Number(x ?? 0));
+  if (d !== sd + od) return { text, count: null, dropped: d, droppedS: sd, droppedO: od, total: null };
+  return { text, count: Number(m[1]), dropped: d, droppedS: sd, droppedO: od, total: Number(m[1]) + d };
+}
+
 async function readConsoleLabel(page) {
-  const text = await page.evaluate(() => document.querySelector(".console-disclosure")?.textContent ?? "");
-  const m = /Console — (\d+) actions?(?: \((\d+) dropped\))?/.exec(text);
-  const count = m ? Number(m[1]) : null;
-  const dropped = m && m[2] ? Number(m[2]) : 0;
-  return { text, count, dropped, total: count === null ? null : count + dropped };
+  return parseConsoleLabel(await page.evaluate(() => document.querySelector(".console-disclosure")?.textContent ?? ""));
 }
 
 /** The console's items in DOM order after expanding every group: a direct child of `.console-entries` that is a
@@ -730,10 +736,18 @@ async function stepGroup(page, consoleHandle) {
     }
   );
   const { items, label } = found.last;
-  const R = label.total - baseline.total;
-  if (R > MAX_CONSOLE_ENTRIES) {
-    throw new Error(`GROUP': capacity: ${R} entries were recorded since the baseline (label total ${label.total} - ${baseline.total}), more than the ring's ${MAX_CONSOLE_ENTRIES}`);
+  if (label.count === null || baseline.count === null) {
+    throw new Error(`GROUP': capacity: the Console's label did not parse (baseline ${JSON.stringify(baseline.text)}; now ${JSON.stringify(label.text)})`);
   }
+  // No row GROUP' reads that was recorded since its baseline can have been evicted: at most one ring's M entries came
+  // since (each ring still holds every entry of its own kind recorded since), or each kind's drops since the baseline
+  // are within what each ring held at least at the baseline, its held count less M (the other ring holds at most M).
+  const R = label.total - baseline.total;
+  const dropS = label.droppedS - baseline.droppedS, dropO = label.droppedO - baseline.droppedO, room = baseline.count - MAX_CONSOLE_ENTRIES;
+  if (R > MAX_CONSOLE_ENTRIES && !(dropO <= room && dropS <= room)) {
+    throw new Error(`GROUP': capacity: ${R} entries were recorded since the baseline (label total ${label.total} - ${baseline.total}), more than each ring's ${MAX_CONSOLE_ENTRIES}, and the drops since then, ${dropS} of the stream kind and ${dropO} of the other, are not both within the ${room} each ring held at least`);
+  }
+  const capacityBranch = R <= MAX_CONSOLE_ENTRIES ? `R=${R} <= ${MAX_CONSOLE_ENTRIES}` : `R=${R} > ${MAX_CONSOLE_ENTRIES}, but the drops since the baseline, ${dropS} of the stream kind and ${dropO} of the other, are each <= ${room}`;
   const w = styleWindow(items);
   const rowsIn = items.flatMap((it) => it.rows).filter((r) => r.i >= w.lo && r.i <= w.hi);
   if (!found.ok) {
@@ -826,7 +840,175 @@ async function stepGroup(page, consoleHandle) {
   }
 
   const distinct = new Set(w.res.map((x) => x.r.req)).size;
-  return `${GROUP_CALLS} style edits -> window items (key, rows inside): ${JSON.stringify(summary)}; ${exercised} group(s) show 2+ rows inside the window; ${distinct} distinct text(s) among the ${w.res.length} style.set record_step rows; R=${R} <= ${MAX_CONSOLE_ENTRIES}; one group-header click wrote 1 entry (label total ${beforeClick.total} -> ${afterClick.total}), a class-C row with owner ${JSON.stringify(newest.owner)} and a statement containing "no API equivalent"`;
+  return `${GROUP_CALLS} style edits -> window items (key, rows inside): ${JSON.stringify(summary)}; ${exercised} group(s) show 2+ rows inside the window; ${distinct} distinct text(s) among the ${w.res.length} style.set record_step rows; capacity: ${capacityBranch}; one group-header click wrote 1 entry (label total ${beforeClick.total} -> ${afterClick.total}), a class-C row with owner ${JSON.stringify(newest.owner)} and a statement containing "no API equivalent"`;
+}
+
+/**
+ * `LABEL'` (known limitation 67): the label's drop form, read once for real. Opens `filter-zoned.parquet` again, settles
+ * (quiet 3000 ms, bound 45 s), and asserts that the label parses, that D = S + O and that S > 0: a first look adds more
+ * data requests, cancels and log lines than the stream ring holds, so the label must show them dropped. Not mutated:
+ * under the swap of the two counts (the form's M-11) it passes whenever the other ring has also dropped entries by now.
+ */
+async function stepLabel(page, consoleHandle) {
+  const outcome = await callOpenPath(page, FIXTURE_SMALL);
+  if (outcome.kind !== "admitted") throw new Error(`LABEL': openPath(${FIXTURE_SMALL}) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+  await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+  const label = await readConsoleLabel(page);
+  if (label.count === null) throw new Error(`LABEL': the Console's label does not parse, or its D is not S + O (${JSON.stringify(label.text)})`);
+  if (!(label.droppedS > 0)) throw new Error(`LABEL': the stream ring did not overflow in this run; the label's drop form was not exercised (${JSON.stringify(label.text)})`);
+  return `the label parses with D = S + O and S > 0: ${JSON.stringify(label.text)}`;
+}
+
+// ---------------------------------------------------------------------------------------
+// MEASURE' (known limitation 67; the form's section 6): what one first look adds to each ring, by dataset and window.
+// Opt-in (CONSOLE_MEASURE=1) and run after the human's sitting; the figures are lower bounds, not performance claims.
+// ---------------------------------------------------------------------------------------
+
+const FIXTURE_100K = FIXTURE_SMALL.replace("filter-zoned.parquet", "100k-happy-path.parquet");
+const MEASURE_WINDOWS = [[1280, 800], [1024, 640], [1366, 768], [1920, 1080]];
+const MEASURE_RUNS_PER_CELL = 3;
+const MEASURE_SETTLE = { quietMs: 3000, timeoutMs: 60_000 };
+const MEASURE_READ_BOUND_MS = 30_000;
+// The registry's own statements for the Console's two toggles (`console/surfaceRegistry.ts`'s `console.togglePanelExpanded` and `console.toggleGroupExpanded` rows), restated here (this file imports nothing from `src/console/`); a row is told by its whole statement, never by a part another row's statement shares.
+const TOGGLE_STATEMENTS = new Set([
+  "no API equivalent exists -- ConsolePanel's own collapsed/expanded disclosure is pure view state (reflexive by design: the console records its own toggles the same as every other panel's).",
+  "no API equivalent exists -- a coalesced ×N group's own expand/collapse disclosure is pure view state, local to that group's row.",
+]);
+
+const labelAfterFrames = (page) =>
+  page.evaluate(async () => {
+    await Promise.race([new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))), new Promise((r) => setTimeout(r, 500))]);
+    return document.querySelector(".console-disclosure")?.textContent ?? "";
+  });
+
+async function setConsoleExpanded(page, want) {
+  await page.evaluate((w) => {
+    const t = document.querySelector(".console-disclosure");
+    if (t && (t.getAttribute("aria-expanded") === "true") !== w) t.click();
+  }, want);
+}
+
+/** One reading after P1 (the form's section 6, "The reading after P1", and section 2.5's R1 with P0 in place of R0): two frames after the last, in one `page.evaluate`. It opens the Console if closed (`{ opened }`); reads the label (N2, S2, O2); with a = (N2 - N0) + (O2 - O0) and L = a + min(M, S2 - S0), clicks the closed group headers among the last L rendered entries, walking from the end. Discarded (`{ discard }`, no click) unless the rendered entries sum to N2. Returns the last L rows when it kept and clicked nothing. */
+const readConsoleAfterP1 = (page, [n0, s0, o0]) => page.evaluate(async ([n0, s0, o0, M]) => {
+  await Promise.race([new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))), new Promise((r) => setTimeout(r, 500))]);
+  const toggle = document.querySelector(".console-disclosure");
+  if (toggle?.getAttribute("aria-expanded") !== "true") { toggle?.click(); return { opened: true }; }
+  const text = toggle.textContent ?? "", m = /Console — (\d+) actions?(?: \((\d+) dropped: (\d+) of data requests, cancels and log lines; (\d+) of other entries\))?$/.exec(text);
+  const [d, s2, o2] = m ? [m[2], m[3], m[4]].map((x) => Number(x ?? 0)) : [0, 0, 0];
+  if (!m || d !== s2 + o2) return { unreadable: true, text };
+  const n2 = Number(m[1]), a = n2 - n0 + (o2 - o0), L = Math.min(n2, a + Math.min(M, s2 - s0));
+  const rowOf = (el) => { const k = ["a", "b", "c"].find((x) => el.classList.contains(`console-entry-class-${x}`)) ?? "u", t = (sel) => el.querySelector(sel)?.textContent ?? null;
+    return k === "a" ? { k, name: t(".console-entry-header") } : { k, name: t(".console-entry-prose") ?? el.textContent }; };
+  const items = [...(document.querySelector(".console-entries")?.children ?? [])].filter((c) => c.matches(".console-group, .console-entry")).map((c) => {
+    if (c.matches(".console-entry")) return { size: 1, rows: [rowOf(c)], header: null };
+    const h = c.querySelector(".console-group-header"), rows = [...c.querySelectorAll(".console-entry")];
+    return rows.length > 0 ? { size: rows.length, rows: rows.map(rowOf), header: null } : { size: Number(/\d+/.exec(h?.textContent ?? "")?.[0]), rows: [], header: h };
+  });
+  if (items.reduce((sum, it) => sum + it.size, 0) !== n2) return { discard: true, text, s2, o2 };
+  let covered = 0, clicked = 0;
+  for (let i = items.length - 1; i >= 0 && covered < L; i--) { if (items[i].header) { items[i].header.click(); clicked++; } covered += items[i].size; }
+  const flat = items.flatMap((it) => it.rows);
+  return { text, n2, s2, o2, a, L, clicked, rows: clicked === 0 && L > 0 ? flat.slice(flat.length - L) : [] };
+}, [n0, s0, o0, MAX_CONSOLE_ENTRIES]);
+
+/** An entry of the other kind, by the name it shows: a class-A row whose header is not `viewport_query` or `cancel`, a class-B row whose prose does not end `(binding_log_session_event)`, and every class-C or unclassified row. Null for an entry of the stream kind. */
+function otherKindName(row) {
+  if (row.k === "a") return row.name === "viewport_query" || row.name === "cancel" ? null : row.name;
+  if (row.k === "b") return /\(binding_log_session_event\)$/.test(row.name ?? "") ? null : (/\((binding_[a-z_]+)\)$/.exec(row.name ?? "")?.[1] ?? row.name);
+  if (row.k === "c") return TOGGLE_STATEMENTS.has(row.name) ? "toggle" : `class-c: ${String(row.name).slice(0, 60)}`;
+  return "unclassified";
+}
+
+/** The reading after P1 and the run's decision, in the order of the form's section 6; each stop is S7 by name. Returns `{ a, L, names, label }`. */
+async function measureReadAfterP1(page, p0, p1, a1) {
+  const [n0, s0, o0, M] = [p0.count, p0.droppedS, p0.droppedO, MAX_CONSOLE_ENTRIES];
+  const deadline = Date.now() + MEASURE_READ_BOUND_MS;
+  let last = null;
+  while (Date.now() < deadline) {
+    const r = await readConsoleAfterP1(page, [n0, s0, o0]);
+    if (r.opened) continue;
+    if (r.unreadable) throw new Error(`MEASURE': the Console's label could not be read after P1 (${JSON.stringify(r.text)})`);
+    last = r;
+    if (r.o2 - o0 > n0 - M) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${r.o2 - o0} entries of the other kind were dropped after P0, more than the ${n0 - M} the other ring held then (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
+    if (r.discard || r.clicked > 0) continue;
+    const names = r.rows.map(otherKindName).filter((n) => n !== null);
+    if (names.length !== r.a) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${r.o2 - o0} entries of the other kind were dropped after P0, more than the ${n0 - M} the other ring held then, or their count ${names.length} is not ${r.a} (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
+    const count = (n) => names.filter((x) => x === n).length, toggles = count("toggle");
+    if (count("close_dataset") > 1 || count("binding_data_plane_attach") > 1 || count("close_dataset") + count("binding_data_plane_attach") + toggles !== names.length || toggles > r.a - a1) {
+      throw new Error(`MEASURE': an entry of the other kind was recorded after P0 that the open does not explain: ${JSON.stringify(names)} (P0: ${JSON.stringify(p0.text)}; P1: ${JSON.stringify(p1.text)}; final: ${JSON.stringify(r.text)})`);
+    }
+    return { a: r.a, L: r.L, names, label: r.text };
+  }
+  throw new Error(`MEASURE': within ${MEASURE_READ_BOUND_MS}ms of P1 no reading had every group open among the newest ${last?.L ?? "?"} entries (${JSON.stringify(last?.text ?? null)})`);
+}
+
+/** One run: set the window (S8 if it fails or the inner size differs), settle, open, P0, settle, P1, then the reading after P1. A run that does not settle is recorded and excluded (it enters no figure). */
+async function measureRun(page, consoleHandle, dataset, [w, h], run) {
+  await setConsoleExpanded(page, false);
+  try {
+    await page.setViewportSize({ width: w, height: h });
+  } catch (e) {
+    throw new Error(`MEASURE': page.setViewportSize(${w}x${h}) failed (${e.message}): STOP and report (S8)`);
+  }
+  await sleep(500);
+  const inner = await page.evaluate(() => `${window.innerWidth}x${window.innerHeight}`);
+  if (inner !== `${w}x${h}`) throw new Error(`MEASURE': inner size is ${inner} after setViewportSize(${w}x${h}): STOP and report (S8)`);
+  await waitForSettle(() => consoleHandle.renderTrace(), MEASURE_SETTLE);
+  const outcome = await callOpenPath(page, dataset);
+  if (outcome.kind !== "admitted") throw new Error(`MEASURE': openPath(${dataset}) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+  const p0 = parseConsoleLabel(await labelAfterFrames(page));
+  if (p0.count === null) throw new Error(`MEASURE': the Console's label could not be read at P0 (${JSON.stringify(p0.text)})`);
+  if (!(p0.droppedS > 0)) throw new Error(`MEASURE': cannot tell the open's own entries from any other: no data request, cancel or log line was dropped after the warm-up (${JSON.stringify(p0.text)})`);
+  const settle = await waitForSettle(() => consoleHandle.renderTrace(), MEASURE_SETTLE);
+  const p1 = parseConsoleLabel(await labelAfterFrames(page));
+  if (!settle.settled) return { ...run, settled: false, p0: p0.text, p1: p1.text };
+  if (p1.count === null) throw new Error(`MEASURE': the Console's label could not be read at P1 (${JSON.stringify(p1.text)})`);
+  const streamAdded = p1.droppedS - p0.droppedS, otherAdded = p1.total - p0.total - streamAdded;
+  const after = await measureReadAfterP1(page, p0, p1, otherAdded);
+  await setConsoleExpanded(page, false);
+  return { ...run, settled: true, streamAdded, otherAdded, a: after.a, L: after.L, names: after.names, p0: p0.text, p1: p1.text, final: after.label };
+}
+
+function fixtureHashes() {
+  return Object.fromEntries([FIXTURE_SMALL, FIXTURE_100K].map((f) => [f, createHash("sha256").update(readFileSync(f)).digest("hex")]));
+}
+
+async function stepMeasure(page, consoleHandle) {
+  if (process.env.CONSOLE_MEASURE !== "1") return { skip: "CONSOLE_MEASURE=1 is not set: MEASURE' is opt-in (the form's section 6) and runs after the human's sitting" };
+  for (const f of [FIXTURE_SMALL, FIXTURE_100K]) if (!existsSync(f)) throw new Error(`MEASURE': fixture not found: ${f} (S9)`);
+  const before = fixtureHashes();
+  const out = { startedAt: new Date().toISOString(), fixtures: before, runs: [], stopped: null };
+  let failure = null;
+  try {
+    // Warm-up: up to three opens of the small file until S > 0 (once S > 0 it stays above 0).
+    let warm = parseConsoleLabel(await labelAfterFrames(page));
+    for (let i = 0; i < 3 && !(warm.droppedS > 0); i++) {
+      const outcome = await callOpenPath(page, FIXTURE_SMALL);
+      if (outcome.kind !== "admitted") throw new Error(`MEASURE': warm-up openPath returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+      await waitForSettle(() => consoleHandle.renderTrace(), MEASURE_SETTLE);
+      warm = parseConsoleLabel(await labelAfterFrames(page));
+    }
+    if (!(warm.droppedS > 0)) throw new Error(`MEASURE': cannot tell the open's own entries from any other: no data request, cancel or log line was dropped after the warm-up (${JSON.stringify(warm.text)})`);
+    for (const dataset of [FIXTURE_SMALL, FIXTURE_100K]) {
+      for (const win of MEASURE_WINDOWS) {
+        for (let n = 1; n <= MEASURE_RUNS_PER_CELL; n++) {
+          out.runs.push(await measureRun(page, consoleHandle, dataset, win, { dataset: dataset.split(/[\\/]/).at(-1), window: `${win[0]}x${win[1]}`, n }));
+        }
+      }
+    }
+  } catch (e) {
+    failure = e;
+    out.stopped = e.message;
+  } finally {
+    await page.setViewportSize({ width: 1280, height: 800 }).catch(() => {});
+    mkdirSync(OUT_DIR, { recursive: true });
+    out.fixturesAfter = fixtureHashes();
+    writeFileSync(join(OUT_DIR, `console-measure-${Date.now()}.json`), JSON.stringify(out, null, 2));
+  }
+  if (failure) throw failure;
+  for (const f of Object.keys(before)) if (before[f] !== out.fixturesAfter[f]) throw new Error(`MEASURE': fixture ${f} changed hash during the run (S9)`);
+  const settled = out.runs.filter((r) => r.settled);
+  return `${out.runs.length} runs, ${settled.length} settled; largest stream-added ${Math.max(...settled.map((r) => r.streamAdded))}; per-run figures and labels in out/console-measure-<ms>.json (rule W is applied by the custodian's script, not here)`;
 }
 
 /**
@@ -1001,7 +1183,7 @@ async function main() {
   const { browser, page, launched } = session;
   const consoleHandle = attachConsole(page);
 
-  /** @type {Array<{id: string, status: "PASS"|"FAIL", note: string}>} */
+  /** @type {Array<{id: string, status: "PASS"|"FAIL"|"SKIP", note: string}>} */
   const results = [];
   const ctx = {};
 
@@ -1009,6 +1191,11 @@ async function main() {
     const startedAt = Date.now();
     try {
       const note = await withTimeout(fn(), timeoutMs, id);
+      if (typeof note === "object" && note !== null && "skip" in note) {
+        results.push({ id, status: "SKIP", note: note.skip });
+        console.log(`[${id}] SKIP: ${note.skip}`);
+        return;
+      }
       results.push({ id, status: "PASS", note });
       console.log(`[${id}] PASS (${Date.now() - startedAt}ms): ${note}`);
     } catch (e) {
@@ -1053,6 +1240,9 @@ async function main() {
     await runStep("GROUP'", 45_000, () => stepGroup(page, consoleHandle));
     await runStep("COPYTRUNC'", 30_000, () => stepCopytrunc(page));
     await runStep("UNCLASS'", 20_000, () => stepUnclass(page));
+    await runStep("LABEL'", 60_000, () => stepLabel(page, consoleHandle));
+    // MEASURE': opt-in (CONSOLE_MEASURE=1); a SKIP line without it. 24 runs: a step bound of 45 min, and the run's own deadline set by whoever runs it.
+    await runStep("MEASURE'", 45 * 60_000, () => stepMeasure(page, consoleHandle));
     await runStep("REGRESS'", 30 * 60_000, () => stepRegress());
 
     console.log("");

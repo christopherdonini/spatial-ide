@@ -373,46 +373,36 @@ const stepKey = (request) => {
 };
 /** The console's ring drops its oldest entries, so a count of rows since the open is not kept: wait until the newest rows end with the tail of the steps committed (as many as were read, in order) and the last row is ok. */
 const waitCommitted = (page, committed) => waitFor(() => readRecordStepRows(page), (r) => { const n = Math.min(r.length, committed.length); return n > 0 && r.at(-1).outcome === "ok" && JSON.stringify(r.slice(-n).map((row) => stepKey(row.request))) === JSON.stringify(committed.slice(-n)); }, 30_000);
-/** The Console's label (open-first-look-fills-fit-view Amendment 5): `Console — <held> actions (<dropped> dropped)`; held + dropped is every entry recorded since the page loaded, and the entry at position k of one reading is number dropped + k. */
-const LABEL = /Console — (\d+) actions?(?: \((\d+) dropped\))?/;
-const parseLabel = (text) => { const m = LABEL.exec(text); return m ? { held: Number(m[1]), dropped: Number(m[2] ?? 0) } : null; };
+// Mirrors `console/recorder.ts`'s `MAX_CONSOLE_ENTRIES`, each of the Console's two rings' size (the sibling-file convention: this file imports nothing from `src/console/`), for E-AND's arithmetic.
+const MAX_CONSOLE_ENTRIES = 128;
+/** The Console's label (known limitation 67): `Console — <held> actions`, or with drops `Console — <held> actions (<D> dropped: <S> of data requests, cancels and log lines; <O> of other entries)`; held + D is every entry recorded since the page loaded. A text that does not match to its end (a partial match is no match), or whose D is not S + O, does not parse. */
+const LABEL = /Console — (\d+) actions?(?: \((\d+) dropped: (\d+) of data requests, cancels and log lines; (\d+) of other entries\))?$/;
+const parseLabel = (text) => { const m = LABEL.exec(text); if (!m) return null; const [d, s, o] = [m[2], m[3], m[4]].map((x) => Number(x ?? 0)); return d === s + o ? { held: Number(m[1]), droppedS: s, droppedO: o } : null; };
 const consoleLabel = (page) => page.evaluate(async () => { await Promise.race([new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))), new Promise((r) => setTimeout(r, 500))]); return document.querySelector(".console-disclosure")?.textContent ?? ""; });
-/** One reading: opens the Console if closed (and returns null); numbers every rendered entry; returns null unless the entries and the closed groups' counts sum to held; clicks each closed group holding an entry numbered at or above the mark. */
-const readConsole = (page, mark) => page.evaluate(([label, mark]) => {
-  const toggle = document.querySelector(".console-disclosure"), m = new RegExp(label).exec(toggle?.textContent ?? "");
-  if (toggle?.getAttribute("aria-expanded") !== "true") { toggle?.click(); return null; }
-  if (!m) return null;
-  let held = Number(m[1]), dropped = Number(m[2] ?? 0), seen = [], steps = [], closed = [], text = (el, sel) => el.querySelector(sel)?.textContent ?? null, pos = dropped;
-  const take = (el) => { if (pos >= mark) { seen.push(pos); if (text(el, ".console-entry-header") === "record_step") steps.push({ n: pos, request: text(el, ".console-request-text"), outcome: text(el, ".console-outcome") }); } pos++; };
-  for (const child of document.querySelector(".console-entries")?.children ?? []) {
-    if (child.classList.contains("console-entry")) take(child);
-    else if (child.classList.contains("console-group")) { const rows = child.querySelectorAll(".console-entry"), n = Number(/\d+/.exec(text(child, ".console-group-header"))[0]);
-      if (rows.length > 0) rows.forEach(take); else { if (pos + n > mark) closed.push(child.querySelector(".console-group-header")); pos += n; } }
-  }
-  if (pos !== dropped + held) return null;
-  closed.forEach((el) => el.click());
-  return { held, dropped, seen, steps };
-}, [LABEL.source, mark]);
-/** Readings every 200 ms from this call until stopped, each numbering the entries from the mark. An entry is seen once a reading has rendered it; one unseen and already dropped is F2; the verdict is set at the first reading handled after `checked` that has seen every entry since the mark with the newest record_step row at ok. */
-function watchConsole(page, mark, label0) {
-  const w = { seen: new Set(), steps: new Map(), last: null, checked: false, verdict: null, error: null, stopped: false, stop: () => { w.stopped = true; } };
-  (async () => {
-    while (!w.stopped) {
-      try {
-        const r = await readConsole(page, mark);
-        if (r) {
-          r.seen.forEach((n) => w.seen.add(n)); r.steps.forEach((s) => w.steps.set(s.n, [stepKey(s.request), s.outcome]));
-          const unseen = []; for (let n = mark; n < r.dropped + r.held; n++) if (!w.seen.has(n)) unseen.push(n); const newest = [...w.steps].sort((a, b) => b[0] - a[0])[0];
-          w.last = { held: r.held, dropped: r.dropped, unseen: unseen.length, newest: newest?.[1] ?? null };
-          if (unseen[0] < r.dropped) w.error = new Error(`E-AND: cannot tell how many record_step rows card B's commit added: entry ${unseen[0]}, recorded after the mark at ${mark}, was dropped before it was read (label after card A's wait: ${label0.held} actions, ${label0.dropped} dropped; now: ${r.held} actions, ${r.dropped} dropped)`);
-          else if (w.checked && unseen.length === 0 && newest?.[1][1] === "ok") w.verdict = { held: r.held, dropped: r.dropped };
-        }
-      } catch (e) { w.error = e; }
-      if (w.error || w.verdict) w.stopped = true; else await sleep(200);
-    }
-  })();
-  return w;
-}
+/** One reading after card B's map settles (E-AND's R1): two frames after the last, in one `page.evaluate`. It opens the Console if it is closed (and returns `{ opened }`); reads the label (N1, S1, O1); with a = (N1 - N0) + (O1 - O0) and L = a + min(M, S1 - S0), clicks the closed group headers among the last L rendered entries (a closed group counts its ×N), walking from the end. Discarded (`{ discard }`, no click) unless the rendered entries, a closed group counting its ×N, sum to N1. Returns the last L rendered rows when it kept and clicked nothing (`clicked` 0), each as its kind, its header or prose, and a class-A row's request text and outcome. */
+const readConsoleAfterMap = (page, [n0, s0, o0]) => page.evaluate(async ([source, n0, s0, o0, M]) => {
+  await Promise.race([new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))), new Promise((r) => setTimeout(r, 500))]);
+  const toggle = document.querySelector(".console-disclosure");
+  if (toggle?.getAttribute("aria-expanded") !== "true") { toggle?.click(); return { opened: true }; }
+  const text = toggle.textContent ?? "", m = new RegExp(source).exec(text);
+  const [d, s1, o1] = m ? [m[2], m[3], m[4]].map((x) => Number(x ?? 0)) : [0, 0, 0];
+  if (!m || d !== s1 + o1) return { unreadable: true, text };
+  const n1 = Number(m[1]), a = n1 - n0 + (o1 - o0), L = Math.min(n1, a + Math.min(M, s1 - s0));
+  const rowOf = (el) => { const k = ["a", "b", "c"].find((x) => el.classList.contains(`console-entry-class-${x}`)) ?? "u", t = (sel) => el.querySelector(sel)?.textContent ?? null;
+    return k === "a" ? { k, name: t(".console-entry-header"), request: t(".console-request-text"), outcome: t(".console-outcome") } : { k, name: t(".console-entry-prose") ?? el.textContent, request: null, outcome: null }; };
+  const items = [...(document.querySelector(".console-entries")?.children ?? [])].filter((c) => c.matches(".console-group, .console-entry")).map((c) => {
+    if (c.matches(".console-entry")) return { size: 1, rows: [rowOf(c)], header: null };
+    const h = c.querySelector(".console-group-header"), rows = [...c.querySelectorAll(".console-entry")];
+    return rows.length > 0 ? { size: rows.length, rows: rows.map(rowOf), header: null } : { size: Number(/\d+/.exec(h?.textContent ?? "")?.[0]), rows: [], header: h };
+  });
+  if (items.reduce((sum, it) => sum + it.size, 0) !== n1) return { discard: true, text, s1, o1 };
+  let covered = 0, clicked = 0;
+  for (let i = items.length - 1; i >= 0 && covered < L; i--) { if (items[i].header) { items[i].header.click(); clicked++; } covered += items[i].size; }
+  const flat = items.flatMap((it) => it.rows);
+  return { text, n1, s1, o1, a, L, clicked, rows: clicked === 0 && L > 0 ? flat.slice(flat.length - L) : [] };
+}, [LABEL.source, n0, s0, o0, MAX_CONSOLE_ENTRIES]);
+/** A data request, a cancel or a log line, as a rendered row shows it (the stream kind, `console/surfaceRegistry.ts`'s three marks). */
+const isStreamRow = (row) => (row.k === "a" && (row.name === "viewport_query" || row.name === "cancel")) || (row.k === "b" && /\(binding_log_session_event\)$/.test(row.name ?? ""));
 
 /** The Filter section's Clear: every card goes. A step starts from here. */
 async function clearCards(page, consoleHandle) {
@@ -460,10 +450,6 @@ async function stepField(page) {
 }
 
 async function stepAnd(page, consoleHandle) {
-  const box = {};
-  try { return await stepAndWatched(page, consoleHandle, box); } finally { box.watch?.stop(); }
-}
-async function stepAndWatched(page, consoleHandle, box) {
   await clearCards(page, consoleHandle);
   const unfiltered = await mapFraction(page);
   if (unfiltered <= 0.02) throw new Error(`E-AND: the unfiltered map is ${(unfiltered * 100).toFixed(2)}% non-background; nothing rendered to filter against`);
@@ -480,21 +466,46 @@ async function stepAndWatched(page, consoleHandle, box) {
   const sentB = await sendCondition(page, ZONE_B);
   if (!sentB.cleared) throw new Error(`E-AND: card B was not applied (${JSON.stringify(sentB)})`);
   const both = await expectApplied("E-AND", page, [ZONE_A, ZONE_B]);
-  const watch = (box.watch = watchConsole(page, label0.held + label0.dropped, label0));
   await settleMap(consoleHandle);
   const fractionAB = await mapFraction(page);
   if (fractionAB > FRACTION_BLANK) throw new Error(`E-AND: with A and B on the map is ${(fractionAB * 100).toFixed(2)}% non-background, expected it empty (at most ${FRACTION_BLANK * 100}%)`);
   if (both.cards.applied !== both.expectedApplied || both.cards.on.join() !== "true,true") throw new Error(`E-AND: .filter-active reads ${JSON.stringify(both.cards.applied)} with the cards ${both.cards.on.join()}, expected ${JSON.stringify(both.expectedApplied)} with true,true`);
-  watch.checked = true; const read = await waitFor(async () => { if (watch.error) throw watch.error; return watch.verdict; }, (v) => v !== null, 30_000);
-  if (!read.ok) throw new Error(`E-AND: within 30000ms of card B's map settling no reading had read every entry since the mark with a record_step row since it at ok (${JSON.stringify(watch.last)})`);
-  const added = [...watch.steps].sort((x, y) => x[0] - y[0]).map(([, row]) => row); if (added.length !== 1 || added[0][0] !== `filter:${ZONE_AB}` || added[0][1] !== "ok") throw new Error(`E-AND: card B's commit added ${added.length} record_step rows, expected exactly one, at ok, carrying the combined text: ${JSON.stringify(added)}`);
+  const read = await readAddedRows(page, text0, label0);
   await page.click(".clause-card:nth-child(2) .clause-switch");
   const off = await waitFor(() => readCards(page), (c) => c.on.join() === "true,false" && c.applied === `Applied: ${ZONE_A}`, 30_000);
   if (!off.ok) throw new Error(`E-AND: with B switched off the cards read ${JSON.stringify(off.last)}, expected on true,false and Applied: ${ZONE_A}`);
   await settleMap(consoleHandle);
   const fractionOff = await mapFraction(page);
   if (Math.abs(fractionOff - fractionA) > FRACTION_TOLERANCE) throw new Error(`E-AND: with B off the map is ${(fractionOff * 100).toFixed(2)}% non-background, A's was ${(fractionA * 100).toFixed(2)}%: over ${FRACTION_TOLERANCE * 100} points apart`);
-  return `A ${(fractionA * 100).toFixed(1)}% non-bg (unfiltered ${(unfiltered * 100).toFixed(1)}%); A and B on: ${(fractionAB * 100).toFixed(2)}%, Applied the exact AND text, card B's commit added exactly one record_step row, at ok (Console after card A's wait: ${label0.held} actions, ${label0.dropped} dropped; after card B's map settled: ${read.last.held} actions, ${read.last.dropped} dropped); B off: ${(fractionOff * 100).toFixed(1)}%, Applied A's text`;
+  return `A ${(fractionA * 100).toFixed(1)}% non-bg (unfiltered ${(unfiltered * 100).toFixed(1)}%); A and B on: ${(fractionAB * 100).toFixed(2)}%, Applied the exact AND text, card B's commit added exactly one record_step row, at ok (Console after card A's wait: ${JSON.stringify(text0)}; after card B's map settled: ${JSON.stringify(read.text)}; dS=${read.dS}, a=${read.a}, L=${read.L}, held stream entries before card B's record_step=${read.streamBefore}); B off: ${(fractionOff * 100).toFixed(1)}%, Applied A's text`;
+}
+
+/** E-AND's readings after card B's map settles (known limitation 67; the rule of the Console form's section 2.5): the entries recorded after the reading at `text0` are the last L rendered entries, when none of the other kind the recorder held then was dropped since (dO <= N0 - M). Fails by name where it cannot tell; never passes there. */
+async function readAddedRows(page, text0, label0) {
+  const [n0, s0, o0, M] = [label0.held, label0.droppedS, label0.droppedO, MAX_CONSOLE_ENTRIES];
+  const deadline = Date.now() + 30_000;
+  let final = null, last = null;
+  const stepsOf = (r) => r.rows.filter((row) => row.k === "a" && row.name === "record_step");
+  const failF4 = (r) => { const added = stepsOf(r).map((row) => [stepKey(row.request), row.outcome]); return new Error(`E-AND: card B's commit added ${added.length} record_step rows, expected exactly one, at ok, carrying the combined text: ${JSON.stringify(added)}`); };
+  while (Date.now() < deadline) {
+    const r = await readConsoleAfterMap(page, [n0, s0, o0]);
+    if (r.opened) continue;
+    if (r.unreadable) throw new Error(`E-AND: the Console's label could not be read after card B's map settled (${JSON.stringify(r.text)})`);
+    if (s0 === 0) throw new Error(`E-AND: cannot tell how many record_step rows card B's commit added: the label after card A's wait shows no data request, cancel or log line dropped, so its held count does not split between the two kinds (${JSON.stringify(text0)})`);
+    last = r;
+    if (r.o1 - o0 > n0 - M) throw new Error(`E-AND: cannot tell how many record_step rows card B's commit added: ${r.o1 - o0} entries of the other kind were dropped between the label read after card A's wait and the reading after card B's map settled, more than the ${n0 - M} the other ring held then (label then: ${JSON.stringify(text0)}; now: ${JSON.stringify(r.text)})`);
+    if (r.discard || r.clicked > 0) continue;
+    final = r;
+    const steps = stepsOf(r), newest = steps.at(-1);
+    if (steps.length === 1 && stepKey(steps[0].request) === `filter:${ZONE_AB}` && steps[0].outcome === "ok") {
+      const at = r.rows.indexOf(steps[0]);
+      return { text: r.text, dS: r.s1 - s0, a: r.a, L: r.L, streamBefore: r.rows.slice(0, at).filter(isStreamRow).length };
+    }
+    if (newest && newest.outcome !== "pending") throw failF4(r);
+  }
+  if (final === null) throw new Error(`E-AND: within 30000ms of card B's map settling no reading had every group open among the newest ${last?.L ?? "?"} entries with its newest record_step row past pending (${JSON.stringify(last?.text ?? null)})`);
+  if (stepsOf(final).length === 0) throw failF4(final);
+  throw new Error(`E-AND: within 30000ms of card B's map settling no reading had every group open among the newest ${final.L} entries with its newest record_step row past pending (${JSON.stringify(final.text)})`);
 }
 
 async function stepRefuse(page, consoleHandle) {

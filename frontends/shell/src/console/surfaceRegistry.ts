@@ -32,6 +32,8 @@ export interface ClassARow {
   /** One of the eight SKP command names, e.g. `"open_dataset"` -- the same string
    * `skp/client.ts`'s `call()` passes to `invoke` as its first argument. */
   readonly command: string;
+  /** `"stream"` marks the rows whose entries the Console keeps in the ring of its own (known limitation 67): a data request or a cancel. Absent on every other row. `isStreamLaneName` below reads the marks. */
+  readonly lane?: "stream";
 }
 
 /** A class-B row names one binding-local Tauri command. Every field is `string`; there is no
@@ -47,6 +49,8 @@ export interface ClassBRow {
    * conformance suite -- every class-B row's citation must contain "ADR-024" or "SKP-V0"
    * (`surfaceCompleteness.test.ts` asserts this for every row in this table). */
   readonly citation: string;
+  /** `"stream"` marks the row whose entries the Console keeps in the ring of its own (known limitation 67): the app's line to the session log. Absent on every other row. */
+  readonly lane?: "stream";
 }
 
 /** A class-C row names a GUI action with no command at all -- style edits, panel toggles, banner
@@ -81,8 +85,8 @@ const BINDING_LOCAL_CITATION =
 const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "open_dataset" },
   { class: "A", command: "describe" },
-  { class: "A", command: "viewport_query" },
-  { class: "A", command: "cancel" },
+  { class: "A", command: "viewport_query", lane: "stream" },
+  { class: "A", command: "cancel", lane: "stream" },
   { class: "A", command: "close_dataset" },
   { class: "A", command: "record_step" },
   { class: "A", command: "save_project" },
@@ -112,6 +116,7 @@ const CLASS_B_ROWS = [
       "writes one diagnostic log line to a host-side log that outlives the session (ADR-010 " +
       "rule 7); the shell never blocks on it, never surfaces its result, and never retries it.",
     citation: BINDING_LOCAL_CITATION,
+    lane: "stream",
   },
   {
     class: "B",
@@ -121,6 +126,7 @@ const CLASS_B_ROWS = [
       "host-compiled data; no dataset, path, or query leaves the shell for this action.",
     citation: BINDING_LOCAL_CITATION,
   },
+  // In an instrumented build only (isInstrumentedBuild), a file that the e2eRelinkFile test hook (src/e2e-test-surface.ts) puts in AdmissionPanel's one-shot slot e2eFileRef is taken once, through takeSlot, in place of this picker's answer for a re-link; the picker is then not opened and no entry of this row is recorded. Open's own pick (handlePick) has no slot. In a plain build the slot is always null, so the picker's own answer supplies the path (ADV-2026-11-21-08 item 3; ADV-2026-11-22-30 item 4).
   {
     class: "B",
     command: "binding_pick_file",
@@ -129,6 +135,7 @@ const CLASS_B_ROWS = [
       "open_dataset is called; the picker's own answer supplies the path, never a script's.",
     citation: BINDING_LOCAL_CITATION,
   },
+  // In an instrumented build only (isInstrumentedBuild), a folder that a test hook of src/e2e-test-surface.ts puts in a one-shot slot is taken once in place of this picker's answer: e2eFolderRef in AdmissionPanel (through takeSlot, for a reopen) and e2eSaveFolderRef in App (for a save). In a plain build both slots are always null, so the picker's own answer supplies the folder (ADV-2026-11-21-08 item 3; ADV-2026-11-21-15 item 5).
   {
     class: "B",
     command: "binding_pick_project_folder",
@@ -432,4 +439,10 @@ export function classBRows(): readonly ClassBRow[] {
 
 export function classCRows(): readonly ClassCRow[] {
   return SURFACE_REGISTRY.filter((row): row is ClassCRow => row.class === "C");
+}
+
+/** Whether an entry of this kind and name is held in the Console's stream ring (known limitation 67): a class-A (`"skp-request"`) or class-B (`"binding-command"`) row the registry marks `lane: "stream"` -- `viewport_query`, `cancel` and `binding_log_session_event`, and no other. Derived from the marked rows, so the recorder keeps no list of names. Its one product caller is `ConsoleRecorder.push`'s lane choice (`recorder.ts`). */
+export function isStreamLaneName(kind: "skp-request" | "binding-command", name: string): boolean {
+  const rows: readonly (ClassARow | ClassBRow)[] = kind === "skp-request" ? classARows() : classBRows();
+  return rows.some((row) => row.command === name && row.lane === "stream");
 }
