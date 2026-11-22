@@ -28,3 +28,13 @@ Out-of-scope: ADR none; security none -- a test file's messages only, Node's sta
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — merged; the second piece
+
+1. **Merged** by the advisor by merge commit 852f2095159332558e7fce1a146342f7bc5a95be, at 2026-11-22T13:48:33Z by GitHub, at the checked head c3bd9798de2933c51811cb90df240c04da009361; its verdict MERGE filed at `state/consults/merge-checks/PR-354-c3bd9798de29.md`; main's CI at the merge commit green (4 runs, all success, read at 2026-11-22T13:54:57Z).
+
+2. **The second piece.** The cause is shown by this piece's gate, so the fix follows now and does not wait for another failure (ADV-2026-11-22-14, `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-14-the-flaky-scripts-tests-cause-shown-by-pr-354s-gate-its-fix-the-nodes-second-piece-now.md`). Its five-line form is `governance/forms/scripts/VERIFY-OFFLINE-NOTE-TEST-PREDICATE-PREREGISTRATION.md`, and the node's gate moves to it in this commit. This form claims no test name, so no claim line is pinned.
+
+Read the last amendment first.
+
+Nothing above is edited.
