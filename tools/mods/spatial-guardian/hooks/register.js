@@ -1105,6 +1105,7 @@ export function register(on) {
   const cache = {};
   on('tool.call', nudge);
   on('tool.call', { tool: 'Bash' }, ($, e, next) => guardShell($, e, next, cache, false)).catch(() => ({ deny: CATCH_REASON }));
+  on('tool.call', { tool: 'Monitor' }, ($, e, next) => guardShell($, e, next, cache, false)).catch(() => ({ deny: CATCH_REASON }));
   on('tool.call', { tool: 'PowerShell' }, ($, e, next) => guardShell($, e, next, cache, true)).catch(() => ({ deny: CATCH_REASON }));
   on('tool.call', { tool: 'Write' }, ($, e, next) => guardWrite($, e, next, cache, 'write', e.file_path)).catch(() => ({ deny: CATCH_REASON }));
   on('tool.call', { tool: 'Edit' }, ($, e, next) => guardWrite($, e, next, cache, 'edit', e.file_path)).catch(() => ({ deny: CATCH_REASON }));
