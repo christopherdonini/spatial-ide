@@ -607,3 +607,25 @@ Made before any code. No outcome has been seen. The words are the architect's, f
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-22 — the shortened-target list joins the Scope as its eleventh file; the words commit
+
+By the advisor's rulings ADV-2026-11-22-10 item 4 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md`) and ADV-2026-11-22-13 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-13-the-cancel-gates-two-texts-for-one-place-the-architects-d1-and-d2-land-doc-1-met-by-them.md`), under the human's delegation of 2026-11-13.
+
+1. **The eleventh file.** `scripts/plan/verify-cites-shortened-target.json` joins §7's Scope as its eleventh file, for its `entries` array only. The node verify-cites-shortened-target-list added it (PR 351, merged by the advisor by merge commit 7ca0a2fd12c0aa58aefcbca87e0cd37068816fdd). The array gains ten entries, one for each unresolved cite in the build worker's report (`state/consults/2026-11-22-cancel-requested-stamp-order-build-worker-report.md`, its verify-cites bullet): seven in this form and three in the two consults it names. Each entry names the citing file, the cite's token as written, and the commit that the rule in the header of `scripts/plan/verify-cites.mjs` names. Nothing else in the file changes, and no cite in this form or in the two consults is touched.
+
+2. **The order.** First the branch takes main in by a merge commit, signed off, never a rebase. Then one commit adds the ten entries and nothing else. At that commit, `node scripts/plan/verify-cites.mjs` exits 0, and §4.5's green `verify-cites` is met there, not at 3f3820c9 (ADV-2026-11-22-10 item 5). If the run at the merge's head names an unresolved cite other than these ten, the worker stops and reports.
+
+3. **The count.** The entries are data, and they count as changed lines like any other line in the Scope. The line count is taken by `git diff --numstat origin/main...HEAD` over the eleven paths at a named commit. After the merge of main the three-dot range starts at the merged main commit, so main's own changes are not counted. The ceiling stays at 800 changed lines, and an overrun is still class 8. §8 item 11 reads the eleventh file as in Scope.
+
+4. **The words commit.** After the entries' commit, one commit applies the architect's D1 to D4 (`state/consults/gates/2026-11-22-cancel-requested-stamp-order-g1-architect.md`, its Documentation section), each in that report's words copied by script, and the clippy line the reviewer's check 9 names (`state/consults/gates/2026-11-22-cancel-requested-stamp-order-g1-reviewer.md`): `spins % 1024 != 0` becomes `!spins.is_multiple_of(1024)`, and nothing else on the line changes. D1 and D2 are taken in place of the reviewer's DOC-1 for the same two comments, by ADV-2026-11-22-13. The closing amendment records DOC-1 as met by them, and that the choice between the two authors' words is that ruling's.
+
+5. **The later commits' read.** The reviewer reads the merge commit, the entries' commit, the words commit and any correction commit once, narrowly (ADV-2026-11-22-10 item 5). For each entry, it checks that the commit is the one the header's rule names. It reads D1 to D4 as applied against the architect's report, and the clippy line as a code line.
+
+6. **Superseded index.**
+   - §7's Scope and Amendment 2 item 9's count: added to by items 1 and 3.
+   - §4.5's green `verify-cites`: met at the entries' commit, by item 2.
+
+Read the last amendment first.
+
+Nothing above is edited.
