@@ -43,7 +43,9 @@ export interface AdmitOptions {
  * `open_dataset` → on success, `describe` → success or typed refusal is the product truth
  * (NEXT-CUT.md). Any non-`SkpError` failure is rethrown rather than swallowed, so it still reaches
  * the global handlers ADR-010 rule 7 installs -- this function only ever turns a *typed* refusal
- * into product UI; an unexpected failure is exactly what those handlers exist for.
+ * into product UI; an unexpected failure is exactly what those handlers exist for. A `describe` that
+ * fails, typed or not, first closes the opened handle (`describeOpened`), waiting for the close at most
+ * `DESCRIBE_FAILED_CLOSE_WAIT_MS`.
  */
 export async function admitDataset(
   path: string,
