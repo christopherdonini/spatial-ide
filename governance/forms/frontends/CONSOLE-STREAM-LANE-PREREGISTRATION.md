@@ -911,3 +911,132 @@ OPEN-2, OPEN-3, OPEN-4, OPEN-7 and OPEN-8 are closed as §12 recommends, by ADV-
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — post-result amendment after the architect's form gate, attempt 2: its words D1 to D6 (section 31 (d)), and ADV-2026-11-22-30 items 2 and 4
+
+**Authority.** The advisor's ruling ADV-2026-11-22-30 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-30-the-console-words-approved-rule-w-step-3-second-form-replaced-r2-cite-changed-the-build-may-start.md`), items 2, 4 and 6, under the delegation of 2026-11-13. The architect's form gate, attempt 2, PASS WITH NOTES: `state/consults/gates/2026-11-22-console-stream-lane-form-gate-architect-attempt-2.md`, gate-log row 842. Its words, not the human's and not the advisor's, are applied with no re-gate under section 31 (d), as the report says. ADV-2026-11-22-28 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-28-the-console-form-after-its-gate-amendment-1-then-attempt-2-the-five-open-items-as-recommended-the-stop-accounted-for-now.md`) item 5: the build may start on this verdict, and the words commit waits for the advisor's approval of L1, K1 to K3, R1, R2, W1 to W3 and Rule W, asked at 2026-11-22T18:43:32.497Z.
+
+**How the texts were copied.** Each old and new text below is copied by script: D1 to D6 from the gate report's Documentation section, except D1's new text, whose value the script computes as the report asks; the last two from the advisor's ruling ADV-2026-11-22-30, its item 2 from its file's fences and its item 4 from its words. Each old text occurs once in this form above this amendment, and none overlaps another. Each new text is read in place of its old text.
+
+**D1.** Old:
+
+```text
+sha256:<line 12's hash, by the custodian's script>
+```
+
+New:
+
+```text
+sha256:72d099f6f0ae79f76d0eaa926e4dcace2536a16bbd600b0a07853b62818347cc
+```
+
+Note: the hash is the sha256 of line 12 of `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-20-the-console-forms-twelfth-file-test-code-only-two-rings-of-256-kept-the-open-drawers-frame-time-measured-after-the-sitting.md` as committed at 0f2078423378fb3f35346a6db9be5833ba0569b9, its LF included, computed by the custodian's script; the gate's new text describes the value and is not copied.
+
+**D2.** Old:
+
+```text
+The open records no step (`frontends/shell/src/App.tsx:1180`) and no gui-action.
+```
+
+New:
+
+```text
+The open records no step (`frontends/shell/src/App.tsx:1180`) and no gui-action after P0: the one gui-action an open can record, `dataset.openDuringExport` (`frontends/shell/src/App.tsx:1305`), answers the export ask, which comes before the admission (`frontends/shell/src/admission/AdmissionPanel.tsx:221`, `:238`), and MEASURE' runs no export.
+```
+
+**D3.** Old:
+
+```text
+and rows of `console.togglePanelExpanded` and `console.toggleGroupExpanded`, the reading's own, numbering together at most a − a₁.
+```
+
+New:
+
+```text
+and rows of `console.togglePanelExpanded` and `console.toggleGroupExpanded`, the reading's own, numbering together at most a − a₁, each told by its row's statement equal as a whole to that action's statement in the registry (`frontends/shell/src/console/surfaceRegistry.ts:266-270`, `:275-278`), never by a part that another row's statement shares.
+```
+
+**D4, text 1 of 3.** Old:
+
+```text
+| VL3 | consoleViewModel.test.ts | real recorder: A, `viewport_query`, B, then M × `viewport_query`: the first group is [A, B] | all evicted | M-9: grouping breaks on a seq gap |
+```
+
+New:
+
+```text
+| VL3 | consoleViewModel.test.ts | real recorder: A, `viewport_query`, B, then M × `viewport_query`: the first group is [A, B] | all evicted | M-9: grouping breaks on a seq gap |
+| VL3′ | consoleViewModel.test.ts | real recorder: two `viewport_query`, a gui-action G, two `viewport_query`, then M gui-actions of another name: G is dropped, and the first group is the four `viewport_query` | all evicted | M-9: grouping breaks on a seq gap |
+```
+
+**D4, text 2 of 3.** Old:
+
+```text
+or other-kind entries between two runs of a stream entry (by reading, not tested).
+```
+
+New:
+
+```text
+or other-kind entries between two runs of a stream entry (VL3′).
+```
+
+**D4, text 3 of 3.** Old:
+
+```text
+Group closing is `ConsolePanel.tsx:96`, and joined runs are VL3.
+```
+
+New:
+
+```text
+Group closing is `ConsolePanel.tsx:96`, and joined runs are VL3 and VL3′.
+```
+
+**D6.** Old:
+
+```text
+stops the measurement unless the open itself explains it (§6, the reading after P1).
+```
+
+New:
+
+```text
+stops the measurement unless the open itself explains it (§6, the reading after P1). This holds for a settled run; an unsettled run is not read and enters no figure (§6, One run, step 5).
+```
+
+**ADV-2026-11-22-30 item 2, rule W step 3's second form.** Old:
+
+```text
+"can add up to ⟨Y⟩ entries of the first kind"
+```
+
+New:
+
+```text
+"can add ⟨Y⟩ or more entries of the first kind"
+```
+
+Note: the advisor's wording under the delegation of 2026-11-13, copied by script from its file's fences, `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-30-the-console-words-approved-rule-w-step-3-second-form-replaced-r2-cite-changed-the-build-may-start.md`.
+
+**ADV-2026-11-22-30 item 4, R2's closing cite.** Old:
+
+```text
+ADV-2026-11-22-22 item 6
+```
+
+New:
+
+```text
+ADV-2026-11-22-30 item 4
+```
+
+Note: the advisor's ruling, `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-30-the-console-words-approved-rule-w-step-3-second-form-replaced-r2-cite-changed-the-build-may-start.md`, item 4.
+
+**D5, the estimate.** The recount is about 790 lines, within 850, by the gate's check 5, with `frontends/shell/e2e/console.mjs` named as the risk. §7 is not edited.
+
+**Order.** D3 is in place before the build's commit 3, and D4 before its commit 2, as the report says; this amendment is on main before the build is dispatched.
+
+Read the last amendment first.
+
+Nothing above is edited.
