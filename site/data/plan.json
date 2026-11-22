@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T03:51:23.249Z",
-  "plan_hash": "4400a1f64baf20db23cfad192644d2dd6855adb46ea411cce5b91c288554d2bb",
+  "generated_at": "2026-11-22T04:19:36.175Z",
+  "plan_hash": "6fce223f6469a8690b79841b54ee22ea0617d7653a0f9f0bb51f784633c1b264",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12355,6 +12355,106 @@
       "dates": {
         "opened": "2026-11-21",
         "done": "2026-11-21"
+      }
+    },
+    {
+      "id": "cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers",
+      "title": "The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3)",
+      "kind": "task",
+      "lane": "engine",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-11-22 by the advisor ruling ADV-2026-11-22-01 item 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 1 (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): full form, both gates; prepared and gated now, merged only after the v0.2 tag. The finding at 624eb45c is in the ledger (1122b). The form keeps two questions apart, whether cancellation reached the producer and the order of the two trace stamps; it keeps both trace promises, a repeated cancellation stamps at most once and cancel_for_drop stamps nothing, and both producer-reach checks; a controlled interleaving where feasible; no plain swap of the two lines. If the fix closes the failure both wrappers go; if not, they stay and the piece goes to the advisor. It replaces the cancel test of ADV-2026-11-21-15 item 3 (iii). Worktree C:/dev/wt/cancel-stamp on cut/cancel-stamp-order from 662ea259, build output D:/wt-targets/cancel-stamp; the isolation check passed on 2026-11-22. The form is being drafted by lead-data.",
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      }
+    },
+    {
+      "id": "subagent-compaction-hooks-quiet-for-subagents",
+      "title": "When a subagent compacts, scripts/hooks/session-resume.mjs prints nothing and scripts/hooks/precompact-flush.mjs allows it with one diagnostic line naming the agent type, the custodian state left alone (the human message of 2026-11-22, item 2 (a))",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md",
+      "evidence": null,
+      "budget_minutes": 90,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PLACED 2026-11-22 by ADV-2026-11-22-01 item 4 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-01-the-pieces-of-the-humans-message-placed-the-two-drafts-filed-on-main-before-their-ids.md), on the human message of 2026-11-22, item 2 (a), which approves exactly this change to the two scripts and their tests (state/directives/2026-11-22-the-humans-message-the-idle-time-work-flaky-tests-are-findings-the-cancel-node-subagent-compaction-guardian-and-monitor-a-property-testing-trial.md): the five-line form governance/forms/scripts/SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md, committed before any code; the reviewer alone; the standard worker; may merge before the v0.2 tag. No settings change. The tests spawn the real entry points against temporary state; live unverified until a real subagent compaction is seen. Worktree C:/dev/wt/subagent-compact on cut/subagent-compaction-hooks from 662ea259, no build output; the isolation check passed on 2026-11-22.",
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      }
+    },
+    {
+      "id": "guardian-checks-monitor-commands",
+      "title": "The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02)",
+      "kind": "task",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 240,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8.",
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      }
+    },
+    {
+      "id": "property-testing-trial-proptest-and-fast-check",
+      "title": "A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03)",
+      "kind": "task",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 5
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 360,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8.",
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
       }
     }
   ]
