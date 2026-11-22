@@ -247,8 +247,10 @@ impl Projects {
     /// Drop the entry, and with it the identity's open lock, of every open this [`Projects`] saved
     /// first or reopened that the catalog no longer holds or whose session has ended
     /// (`require_live`). The shell's `close_dataset` starts it on another thread after the host
-    /// has closed the dataset and does not wait for it, and [`Projects::open_project`] calls it
-    /// before it takes a lock. It takes the `saved` mutex before the catalog and the generations,
+    /// has closed the dataset and does not wait for it, [`Projects::open_project`] calls it
+    /// before it takes a lock, and [`Projects::reply_of`]'s guard calls it after its own close of
+    /// the dataset, when a panic unwinds out of building the `opened` reply. It takes the `saved`
+    /// mutex before the catalog and the generations,
     /// as [`Projects::save`] does, so a save in progress ends before its entry is dropped. After
     /// `close_dataset` has replied, the lock can therefore still be held until a call of this
     /// function that began after the host's close has run: the one `close_dataset` started, or
@@ -891,6 +893,8 @@ impl Projects {
     /// [`open_error_of`], and the reply built from what the reopen returned. No reply carries a
     /// path; `not_found`'s `file_name` passes through [`bounded`]. It can wait on the `saved` mutex
     /// ([`Projects::release_ended`] and the entry it keeps), so a host calls it off its main thread.
+    /// A panic while the `opened` reply is built closes the reopened dataset and frees its lock
+    /// before the panic leaves the call ([`Projects::reply_of`]).
     pub fn open_project_command(
         &self,
         req: OpenProjectRequest,
@@ -915,9 +919,34 @@ impl Projects {
     }
 
     /// The `opened` reply of a reopen, built by [`opened_of`]. Its one caller is
-    /// [`Projects::open_project_command`]'s `Reopen::Opened` arm.
+    /// [`Projects::open_project_command`]'s `Reopen::Opened` arm. If [`opened_of`] panics, its
+    /// guard runs during the unwind, holding no lock: it closes the dataset through the host, as
+    /// [`Projects::open_project`] closes it after a refused write, and then calls
+    /// [`Projects::release_ended`], which drops the entry and with it the identity's open lock.
     fn reply_of(&self, o: Opened) -> OpenedProject {
+        let dataset = o.dataset.clone();
+        let _guard = ReplyGuard {
+            projects: self,
+            dataset,
+        };
         opened_of(o)
+    }
+}
+
+/// [`Projects::reply_of`]'s guard: only on an unwind, it closes `dataset` and frees its lock.
+struct ReplyGuard<'a> {
+    projects: &'a Projects,
+    dataset: DatasetHandle,
+}
+
+impl Drop for ReplyGuard<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            let (skp, dataset) = (SKP_VERSION.to_string(), self.dataset.clone());
+            let host = self.projects.recorder.host();
+            drop(host.close_dataset(CloseDatasetRequest { skp, dataset }));
+            self.projects.release_ended();
+        }
     }
 }
 
@@ -969,7 +998,11 @@ fn open_error_of(e: OpenFailure, folder: &str) -> SkpError {
 }
 
 /// The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the
-/// view's state; the check's names; and the two lineage facts, with no line and no rule text.
+/// view's state; the check's names; and the two lineage facts, with no text of a lineage file's
+/// lines, no rule text and no error text: a refusal carries a line number where it has one. It
+/// panics if the style does not write again as canonical JSON, if that JSON does not read back, or
+/// if the check names a word the wire has none for. No file the reader accepts reaches any of
+/// these, and [`Projects::reply_of`] closes the dataset and frees the lock if one fires.
 fn opened_of(o: Opened) -> OpenedProject {
     let w = o.workspace;
     // The reader accepted the style only in ADR-017 §5a's canonical form, so it is written again
