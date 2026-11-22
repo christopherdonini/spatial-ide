@@ -732,25 +732,12 @@ mod tests {
 
     #[test]
     fn a_session_log_folder_is_the_test_runs_own() {
-        let (_session, log) = session_log("folder-of-the-runs-own");
-        let dir = log.path.parent().expect("the log file has a folder");
-        assert!(
-            dir.starts_with(std::env::temp_dir()),
-            "the folder {dir:?} is not under the system temporary folder"
-        );
-        let run = dir.parent().expect("the folder has a parent");
-        assert_eq!(
-            run.file_name().and_then(|n| n.to_str()),
-            Some(std::process::id().to_string().as_str()),
-            "the folder {dir:?} is not under a component equal to the process id"
-        );
-        assert_eq!(
-            run.parent()
-                .and_then(|p| p.file_name())
-                .and_then(|n| n.to_str()),
-            Some("spatial-ide-shell-session-log-tests"),
-            "the process id's folder is not under the fixed folder"
-        );
+        let (_session, log) = session_log("own");
+        let want = std::env::temp_dir()
+            .join("spatial-ide-shell-session-log-tests")
+            .join(std::process::id().to_string())
+            .join("own");
+        assert_eq!(log.path.parent(), Some(want.as_path()), "not the run's own");
     }
 
     /// A line after its `<unix-ms>` stamp and the space, its LF kept.
