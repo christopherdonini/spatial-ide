@@ -15,3 +15,24 @@ Change: in the test named runVerify: --offline note is present and PR/release ev
 Tests+mutation: no new test. The regression, red then green: with (c) applied alone, the file run alone fails this test by name at its second assertion, and the worker records the failure byte for byte from the run's output; with (a) and (b) applied too, the file runs green. M1: in an export of the whole tree with its own git index (core.longpaths set), verify.mjs's offline handling of an unchecked pull-request evidence is changed so that it reports a failure for it; the test fails by name on the new predicate, recorded byte for byte; the export is then removed, and the worktree's verify.mjs is compared with the head by cmp. The runs: node --test scripts/plan/verify.test.mjs, and CI's scripts suite green.
 Out-of-scope: ADR none; security none -- one test file, Node's standard library, no dependency, no workflow; wire none; guarantee none touched -- the test's meaning stays: offline, unchecked pull-request or release evidence alone fails nothing; only what counts as such a failure is narrowed to the script's own words for it.
 ```
+
+### Amendment 1 — 2026-11-22 — the text, named from the code before the change
+
+1. **The text.** At 533c7402275086651c1fd590cd2005eb21cb9dc5, `scripts/plan/verify.mjs` writes a pull-request or release evidence failure in four places, copied here by script from `git show`, each with its line number:
+
+```
+180: if (!slug) return [`${tag}: evidence {pr: ${evidence.pr}} could not be checked (no repo slug found)`];
+182: return result.ok ? [] : [`${tag}: PR #${evidence.pr} is not merged (${result.detail})`];
+195: : [`${tag}: release "${evidence.release}" was not found (gh release view)`];
+236: return [`node "${node.id}": status is "${node.status}" but PR #${pr} is reported merged (${result.detail})`];
+```
+
+   What tells such a failure apart is fixed text in these lines: `PR #` before a number, `evidence {pr: ` before a number, and `(gh release view)`. By the step-A worker's search (`state/consults/2026-11-22-verify-offline-note-test-predicate-step-a-worker-report.md`, its item 3), no other failure string in the plan scripts holds them. `queue.mjs` and `site.mjs` hold `PR #` only in what they render, and the drift failures name paths, which hold no `#`.
+
+2. **Offline,** the two returns before lines 180 and 195 (lines 179 and 193) write nothing, so no such failure is written offline at all. The test's meaning stands as the form gives it.
+
+3. **The change** takes the worker's proposed predicate, the regular expression `/PR #\d|evidence \{pr: \d|\(gh release view\)/` tested on each failure; the assertion's message prints, as JSON, the failures it matches. Everything else is as the form's Change and Tests+mutation lines give it.
+
+Read the last amendment first.
+
+Nothing above is edited.

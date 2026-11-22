@@ -629,3 +629,27 @@ By the advisor's rulings ADV-2026-11-22-10 item 4 (`state/directives/2026-11-22-
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — 2026-11-22 — the narrow read; the record before the merge request
+
+1. **The narrow read** of the merge of main (51a1c84dd8502c5b9a7295e113f78101923d9c01), the entries' commit (315e44d3cf3ad5f35f4dc33910708bef9e263669) and the words commit (74c06805a61c64485d9bed90118c4aedfa27d9a5), by item 5 of Amendment 3: the reviewer, PASS WITH NOTES, no Correctness, Evidence or Documentation finding (`state/consults/gates/2026-11-22-cancel-requested-stamp-order-narrow-read-reviewer.md`, gate-log row 830). The worker's report is `state/consults/2026-11-22-cancel-requested-stamp-order-merge-entries-words-worker-report.md`. The count is 726 of the 800 changed lines over the eleven Scope paths (Amendment 3 item 3).
+
+2. **CI at 74c06805a61c64485d9bed90118c4aedfa27d9a5:** every check passing, read by the custodian at 2026-11-22T14:14:04Z. This meets the narrow read's N1 (two Windows jobs pending at its own read).
+
+3. **The gates' Documentation items.** DOC-1 is met by the architect's D1 and D2, applied in the words commit; the choice between the two authors' words is ADV-2026-11-22-13's (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-13-the-cancel-gates-two-texts-for-one-place-the-architects-d1-and-d2-land-doc-1-met-by-them.md`). DOC-2: ADV-2026-11-22-10 is filed (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md`), which also meets the architect's N5. DOC-3 and the architect's N1: the build report's C1 line (`state/consults/2026-11-22-cancel-requested-stamp-order-build-worker-report.md`) gives one wait message for T3, T4 and T5, while as built T3's and T5's messages differ; the report is filed and not edited, and this item is its correction by reference. DOC-4: C2 (ebdd0fd7ce0100fd621529aeb6fd239faafe6c30) says in its message that it edits the doc comment on cancel_for_drop, and its diff to engine/src/cancel.rs from 4a26ed74 edits none; no commit is rewritten (ADV-2026-11-22-10 item 6). DOC-5: the count stands on the gates' own numstat (code gate 1's check 2; the narrow read's check 5).
+
+4. **The clippy line** (ADV-2026-11-22-10 item 6; the architect's N3) is corrected in the words commit, and the narrow read reads its predicate as the same for every u32.
+
+5. **The campaign's wording** (the architect's N2): at C3 the wrappers are gone, so its evidence is the pass counts, 50 of 50 per binary, not a count of wrapper hits; the C1 campaign showed no detection power for skp_filter_cancellation, 0 hits in 50 runs (`state/consults/2026-11-22-cancel-requested-stamp-order-build-worker-report.md`).
+
+6. **The disclosure and the residual** of ADV-2026-11-22-07 item 6 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-07-the-cancel-forms-notes-in-the-architects-words-the-ninth-file-attempt-2-on-amendment-1.md`) stand as that item gives them, for this build's record. The skp_admission binary passed in CI at 74c06805a61c64485d9bed90118c4aedfa27d9a5 and in both gates' runs.
+
+7. **The stray file** (ADV-2026-11-22-10 item 6): the build worker's 180-byte C4 output, written beside `<S>` and not in it (its report, its departures). A search three levels deep under the sessions' temporary folder found no such file at 2026-11-22T14:02:38Z.
+
+8. **Line cites at the head** (the narrow read's N2): D3 added one line to the doc comment above cancel, so the architect's cancel.rs cites below it, read at 3f3820c9, are one line lower at 74c06805a61c64485d9bed90118c4aedfa27d9a5 (the mark at line 202, drop(publish) at 209). Any later record cites them at a named commit.
+
+9. **The merge request** waits for the v0.2 tag (the human's message of 2026-11-22, item 1). It names any change on main since 069b91e0 to the eleven paths and reads CI again (the architect's N4). Before it, the PR body lists D1 to D4, the disclosure and residual, and C2's message.
+
+Read the last amendment first.
+
+Nothing above is edited.
