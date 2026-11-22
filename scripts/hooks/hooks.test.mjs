@@ -1573,3 +1573,93 @@ test('stop-queue: the default plan path is governance/PLAN.yaml', async () => {
     if (saved !== undefined) process.env.CUSTODIAN_PLAN_PATH = saved;
   }
 });
+
+// --- subagent compaction: SUBAGENT-COMPACTION-HOOKS-PREREGISTRATION.md; the real entry points, spawned ---
+
+function subagentEnv(dir) {
+  const env = { ...process.env, CUSTODIAN_TELEGRAM_DRY_RUN: '1', CLAUDE_PROJECT_DIR: dir };
+  for (const k of ['CLAUDE_CODE_REMOTE', 'CUSTODIAN_TELEGRAM_BOT_TOKEN', 'CUSTODIAN_TELEGRAM_CHAT_ID', 'CUSTODIAN_STOP_HOOK']) delete env[k];
+  return env;
+}
+
+function subagentProject() {
+  const dir = makeTempDir('subagent-compact-');
+  fs.mkdirSync(path.join(dir, 'state'), { recursive: true });
+  fs.mkdirSync(path.join(dir, '.claude', 'state'), { recursive: true });
+  const stale = '2020-01-01T00:00:00Z';
+  fs.writeFileSync(
+    path.join(dir, 'state', 'CUT-STATE.md'),
+    `# CUT-STATE\n\n## SESSION-CONTINUITY\nflushed_at: ${stale}\ntip: 0000000000000000000000000000000000000000\n\n## Ledger\n\n- entry 1\n`,
+    'utf8',
+  );
+  return dir;
+}
+
+function runEntry(script, input, dir) {
+  return spawnSync(process.execPath, [path.join(here, script)], { input: JSON.stringify(input), encoding: 'utf8', env: subagentEnv(dir) });
+}
+
+function subagentRecordLines(dir, sessionId) {
+  const p = path.join(dir, '.claude', 'state', `precompact-${sessionId}.jsonl`);
+  return fs.existsSync(p) ? fs.readFileSync(p, 'utf8').split('\n').filter(Boolean).map((l) => JSON.parse(l)) : [];
+}
+
+test('subagent compaction: session-resume with agent_id prints nothing and exits 0', () => {
+  const dir = subagentProject();
+  try {
+    const input = { session_id: 'sub-resume', hook_event_name: 'SessionStart', source: 'compact', agent_id: 'agent-1', agent_type: 'worker' };
+    const r = runEntry('session-resume.mjs', input, dir);
+    assert.deepEqual({ status: r.status, stdout: r.stdout }, { status: 0, stdout: '' });
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('subagent compaction: session-resume without agent_id prints the reading order and the block as today', () => {
+  const dir = subagentProject();
+  try {
+    const input = { session_id: 'main-resume', hook_event_name: 'SessionStart', source: 'compact' };
+    const r = runEntry('session-resume.mjs', input, dir);
+    assert.equal(r.status, 0);
+    assert.ok(r.stdout.startsWith(READING_ORDER), 'the reading order comes first');
+    assert.match(r.stdout, /## SESSION-CONTINUITY\nflushed_at: 2020-01-01T00:00:00Z/);
+    assert.match(r.stdout, /Resume facts: block_age_min=\d+ /);
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('subagent compaction: precompact-flush with agent_id allows, writes no block record and logs one allowed-subagent line', () => {
+  const dir = subagentProject();
+  try {
+    for (const [i, trigger] of ['auto', 'manual'].entries()) {
+      const input = { session_id: 'sub-pre', hook_event_name: 'PreCompact', trigger, custom_instructions: null, agent_id: 'agent-1', agent_type: 'worker' };
+      const r = runEntry('precompact-flush.mjs', input, dir);
+      assert.equal(r.status, 0, `${trigger}: ${r.stderr}`);
+      assert.equal(fs.existsSync(path.join(dir, '.claude', 'state', 'precompact-sub-pre.json')), false, `${trigger}: no block record`);
+      const lines = subagentRecordLines(dir, 'sub-pre');
+      assert.equal(lines.length, i + 1, `${trigger}: one line appended per call`);
+      assert.equal(lines[i].decision, 'allowed-subagent', `${trigger}: the decision`);
+      assert.equal(lines[i].agent_type, 'worker', `${trigger}: the agent_type`);
+      assert.equal(lines[i].flushed_at, null, `${trigger}: no flushed_at read`);
+    }
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('subagent compaction: precompact-flush without agent_id over a stale block and trigger manual still blocks and records', () => {
+  const dir = subagentProject();
+  try {
+    const input = { session_id: 'main-pre', hook_event_name: 'PreCompact', trigger: 'manual', custom_instructions: null };
+    const r = runEntry('precompact-flush.mjs', input, dir);
+    assert.equal(r.status, 2, r.stderr);
+    assert.ok(fs.existsSync(path.join(dir, '.claude', 'state', 'precompact-main-pre.json')), 'the block record is written');
+    const lines = subagentRecordLines(dir, 'main-pre');
+    assert.equal(lines.length, 1);
+    assert.equal(lines[0].decision, 'blocked');
+    assert.equal('agent_type' in lines[0], false, 'the parent session record is unchanged');
+  } finally {
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});
