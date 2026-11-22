@@ -1956,22 +1956,48 @@ async function monitorRefused(on: any, $: any, command: string, rule: string, re
   expect(writes[0].text.includes(command)).toBe(false)
 }
 
+// RECORDED MUTATION: MU1, the Monitor registration removed from register(); MU2, Monitor dropped from the target
+// map of logRefusal (so `target_sha256` reads `unavailable`). Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this
+// change, claude --version 2.1.330 (Claude Code): MU1 and MU2 each -> fails: `M-T1 a Monitor force-push is refused by G1
+// and logged with the tool Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a
+// Monitor plugin install is refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is
+// refused by G9 and logged with the tool Monitor`.
 test('M-T1 a Monitor force-push is refused by G1 and logged with the tool Monitor', async ($, on) => {
   await monitorRefused(on, $, 'git push --force origin HEAD:refs/heads/guardian-monitor-fixture', 'G1', G1_REASON)
 })
 
+// RECORDED MUTATION: MU1 and MU2, as above M-T1. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change,
+// claude --version 2.1.330 (Claude Code) -> fails: `M-T1 a Monitor force-push is refused by G1 and logged with the tool
+// Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a Monitor plugin install is
+// refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is refused by G9 and logged
+// with the tool Monitor`.
 test('M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor', async ($, on) => {
   await monitorRefused(on, $, 'gh pr merge 1 --merge', 'G7', G7_REASON)
 })
 
+// RECORDED MUTATION: MU1 and MU2, as above M-T1. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change,
+// claude --version 2.1.330 (Claude Code) -> fails: `M-T1 a Monitor force-push is refused by G1 and logged with the tool
+// Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a Monitor plugin install is
+// refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is refused by G9 and logged
+// with the tool Monitor`.
 test('M-T3 a Monitor plugin install is refused by G8 and logged with the tool Monitor', async ($, on) => {
   await monitorRefused(on, $, 'claude plugin install some-plugin', 'G8', G8_REASON)
 })
 
+// RECORDED MUTATION: MU1 and MU2, as above M-T1. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change,
+// claude --version 2.1.330 (Claude Code) -> fails: `M-T1 a Monitor force-push is refused by G1 and logged with the tool
+// Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a Monitor plugin install is
+// refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is refused by G9 and logged
+// with the tool Monitor`.
 test('M-T4 a Monitor clean of the main checkout is refused by G9 and logged with the tool Monitor', async ($, on) => {
   await monitorRefused(on, $, 'cargo clean', 'G9', G9_REASON)
 })
 
+// RECORDED MUTATION: MU3, the Monitor registration's handler refusing every call (`refuse($, e, cache, CATCH_VERDICT)` in
+// place of `guardShell($, e, next, cache, false)`); MU1 and MU2 cannot fail this test. Observed at
+// 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change, claude --version 2.1.330 (Claude Code) -> fails: `M-T5 a
+// harmless Monitor command reaches the engine unchanged and writes no log line`, `M-T6 a Monitor watch with no command
+// reaches the engine unchanged and writes no log line` (and M-T1 to M-T4, which the same mutation also turns red).
 test('M-T5 a harmless Monitor command reaches the engine unchanged and writes no log line', async ($, on) => {
   const probe = v1(on)
   const writes = answerWrites(on)
@@ -1983,6 +2009,10 @@ test('M-T5 a harmless Monitor command reaches the engine unchanged and writes no
   expect(writes.length).toBe(0)
 })
 
+// RECORDED MUTATION: MU3, as above M-T5. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change, claude
+// --version 2.1.330 (Claude Code) -> fails: `M-T5 a harmless Monitor command reaches the engine unchanged and writes no
+// log line`, `M-T6 a Monitor watch with no command reaches the engine unchanged and writes no log line` (and M-T1 to
+// M-T4, which the same mutation also turns red).
 test('M-T6 a Monitor watch with no command reaches the engine unchanged and writes no log line', async ($, on) => {
   const probe = v1(on)
   const writes = answerWrites(on)
