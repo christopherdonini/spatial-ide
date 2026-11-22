@@ -55,6 +55,9 @@ struct Inner {
     /// Set for exactly the duration of one `execute_guarded` closure. Read by the re-interrupter
     /// thread and by the `is_executing` instrument accessor.
     in_execute: AtomicBool,
+    /// Held while `cancel_inner` decides who cancels first, stamps the request and publishes the
+    /// flag. Every writer of `cancelled` holds it, so one call per token sees the flag unset.
+    transition: Mutex<()>,
     /// The test build's seams in `cancel_inner` (form §2.3). Absent from the shipped build.
     #[cfg(test)]
     seams: Seams,
@@ -84,6 +87,16 @@ struct Seams {
     after_publish: Mutex<Option<Box<dyn FnOnce() + Send>>>,
     /// How many times this token's own stamp decision reached the mark.
     stamps: std::sync::atomic::AtomicUsize,
+}
+
+/// Publishes `Inner::cancelled` when dropped, so an unwind out of the request's stamp cannot leave
+/// the token uncancelled.
+struct PublishOnDrop<'a>(&'a AtomicBool);
+
+impl Drop for PublishOnDrop<'_> {
+    fn drop(&mut self) {
+        self.0.store(true, Ordering::SeqCst);
+    }
 }
 
 /// Clears `Inner::in_execute` when dropped, so an unwind out of the guarded closure cannot leave the
@@ -129,7 +142,9 @@ impl CancelToken {
     /// Request cancellation. Sets the flag **before** interrupting, so any thread that observes the
     /// interrupt's error can already tell why it happened.
     ///
-    /// Stamps [`trace::CANCELLATION_REQUESTED`](crate::trace::CANCELLATION_REQUESTED) — the **first
+    /// Stamps [`trace::CANCELLATION_REQUESTED`](crate::trace::CANCELLATION_REQUESTED), when a trace
+    /// is running, at most once per token, under the token's `transition` lock and **before the flag
+    /// is published**, so the stamp precedes every observer that loads the flag. It is the **first
     /// of the three cancellation instants**, and the only one the canceller itself can stamp. The
     /// other two belong to whoever owns the operation: `cancel_observed` (the worker stopped
     /// advancing — what `docs/08` budgets) and `cancel_acknowledged` (the operation quiescent).
@@ -155,24 +170,47 @@ impl CancelToken {
         self.cancel_inner(false);
     }
 
-    /// **Stamps at most once, on the false→true transition.** A token cancelled twice is one
-    /// cancellation request; two stamps would give a summarizer two candidate origins for the same
-    /// interval, and `Trace::first` would pick whichever was pushed first rather than the earliest.
+    /// **Stamps at most once, on the false→true transition, under `transition` and before the flag
+    /// is published.** A token cancelled twice is one cancellation request; two stamps would give a
+    /// summarizer two candidate origins for the same interval, and `Trace::first` would pick
+    /// whichever was pushed first rather than the earliest. A caller that finds the flag already set
+    /// stamps nothing and returns once the winner has published, so `is_cancelled()` is true when
+    /// any `cancel()` returns.
     fn cancel_inner(&self, stamp: bool) {
-        let already = self.inner.cancelled.swap(true, Ordering::SeqCst);
         #[cfg(test)]
-        if !already {
-            self.fire(Seam::AfterPublish);
-            self.fire(Seam::BeforeStamp);
+        if matches!(
+            self.inner.transition.try_lock(),
+            Err(std::sync::TryLockError::WouldBlock)
+        ) {
+            self.fire(Seam::OnContended);
         }
-        if stamp && !already {
-            crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
-            #[cfg(test)]
-            {
-                self.inner.seams.stamps.fetch_add(1, Ordering::SeqCst);
-                self.fire(Seam::OnStamp);
+        let first = {
+            let _transition = self
+                .inner
+                .transition
+                .lock()
+                .unwrap_or_else(|e| e.into_inner());
+            if self.inner.cancelled.load(Ordering::SeqCst) {
+                false
+            } else {
+                // Publishes when dropped, an unwind out of the stamp included.
+                let publish = PublishOnDrop(&self.inner.cancelled);
+                #[cfg(test)]
+                self.fire(Seam::BeforeStamp);
+                if stamp {
+                    crate::trace::mark(crate::trace::CANCELLATION_REQUESTED, 0, 0);
+                    #[cfg(test)]
+                    {
+                        self.inner.seams.stamps.fetch_add(1, Ordering::SeqCst);
+                        self.fire(Seam::OnStamp);
+                    }
+                }
+                drop(publish);
+                #[cfg(test)]
+                self.fire(Seam::AfterPublish);
+                true
             }
-        }
+        };
         if let Some(h) = self
             .inner
             .interrupt
@@ -188,7 +226,7 @@ impl CancelToken {
         // header) — if that happens, nothing raised here reaches the query, so this thread keeps
         // re-raising on a timer for as long as `execute_guarded`'s closure is still running and a
         // connection is still bound, and stops the moment either is no longer true.
-        if !already && self.inner.in_execute.load(Ordering::SeqCst) {
+        if first && self.inner.in_execute.load(Ordering::SeqCst) {
             let inner = Arc::clone(&self.inner);
             // `Builder::spawn`, not `thread::spawn`: this runs from `BatchStream`'s `Drop` too, and
             // `thread::spawn` panics when the OS refuses a thread. A refusal is discarded: stopping
