@@ -14,3 +14,17 @@ Change: in the test named runVerify: --offline note is present and PR/release ev
 Tests+mutation: no new test. M1: the temporary folder's prefix changed to one containing pr (verify-offline-note-pr-), the node's deterministic check; the file run alone fails on this test, and the worker records the failure message byte for byte from the run's output, which must show the failures that contain pr, each with its folder path; then reverted, the file compared with the head by cmp, and the file run green. The runs: node --test scripts/plan/verify.test.mjs, and CI's scripts suite green.
 Out-of-scope: ADR none; security none -- a test file's messages only, Node's standard library, no dependency, no workflow; wire none; guarantee none touched -- neither assertion's condition changes, so the test passes and fails on exactly the inputs it did before.
 ```
+
+### Amendment 1 — 2026-11-22 — the single gate: the reviewer, PASS WITH NOTES at c3bd9798
+
+1. **The gate.** The reviewer alone gave PASS WITH NOTES at c3bd9798de2933c51811cb90df240c04da009361, with no Correctness, Evidence or Documentation finding. Its report is `state/consults/gates/2026-11-22-verify-offline-note-test-message-gate-reviewer.md` (gate-log row 829). The diff is one file with 2 lines added and 2 removed, and both conditions are byte-identical to the base by script. M1 was re-observed in an export of the whole tree with a scratch git index: the form's test failed alone, at its second assertion, with the five failures that hold pr in the message. CI was 8 of 8 passing at the head, read by the custodian at 2026-11-22T13:18:22Z and by the reviewer at 2026-11-22T13:21:44Z. The build worker's report is `state/consults/2026-11-22-verify-offline-note-test-message-build-worker-report.md`.
+
+2. **The notes.**
+   - N1: a mutation of this test file needs an export of the whole tree with a git index built in it (core.longpaths set). This is for later briefs; this piece is unchanged.
+   - N2: the PR goes out of draft before the merge check.
+   - N3: the worker's logs record no exit code or commit; the reviewer's own runs re-observe the head and M1.
+   - N4: the sign-off carries git's configured author address. `git commit -s` adds it, and every commit's author field carries the same address. No action.
+
+Read the last amendment first.
+
+Nothing above is edited.
