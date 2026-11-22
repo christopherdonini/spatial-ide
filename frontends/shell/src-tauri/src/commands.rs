@@ -722,11 +722,35 @@ mod tests {
     fn session_log(name: &str) -> (Session, SessionLog) {
         let dir = std::env::temp_dir()
             .join("spatial-ide-shell-session-log-tests")
+            .join(std::process::id().to_string())
             .join(name);
         let _ = std::fs::remove_dir_all(&dir);
         let log = SessionLog::open(&dir).unwrap();
         let session = Session::with_origin("http://tauri.localhost".to_string()).unwrap();
         (session, log)
+    }
+
+    #[test]
+    fn a_session_log_folder_is_the_test_runs_own() {
+        let (_session, log) = session_log("folder-of-the-runs-own");
+        let dir = log.path.parent().expect("the log file has a folder");
+        assert!(
+            dir.starts_with(std::env::temp_dir()),
+            "the folder {dir:?} is not under the system temporary folder"
+        );
+        let run = dir.parent().expect("the folder has a parent");
+        assert_eq!(
+            run.file_name().and_then(|n| n.to_str()),
+            Some(std::process::id().to_string().as_str()),
+            "the folder {dir:?} is not under a component equal to the process id"
+        );
+        assert_eq!(
+            run.parent()
+                .and_then(|p| p.file_name())
+                .and_then(|n| n.to_str()),
+            Some("spatial-ide-shell-session-log-tests"),
+            "the process id's folder is not under the fixed folder"
+        );
     }
 
     /// A line after its `<unix-ms>` stamp and the space, its LF kept.

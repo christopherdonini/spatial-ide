@@ -1756,10 +1756,34 @@ mod tests {
     fn workspace(name: &str) -> PathBuf {
         let d = std::env::temp_dir()
             .join("spatial-ide-shell-publish-tests")
+            .join(std::process::id().to_string())
             .join(name);
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::canonicalize(&d).unwrap()
+    }
+
+    #[test]
+    fn a_publish_workspace_is_the_test_runs_own() {
+        let dir = workspace("folder-of-the-runs-own");
+        let temp = std::fs::canonicalize(std::env::temp_dir()).unwrap();
+        assert!(
+            dir.starts_with(&temp),
+            "the workspace {dir:?} is not under the system temporary folder {temp:?}"
+        );
+        let run = dir.parent().expect("the workspace has a parent");
+        assert_eq!(
+            run.file_name().and_then(|n| n.to_str()),
+            Some(std::process::id().to_string().as_str()),
+            "the workspace {dir:?} is not under a component equal to the process id"
+        );
+        assert_eq!(
+            run.parent()
+                .and_then(|p| p.file_name())
+                .and_then(|n| n.to_str()),
+            Some("spatial-ide-shell-publish-tests"),
+            "the process id's folder is not under the fixed folder"
+        );
     }
 
     fn fixture(dir: &Path, features: usize) -> Arc<Dataset> {
