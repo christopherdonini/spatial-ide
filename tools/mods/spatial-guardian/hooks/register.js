@@ -949,7 +949,7 @@ async function logRefusal($, e, cache, verdict, decidedAt) {
     const main = await mainTree($, cache);
     const root = main === null ? undefined : logRootFrom(main);
     if (root !== undefined) {
-      const target = { Bash: e.command, PowerShell: e.command, NotebookEdit: e.notebook_path }[e.tool] ?? e.file_path;
+      const target = { Bash: e.command, Monitor: e.command, PowerShell: e.command, NotebookEdit: e.notebook_path }[e.tool] ?? e.file_path;
       const line = `${JSON.stringify({
         schema: LOG_SCHEMA,
         time: decidedAt,
@@ -977,9 +977,10 @@ async function refuse($, e, cache, verdict) {
   return { deny: verdict.reason };
 }
 
-// The shell hooks' decision: G6 (a PowerShell call by a subagent only; the main loop makes no `$`
-// call, and a shell call has no path to place, so a report-only subagent's PowerShell call is
-// refused whatever its command), then G1, G7, G8 and G9.
+// The shell hooks' decision (Bash, Monitor and PowerShell): G6 (a PowerShell call by a subagent only;
+// the main loop makes no `$` call, and a shell call has no path to place, so a report-only subagent's
+// PowerShell call is refused whatever its command), then G1, G7, G8 and G9. A Monitor call is read as a
+// Bash call is, without G6; a Monitor call with no command reads as an empty command, which no rule refuses.
 async function decideShell($, e, cache, isPowerShell) {
   if (isPowerShell && e.agentId !== undefined) {
     const refusal = await g6Refusal($, e.agentId, undefined);
