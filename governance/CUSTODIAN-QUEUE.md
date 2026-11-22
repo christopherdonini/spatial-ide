@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a905925f5fd4dddfcfbb71c3f206bb5ff8a9f3c46b9e1bdc51abbbbb6b9b264c`) at `2026-11-22T19:55:40.032Z`.
+Generated from `PLAN.yaml` (sha256 `ca99814f7f1460049cc0914a37b561292c75b44f389ee04530a50d15ae45f2ed`) at `2026-11-22T20:17:45.460Z`.
 
 ## 1. Next
 
@@ -138,6 +138,7 @@ Generated from `PLAN.yaml` (sha256 `a905925f5fd4dddfcfbb71c3f206bb5ff8a9f3c46b9e
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) (phase `prototype`) — never queued until placed
+- **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
 - **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) (phase `prototype`) — never queued until placed
 
 ### Unscheduled

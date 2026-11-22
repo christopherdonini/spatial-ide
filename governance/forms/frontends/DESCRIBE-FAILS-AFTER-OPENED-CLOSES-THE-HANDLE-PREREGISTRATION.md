@@ -251,3 +251,345 @@ Every quantity is an assertion: call order, call counts, request shapes, typed c
 - **OPEN-5:** The class. Recommended: full, on item 2 (a)'s seam ground and item 2 (b)'s "In doubt". The alternative is a five-line, shell-only piece with K1 dropped, which leaves the seam proven only by the existing kernel tests of §0.3.
 - **OPEN-6:** A log line for the close? Recommended: none. The Console row already shows it, and a line would be a new string.
 - **OPEN-7:** ADV-2026-11-16-06 "runs for a week from 2026-11-16" (`:13`). Recommended: the custodian confirms that item 2 still governs at dispatch.
+
+### Amendment 1 — 2026-11-22 — post-result amendment after the architect's form gate, attempt 1 (FAIL): the gate's words for E-1, E-2 and D-1 to D-4; the bound on the awaited close; the OPEN items
+
+Post-result amendment, written after the architect's form gate, attempt 1 (FAIL), whose findings are this round's results. Nothing above is edited: each new text below is read in place of its old text, each text given after a line is read after that line, and the form's own text stays as filed. No code is written before the architect's attempt 2, which reads this amendment alone, ends PASS or PASS WITH NOTES (ADV-2026-11-22-35 item 1; ADV-2026-11-22-38 item 5).
+
+**Authority.** The advisor's rulings under the delegation of 2026-11-13, not the human's words: ADV-2026-11-22-35 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-35-node-g-open-2-to-open-6-as-recommended-open-3-the-awaited-close-bounded-by-reading-amendment-1-then-attempt-2.md`), ADV-2026-11-22-38 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-38-node-g-the-awaited-close-gets-a-bound-what-the-architect-adds-to-amendment-1-a-finding-to-the-queue.md`) and ADV-2026-11-22-39 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-39-node-g-the-d-1-replacement-goes-in-the-architects-wording-for-the-bound-carries-the-sentence.md`). **Evidence:** the gate report, `state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md` (gate-log row 843); the architect's reading of what bounds the awaited close, `state/consults/2026-11-22-describe-fails-after-opened-closes-the-handle-open-3-bound-architect.md`; and the architect's draft for ADV-2026-11-22-38, `state/consults/2026-11-22-describe-fails-after-opened-closes-the-handle-amendment-1-bound-architect-draft.md`. The two consults are filed in the commit that appends this amendment.
+
+**How the texts were copied.** None of the texts below is the human's wording or the advisor's: each new text is the architect's, from the gate report (item 1) or from the draft (D-1's new text in item 1, and items 2 to 6). The old texts and the lines are the form's. Every text is copied by the custodian's script, each the text between its fence lines in its report, which are not part of it. The script checked at this filing that each old text and each line occurs exactly once in the form above this amendment, and that no two overlap there. The clause checks stay in the reports. Code cites inside the texts are reading aids at 44c6132360a8ee00823860c07e7bb8f63a7460b5.
+
+#### 1. The gate's words for E-1, E-2 and D-1 to D-4 (ADV-2026-11-22-35 item 1; ADV-2026-11-22-39 item 1)
+
+**E-1.** Old:
+
+````text
+- **KM1** (at C2): `release_ended` keeps every entry (`saved.retain(|_| true)` at `kernel/src/project/mod.rs:265`). Kills K1 at step 6, by its message.
+````
+
+New:
+
+````text
+- **KM1** (at C2, in K1 alone): step 5's `rig.close(&handle)` removed, `rig.projects.release_ended()` kept. Kills K1 at step 6, by its message: the catalog still holds the reopened handle, so `release_ended` keeps its entry and its lock. A product mutation of `release_ended` (`saved.retain(|_| true)` at `kernel/src/project/mod.rs:265`) is not listed: it also keeps the entry of the save `rig.inside()` makes, so K1 fails at step 2 (`skp.project_open_elsewhere`) and never reaches step 6.
+````
+
+**E-2, text 1 of 2 (A2).** Old:
+
+````text
+- **A2** `a describe that fails untyped after open_dataset sends close_dataset and rethrows`. C1: red. C2: green.
+````
+
+New:
+
+````text
+- **A2** `a describe that fails untyped after open_dataset sends close_dataset and rethrows the same error`. `describe`'s `invoke` rejects with a `TypeError`. `admitDataset` rejects with that same object, and the third call is `close_dataset` for the opened handle. C1: red at the third call (two calls). C2: green.
+````
+
+**E-2, text 2 of 2 (M4).** Old:
+
+````text
+- **M4** (at C2): the caught error replaced by a new one before the rethrow. Kills S2 and A2.
+````
+
+New:
+
+````text
+- **M4** (at C2): in `describeOpened`, a caught error that is not an `SkpCallError` replaced by `new TypeError(String(e))` before the rethrow. Kills S2 and A2, each at its same-object assertion. A typed refusal is still rethrown as caught, so S1, S3 and A1 pass.
+````
+
+**D-1.** Old:
+
+````text
+  - The Console shows that call as a row, since `call` records every command (`frontends/shell/src/skp/client.ts:59`). That is the only change an operator can see, and only after a failed `describe`.
+````
+
+New:
+
+````text
+  - The Console shows that call as a row, since `call` records every command (`frontends/shell/src/skp/client.ts:59`). After a failed `describe`, an operator can see that row, and once the close has settled, a retry of the same reopen is no longer refused as `skp.project_open_elsewhere`, since `open_project` runs `release_ended` before it takes the lock. Ordinary use does not reach a failed `describe` (§0.4).
+````
+
+The new text is the architect's, from its draft, and replaces the gate's D-1 new text after ADV-2026-11-22-38 (ADV-2026-11-22-39 item 1).
+
+**D-2.** Old:
+
+````text
+- So an open whose handle the shell never closes keeps the lock until its session ends or the app exits. In the meantime, a retry of the same reopen is refused as `skp.project_open_elsewhere`.
+````
+
+New:
+
+````text
+- So an open whose handle the shell never closes keeps the lock until the app exits, or, after its session ends, until this process's next reopen or close runs `release_ended`. Until then, a retry of the same reopen is refused as `skp.project_open_elsewhere`.
+````
+
+**D-3.** Old:
+
+````text
+  - for a reopen, this frees the project's lock through the kernel's existing release (§0.2), which the seam test pins.
+````
+
+New:
+
+````text
+  - for a reopen, this frees the project's lock through the kernel's existing release (§0.2), which the seam test pins: once the thread the `close_dataset` binding starts has run `release_ended`, or at this process's next reopen or close if that thread does not start (`frontends/shell/src-tauri/src/commands.rs:119-128`).
+````
+
+**D-4.** Old:
+
+````text
+  - `docs/01` principle 7 (the awaited close is one in-memory command, and the release runs off the caller's thread, `commands.rs:142-147`);
+````
+
+New:
+
+````text
+  - `docs/01` principle 7 (the awaited close is the existing `close_dataset` command, which every close already sends, and the release runs off the caller's thread, `commands.rs:142-147`);
+````
+
+#### 2. The bound on the awaited close (ADV-2026-11-22-38 items 2 and 3; ADV-2026-11-22-39 items 2 and 3)
+
+**§2.1, text 1 of 3.** Old:
+
+````text
+- It awaits `describe(dataset)`. On any rejection it first awaits `closeDataset(dataset)`, drops any rejection of the close, and then rejects with the **same** error it caught.
+````
+
+New:
+
+````text
+- It awaits `describe(dataset)`. On any rejection it first sends `closeDataset(dataset)`, then waits until the close settles or `DESCRIBE_FAILED_CLOSE_WAIT_MS` (`admitDataset.ts`, 2_000 ms) has passed since it was sent, whichever is first. It clears its timer, drops the close's reply and any rejection of it, whenever they come, and rejects with the **same** error it caught. After the bound the close is left running. Nothing else is added: no string, no log line, no retry of the close. The constant's doc gives its reason: it caps how long the error waits; it is under the watchdog's 5_000 ms (`frontends/shell/src/diagnostics/watchdog.ts:13` @ 44c6132360a8ee00823860c07e7bb8f63a7460b5), so the close alone cannot hold the describe phase past it; it is declared, not measured.
+````
+
+**§2.1, text 2 of 3 (the sketch).** Old:
+
+````text
+  ```ts
+  export async function describeOpened(dataset: string): Promise<DescribeResponse> {
+    try { return await describeDataset(dataset); }
+    catch (e) { await closeDataset(dataset).catch(() => {}); throw e; }
+  }
+  ```
+````
+
+New:
+
+````text
+  ```ts
+  export const DESCRIBE_FAILED_CLOSE_WAIT_MS = 2_000;
+  export async function describeOpened(dataset: string): Promise<DescribeResponse> {
+    try { return await describeDataset(dataset); }
+    catch (e) {
+      const closed = closeDataset(dataset).then(() => {}, () => {});
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      const deadline = new Promise<void>((resolve) => { timer = setTimeout(resolve, DESCRIBE_FAILED_CLOSE_WAIT_MS); });
+      await Promise.race([closed, deadline]);
+      clearTimeout(timer);
+      throw e;
+    }
+  }
+  ```
+````
+
+**§2.1, text 3 of 3 (the doc clauses).** Old:
+
+````text
+- The doc comments of `admitProject` (`openProject.ts:56-61`), of the file header's first bullet (`openProject.ts:8-10`) and of `admitDataset` (`admitDataset.ts:41-47`) each gain one clause naming the close. These are the worker's words, read by both gates.
+````
+
+New:
+
+````text
+- The doc comments of `admitProject` (`openProject.ts:56-61`), of the file header's first bullet (`openProject.ts:8-10`) and of `admitDataset` (`admitDataset.ts:41-47`) each gain one clause naming the close and its bound. These are the worker's words, read by both gates.
+````
+
+**§2.3.** After the line:
+
+````text
+- Fire-and-forget close (OPEN-3): it would let the refusal show before the close is sent.
+````
+
+New:
+
+````text
+- An unbounded await of the close (OPEN-3 as first drafted): a close that never settled would hold the refusal back, with only the panel's in-flight line shown (ADV-2026-11-22-38 item 1).
+````
+
+**§1, may claim.** After the line:
+
+````text
+  - after an `opened` or an `open_dataset` reply, any failure of `describe` makes the shell send `close_dataset` for that handle before the run ends;
+````
+
+New:
+
+````text
+  - the run receives the refusal of `describe`, or the error rethrown, when the close settles or once `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed since the close was sent, whichever is first, and shows it as today; after the bound the close is left running, its reply and its rejection are dropped, and its Console entry is resolved only when it settles (`frontends/shell/src/skp/client.ts:59-71` @ 44c6132360a8ee00823860c07e7bb8f63a7460b5);
+````
+
+**§1, may not claim.** After the line:
+
+````text
+  - that a lock is freed when the close itself cannot reach the kernel.
+````
+
+New:
+
+````text
+  - that the project's lock is freed when the close has not settled by `DESCRIBE_FAILED_CLOSE_WAIT_MS`, or that a retry of the same reopen then finds it free: the refusal is then shown while the close still runs, and the lock is freed only once the close settles and the release it starts has run (§0.2);
+  - that the refusal is returned at the bound exactly: the bound is a timer, which a webview runs no earlier than its delay and may run later (taken from documentation, not read in this repo);
+  - that the close settles within the bound: the value is declared, not measured, and two of the close's waits have no bound in this code (§0.4, Amendment 1).
+````
+
+**§6.** Old:
+
+````text
+Every quantity is an assertion: call order, call counts, request shapes, typed codes and lock state. Nothing is timed.
+````
+
+New:
+
+````text
+Every quantity is an assertion: call order, call counts, request shapes, typed codes, timer counts and lock state. Nothing is measured: S5 and S6 run on vitest's fake clock, which the test moves, and no duration is recorded.
+````
+
+#### 3. The tests and mutations (ADV-2026-11-22-38 item 3)
+
+**§4.1, S5 and S6.** After the line:
+
+````text
+- **S4** `an opened reopen whose describe succeeds closes nothing`. A control: green at C1 and C2.
+````
+
+New:
+
+````text
+- **S5** `a describe failure whose close never settles rethrows the same error once the bound has passed`. On vitest's fake clock (a clock the test moves, not a sleep, so §2.4 and §8 item 6 hold), `describe` throws `err`, an `SkpCallError` of the mock's class with the envelope above, and `closeDataset` records its handle and returns a promise that never settles. `describeOpened("ds_s5")` is reached through the module namespace (`import * as admission from "../admission/admitDataset"`), and its settlement is recorded.
+  - Outcome: closes equal `["ds_s5"]` before the clock moves; after `vi.advanceTimersByTimeAsync(DESCRIBE_FAILED_CLOSE_WAIT_MS - 1)` it has not settled; after one more ms it has rejected with `err` itself (`toBe`); `vi.getTimerCount()` is 0.
+  - C1: red at the call: `describeOpened` is not exported at C1, so `admission.describeOpened` is not a function; the namespace import keeps S1 to S4 loading for their own reds. C2: green.
+- **S6** `a describe failure whose close settles leaves no timer armed`. On the fake clock, `describe` throws `err` and `closeDataset` resolves. `describeOpened("ds_s6")` rejects with `err` itself without the clock moving, closes equal `["ds_s6"]`, and `vi.getTimerCount()` is 0.
+  - C1: red at the call, as S5. C2: green.
+````
+
+**§4.4, M1.** Old:
+
+````text
+- **M1** (at C2): the close removed from `describeOpened`. Kills S1, S2, S3, A1 and A2.
+````
+
+New:
+
+````text
+- **M1** (at C2): the close removed from `describeOpened`, with its deadline: the caught error is rethrown at once. Kills S1, S2, S3, S5, S6, A1 and A2.
+````
+
+**§4.4, M5 to M7.** After the line:
+
+````text
+- **M3** (at C2): `describeOpened` closes on success as well. Kills S4.
+````
+
+New:
+
+````text
+- **M5** (at C2): the deadline removed: the close awaited alone, as first drafted. Kills S5 at its settled-after-the-bound assertion.
+- **M6** (at C2): the timer armed with a delay of 0 in place of `DESCRIBE_FAILED_CLOSE_WAIT_MS`. Kills S5 at its not-settled-before-the-bound assertion.
+- **M7** (at C2): the `clearTimeout` removed. Kills S6 at its timer count.
+````
+
+**§5.3.** Old:
+
+````text
+- any of S1 to S3, A1 or A2 not red at C1 for its own reason;
+````
+
+New:
+
+````text
+- any of S1 to S3, S5, S6, A1 or A2 not red at C1 for its own reason;
+````
+
+**§8, item 7.** Old:
+
+````text
+7. A red/green claim for K1, or S1 to S3, A1 or A2 lacking their recorded C1 reds.
+````
+
+New:
+
+````text
+7. A red/green claim for K1, or S1 to S3, S5, S6, A1 or A2 lacking their recorded C1 reds.
+````
+
+The tests of the order (the close sent before the error is thrown) hold as drafted, by the draft's section 3.
+
+#### 4. The watchdog note (ADV-2026-11-22-38 item 3)
+
+**§2.1, the watchdog.** After the line:
+
+````text
+  - the watchdog's `begin`/`end` stay where they are.
+````
+
+New:
+
+````text
+  - in `admitDataset` the close falls inside the `describe` watchdog phase, begun before the describe and ended in the catch (`frontends/shell/src/admission/admitDataset.ts:60`, `:67-68` @ 44c6132360a8ee00823860c07e7bb8f63a7460b5). With the bound, the close holds that phase open for at most `DESCRIBE_FAILED_CLOSE_WAIT_MS`, under the watchdog's 5_000 ms (`frontends/shell/src/diagnostics/watchdog.ts:13`, `:45`), so a stalled close is no longer logged under "describe", unless the webview runs the bound's timer late (taken from documentation, not read in this repo); a `describe` that itself stays open past the remainder still is, by the existing line (`watchdog.ts:46-47`). No line is added. `admitProject` begins no watchdog phase (`frontends/shell/src/project/openProject.ts:62-78`).
+````
+
+#### 5. The two unbounded waits and the host's main thread (ADV-2026-11-22-38 items 3 and 6)
+
+**§0.4.** After the line:
+
+````text
+- Out of this node: a panic in `opened_of` after the entry is kept (`kernel/src/project/mod.rs:967-1046`, node (d)); and a webview reload that leaves every handle open (not read).
+````
+
+New:
+
+````text
+- Out of this node, a finding by reading for the queue (ADV-2026-11-22-38 item 6), each part marked by its source, read at 44c6132360a8ee00823860c07e7bb8f63a7460b5:
+  - read in this repo: the kernel's close joins the open's watch threads, which return when the operating system completes each cancelled directory read (`engine/src/watch.rs:486-513`, `:322-331`); no code here bounds that completion;
+  - read in this repo: the close drops the removed dataset after its guard (`kernel/src/skp.rs:1664`), and when the catalog held the last reference and no lease is in flight, its idle DuckDB connections close there (`engine/src/pool.rs:324`), "in an external section this code does not bound" (`kernel/src/lib.rs:189`, sub-line);
+  - taken from Tauri 2's documentation, not read in this repo: a command declared without `async` runs on the main thread. The `close_dataset` binding is declared so (`frontends/shell/src-tauri/src/commands.rs:133-139`, read), so by that documentation every close holds the host's main thread while the kernel's close runs.
+  No one has seen it stall. The piece bounds only the shell's wait (§2.1); it neither bounds nor changes either kernel wait.
+````
+
+#### 6. The budget (ADV-2026-11-22-38 item 4; class 9)
+
+**§7, the line budget.** After the line:
+
+````text
+- **Line budget:** at most 220 changed lines (insertions plus deletions under §21c's rule, this form excluded), counted by `git diff --numstat origin/main...HEAD --` over the five paths at a named commit. An overrun is class 8, and this line is never edited.
+````
+
+New:
+
+````text
+- **Line budget, Amendment 1 (class 9, a scope addition on ADV-2026-11-22-38 item 4):** at most 270 changed lines, counted as the line above counts, over the same five paths. The bound adds an estimated 49: about 13 in `frontends/shell/src/admission/admitDataset.ts` (the constant and its doc, the race and the cleared timer) and about 36 in `frontends/shell/src/project/openProject.test.ts` (S5, S6, the namespace import, the fake clock's reset). The form declared 220 without its margin, so the addition is declared, not fitted. The line above is not edited; an overrun of 270 is class 8.
+````
+
+**§7, the constant.** Old:
+
+````text
+- No constant is added.
+````
+
+New:
+
+````text
+- One constant is added: `DESCRIBE_FAILED_CLOSE_WAIT_MS = 2_000` in `frontends/shell/src/admission/admitDataset.ts`, with its reason in its doc (§2.1, Amendment 1).
+````
+
+#### 7. The OPEN items
+
+OPEN-1 and OPEN-7 were ruled by ADV-2026-11-22-32 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-32-node-g-open-1-the-draft-stands-as-the-form-open-7-the-week-not-extended-the-fuller-class-go-on-with-d.md`). OPEN-2 to OPEN-6 are closed as the form recommends, by ADV-2026-11-22-35 items 2 to 6, and OPEN-3 with the bound of item 2 above (ADV-2026-11-22-38).
+
+#### 8. For the attempt
+
+By the custodian's summary, not the rulings' words: attempt 2 starts when a place on the strongest model is free; words that would touch `KNOWN-LIMITATIONS.md` or a string the app shows go to the advisor first (ADV-2026-11-22-35 item 7); the merge request comes after the tag, and node (d)'s form gate follows this form's (its item 8); the finding of item 5 goes to the queue as its own node, placed after the tag (ADV-2026-11-22-38 item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.
