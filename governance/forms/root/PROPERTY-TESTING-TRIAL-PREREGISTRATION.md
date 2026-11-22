@@ -118,3 +118,28 @@ The advisor ruled the question this form put to it, under the delegation of 2026
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — the human's approval of the pins, the end of the form gate, and the piece's first record, before any code
+
+1. **The pins are approved.** The human approved the draft ADV-2026-11-22-03 by their typed message in the custodian's session, filed at `state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md`. Under the grant of 2026-11-13, item 4, the draft is now the human's words: section 2 builds exactly its item 1 (a) and (b), with its item 3's delta. The header's sentence that the draft is not yet approved, and that nothing of sections 2 to 5 is built until then, is met by this item.
+2. **The form gate ends at the re-gate** (ADV-2026-11-22-08 item 5). Its FAIL stands in every record. Its blocking findings are closed by the architect's words under AUTONOMY.md §31, as the header records, and its question on P1 by Amendment 1. No further form gate runs. The build's two gates read P1, the fixed case and Amendment 1 together (ADV-2026-11-22-08 item 4).
+3. **The piece's first record** (the Isolation section names this form's first amendment; Amendment 1 recorded the ruling, so the record is here). The custodian's check, its output byte for byte:
+
+```
+2026-11-22T11:32:12Z
+main target: LINK Junction -> D:\spatial-ide\target
+main shell target: LINK Junction -> D:\spatial-ide\shell-target
+worktree top: C:/dev/wt/property-trial
+C:/dev/wt/property-trial/target: ABSENT
+C:/dev/wt/property-trial/frontends/shell/src-tauri/target: ABSENT
+C:/dev/wt/property-trial/target/fixtures: ABSENT
+build folder D:/wt-targets/property-trial: PLAIN D:\wt-targets\property-trial
+ISO-OK
+```
+
+   The worktree `C:/dev/wt/property-trial` is on `cut/property-testing-trial`, created from ba49a5d4553e489049bb7392a0b10336510037cc and fast-forwarded to main at dispatch; its build folder is `D:/wt-targets/property-trial`.
+4. **The CI-timings commit** of section 5 comes after the branch's first green CI run, by a later dispatch. The first dispatch ends with P3 and the push. The order of section 5 is unchanged.
+
+Read the last amendment first.
+
+Nothing above is edited.

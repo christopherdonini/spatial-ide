@@ -27,6 +27,12 @@
 // scan fails when the list, at a commit on HEAD's first-parent history that changes it, holds an entry its
 // first parent's list does not (an absent list holds none), the oldest such commit excepted, and it fails in
 // a shallow clone, where that history cannot be read.
+// SHORTENED TARGET (node verify-cites-shortened-target-list; the ruling is state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md, item 2): an
+// unpinned cite that does not resolve in the tree and that scripts/plan/verify-cites-shortened-target.json lists by
+// {path, cite, commit} is read at the entry's commit by the pin's own check (the commit must be an ancestor of HEAD),
+// and fails by name with a reason naming the list and the commit. An entry applies only if its path is under state/ or
+// governance/forms/ and its commit is 40 hex digits; any other entry, one whose cite resolves in the tree, and one that
+// matches no unpinned cite in its path fail by name under their own FAIL line (targetErrors). An entry's commit is the commit that filed the citing line, where the cite holds there; where it does not, it is the newest commit on HEAD's first-parent history at which the cite holds, the first parent of the first-parent commit that shortened the cited file below the cited line (the form's rule).
 // PINNED FALLBACK: a cite
 // that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
 // at that commit instead: the commit must exist, a path must be a file there, and the line must be
@@ -78,9 +84,9 @@
 //     (CLAUDE.md) — `docs/02:91` is doc 02 section 91, not file `docs/02` line 91.
 //
 // WHAT THIS DOES NOT CATCH (disclosed): a cited line that moved but stayed in range (this checks
-// existence and bounds, not that line N still says what the citation implies); a citation with the
+// existence and bounds, not that line N still says what the citation implies; at a shortened-target entry the scan checks that the cite holds at the entry's commit and that the commit is on HEAD's history, not that it is the commit the rule above names; the shortened-target list has no history check; an entry for a cite in an archived folder is accepted though that cite is advisory anyway; one entry covers every occurrence of its token in its citing file; a second entry for the same file and token replaces the first, unreported; and, under --files, an entry whose citing file is not among the files scanned (the glob excludes it, or it is not tracked) is not checked for a match); a citation with the
 // right line count but the wrong file among same-basename siblings; a listed cite (the legacy bound above) to the line just past the end of a file that ends in a newline,
-// or to line 1 of an empty file; a list entry no longer needed is not reported; a change to the list is
+// or to line 1 of an empty file; a legacy-bound list entry no longer needed is not reported; a change to the legacy-bound list is
 // checked against its history only once committed; and that history is read along first parents, so a commit
 // reached only through a merge's second parent is checked as part of the merge, not alone; and, by the
 // tiering above, a
@@ -278,6 +284,21 @@ function legacyKeys(text) {
   for (const e of JSON.parse(text).entries) if (typeof e?.path === 'string' && typeof e.cite === 'string') keys.add(JSON.stringify([e.path, e.cite]));
   return keys;
 }
+const SHORT_LIST = 'scripts/plan/verify-cites-shortened-target.json';
+function shortenedEntries(root) {
+  const p = path.join(root, SHORT_LIST);
+  const entries = new Map();
+  const errors = [];
+  if (!fs.existsSync(p)) return { entries, errors };
+  for (const e of JSON.parse(fs.readFileSync(p, 'utf8')).entries) {
+    const bad = typeof e?.path !== 'string' || typeof e.cite !== 'string' || typeof e.commit !== 'string' ? 'is not {path, cite, commit}'
+      : !/^[0-9a-f]{40}$/.test(e.commit) ? 'commit is not 40 hex digits (not applied)'
+      : !(e.path.startsWith('state/') || e.path.startsWith('governance/forms/')) ? 'path is not under state/ or governance/forms/ (not applied)' : null;
+    if (bad) errors.push(`${JSON.stringify(e)}: ${bad}`);
+    else entries.set(JSON.stringify([e.path, e.cite]), { e, matched: false, resolved: false });
+  }
+  return { entries, errors };
+}
 function countOf(text) {
   const pieces = text.split('\n').length;
   return { pieces, lines: pieces - (text === '' || text.endsWith('\n') ? 1 : 0) };
@@ -410,7 +431,7 @@ function pinnedRefs(pathRaw, citingRel, index, map) {
 }
 
 /**
- * Runs the scan. Returns { gated, advisory, scanned, listErrors }. Each finding is
+ * Runs the scan. Returns { gated, advisory, scanned, listErrors, targetErrors }. Each finding is
  * { relPath, citeLine, target, reason }. `gated` findings drive the exit code; `advisory` findings
  * are printed for information only (see the two-tier note at the top of this file).
  */
@@ -423,6 +444,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
   const advisory = [];
   const listPath = path.join(root, LEGACY_LIST);
   const legacy = fs.existsSync(listPath) ? legacyKeys(fs.readFileSync(listPath, 'utf8')) : new Set();
+  const gitR = (args) => execFileSync('git', args, { cwd: root, encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] });
+  const short = shortenedEntries(root);
   const map = loadMovedMap(root);
   const post = map.rows.length ? postMoveChecker(root) : null;
   for (const relPath of files) {
@@ -445,6 +468,8 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       // A pinned cite's own path takes no map and no post-move check (the form's section 2.3); a moved citing file's
       // relative path is resolved from its pre-move folder and from its folder now (pinnedRefs).
       const res = cite.pin ? checkResolved(cite, ...pinnedRefs(cite.pathRaw, relPath, index, map), root) : checkCitation(cite, index, root, map);
+      const st = cite.pin ? null : short.entries.get(JSON.stringify([relPath, cite.raw]));
+      if (st) { st.matched = true; if (res.status === 'ok') st.resolved = true; }
       if (res.mapped && post.writtenAfter(res.mapped.row, relPath, cite.citeLine)) {
         const row = res.mapped.row;
         (res.mapped.exact ? sink : advisory).push({ ...at, reason: `old path "${row.old}" cited after the move at ${row.commit.slice(0, 12)}; cite "${res.mapped.path}"` });
@@ -458,6 +483,15 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
         continue;
       }
       let pinReason = null;
+      if (st && !st.resolved) {
+        const [rx, ra] = pinnedRefs(cite.pathRaw, relPath, index, map);
+        const where = `shortened-target list ${SHORT_LIST} at ${st.e.commit.slice(0, 12)}: `;
+        let anc = true;
+        try { gitR(['merge-base', '--is-ancestor', st.e.commit, 'HEAD']); } catch { anc = false; }
+        const sr = anc ? checkPinned({ ...cite, pin: st.e.commit }, root, [...new Set([...(rx.length ? rx : ra), cite.pathRaw.replace(/^\.\//, '')])]) : { ok: false, reason: 'the commit is not an ancestor of HEAD' };
+        if (sr.ok) continue;
+        pinReason = where + sr.reason;
+      }
       if (cite.pin && (res.status !== 'no-match' || cls === 'rooted')) {
         const [rx, ra] = pinnedRefs(cite.pathRaw, relPath, index, map);
         const pr = checkPinned(cite, root, [...new Set([...(rx.length ? rx : ra), cite.pathRaw.replace(/^\.\//, '')])]);
@@ -477,7 +511,12 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
       }
     }
   }
-  return { gated, advisory, scanned: files.length, listErrors: legacyListErrors(root) };
+  const targetErrors = [...short.errors];
+  for (const { e, matched, resolved } of short.entries.values()) {
+    if (!matched && (!filesGlob || files.includes(e.path))) targetErrors.push(`${JSON.stringify(e)}: matches no unpinned cite in its path`);
+    else if (resolved) targetErrors.push(`${JSON.stringify(e)}: the cite resolves in the tree as written`);
+  }
+  return { gated, advisory, scanned: files.length, listErrors: legacyListErrors(root), targetErrors };
 }
 
 function parseArgs(argv) {
@@ -498,7 +537,7 @@ function line(f) {
 
 function main() {
   const args = parseArgs(process.argv.slice(2));
-  const { gated, advisory, scanned, listErrors } = runVerifyCites({ repoRoot: REPO_ROOT, filesGlob: args.files });
+  const { gated, advisory, scanned, listErrors, targetErrors } = runVerifyCites({ repoRoot: REPO_ROOT, filesGlob: args.files });
   const failing = args.strict ? [...gated, ...advisory] : gated;
 
   if (!args.quiet && advisory.length && !args.strict) {
@@ -510,8 +549,13 @@ function main() {
     for (const e of listErrors) console.error(`  - ${e}`);
     process.exitCode = 1;
   }
+  if (targetErrors.length) {
+    console.error(`verify:cites FAIL — ${targetErrors.length} shortened-target list error(s):`);
+    for (const e of targetErrors) console.error(`  - ${e}`);
+    process.exitCode = 1;
+  }
   if (failing.length === 0) {
-    if (!listErrors.length) console.log(
+    if (!listErrors.length && !targetErrors.length) console.log(
       `verify:cites PASS — every rooted (in-tree) path:line reference across ${scanned} file(s) resolves.` +
         (advisory.length ? ` (${advisory.length} loose reference(s) advised above.)` : ''),
     );
