@@ -54,3 +54,13 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-22 — merged
+
+1. **Merged** by the advisor by merge commit b9023d48d63b98f07db79c59125db190d5d39c5f, at 2026-11-22T15:13:23Z by GitHub, at the checked head d06c2dfb10b660e0ce0106dbd4b8f06d98902d0c; its verdict MERGE filed at `state/consults/merge-checks/PR-355-d06c2dfb10b6.md`; main's CI at the merge commit green (4 runs, all success, read at 2026-11-22T15:18:06Z).
+
+2. The ledger's finding on the flaky test closes at this merge (ADV-2026-11-22-14 item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.

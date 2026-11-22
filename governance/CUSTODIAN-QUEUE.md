@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c278648c41c4951d4b4730cd11bec3caeeef442c52f2ee42a2dab6bf96f6cdaf`) at `2026-11-22T15:31:46.831Z`.
+Generated from `PLAN.yaml` (sha256 `9e28c1acdd57ec99c415efcd183be80ae011543367068e3b290a040a78df9c50`) at `2026-11-22T15:48:18.745Z`.
 
 ## 1. Next
 
@@ -25,11 +25,7 @@ Generated from `PLAN.yaml` (sha256 `c278648c41c4951d4b4730cd11bec3caeeef442c52f2
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 30 min)
-
-### ruling
-
-- **shell-test-executables-carry-the-common-controls-manifest** — The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4) (10 min)
+## 3. Waiting on the human (total: 20 min)
 
 ### sitting
 
@@ -60,7 +56,6 @@ Generated from `PLAN.yaml` (sha256 `c278648c41c4951d4b4730cd11bec3caeeef442c52f2
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
-- **verify-offline-note-test-flake** — scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown — evidence: branch `cut/verify-offline-note-predicate`
 - **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) — evidence: branch `cut/guardian-monitor`
 
 ## 6. Proposed / unscheduled
@@ -166,3 +161,4 @@ Generated from `PLAN.yaml` (sha256 `c278648c41c4951d4b4730cd11bec3caeeef442c52f2
 - **recorder-write-latency-measure** — Evidence Recorder: a declared write-latency measure with its own sample, so the brief overhead acceptance can be established before the Recorder evaluation ends (Amendment 2 C2-d keeps E5 a lower bound) (phase `prototype`) — ambition, never queued
 - **reuse-round-1-bundle** — Reuse archaeology round 1, the advisor bundle, filed as one docs-and-data piece (not under docs/) (phase `prototype`) — ambition, never queued
 - **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete (phase `prototype`) — ambition, never queued
+- **shell-test-executables-carry-the-common-controls-manifest** — The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4) (phase `prototype`) — ambition, never queued
