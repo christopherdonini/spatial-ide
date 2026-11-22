@@ -32,7 +32,7 @@
 // {path, cite, commit} is read at the entry's commit by the pin's own check (the commit must be an ancestor of HEAD),
 // and fails by name with a reason naming the list and the commit. An entry applies only if its path is under state/ or
 // governance/forms/ and its commit is 40 hex digits; any other entry, one whose cite resolves in the tree, and one that
-// matches no unpinned cite in its path fail by name under their own FAIL line (targetErrors).
+// matches no unpinned cite in its path fail by name under their own FAIL line (targetErrors). An entry's commit is the commit that filed the citing line, where the cite holds there; where it does not, it is the newest commit on HEAD's first-parent history at which the cite holds, the first parent of the first-parent commit that shortened the cited file below the cited line (the form's rule).
 // PINNED FALLBACK: a cite
 // that does not resolve in the tree but is directly followed by `@ <commit>` (7-40 hex digits) is read
 // at that commit instead: the commit must exist, a path must be a file there, and the line must be
@@ -84,9 +84,9 @@
 //     (CLAUDE.md) — `docs/02:91` is doc 02 section 91, not file `docs/02` line 91.
 //
 // WHAT THIS DOES NOT CATCH (disclosed): a cited line that moved but stayed in range (this checks
-// existence and bounds, not that line N still says what the citation implies; at a shortened-target entry the scan checks that the cite holds at the entry's commit and that the commit is on HEAD's history, not that it is the commit the rule names); a citation with the
+// existence and bounds, not that line N still says what the citation implies; at a shortened-target entry the scan checks that the cite holds at the entry's commit and that the commit is on HEAD's history, not that it is the commit the rule above names; the shortened-target list has no history check; an entry for a cite in an archived folder is accepted though that cite is advisory anyway; one entry covers every occurrence of its token in its citing file; and a second entry for the same file and token replaces the first, unreported; under --files, an entry whose citing file the glob excludes is not checked for a match); a citation with the
 // right line count but the wrong file among same-basename siblings; a listed cite (the legacy bound above) to the line just past the end of a file that ends in a newline,
-// or to line 1 of an empty file; a list entry no longer needed is not reported; a change to the list is
+// or to line 1 of an empty file; a legacy-bound list entry no longer needed is not reported; a change to the legacy-bound list is
 // checked against its history only once committed; and that history is read along first parents, so a commit
 // reached only through a merge's second parent is checked as part of the merge, not alone; and, by the
 // tiering above, a
@@ -431,7 +431,7 @@ function pinnedRefs(pathRaw, citingRel, index, map) {
 }
 
 /**
- * Runs the scan. Returns { gated, advisory, scanned, listErrors }. Each finding is
+ * Runs the scan. Returns { gated, advisory, scanned, listErrors, targetErrors }. Each finding is
  * { relPath, citeLine, target, reason }. `gated` findings drive the exit code; `advisory` findings
  * are printed for information only (see the two-tier note at the top of this file).
  */
@@ -513,7 +513,7 @@ export function runVerifyCites({ repoRoot, filesGlob } = {}) {
   }
   const targetErrors = [...short.errors];
   for (const { e, matched, resolved } of short.entries.values()) {
-    if (!matched) targetErrors.push(`${JSON.stringify(e)}: matches no unpinned cite in its path`);
+    if (!matched && (!filesGlob || files.includes(e.path))) targetErrors.push(`${JSON.stringify(e)}: matches no unpinned cite in its path`);
     else if (resolved) targetErrors.push(`${JSON.stringify(e)}: the cite resolves in the tree as written`);
   }
   return { gated, advisory, scanned: files.length, listErrors: legacyListErrors(root), targetErrors };

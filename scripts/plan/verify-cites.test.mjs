@@ -834,7 +834,7 @@ test('verify-cites: a pinned cite from a moved file to a file moved beside it st
 // The shortened-target list: a listed cite into a file that a later commit shortened is read at its entry's commit.
 const ST = 'scripts/plan/verify-cites-shortened-target.json';
 const STEM = 'scripts/plan/verify-cites-shortened-target.json at ';
-function shortened({ noteRel = 'state/note.md', cite = 'engine/src/pool.rs:5', entry, side = false, listed = true }) {
+function shortened({ noteRel = 'state/note.md', cite = 'engine/src/pool.rs:5', entry, side = false, listed = true, glob }) {
   const dir = gitTree({ 'engine/src/pool.rs': 'a\nb\nc\nd\ne\n', [noteRel]: `see ${cite}\n` });
   try {
     const c1 = gitIn(dir, 'rev-parse', 'HEAD');
@@ -853,7 +853,7 @@ function shortened({ noteRel = 'state/note.md', cite = 'engine/src/pool.rs:5', e
       gitIn(dir, 'add', '-A');
       gitIn(dir, 'commit', '-q', '-m', 'list');
     }
-    return { ...runVerifyCites({ repoRoot: dir }), c1, other };
+    return { ...runVerifyCites({ repoRoot: dir, filesGlob: glob }), c1, other };
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -910,4 +910,10 @@ test('a_shortened_target_entry_that_matches_no_cite_fails_by_name', () => {
   const r = shortened({ entry: stEntry('engine/src/pool.rs:3') });
   assert.equal(r.targetErrors.length, 1, JSON.stringify(r));
   assert.ok(/matches no unpinned cite/.test(r.targetErrors[0]) && r.targetErrors[0].includes('engine/src/pool.rs:3'), r.targetErrors[0]);
+});
+
+// RECORDED MUTATION (M8) applied alone to the code of f912819f120a8434d385471b3eedb3d8f92b9274 plus the fix and reverted: the glob condition removed (`if (!matched) targetErrors.push(`) -> fails by name: `a_shortened_target_entry_outside_the_files_glob_is_not_reported_as_unmatched`, and only this one.
+test('a_shortened_target_entry_outside_the_files_glob_is_not_reported_as_unmatched', () => {
+  const r = shortened({ entry: stEntry('engine/src/pool.rs:5'), glob: 'docs/**' });
+  assert.deepEqual([r.gated, r.targetErrors], [[], []], JSON.stringify(r));
 });
