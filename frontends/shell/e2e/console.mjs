@@ -36,9 +36,9 @@
 // cleanly, already used by filter.mjs/filter-panel.mjs/publish.mjs) -- regenerate: `cargo test -p
 // spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored
 // --nocapture`. Reused for every step below: NEXT-CUT.md's "one-click-two-commands" truth (TWOCMD')
-// is about ONE openPath call producing two class-A entries, so the steps before LABEL' share one open.
-// LABEL' opens the file again; the opt-in MEASURE' opens it up to three times to warm up, then it and
-// `100k-happy-path.parquet` once per run.
+// is about ONE openPath call producing two class-A entries, so the steps before COPYTRUNC' share one open.
+// COPYTRUNC' opens the file again with a near-cap crsAssertion, and LABEL' opens it once more; the opt-in
+// MEASURE' opens it up to three times to warm up, then it and `100k-happy-path.parquet` once per run.
 //
 // `waitForMountReady`/`withTimeout`/`sleep` are duplicated from regression.mjs/admission-remediation.mjs
 // rather than imported -- this workspace's own established sibling-file convention.
@@ -933,7 +933,7 @@ async function measureReadAfterP1(page, p0, p1, a1) {
     if (r.o2 - o0 > n0 - M) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${r.o2 - o0} entries of the other kind were dropped after P0, more than the ${n0 - M} the other ring held then (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
     if (r.discard || r.clicked > 0) continue;
     const names = r.rows.map(otherKindName).filter((n) => n !== null);
-    if (names.length !== r.a) throw new Error(`MEASURE': cannot tell the open's own entries from any other: ${names.length} entries of the other kind are among the newest ${r.L}, not the ${r.a} recorded after P0 (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
+    if (names.length !== r.a) throw new Error(`MEASURE': cannot tell the open's own entries from any other: the entries of the other kind among the newest ${r.L}: their count ${names.length} is not ${r.a} (P0: ${JSON.stringify(p0.text)}; now: ${JSON.stringify(r.text)})`);
     const count = (n) => names.filter((x) => x === n).length, toggles = count("toggle");
     if (count("close_dataset") > 1 || count("binding_data_plane_attach") > 1 || count("close_dataset") + count("binding_data_plane_attach") + toggles !== names.length || toggles > r.a - a1) {
       throw new Error(`MEASURE': an entry of the other kind was recorded after P0 that the open does not explain: ${JSON.stringify(names)} (P0: ${JSON.stringify(p0.text)}; P1: ${JSON.stringify(p1.text)}; final: ${JSON.stringify(r.text)})`);
@@ -976,7 +976,7 @@ function fixtureHashes() {
 }
 
 async function stepMeasure(page, consoleHandle) {
-  if (process.env.CONSOLE_MEASURE !== "1") return { skip: "CONSOLE_MEASURE=1 is not set: MEASURE' is opt-in (the form's section 6) and runs after the human's sitting" };
+  if (process.env.CONSOLE_MEASURE !== "1") return { skip: "CONSOLE_MEASURE=1 is not set: MEASURE' is opt-in (section 6 of the Console form, governance/forms/frontends/CONSOLE-STREAM-LANE-PREREGISTRATION.md) and runs after the human's sitting" };
   for (const f of [FIXTURE_SMALL, FIXTURE_100K]) if (!existsSync(f)) throw new Error(`MEASURE': fixture not found: ${f} (S9)`);
   const before = fixtureHashes();
   const out = { startedAt: new Date().toISOString(), fixtures: before, runs: [], stopped: null };
