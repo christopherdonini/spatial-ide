@@ -8,8 +8,8 @@
  * - **The reopen's `admit`** (`admitProject`) is what `runAdmitPath` (`admission/AdmissionPanel.tsx`) runs for a reopen, in place of
  *   `admitDataset`: `open_project` and then `describe` (section 2.8). It never calls `open_dataset`. A `question` or a `not_found` ends the run
  *   (O-14); the panel re-enters the run with the answer, or with the re-link and the answer the run already gave. A `describe` that fails after
- *   `opened` closes the opened handle first, waiting for the close at most `DESCRIBE_FAILED_CLOSE_WAIT_MS` (`admission/admitDataset.ts`'s
- *   `describeOpened`).
+ *   `opened` first sends `close_dataset` for the opened handle, and the failure goes on when the close settles or once
+ *   `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed, whichever is first (`admission/admitDataset.ts`'s `describeOpened`).
  * - **Text from a file is bounded** (item 5 (j)) by `project/shownText.ts` here, before it reaches a place or the log: every refusal's message and
  *   fields, `file_name`, `basis` and O-18's column. The workspace's own text is not (item 5 (k)): it applies whole, and W-TEXT names the member.
  * - **The refusal's owner place** (item 5 (g); ADV-2026-11-20-05 item 4) is chosen here from the code alone, and S9's two places from the
@@ -60,7 +60,7 @@ export interface Reopened {
  * identity this window holds, for S9. A typed refusal is bounded, logged once and returned with its owner place; any other failure is rethrown,
  * as `admitDataset` rethrows it, for the global handlers. When `describe` fails, `describeOpened` first sends `close_dataset` for the opened
  * handle, which frees the project's lock once the kernel has closed it and its release has run; the failure goes on when the close settles or
- * after at most `DESCRIBE_FAILED_CLOSE_WAIT_MS`. A cancel after the engine's open answers `opened` and is applied as any `opened` is
+ * once `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed, whichever is first. A cancel after the engine's open answers `opened` and is applied as any `opened` is
  * (item 5 (e)): that is timing inside one round trip, not covered by a test.
  */
 export async function admitProject(folder: string, cancelKey: string, options: AdmitOptions = {}, heldProject: string | null = null): Promise<AdmissionOutcome> {

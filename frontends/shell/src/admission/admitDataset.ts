@@ -44,8 +44,8 @@ export interface AdmitOptions {
  * (NEXT-CUT.md). Any non-`SkpError` failure is rethrown rather than swallowed, so it still reaches
  * the global handlers ADR-010 rule 7 installs -- this function only ever turns a *typed* refusal
  * into product UI; an unexpected failure is exactly what those handlers exist for. A `describe` that
- * fails, typed or not, first closes the opened handle (`describeOpened`), waiting for the close at most
- * `DESCRIBE_FAILED_CLOSE_WAIT_MS`.
+ * fails, typed or not, first sends `close_dataset` for the opened handle (`describeOpened`), and the failure
+ * goes on when the close settles or once `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed, whichever is first.
  */
 export async function admitDataset(
   path: string,
@@ -77,9 +77,10 @@ export async function admitDataset(
 }
 
 /**
- * How long a `describe` that failed after a handle was returned waits for that handle's close before its error goes on. It caps how long the
- * error waits. It is under the watchdog's `WATCHDOG_PHASE_TIMEOUT_MS` (5_000 ms, `diagnostics/watchdog.ts`), so the close alone cannot hold the
- * `describe` phase past it. It is declared, not measured.
+ * How long a `describe` that failed after a handle was returned waits for that handle's close before its error goes on. It is the delay of the
+ * timer that ends that wait; a timer runs at its delay or later (taken from documentation, not read in this repo). It is under the watchdog's
+ * `WATCHDOG_PHASE_TIMEOUT_MS` (5_000 ms, `diagnostics/watchdog.ts`), so the close alone does not hold the `describe` phase past it, unless that
+ * timer runs late. It is declared, not measured.
  */
 export const DESCRIBE_FAILED_CLOSE_WAIT_MS = 2_000;
 
