@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c9729e7625aca8f872e5cb830173c0d0e60ef2f10a009f126c8660a4e90a774f`) at `2026-11-22T21:42:14.677Z`.
+Generated from `PLAN.yaml` (sha256 `bc1e8438dafeee4f632be0093cde0bca8117f2adc4269fb16a45bd240380db1f`) at `2026-11-22T22:06:44.880Z`.
 
 ## 1. Next
 
@@ -54,6 +54,7 @@ Generated from `PLAN.yaml` (sha256 `c9729e7625aca8f872e5cb830173c0d0e60ef2f10a00
 - **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) — evidence: branch `cut/cancel-stamp-order`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
+- **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) — evidence: branch `cut/opened-of-panic-frees-the-lock`
 - **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete — evidence: branch `cut/untiled-reissue-mint-window`
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
@@ -139,7 +140,6 @@ Generated from `PLAN.yaml` (sha256 `c9729e7625aca8f872e5cb830173c0d0e60ef2f10a00
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
-- **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) (phase `prototype`) — never queued until placed
 - **relink-after-refusal-at-the-recorded-place** — After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73) (phase `prototype`) — never queued until placed
 
 ### Unscheduled

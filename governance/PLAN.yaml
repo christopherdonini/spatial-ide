@@ -7769,7 +7769,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 848); the build dispatched on cut/describe-failed-close. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 FILED 2026-11-22: E-1, E-2, D-1 to D-4 and the bound on the awaited close (ADV-2026-11-22-38, -39), a ceiling of 270 lines (class 9); attempt 2 on it alone next. Before: FORM GATE ATTEMPT 1 FAIL 2026-11-22 (E-1, E-2; D-1 to D-4), state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md; OPEN-2 to OPEN-6 ruled as recommended (ADV-2026-11-22-35); Amendment 1 waits for the architect reading on what bounds the awaited close (item 4); then attempt 2. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md, full, both gates, drafted by lead-data, standing as the form by ADV-2026-11-22-32 item 1; next its architect form gate; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
+    summary: "BUILT 2026-11-22 (C1 to C3, head 3755df81), draft PR 360; the reviewer build gate running. Before: FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 848); the build dispatched on cut/describe-failed-close. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 FILED 2026-11-22: E-1, E-2, D-1 to D-4 and the bound on the awaited close (ADV-2026-11-22-38, -39), a ceiling of 270 lines (class 9); attempt 2 on it alone next. Before: FORM GATE ATTEMPT 1 FAIL 2026-11-22 (E-1, E-2; D-1 to D-4), state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md; OPEN-2 to OPEN-6 ruled as recommended (ADV-2026-11-22-35); Amendment 1 waits for the architect reading on what bounds the awaited close (item 4); then attempt 2. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md, full, both gates, drafted by lead-data, standing as the form by ADV-2026-11-22-32 item 1; next its architect form gate; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
     dates: {opened: 2026-11-22, done: null}
   - id: kernel-close-unbounded-waits-and-the-host-main-thread
     title: "The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6)"
@@ -7793,17 +7793,17 @@ nodes:
     kind: task
     lane: kernel-protocol
     phase: prototype
-    status: proposed
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/opened-of-panic-frees-the-lock}
     budget_minutes: 300
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "BUILD TO GO ON 2026-11-22 (ADV-2026-11-22-41): Amendment 1 as written, no second gate attempt, M5 recorded as an observation; it waits for a place on the strongest model. Before: AMENDMENT 1 2026-11-22: D-1 to D-9 and ADV-2026-11-22-40 on OPEN-1 to OPEN-4; the build waits for the advisor on D-4, D-7 and D-8. Before: FORM GATE PASS WITH NOTES 2026-11-22 (gate-log row 849): D-1 to D-9 to the form by amendment; OPEN-1 to OPEN-4 to the advisor. Before: FORM COMMITTED 2026-11-22: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md, full, both gates, drafted by lead-data; next its architect form gate, after the form gate of node g; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
+    summary: "BUILD DISPATCHED 2026-11-22 on cut/opened-of-panic-frees-the-lock (worker-high, Opus), at main 1938c1b5. Before: BUILD TO GO ON 2026-11-22 (ADV-2026-11-22-41): Amendment 1 as written, no second gate attempt, M5 recorded as an observation; it waits for a place on the strongest model. Before: AMENDMENT 1 2026-11-22: D-1 to D-9 and ADV-2026-11-22-40 on OPEN-1 to OPEN-4; the build waits for the advisor on D-4, D-7 and D-8. Before: FORM GATE PASS WITH NOTES 2026-11-22 (gate-log row 849): D-1 to D-9 to the form by amendment; OPEN-1 to OPEN-4 to the advisor. Before: FORM COMMITTED 2026-11-22: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md, full, both gates, drafted by lead-data; next its architect form gate, after the form gate of node g; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
     dates: {opened: 2026-11-22, done: null}
   - id: relink-after-refusal-at-the-recorded-place
     title: "After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73)"
@@ -7820,5 +7820,5 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM GATE RUNNING 2026-11-22 (architect, at main be11bd98). Before: FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag."
+    summary: "FORM GATE FAIL 2026-11-22 (gate-log row 850): C-1, E-1 and D-1 to D-9 for an amendment; S12 words and OPEN-1 to OPEN-9 to the advisor. Before: FORM GATE RUNNING 2026-11-22 (architect, at main be11bd98). Before: FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag."
     dates: {opened: 2026-11-22, done: null}
