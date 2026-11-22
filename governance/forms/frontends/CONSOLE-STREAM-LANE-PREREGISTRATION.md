@@ -591,3 +591,323 @@ Each stop is reported, and the custodian sends it to the advisor.
 ## §13 Amendments
 
 *(Opens empty; append-only.)*
+
+### Amendment 1 — 2026-11-22 — post-result amendment after the architect's form gate, attempt 1 (FAIL): the gate's words for C1, E1 and D1 to D7; the open's own entries and the stop; rule W among item 67's words; the joined runs; the OPEN items
+
+Post-result amendment, written after the architect's form gate, attempt 1 (FAIL), whose findings are this round's results. Nothing above is edited: each new text below is read in place of its old text, and the form's own text stays as filed. No code is written before the architect's attempt 2, which reads this amendment alone, ends PASS or PASS WITH NOTES (ADV-2026-11-22-28 item 1).
+
+**Authority.** The advisor's ruling ADV-2026-11-22-28, under the delegation of 2026-11-13, not the human's words: `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-28-the-console-form-after-its-gate-amendment-1-then-attempt-2-the-five-open-items-as-recommended-the-stop-accounted-for-now.md`, items 1 to 6. **Evidence:** the gate report, `state/consults/gates/2026-11-22-console-stream-lane-form-gate-architect.md` (gate-log row 837), and the architect's draft of the additions, `state/consults/2026-11-22-console-stream-lane-amendment-1-additions-architect-draft.md`, filed in the commit that appends this amendment.
+
+**How the texts were copied.** None of the texts below is the human's wording or the advisor's: each is the architect's. Every old and new text is copied by the custodian's script, those of item 1 from the gate report and those of item 2 from the draft. Each is the text between its fence lines in that file, which are not part of it. The script checked at this filing that each old text occurs exactly once in the form above this amendment, and that no two old texts overlap there. The clause checks stay in the two reports. Code cites inside the texts are reading aids at 0f2078423378fb3f35346a6db9be5833ba0569b9.
+
+#### 1. The gate's words for C1, E1 and D1 to D7 (ADV-2026-11-22-28 item 1)
+
+**C1, text 1 of 3.** Old:
+
+````text
+     - **The check:** let R = label total − baseline total, and ΔO = the other kind's drops since the baseline. The check passes when R ≤ M (at most M entries of any kind came since the baseline, so the other ring still holds every one of them). It also passes when ΔO ≤ N_base − M: the other ring held at least N_base − M at the baseline, because the stream ring holds at most M, and it evicts oldest first.
+````
+
+New:
+
+````text
+     - **The check:** let R = label total − baseline total, ΔO and ΔS = the other and the stream kind's drops since the baseline, and N_base = the held count at the baseline. The check passes when R ≤ M (at most M entries of any kind came since the baseline, so each ring still holds every entry of its own kind recorded since). It also passes when ΔO ≤ N_base − M and ΔS ≤ N_base − M: each ring held at least N_base − M at the baseline, because the other ring holds at most M, and each evicts its own oldest first.
+````
+
+**C1, text 2 of 3.** Old:
+
+````text
+     - **Failure:** otherwise it fails with `GROUP': capacity: <R> entries were recorded since the baseline (label total <t> - <t0>), more than each ring's <M>, and <ΔO> entries of the other kind were dropped, more than the <N0 - M> the other ring held at least`.
+````
+
+New:
+
+````text
+     - **Failure:** otherwise it fails with `GROUP': capacity: <R> entries were recorded since the baseline (label total <t> - <t0>), more than each ring's <M>, and the drops since then, <ΔS> of the stream kind and <ΔO> of the other, are not both within the <N0 - M> each ring held at least`.
+````
+
+**C1, text 3 of 3.** Old:
+
+````text
+the check passes when R ≤ 128, or when the other kind's entries since the baseline number at most N_base − 128.
+````
+
+New:
+
+````text
+the check passes when R ≤ 128, or when the other kind's entries since the baseline and the stream kind's drops since then each number at most N_base − 128.
+````
+
+**E1, text 1 of 1.** Old:
+
+````text
+**M-CB3:** `droppedOther` read as 0 in `collapsedCountSync.ts` and in `ConsolePanel`'s sync. Then ΔO reads 0, so a = N₁ − N₀ (0 in the ordinary state), and L = min(M, ΔS). The last L entries are card B's load and R1's clicks. Card B's `record_step`, recorded before its load's tile requests, is not among them. Set {F4 with n = 0}. Whether the `record_step` is recorded before the load's first tile request is by reading only (Amendment 5 item 3 (i) of the first-look form); if it is not, a pass is a finding.
+````
+
+New:
+
+````text
+**M-CB3:** `droppedOther` read as 0 in `collapsedCountSync.ts` and in `ConsolePanel`'s sync. Then ΔO reads 0, so a reads N₁ − N₀ (0 in the ordinary state, both rings full), and L = min(M, ΔS). The entries rendered after R0 are the stream entries still held and every other-kind entry recorded after R0, so the last L leave out the oldest of them, as many as there are other-kind entries. Card B's `record_step` is left out, and the set holds, when the held stream entries recorded after R0 and before it number no more than the other-kind entries recorded after it (R1's clicks among them); in the ordinary state, where card B's load adds more than M stream entries, that holds when the `record_step` is recorded before the oldest stream entry still held. By reading at 0f2078423378: the step is enqueued after the untiled request's issued outcome (`frontends/shell/src/App.tsx:394-395`, `:1072`) and recorded in the same call when no step is in flight (`frontends/shell/src/workspace/stepRecorder.ts:49-55`, `:69-75`; `frontends/shell/src/skp/client.ts:59`), and tiles are asked for only at that look's Completed terminal (`KNOWN-LIMITATIONS.md` item 67's comment). Set {F4 with n = 0}. The build checks the reading: the unmutated E-AND run records, from its final reading, ΔS, a and the number of held stream entries recorded after R0 and before card B's `record_step`; if that number is above 0, M-CB3 is not run as evidence and goes to the advisor as a possible pass case (ADV-2026-11-22-26 item 2); a pass of a run made is a finding.
+````
+
+**D1, text 1 of 1.** Old:
+
+````text
+- **W1, `e2e/README.md:280`.** The clause "the label's total may grow by at most the recorder's 256 so none of its own rows can have been evicted" becomes "the label must show that none of its own rows can have been evicted: its total grew by at most one ring's 128, or the entries of the other kind dropped since the baseline are at most its held count then less 128".
+````
+
+New:
+
+````text
+- **W1, `e2e/README.md:280`, that line only** (line 279, which ends "and the label's total may grow", is kept). On line 280, "by at most the recorder's 256 so none of its own rows can have been evicted." becomes "by at most one ring's 128, or else each kind's drops since the baseline must be at most the baseline's held count less 128, so none of its own rows can have been evicted."
+````
+
+**D2, text 1 of 1.** Old:
+
+````text
+No mutation of E-AND shows a swap of the label's two drop counts, because with the other ring full at R0 and at most 128 entries of each kind dropped between R0 and R1, §2.5's arithmetic gives the same L and the same decision whichever count is which; the label's order is covered by VL2 under M-11, whose fixed snapshot fails under the swap every time.
+````
+
+New:
+
+````text
+No mutation of E-AND shows a swap of the label's two drop counts when both counts are above 0 at R0, the other ring is full there and at most 128 entries of each kind are dropped between R0 and R1, because §2.5's arithmetic then gives the same L and the same decision whichever count is which; the label's order is covered by VL2 under M-11, whose fixed snapshot fails under the swap every time.
+````
+
+**D3, text 1 of 2.** Old:
+
+````text
+A pass that clicks nothing is final. Readings are two frames apart, bounded to 30 s. A reading is discarded unless the rendered entries, counting each closed group's ×N, sum to N₁.
+````
+
+New:
+
+````text
+A reading is discarded, clicks nothing and is not final unless the rendered entries, counting each closed group's ×N, sum to N₁. A reading kept that clicks nothing is final. Readings are two frames apart, bounded to 30 s.
+````
+
+**D3, text 2 of 2.** Old:
+
+````text
+6. If no final reading has its newest added row past `pending` within 30 s: F4 when added is empty (n = 0), else F3′.
+````
+
+New:
+
+````text
+6. If no reading is final within 30 s: F3′. If final readings come but none has its newest added row past `pending` within 30 s: F4 when added is empty (n = 0), else F3′.
+````
+
+**D4, text 1 of 1.** Old:
+
+````text
+**R1, the readings after card B's map settles** (`:484-487`). Each is one `page.evaluate` that:
+````
+
+New:
+
+````text
+**R1, the readings after card B's map settles** (`:484-487`). This supersedes the start during the load (first-look form, Amendment 5 items 3 (b) and 12; ADV-2026-11-19-09): under two rings a load evicts no other-kind entry, so the decision needs only ΔO ≤ N₀ − M. Each is one `page.evaluate` that:
+````
+
+**D5, text 1 of 1.** Old:
+
+````text
+   - `MAX_CONSOLE_ENTRIES = 128`, each ring's size, declared at its site. The doc at :133-140, including :135-136, is rewritten.
+````
+
+New:
+
+````text
+   - `MAX_CONSOLE_ENTRIES = 128`, each ring's size, declared at its site. The doc at :133-140, including :135-136, is rewritten, and so are the docs of `push` (:273-281), `droppedCount` (:290-291) and `entries` (:296-299, whose "only the oldest ever leaves" is untrue under two rings). In `collapsedCountSync.ts`, "(two numbers)" (:8) becomes three. In `console.mjs`, the mirror's comment (:67-68) names each ring's size, `readConsoleLabel`'s doc (:241) follows L1, and GROUP's PASS text (:829) names the branch of the check that passed, with R, ΔS and ΔO.
+````
+
+**D6, text 1 of 1.** Old:
+
+````text
+**Its meaning.** The advisor's words, byte-copied from the ADV-2026-11-22-20 copy (sha256 d4c8856351288b6250ebee06a6e4b1e6e2f8a1b949dee9849cbbcf7477b83d8c), marked so:
+````
+
+New:
+
+````text
+**Its meaning.** The advisor's words, byte-copied by script, marked so, a sub-line span carrying its line's hash (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-20-the-console-forms-twelfth-file-test-code-only-two-rings-of-256-kept-the-open-drawers-frame-time-measured-after-the-sitting.md:12 @ 0f2078423378fb3f35346a6db9be5833ba0569b9 sha256:<line 12's hash, by the custodian's script>`):
+````
+
+**D7, text 1 of 2.** Old:
+
+````text
+None is on main yet. Each is filed under `state/directives/` before this form is committed, and §0.1 then names its path.
+````
+
+New:
+
+````text
+Each was filed under `state/directives/` before this form was committed; the custodian's header line names each path.
+````
+
+**D7, text 2 of 2.** Old:
+
+````text
+Ranges are reading aids, not pins, except where marked "pin: hash by the custodian".
+````
+
+New:
+
+````text
+Ranges are reading aids, not pins, except the two pinned references of §0.2 and §2.1.
+````
+
+#### 2. The additions (ADV-2026-11-22-28 items 2 to 4)
+
+**(a) The open's own entries and the stop (item 4).** The draft's section A.1 says, by reading, which entries of the other kind an open records and when against P0. Its section A.3 checks §2.5 with the rule changed. The rule's texts follow.
+
+**§1, "May not claim".** Old:
+
+````text
+- That every entry a first look adds is of the stream kind. That is by reading, and S7 checks it.
+````
+
+New:
+
+````text
+- That every entry a first look adds is of the stream kind. That is by reading, and S7 checks it: an entry of the other kind recorded after P0 stops the measurement unless the open itself explains it (§6, the reading after P1).
+````
+
+**§5, P5.** Old:
+
+````text
+- P5: in MEASURE', every settled run has other-added = 0, and the 1280 by 800 runs on `filter-zoned.parquet` have stream-added ≥ 220.
+````
+
+New:
+
+````text
+- P5: in MEASURE', every settled run's entries of the other kind recorded after P0 are the open's own (§6): other-added is 0 or 1, the `close_dataset` of the dataset the open replaced landing before or after P0, with no `binding_data_plane_attach` (the process attached before MEASURE'); and the 1280 by 800 runs on `filter-zoned.parquet` have stream-added ≥ 220.
+````
+
+**§5, Falsification.** Old:
+
+````text
+- a first look adding an other-kind entry (S7);
+````
+
+New:
+
+````text
+- a first look adding an other-kind entry that the open itself does not explain (S7);
+````
+
+**§6, MEASURE's opening paragraph.** Old:
+
+````text
+with the drawer collapsed
+````
+
+New:
+
+````text
+with the drawer collapsed from each run's step 1 to its P1 (the reading after P1 opens it, and closes it again before the next run)
+````
+
+**§6, Warm-up.** Old:
+
+````text
+- **Warm-up:** up to three opens of `filter-zoned.parquet` until S > 0. Otherwise the splits are marked inexact.
+````
+
+New:
+
+````text
+- **Warm-up:** up to three opens of `filter-zoned.parquet` until S > 0. Otherwise MEASURE' stops under S7 with `MEASURE': cannot tell the open's own entries from any other: no data request, cancel or log line was dropped after the warm-up (<label>)`. Once S > 0 it stays above 0, so every later run's P0 has S > 0.
+````
+
+**§6, The split.** Old:
+
+````text
+- **The split:** with S > 0 at P0, stream-added = ΔS and other-added = Δtotal − ΔS.
+````
+
+New:
+
+````text
+- **The split:** with S > 0 at P0, stream-added = ΔS and other-added = Δtotal − ΔS, both from P0 to P1.
+- **The open's own entries of the other kind** (ADV-2026-11-22-28 item 4; by reading at 0f2078423378): `open_dataset` and `describe` are recorded before `openPath` returns (`frontends/shell/src/admission/admitDataset.ts:57`, `:61`; `frontends/shell/src/admission/AdmissionPanel.tsx:430`), so before P0, and are never in other-added. After P0 the open can add only: at most one `close_dataset`, for the dataset it replaces, sent by the workspace effect (`frontends/shell/src/App.tsx:1645-1650`) at a time the code does not fix against P0; and at most one `binding_data_plane_attach`, memoized once per process (`frontends/shell/src/streaming/dataPlaneClient.ts:20-27`). The open records no step (`frontends/shell/src/App.tsx:1180`) and no gui-action.
+- **The reading after P1.** Each settled run, after P1, makes §2.5's R1 reading with P0 in place of R0 and §2.5's discard rule. Each reading is one `page.evaluate`: it opens the Console if closed; reads the label (N₂, S₂, O₂); computes a = (N₂ − N₀) + (O₂ − O₀) and L = a + min(M, S₂ − S₀); and clicks the closed group headers among the last L rendered entries, counting each closed group's ×N, walking from the end. A reading kept that clicks nothing is final. Readings are two frames apart, bounded to 30 s. Then the Console is closed. With a₁ = other-added (P0 to P1), the run decides in this order, each stop by name:
+  1. A label that does not parse: S7, `MEASURE': the Console's label could not be read after P1 (<text>)`.
+  2. O₂ − O₀ > N₀ − M: S7, `MEASURE': cannot tell the open's own entries from any other: <ΔO> entries of the other kind were dropped after P0, more than the <N0 - M> the other ring held then (P0: <text>; now: <text>)`.
+  3. No final reading within 30 s: S7, `MEASURE': within 30000ms of P1 no reading had every group open among the newest <L> entries (<last reading>)`.
+  4. Otherwise, take the entries of the other kind among the last L of the final reading, each by its kind and the name it shows: a class-A row whose header is not `viewport_query` or `cancel`, a class-B row whose prose does not end `(binding_log_session_event)`, and every class-C or unclassified row. If they do not number a: S7, as in 2, with `their count <k> is not <a>`. The run goes on only when they are: at most one `close_dataset`; at most one `binding_data_plane_attach`; and rows of `console.togglePanelExpanded` and `console.toggleGroupExpanded`, the reading's own, numbering together at most a − a₁. Otherwise: S7, `MEASURE': an entry of the other kind was recorded after P0 that the open does not explain: <names> (P0: <text>; P1: <text>; final: <text>)`.
+  The JSON records, per run, a₁, a, L, the names found and the three labels. A stop ends MEASURE' at that run; it is not retried.
+````
+
+**§6, Rule W step 2.** Old:
+
+````text
+2. Any other-added > 0 is S7.
+````
+
+New:
+
+````text
+2. A run stopped under S7 by the reading after P1 ends the measurement, and rule W is not applied. Other-added from the open's own entries is recorded and enters neither Y nor X, which count stream-added only.
+````
+
+**§11, S7.** Old:
+
+````text
+- S7: MEASURE' gives other-added > 0, or a grammar disagreement.
+````
+
+New:
+
+````text
+- S7: MEASURE' records, after P0, an entry of the other kind that the open itself does not explain, or cannot tell the open's own entries from any other (§6, the warm-up and the reading after P1), or a grammar disagreement.
+````
+
+**(b) Rule W (item 3).** This sentence is part of the form from this amendment:
+
+````text
+Rule W's sentences (⟨H⟩'s two forms and ⟨FIGURE⟩) and its table of fractions are part of item 67's words, so they come to the advisor with K1 and K2 after attempt 2 (ADV-2026-11-22-28 item 3), and the commit that fills them in after MEASURE' is read narrowly by the reviewer against the rule (§10, commit 4).
+````
+
+**(c) The joined runs (OPEN-4, item 2).** The draft's section B.2 finds that K2 already carries the sentence, but more narrowly than the code. Its texts follow.
+
+**K2, its last sentence.** Old:
+
+````text
+When the entries of the first kind that separate two runs of the same entry are dropped, the two runs show as one group, which is closed unless the earlier run was a group you had opened.
+````
+
+New:
+
+````text
+When the entries that separate two runs of the same entry are dropped and both runs are still kept, the two runs show as one group, which is closed unless the earlier run was a group you had opened.
+````
+
+**§2.3 item 6.** Old:
+
+````text
+6. **Grouping after a drop** (by reading; VL3; OPEN-4): two runs of one other-kind entry whose stream separators are dropped join into one group.
+````
+
+New:
+
+````text
+6. **Grouping after a drop** (by reading; VL3; OPEN-4, ruled by ADV-2026-11-22-28 item 2): two runs of one entry whose separators are all dropped while both runs are kept join into one group. The separators are then of the other kind: stream entries between two runs of an other-kind entry (VL3), or other-kind entries between two runs of a stream entry (by reading, not tested).
+````
+
+#### 3. The OPEN items (ADV-2026-11-22-28 item 2)
+
+````text
+OPEN-2, OPEN-3, OPEN-4, OPEN-7 and OPEN-8 are closed as §12 recommends, by ADV-2026-11-22-28 item 2 (OPEN-4's sentence in K2 as Amendment 1 words it; OPEN-7's §6 with the stop of item 4).
+````
+
+#### 4. For the attempt
+
+- The draft's section "For the custodian and the advisor", items 1 to 3, is for the architect's attempt 2. By the custodian's summary, not the draft's words, it covers three things: the warm-up's inexact path becomes a stop, the class-C rows are named by their registry statements, and VL3 tests the joined runs in one direction only.
+- By ADV-2026-11-22-28 item 5, after attempt 2 the advisor approves or replaces L1, K1 to K3, R1, R2 and W1 to W3. The build may start on attempt 2's verdict, and the words commit waits. By its item 6, the measurement runs after the sitting of 2026-11-24.
+
+Read the last amendment first.
+
+Nothing above is edited.
