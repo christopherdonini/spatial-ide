@@ -8,6 +8,7 @@
 //     allowed whatever the freshness. A fresh ledger is allowed.
 //   - any other `trigger`, or none (an automatic compaction): judged for freshness, recorded, and
 //     always allowed. It never blocks, and it neither reads nor writes the block record above.
+//   - an input that carries agent_id (a subagent's compaction): allowed before the freshness and block checks; checkFreshness is not called, the block record above is neither read nor written, and the record line carries decision allowed-subagent, flushed_at null and a sixth field, agent_type (a string as received, else null).
 // Every call that reaches the decision appends one line to .claude/state/precompact-<session_id>.jsonl
 // (at, trigger, decision, reason, flushed_at). A line that cannot be written leaves the decision as is.
 //
@@ -224,6 +225,26 @@ function withNote(stderr, note) {
 /** The decision core, injectable for tests (see checkFreshness's own `git` parameter). */
 export function decidePrecompact(input, { projectRoot, now = new Date(), git } = {}) {
   const sessionId = input.session_id ?? 'unknown-session';
+
+  if (input.agent_id) {
+    // A subagent's compaction: allowed, the custodian's state untouched; one diagnostic line, no ledger read.
+    try {
+      const line = JSON.stringify({
+        at: now.toISOString(),
+        trigger: typeof input.trigger === 'string' ? input.trigger : null,
+        decision: 'allowed-subagent',
+        reason: null,
+        flushed_at: null,
+        agent_type: typeof input.agent_type === 'string' ? input.agent_type : null,
+      });
+      const p = recordLogPath(projectRoot, sessionId);
+      fs.mkdirSync(path.dirname(p), { recursive: true });
+      fs.appendFileSync(p, `${line}\n`, 'utf8');
+    } catch (e) {
+      console.error(`precompact-flush: could not append the record line (${e.message}); the decision stands.`);
+    }
+    return { decision: 'allow', stderr: 'allow: a subagent compaction (agent_id present); the custodian state is left alone.' };
+  }
 
   if (input.trigger !== 'manual') {
     const judged = checkFreshness(projectRoot, { now, ...(git ? { git } : {}) });
