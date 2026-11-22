@@ -269,8 +269,8 @@ test('runVerify: --offline note is present and PR/release evidence does not fail
   const planPath = path.join(dir, 'PLAN.yaml');
   fs.copyFileSync(path.join(fixturesDir, 'valid-plan.yaml'), planPath); // has {pr: 1} and {pr: 2} done evidence
   const result = runVerify({ planPath, repoRoot, siteDir: path.join(dir, 'site'), offline: true });
-  assert.ok(result.notes.some((n) => n.includes('--offline')));
-  assert.ok(!result.failures.some((f) => f.includes('pr')));
+  assert.ok(result.notes.some((n) => n.includes('--offline')), `notes runVerify returned: ${JSON.stringify(result.notes)}`);
+  assert.ok(!result.failures.some((f) => f.includes('pr')), `failures containing pr: ${JSON.stringify(result.failures.filter((f) => f.includes('pr')))}`);
 });
 
 // Amendment 2 (B1): proof the check is wired into verify:plan, through verifyStatusAgreement (which
