@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T14:14:07.049Z",
-  "plan_hash": "29a7bdc52ef290bef3f06598b76e07f46742d48e245b12378aa3572bd3fc8dd0",
+  "generated_at": "2026-11-22T14:51:25.526Z",
+  "plan_hash": "37c4e66ba86e7b94ba3dba7483c4202e2bc85ef8cd50b475e3567580580f3e4f",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -328,11 +328,31 @@
     }
   ],
   "waiting_on_human": {
-    "total_minutes": 20,
+    "total_minutes": 30,
     "by_kind": {
       "click": [],
       "sight": [],
-      "ruling": [],
+      "ruling": [
+        {
+          "id": "shell-test-executables-carry-the-common-controls-manifest",
+          "title": "The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4)",
+          "lane": "shell",
+          "phase": "prototype",
+          "status": "blocked",
+          "order": null,
+          "budget_minutes": 240,
+          "needs_human": {
+            "kind": "ruling",
+            "minutes": 10
+          },
+          "evidence": null,
+          "dates": {
+            "opened": "2026-11-22",
+            "done": null
+          },
+          "summary": "DESIGN NOTE 2026-11-22: proposed by ADV-2026-11-20-22 item 4 (state/directives/2026-11-20-advisor-ruling-adv-2026-11-20-22-the-redaction-stop-route-ii-one-sessionlog-method-k-4-a-presence-scan-no-dev-dependency-line.md), placed last of ADV-2026-11-21-15 item 3 (state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-15-the-proposed-nodes-graded-and-ordered-until-the-tag-a-product-piece-merges-only-on-v0-2s-list-or-the-humans-word.md); the architect design note (state/consults/2026-11-22-shell-test-executables-manifest-design-note-architect.md) recommends route T, a rustc-link-arg-tests line in build.rs, the tauri test feature on the dev-dependency and one handler function drawn out of run, full form and both gates, and says it goes to the human: a dependency line and code of the shipped exe; nothing is built before their word."
+        }
+      ],
       "sitting": [
         {
           "id": "operator-sitting-queue",
@@ -813,7 +833,7 @@
         "opened": "2026-10-04",
         "done": null
       },
-      "summary": "IN PROGRESS 2026-11-22: step A read at 533c7402 (state/consults/2026-11-22-verify-offline-note-test-predicate-step-a-worker-report.md): verify.mjs writes a PR or release evidence failure in four places and none offline; the text filed as the second form Amendment 1; next step B, the change. Before: IN PROGRESS 2026-11-22: the first piece merged by the advisor (PR 354, 852f2095), main green, its verdict state/consults/merge-checks/PR-354-c3bd9798de29.md, its form Amendment 2; the cause shown by its gate: the second assertion matched pr in the temporary folder path; the second piece by ADV-2026-11-22-14, its five-line form governance/forms/scripts/VERIFY-OFFLINE-NOTE-TEST-PREDICATE-PREREGISTRATION.md, the reviewer alone; next the worker names verify.mjs own text for an evidence failure, filed as that form Amendment 1 before the change. Before: IN PROGRESS 2026-11-22: the single gate PASS WITH NOTES at c3bd9798, the reviewer alone, no finding (state/consults/gates/2026-11-22-verify-offline-note-test-message-gate-reviewer.md); the form Amendment 1; next PR 354 out of draft and the merge check. Before: IN PROGRESS 2026-11-22: built at c3bd9798, 4 changed lines in the one file; M1 red at the second assertion with the five failures that hold pr in its message, then restored and green; the scripts suite 623 of 623 in the worktree; PR 354 in draft; its report state/consults/2026-11-22-verify-offline-note-test-message-build-worker-report.md; next the reviewer gate, the reviewer alone. Before: IN PROGRESS 2026-11-22: the five-line form committed (governance/forms/scripts/VERIFY-OFFLINE-NOTE-TEST-MESSAGE-PREREGISTRATION.md), the reviewer alone and the standard worker (ADV-2026-11-21-15 item 3 (ii)), started by ADV-2026-11-22-11 with item 3 (i) waiting for a quiet machine; the two assertions gain messages, the cause after the next failure; its finding in the ledger (1122t). Before: Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the offline-note test in scripts/plan/verify.test.mjs failed once and passed on a re-run. Likely cause, from Fable 2026-10-04 advice, item 1 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), and confirmed by one local probe run by the custodian: the test copies only the fixture PLAN.yaml into a mkdtemp folder, so runVerify returns five queue and site drift failures that each carry that folder path, and the assertion that no failure contains the substring pr fails whenever the six random characters of the folder name contain pr. With the prefix verify-offline-note-pr- all five failures contain pr; with the test prefix, none did in that run. The deterministic check for the node form: the same test body with a prefix containing pr fails every time. The fix would assert on the PR-evidence failure shapes, not on a substring. Never queued until the human places it.",
+      "summary": "IN PROGRESS 2026-11-22: PR 355, the second piece, the single gate PASS WITH NOTES at d06c2dfb (state/consults/gates/2026-11-22-verify-offline-note-test-predicate-gate-reviewer.md); the second form Amendment 2, the record before the merge check; next the merge check. Before: IN PROGRESS 2026-11-22: step A read at 533c7402 (state/consults/2026-11-22-verify-offline-note-test-predicate-step-a-worker-report.md): verify.mjs writes a PR or release evidence failure in four places and none offline; the text filed as the second form Amendment 1; next step B, the change. Before: IN PROGRESS 2026-11-22: the first piece merged by the advisor (PR 354, 852f2095), main green, its verdict state/consults/merge-checks/PR-354-c3bd9798de29.md, its form Amendment 2; the cause shown by its gate: the second assertion matched pr in the temporary folder path; the second piece by ADV-2026-11-22-14, its five-line form governance/forms/scripts/VERIFY-OFFLINE-NOTE-TEST-PREDICATE-PREREGISTRATION.md, the reviewer alone; next the worker names verify.mjs own text for an evidence failure, filed as that form Amendment 1 before the change. Before: IN PROGRESS 2026-11-22: the single gate PASS WITH NOTES at c3bd9798, the reviewer alone, no finding (state/consults/gates/2026-11-22-verify-offline-note-test-message-gate-reviewer.md); the form Amendment 1; next PR 354 out of draft and the merge check. Before: IN PROGRESS 2026-11-22: built at c3bd9798, 4 changed lines in the one file; M1 red at the second assertion with the five failures that hold pr in its message, then restored and green; the scripts suite 623 of 623 in the worktree; PR 354 in draft; its report state/consults/2026-11-22-verify-offline-note-test-message-build-worker-report.md; next the reviewer gate, the reviewer alone. Before: IN PROGRESS 2026-11-22: the five-line form committed (governance/forms/scripts/VERIFY-OFFLINE-NOTE-TEST-MESSAGE-PREREGISTRATION.md), the reviewer alone and the standard worker (ADV-2026-11-21-15 item 3 (ii)), started by ADV-2026-11-22-11 with item 3 (i) waiting for a quiet machine; the two assertions gain messages, the cause after the next failure; its finding in the ledger (1122t). Before: Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the offline-note test in scripts/plan/verify.test.mjs failed once and passed on a re-run. Likely cause, from Fable 2026-10-04 advice, item 1 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), and confirmed by one local probe run by the custodian: the test copies only the fixture PLAN.yaml into a mkdtemp folder, so runVerify returns five queue and site drift failures that each carry that folder path, and the assertion that no failure contains the substring pr fails whenever the six random characters of the folder name contain pr. With the prefix verify-offline-note-pr- all five failures contain pr; with the test prefix, none did in that run. The deterministic check for the node form: the same test body with a prefix containing pr fails every time. The fix would assert on the PR-evidence failure shapes, not on a substring. Never queued until the human places it.",
       "evidence_label": "branch `cut/verify-offline-note-predicate`"
     },
     {

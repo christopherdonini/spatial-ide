@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `29a7bdc52ef290bef3f06598b76e07f46742d48e245b12378aa3572bd3fc8dd0`) at `2026-11-22T14:14:07.049Z`.
+Generated from `PLAN.yaml` (sha256 `37c4e66ba86e7b94ba3dba7483c4202e2bc85ef8cd50b475e3567580580f3e4f`) at `2026-11-22T14:51:25.526Z`.
 
 ## 1. Next
 
@@ -25,7 +25,11 @@ Generated from `PLAN.yaml` (sha256 `29a7bdc52ef290bef3f06598b76e07f46742d48e245b
 - **publish-bundle-sigterm** — SIGTERM handling in publish-bundle on unix (wave-3 W3-A observation 3) (lane `platform`, order null, budget 90 min)
 - **publish-unix-quota-perm-errors** — EDQUOT and EPERM in publish error classification on unix (wave-3 W3-A observation 1) (lane `platform`, order null, budget 90 min)
 
-## 3. Waiting on the human (total: 20 min)
+## 3. Waiting on the human (total: 30 min)
+
+### ruling
+
+- **shell-test-executables-carry-the-common-controls-manifest** — The shell crate test executables carry the Common Controls v6 manifest, so that the tauri mock runtime can be used in its tests (ADV-2026-11-20-22 item 4) (10 min)
 
 ### sitting
 
