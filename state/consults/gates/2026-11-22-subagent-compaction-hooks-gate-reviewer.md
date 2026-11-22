@@ -128,3 +128,48 @@ None.
 - **N5. Subagent lines land in the parent's record log.** A subagent compaction's line goes to `precompact-<session_id>.jsonl` for whatever session_id the harness passes, which is probably the parent's. Nothing reads that log to make a decision (see the table), so the parent's decisions are unaffected. Worth one line in the README draft if the human wants it.
 
 Scratch files, all in `<S>`: `schrev-T.log`, `schrev-M.log`, `schrev-CI.log`, `schrev-m1.log`, `schrev-m2.log`, `schrev-m2b.log`.
+
+*Appended by the custodian, 2026-11-22: the reviewer's note on the correction commit, under ADV-2026-11-22-05 item 2. It is not a new attempt of the gate, and the report above is carried forward. Its run: Bash 13, SubagentHandback 1, by unique call ids; none errored, model claude-opus-5-5, from 2026-11-22T05:47:37Z to 2026-11-22T05:49:21Z by its transcript. Below, byte for byte from its hand-back of 6700 bytes, sha256 9aa555699ce6b1e6e42e0f06ff162240ef2d0c1f394c7540e3205975cfb9e24a, except one profile path masked as <S>. Read by the custodian after it: C:/dev/wt/subagent-compact at fdd1f545f0334fb6fbde9ede82a5da0cdd74219c, the porcelain empty.*
+
+## Note on the correction commit fdd1f545f0334fb6fbde9ede82a5da0cdd74219c (the reviewer, 2026-11-22; ADV-2026-11-22-05 item 2)
+
+Verdict: the correction holds. I read cut/subagent-compaction-hooks @ fdd1f545f0334fb6fbde9ede82a5da0cdd74219c in the worktree C:/dev/wt/subagent-compact. `git rev-parse HEAD` printed `fdd1f545f0334fb6fbde9ede82a5da0cdd74219c` at the start and again at the end. `git status --porcelain` printed nothing at the start and nothing at the end. `git log --oneline 66fb4c2b..fdd1f545` shows one commit, fdd1f545. `git diff 66fb4c2b fdd1f545 --stat` printed `2 files changed, 4 insertions(+), 4 deletions(-)` (scripts/hooks/hooks.test.mjs and scripts/hooks/precompact-flush.mjs). The diff has three comment lines (one D1 insertion and two N4 rewrites) and one code line (N1).
+
+### Check 1: the literal's value is unchanged
+
+- **Line endings.** `git check-attr -a scripts/hooks/precompact-flush.mjs` printed `text: auto` and `eol: lf`. These come from `.gitattributes` line `* text=auto eol=lf`. `git ls-files --eol` printed `i/lf    w/lf    attr/text=auto eol=lf` for the file.
+- **CR bytes.** I counted CR bytes with `tr -cd '\r' | wc -c`. It printed `CR bytes in blob 66fb4c2b: 0`, `CR bytes in blob fdd1f545: 0` and `CR bytes in worktree file: 0`.
+- **The bytes of the line.** `git show <c>:scripts/hooks/precompact-flush.mjs | grep -n -A1 'appendFileSync(p, \`' | od -c` shows:
+  - At 66fb4c2b, line 241 ends `` ` $ { l i n e } \n `` with a real LF byte, and line 242 is `` ` , ' u t f 8 ' ) ; ``.
+  - At fdd1f545, line 242 holds `` ` $ { l i n e } \ n ` , ' u t f 8 ' ) ; `` on one line. That is a backslash followed by `n`.
+- **The value of the literal.** The script `scratchpad/evlit.mjs` takes the literal's source from each blob with `git show`, starting after the `allowed-subagent` anchor. It evaluates the literal with `new Function('line', 'return ' + lit)('LINE')`. It printed:
+  - `66fb4c2b literal source bytes: "\`${line}\n\`" value: "LINE\n" hex: 4c494e450a`
+  - `fdd1f545 literal source bytes: "\`${line}\\n\`" value: "LINE\n" hex: 4c494e450a`
+  - `equal: true`
+  - Both values are the line followed by one LF (0a) and no CR.
+- **A CR LF checkout.** I fed a raw CR LF inside a template literal through the same route. It printed `CRLF raw evaluates to: "LINE\n"`. So the old form would also have given one LF even with a CR present. There was none.
+
+### Check 2: test (3) fails if the newline is lost
+
+- **The mutation.** The script `scratchpad/mut.cjs` uses the anchor `"\n      fs.appendFileSync(p, \`${line}\\n\`, 'utf8');\n"`. That is the six-space indent, so it excludes the four-space `appendRecord` line at `:214`. The script counts the matches, exits 1 unless there is exactly 1, and then drops the `\n`. It printed `matches: 1` and `rc=0`. `git diff` showed only `-      fs.appendFileSync(p, \`${line}\n\`, 'utf8');` / `+      fs.appendFileSync(p, \`${line}\`, 'utf8');` at `@@ -239,7 +239,7 @@`.
+  - A first attempt with an inline `node -e` printed `matches: 0` and `rc=1`, because shell escaping lost the backslash. It changed nothing and the file was unmodified. I then used the script file instead.
+- **The run under the mutation.** I ran `node --test --test-name-pattern="subagent compaction: precompact-flush with agent_id allows, writes no block record and logs one allowed-subagent line" scripts/hooks/hooks.test.mjs` from the worktree root. It gave `rc=1`, `ℹ tests 1`, `ℹ pass 0` and `ℹ fail 1`, with:
+  - `SyntaxError: Unexpected non-whitespace character after JSON at position 134 (line 1 column 135)`
+  - `at subagentRecordLines (file:///C:/dev/wt/subagent-compact/scripts/hooks/hooks.test.mjs:1604:84)`
+  - `at TestContext.<anonymous> (file:///C:/dev/wt/subagent-compact/scripts/hooks/hooks.test.mjs:1642:21)`
+- **Why it fails, in paraphrase.** The test makes two calls, `auto` then `manual`. Without the LF, the second record is appended onto the first line. `subagentRecordLines` splits the file on `\n` and calls `JSON.parse`, which throws on the joined line. So the test fails for the intended reason, records run together. The failure shows as a parse error, not as an `assert` message. With a single call the mutation would not be caught; the loop of two calls is what catches it.
+- **The restore.** I ran `git -C C:/dev/wt/subagent-compact checkout -- scripts/hooks/precompact-flush.mjs`. It printed `restored; porcelain: []`.
+- **The run after the restore.** The same command gave `rc=0`, `✔ subagent compaction: precompact-flush with agent_id allows, writes no block record and logs one allowed-subagent line (158.6416ms)`, `ℹ pass 1` and `ℹ fail 0`.
+
+### Check 3: the three comment lines are my words
+
+The script `scratchpad/cmp.cjs` takes my words from `state/consults/gates/2026-11-22-subagent-compaction-hooks-gate-reviewer.md` in the main checkout. The D1 words are the backticked "Replacement words" span. The N4 words are the backticked span after "Plainer words would be:". It compares those words with the lines `git diff 66fb4c2b fdd1f545` adds.
+
+- **D1** (`precompact-flush.mjs`, the line inserted after the automatic-compaction bullet, before `// Every call that reaches…`): the script printed `D1 added == D1 words: true lengths 329 329`. The line matches byte for byte. It sits where D1 said to put it.
+- **N4, both lines** (`hooks.test.mjs`, the lines just above the tests at `:1608` and `:1634`). My words were `RECORDED MUTATION (run at f77c3fa9, before this comment was added): …`. The `…` stands for the rest of the existing comment. For each line the script printed `N4 line starts with the words before the ellipsis: true | tail after prefix equals the old line tail after "parent: ": true`.
+  - The only change on each line is `, at the commit that adds this line's parent` → ` (run at f77c3fa9, before this comment was added)`. The `// ` marker comes first, and the old text after the colon is kept byte for byte. Both lines match my words, with the rest of the comment filled in from the original.
+  - N4's condition was "Only add the commit id if the merge keeps the branch commits" (paraphrase of my N4). That is still a merge-time condition. `git merge-base --is-ancestor f77c3fa9 fdd1f545` gave `rc=0`: f77c3fa9 (`f77c3fa9b0b553e62b192fe5424181b4e26db750`) is on the branch. A squash merge would leave that id unreachable from main, so the merge should keep the branch commits, as N4 asked.
+
+The scratch scripts and logs are in `<S>\`: `evlit.mjs`, `mut.cjs`, `cmp.cjs`, `mut-run.log` and `restored-run.log`.
+
+The correction holds; the rest of the report is carried forward.
