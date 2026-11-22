@@ -1011,7 +1011,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
       // guarded: the manager's session end (`TileViewportStreamManager.endSession`, reached through
       // `notifySessionEnded` from the untiled sink's `onTerminal` and from `App.tsx`'s session-ended
       // event route, and from a tile's own session-ended terminal or mint refusal) runs `clearAll`,
-      // whose `cancelTileStream` reports each in-flight tile here; when the last tracked tile goes,
+      // whose `cancelTileStream` reports each in-flight tile here; when the tile it reports is the last one tracked (none queued or being minted, which `clearAll` then drops unreported),
       // the emission below runs once, before `endCandidateSession` clears every tile. Otherwise the S2
       // settling-moment obligation is carried by `onTerminal`'s own identical emit, below.
       if (!suppressNestedSupersededEmit && manager.trackedTileCount === 0) emitResidencyStatus();
