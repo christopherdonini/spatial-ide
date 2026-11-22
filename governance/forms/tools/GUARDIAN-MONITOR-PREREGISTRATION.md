@@ -139,3 +139,69 @@ The line holds no command text (the draft, item 3 (d)).
 ## Amendments
 
 *(Opens empty; append-only. Amendment 1 is P0's record; Amendment 2 is P0b's.)*
+
+### Amendment 1 — 2026-11-22 — P0: the engine writes no types folder at 2.1.330, a stop at P0
+
+1. **The record.** P0 ran in `C:/dev/wt/guardian-monitor`, fast-forwarded to 50109787109bbd47c3c6a6626b83c7098c31095d, main with this form, nothing built; the worker's report is `state/consults/2026-11-22-guardian-monitor-p0-worker-report.md` (3550 bytes, sha256 5c986d7f65226b1b1b4e0489dad937a54c0b98ea23ae1b8349308e8b0bc0f6e2). Item 1, `claude --version`: `2.1.330 (Claude Code)`. Item 2, `claude plugin validate tools/mods/spatial-guardian`, exit 0, its whole output byte for byte from the worker's file:
+
+```
+Validating plugin manifest: C:\dev\wt\guardian-monitor\tools\mods\spatial-guardian\.claude-plugin\plugin.json
+
+⚠ Found 1 warning:
+
+  ❯ version: No version specified. Consider adding a version following semver (e.g., "1.0.0")
+
+Validating hooks: C:\dev\wt\guardian-monitor\tools\mods\spatial-guardian\hooks\hooks.json
+
+  ❯ ./register.js hooks: tool.call, tool.call{tool=Bash}, tool.call{tool=PowerShell}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}
+  ❯ ./register.js gating hook without .catch: tool.call
+  ❯ ./register.js gating hook with .catch: tool.call{tool=Bash}
+  ❯ ./register.js gating hook with .catch: tool.call{tool=PowerShell}
+  ❯ ./register.js gating hook with .catch: tool.call{tool=Write}
+  ❯ ./register.js gating hook with .catch: tool.call{tool=Edit}
+  ❯ ./register.js gating hook with .catch: tool.call{tool=NotebookEdit}
+  ❯ ./register.js calls: $.agent.list (via agentKind, g6Refusal), $.env.get (via userClaudeFolder), $.fs.read (via g3Refuses), $.fs.stat (via isThisRepository, makeG9Rule, place, userClaudeFolder), $.fs.write (via logRefusal), $.process.run, $.session.messages (via g6Refusal), $.session.repo (via mainTree), $.session.usage (via contextFill)
+  ❯ ./register.js env writes: nothing
+  ❯ ./register.js env reads: USERPROFILE
+
+Provides:
+
+  ❯ modules: hooks/register.js
+
+Hosts not read for: modules (1)
+Hosts not declared: list what these parts reach under "network.hosts" in plugin.json
+
+Plugin directory checks for C:\dev\wt\guardian-monitor\tools\mods\spatial-guardian. The plugin directory is the catalog that plugins are submitted to; this is a subset of what it runs.
+
+⚠ Found 1 plugin directory warning:
+
+  ❯ .claude-plugin/plugin.json icon: No icon (ICON_MISSING). No icon found in the plugin. The validator looked for `icon` in plugin.json and for a file at .claude-plugin/icon.png or .svg, assets/icon.png or .svg, or a similar path.
+    Fix: Add a square PNG to the plugin folder at .claude-plugin/icon.png, or set `icon` in plugin.json to the path of a square PNG or JPEG in the plugin: 512 to 2048 px on each side, under 2 MB. SVG and WebP are not accepted. That file may become the listing icon only once: the first time the plugin is saved or submitted in the developer portal. Adding or changing it later does not change the icon.
+
+About these checks:
+
+  ❯ The repository root was taken to be C:\dev\wt\guardian-monitor, the nearest parent folder with a .git folder or file. LICENSE was taken from it, because this plugin folder has none of its own. For a plugin submitted from a git repository, the repository root is the top folder of that repository, with only what is committed there, so check that the folder named above is that top folder.
+  ❯ hooks/hooks.json names a hooks module (a code file listed under `modules`). The plugin directory has rules of its own for such code, and these checks apply none of them, so passing here does not mean the directory accepts the plugin. The developer portal's own validation applies those rules.
+
+These plugin directory checks do not change the result below.
+
+The directory also runs a safety scan and a policy review that this command does not.
+
+✔ Validation passed with warnings
+```
+
+2. **Items 3 and 4.** The engine wrote no `.claude-plugin/types/` folder into the copy after validate, nor after one `claude plugin test tools/mods/spatial-guardian` (exit 0, 76 pass, 0 fail); the main checkout's installed copy has none either, by the custodian's read-only listing. So no declaration names Monitor, the event a handler receives is not read, and item 4 cannot be answered. No field beyond the four the draft names was found, since none could be read.
+
+3. **Isolation.** The resolved paths, byte for byte from the worker's file, with `git status --porcelain --ignored` empty after them:
+
+```
+. => C:\dev\wt\guardian-monitor
+tools/mods/spatial-guardian => C:\dev\wt\guardian-monitor\tools\mods\spatial-guardian
+tools/mods/spatial-guardian/.claude-plugin/types => absent: ENOENT
+```
+
+4. **The stop.** Section 0's stop that no declaration names Monitor holds, and the Isolation section's premise that the engine writes the types folder does not hold at this build. The custodian sent the stop to the advisor, whose draft for the human, ADV-2026-11-22-12, is filed at `state/consults/2026-11-22-advisor-draft-adv-2026-11-22-12-the-guardian-and-monitor-piece-after-its-p0-stop-not-the-humans-words.md`. The piece holds at P0, and nothing of P0b is written, until the human types its approval.
+
+Read the last amendment first.
+
+Nothing above is edited.

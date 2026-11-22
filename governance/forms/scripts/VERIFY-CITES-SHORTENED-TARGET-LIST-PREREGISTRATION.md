@@ -31,3 +31,13 @@ Out-of-scope: ADR: no status line or amendment; security: nothing ADR-020, ADR-0
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — merged
+
+1. **Merged** by the advisor by merge commit 7ca0a2fd12c0aa58aefcbca87e0cd37068816fdd, at 2026-11-22T12:50:31Z by GitHub, at the checked head e0c84fe2566f6c21161dbe5f2bca2b4ff46bf7b9; its verdict MERGE filed at `state/consults/merge-checks/PR-351-e0c84fe2566f.md`; main's CI at the merge commit green (4 runs, all success, read at 2026-11-22T12:57:08Z).
+
+2. The fifth entry error the form names, an entry not shaped as path, cite and commit, has no test of its own, as the advisor's message with the verdict asks this amendment to say. The cancel branch now takes main in by a merge commit, its form gaining the list file as an eleventh Scope path first (ADV-2026-11-22-10 item 4).
+
+Read the last amendment first.
+
+Nothing above is edited.

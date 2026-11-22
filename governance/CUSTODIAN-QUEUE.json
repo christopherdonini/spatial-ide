@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T12:27:10.732Z",
-  "plan_hash": "70ad5fbd6f5f48f551653e59a47ffc2650b0fb33f8719e5d7bb9de749491c23e",
+  "generated_at": "2026-11-22T12:57:14.536Z",
+  "plan_hash": "208be9e8d106cfb15880b096250bbb3a4747d4c3ca5f920b27094304ef61b11e",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -769,8 +769,30 @@
         "opened": "2026-11-22",
         "done": null
       },
-      "summary": "IN PROGRESS 2026-11-22: built and pushed at 8fd35b28, PR 353 in draft (state/consults/2026-11-22-property-testing-trial-build-worker-report-2.md); the worker had stopped at P2 break (b), no seed line printed, by its reading of section 4 (state/consults/2026-11-22-property-testing-trial-build-worker-report-1.md), and the custodian read it as no stop, since the stop turns on each library's first break run and both printed their seeds; the code gates, the reviewer and the architect, running; the CI-timings commit owed. Before: IN PROGRESS 2026-11-22: the build dispatched on cut/property-testing-trial in its own worktree and build folder, the form Amendment 2 recording the approval, the end of the form gate (ADV-2026-11-22-08 item 5; next was the build, not a form gate) and the isolation check; the tests merge after the tag. Before: PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8.",
+      "summary": "IN PROGRESS 2026-11-22: both code gates PASS WITH NOTES at 8fd35b28, no Correctness or Evidence finding blocking (state/consults/gates/2026-11-22-property-testing-trial-code-gate-reviewer.md; state/consults/gates/2026-11-22-property-testing-trial-code-gate-architect.md); the architect D1 goes into the closing amendment in its words; the CI-timings commit 09ce1dfe, empty, its message the record since section 6 names no timings file; the merge request after the tag. Before: IN PROGRESS 2026-11-22: built and pushed at 8fd35b28, PR 353 in draft (state/consults/2026-11-22-property-testing-trial-build-worker-report-2.md); the worker had stopped at P2 break (b), no seed line printed, by its reading of section 4 (state/consults/2026-11-22-property-testing-trial-build-worker-report-1.md), and the custodian read it as no stop, since the stop turns on each library's first break run and both printed their seeds; the code gates, the reviewer and the architect, running; the CI-timings commit owed. Before: IN PROGRESS 2026-11-22: the build dispatched on cut/property-testing-trial in its own worktree and build folder, the form Amendment 2 recording the approval, the end of the form gate (ADV-2026-11-22-08 item 5; next was the build, not a form gate) and the isolation check; the tests merge after the tag. Before: PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8.",
       "evidence_label": "branch `cut/property-testing-trial`"
+    },
+    {
+      "id": "verify-offline-note-test-flake",
+      "title": "scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 45,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/verify-offline-note-message"
+      },
+      "dates": {
+        "opened": "2026-10-04",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-11-22: the five-line form committed (governance/forms/scripts/VERIFY-OFFLINE-NOTE-TEST-MESSAGE-PREREGISTRATION.md), the reviewer alone and the standard worker (ADV-2026-11-21-15 item 3 (ii)), started by ADV-2026-11-22-11 with item 3 (i) waiting for a quiet machine; the two assertions gain messages, the cause after the next failure; its finding in the ledger (1122t). Before: Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the offline-note test in scripts/plan/verify.test.mjs failed once and passed on a re-run. Likely cause, from Fable 2026-10-04 advice, item 1 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), and confirmed by one local probe run by the custodian: the test copies only the fixture PLAN.yaml into a mkdtemp folder, so runVerify returns five queue and site drift failures that each carry that folder path, and the assertion that no failure contains the substring pr fails whenever the six random characters of the folder name contain pr. With the prefix verify-offline-note-pr- all five failures contain pr; with the test prefix, none did in that run. The deterministic check for the node form: the same test body with a prefix containing pr fails every time. The fix would assert on the PR-evidence failure shapes, not on a substring. Never queued until the human places it.",
+      "evidence_label": "branch `cut/verify-offline-note-message`"
     },
     {
       "id": "guardian-checks-monitor-commands",
@@ -791,52 +813,8 @@
         "opened": "2026-11-22",
         "done": null
       },
-      "summary": "IN PROGRESS 2026-11-22: the form committed (governance/forms/tools/GUARDIAN-MONITOR-PREREGISTRATION.md) after its architect gate: attempt 1 FAIL on the draft, C-1, E-1, D-1 to D-13 (state/consults/gates/2026-11-22-guardian-monitor-form-gate-architect.md), its words applied by a worker's script with one departure (state/consults/2026-11-22-guardian-monitor-form-correction-1-worker-report.md); attempt 2 PASS WITH NOTES (state/consults/gates/2026-11-22-guardian-monitor-form-gate-architect-attempt-2.md), its W1 to W14 applied in its words; P0 next, read-only, in C:/dev/wt/guardian-monitor. Before: APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-02 is the human words, its item 4 (a) the typed approval naming the two live checks of its item 6; a full form and both gates (ADV-2026-11-22-01 item 5); it may merge before the tag; next, its form. Before: WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8.",
+      "summary": "IN PROGRESS 2026-11-22: STOPPED at P0, the engine writes no types folder at 2.1.330, so no declaration names Monitor (state/consults/2026-11-22-guardian-monitor-p0-worker-report.md; the form Amendment 1); the advisor draft ADV-2026-11-22-12 for the human (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-12-the-guardian-and-monitor-piece-after-its-p0-stop-not-the-humans-words.md); held until the human types its approval. Before: IN PROGRESS 2026-11-22: the form committed (governance/forms/tools/GUARDIAN-MONITOR-PREREGISTRATION.md) after its architect gate: attempt 1 FAIL on the draft, C-1, E-1, D-1 to D-13 (state/consults/gates/2026-11-22-guardian-monitor-form-gate-architect.md), its words applied by a worker's script with one departure (state/consults/2026-11-22-guardian-monitor-form-correction-1-worker-report.md); attempt 2 PASS WITH NOTES (state/consults/gates/2026-11-22-guardian-monitor-form-gate-architect-attempt-2.md), its W1 to W14 applied in its words; P0 next, read-only, in C:/dev/wt/guardian-monitor. Before: APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-02 is the human words, its item 4 (a) the typed approval naming the two live checks of its item 6; a full form and both gates (ADV-2026-11-22-01 item 5); it may merge before the tag; next, its form. Before: WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8.",
       "evidence_label": "branch `cut/guardian-monitor`"
-    },
-    {
-      "id": "verify-cites-shortened-target-list",
-      "title": "verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3)",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 120,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/verify-cites-shortened-target"
-      },
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "IN PROGRESS 2026-11-22: the narrow read PASS WITH NOTES at 2069eb88, C1 closed (state/consults/gates/2026-11-22-verify-cites-shortened-target-list-gate-reviewer-attempt-2.md); its Doc-1, a comment line, in its words at e0c84fe2; CI green; the form's Amendment 1; the merge check to the advisor next. Before: IN PROGRESS 2026-11-22: the reviewer gate attempt 1 FAIL at f912819f on C1 alone, a listed entry whose citing file a --files glob leaves out reported unmatched, with D1 to D3 (state/consults/gates/2026-11-22-verify-cites-shortened-target-list-gate-reviewer.md); corrected at 2069eb88, 144 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-correction-1-worker-report.md); the reviewer narrow read next (ADV-2026-11-22-05 item 4). Before: built at f912819f on cut/verify-cites-shortened-target, PR 351 a draft, 134 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-build-worker-report.md); the reviewer gate next. Before: PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4).",
-      "evidence_label": "branch `cut/verify-cites-shortened-target`"
-    },
-    {
-      "id": "hooks-readme-subagent-compaction-sentences",
-      "title": "The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "in-progress",
-      "order": null,
-      "budget_minutes": 30,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": {
-        "branch": "cut/hooks-readme-subagent-sentences"
-      },
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "IN PROGRESS 2026-11-22: PR 352 at 17b0cf48, the reviewer gate PASS with no finding (state/consults/gates/2026-11-22-hooks-readme-subagent-compaction-sentences-gate-reviewer.md); the worker's report (state/consults/2026-11-22-hooks-readme-subagent-compaction-sentences-build-worker-report.md); the form's Amendment 1; ready and the merge check next. Before: IN PROGRESS 2026-11-22: the worker dispatched on cut/hooks-readme-subagent-sentences in its own worktree from 90bdeab7, beside the trial build. Before: READY 2026-11-22: the human approved the draft ADV-2026-11-22-06 by their typed message (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md); its two sentences go into scripts/hooks/README.md by the custodian script, byte for byte; the five-line form and the reviewer alone; no script, test or settings file; it may merge before the tag.",
-      "evidence_label": "branch `cut/hooks-readme-subagent-sentences`"
     }
   ],
   "proposed": [
@@ -1504,25 +1482,6 @@
         "done": null
       },
       "summary": "Proposed by question round 43, item 3 (RULED 2026-10-03): guardian-v0's G5 (refuse a Write or Edit whose new content holds a user-profile path, with the existing scanner's own matcher) leaves v0, because a mod cannot import scripts/hooks/profile-path-scan.mjs and the scanner reads content only from a file (state/consults/2026-10-03-guardian-v0-p0-report.md, section 7; state/consults/2026-10-03-guardian-v0-architect-draft.md, section 2.6 option a). The scanner's change is its own piece, under scripts/hooks/EXPOSURE-PROFILE-PATHS-PREREGISTRATION.md; G5 then joins Guardian by its own amendment. Never queued until the human places it."
-    },
-    {
-      "id": "verify-offline-note-test-flake",
-      "title": "scripts/plan/verify.test.mjs's offline-note test failed once on a pull_request run and passed on a re-run; its bare assertion carries no message, so the cause is unknown",
-      "lane": "governance",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 45,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-04",
-        "done": null
-      },
-      "summary": "Seen 2026-10-04 on PR 172 (Governance CI run 37209345096, the pull_request event at 609ab945): the offline-note test in scripts/plan/verify.test.mjs failed once and passed on a re-run. Likely cause, from Fable 2026-10-04 advice, item 1 (state/directives/2026-10-04-fable-advice-nodes-trailers-latency.md), and confirmed by one local probe run by the custodian: the test copies only the fixture PLAN.yaml into a mkdtemp folder, so runVerify returns five queue and site drift failures that each carry that folder path, and the assertion that no failure contains the substring pr fails whenever the six random characters of the folder name contain pr. With the prefix verify-offline-note-pr- all five failures contain pr; with the test prefix, none did in that run. The deterministic check for the node form: the same test body with a prefix containing pr fails every time. The fix would assert on the PR-evidence failure shapes, not on a substring. Never queued until the human places it."
     },
     {
       "id": "slice-budgets-cancel-cells-on-trace-pair",

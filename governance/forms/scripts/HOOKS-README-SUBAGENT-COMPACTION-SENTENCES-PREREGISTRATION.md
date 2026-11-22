@@ -27,3 +27,13 @@ Out-of-scope: ADR none; security none -- no hook, script, test, settings or perm
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — merged
+
+1. **Merged** by the advisor by merge commit 8fcde30a257fba3564e5ff3ed72c978d0024ba8d, at 2026-11-22T12:49:18Z by GitHub, at the checked head 17b0cf48bde716f611b78fe5d35b43d53b71e734; its verdict MERGE filed at `state/consults/merge-checks/PR-352-17b0cf48bde7.md`; main's CI at the merge commit green (4 runs, all success, read at 2026-11-22T12:57:01Z).
+
+2. The reviewer's note that line 13 of scripts/hooks/precompact-flush.mjs still lists five record fields goes to the docs lane, its words to the advisor first, since it is a hook script (the advisor's message with the verdict).
+
+Read the last amendment first.
+
+Nothing above is edited.
