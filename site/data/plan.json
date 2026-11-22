@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T21:22:25.524Z",
-  "plan_hash": "7fcb9e77bbb344e8557deafe973170c75d46b35c65c2efb61f0061f7b4274062",
+  "generated_at": "2026-11-22T21:42:14.894Z",
+  "plan_hash": "c9729e7625aca8f872e5cb830173c0d0e60ef2f10a009f126c8660a4e90a774f",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12673,7 +12673,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "AMENDMENT 1 2026-11-22: D-1 to D-9 and ADV-2026-11-22-40 on OPEN-1 to OPEN-4; the build waits for the advisor on D-4, D-7 and D-8. Before: FORM GATE PASS WITH NOTES 2026-11-22 (gate-log row 849): D-1 to D-9 to the form by amendment; OPEN-1 to OPEN-4 to the advisor. Before: FORM COMMITTED 2026-11-22: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md, full, both gates, drafted by lead-data; next its architect form gate, after the form gate of node g; the merge waits for the tag (ADV-2026-11-21-15 item 1).",
+      "summary": "BUILD TO GO ON 2026-11-22 (ADV-2026-11-22-41): Amendment 1 as written, no second gate attempt, M5 recorded as an observation; it waits for a place on the strongest model. Before: AMENDMENT 1 2026-11-22: D-1 to D-9 and ADV-2026-11-22-40 on OPEN-1 to OPEN-4; the build waits for the advisor on D-4, D-7 and D-8. Before: FORM GATE PASS WITH NOTES 2026-11-22 (gate-log row 849): D-1 to D-9 to the form by amendment; OPEN-1 to OPEN-4 to the advisor. Before: FORM COMMITTED 2026-11-22: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md, full, both gates, drafted by lead-data; next its architect form gate, after the form gate of node g; the merge waits for the tag (ADV-2026-11-21-15 item 1).",
       "dates": {
         "opened": "2026-11-22",
         "done": null
@@ -12698,7 +12698,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag.",
+      "summary": "FORM GATE RUNNING 2026-11-22 (architect, at main be11bd98). Before: FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag.",
       "dates": {
         "opened": "2026-11-22",
         "done": null
