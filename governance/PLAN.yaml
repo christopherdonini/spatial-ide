@@ -7657,17 +7657,17 @@ nodes:
     kind: task
     lane: measurement
     phase: prototype
-    status: ready
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/root/PROPERTY-TESTING-TRIAL-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/property-testing-trial}
     budget_minutes: 360
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8."
+    summary: "IN PROGRESS 2026-11-22: the build dispatched on cut/property-testing-trial in its own worktree and build folder, the form Amendment 2 recording the approval, the end of the form gate (ADV-2026-11-22-08 item 5; next was the build, not a form gate) and the isolation check; the tests merge after the tag. Before: PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8."
     dates: {opened: 2026-11-22, done: null}
   - id: verify-cites-shortened-target-list
     title: "verify-cites reads a listed cite into a file that a later commit shortened at the commit its entry names; an entry outside the filed records, with a malformed commit, resolving in the tree or matching no cite fails by name (the advisor ruling ADV-2026-11-22-10 items 1 to 3)"
@@ -7685,4 +7685,21 @@ nodes:
     felt_verdict: false
     entries: []
     summary: "IN PROGRESS 2026-11-22: built at f912819f on cut/verify-cites-shortened-target, PR 351 a draft, 134 changed lines (state/consults/2026-11-22-verify-cites-shortened-target-list-build-worker-report.md); the reviewer gate next. Before: PLACED 2026-11-22 by ADV-2026-11-22-10 items 1 to 3 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md), under the human delegation of 2026-11-13, on the cancel build stop at 3f3820c9: the five-line form, the reviewer alone, the standard worker; it merges as it closes, before the v0.2 tag, ahead of the ADV-2026-11-21-15 nodes and behind sitting work; after it merges the cancel branch takes main in by a merge commit and adds its ten entries (item 4)."
+    dates: {opened: 2026-11-22, done: null}
+  - id: hooks-readme-subagent-compaction-sentences
+    title: "The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06"
+    kind: task
+    lane: governance
+    phase: prototype
+    status: ready
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: governance/forms/scripts/HOOKS-README-SUBAGENT-COMPACTION-SENTENCES-PREREGISTRATION.md
+    evidence: null
+    budget_minutes: 30
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "READY 2026-11-22: the human approved the draft ADV-2026-11-22-06 by their typed message (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md); its two sentences go into scripts/hooks/README.md by the custodian script, byte for byte; the five-line form and the reviewer alone; no script, test or settings file; it may merge before the tag."
     dates: {opened: 2026-11-22, done: null}

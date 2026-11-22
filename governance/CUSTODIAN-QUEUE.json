@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T11:15:59.300Z",
-  "plan_hash": "e3c51224f079159a447cc98fb2c14ae4ef1c82159f7af3fd86d41105de6d9ed1",
+  "generated_at": "2026-11-22T11:33:23.047Z",
+  "plan_hash": "0abe2764ce986f14555b494ece5340295b451bda8708cc21a80c3f88af1796b2",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -213,25 +213,6 @@
       "summary": "PLACED S3 2026-11-15 as filler entry 18, after the current entries, by the advisor's ruling ADV-2026-11-15-13 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-13-shell-e2e-publish-audit-log-follows-app-dirs-filler-18-s3-budget-30-the-whole-boundary-table-the-windows-row-included.md), budget 30, its lane kept, no dependency. It changes resolveAuditLogPath and its doc comment in frontends/shell/e2e/publish.mjs, nothing else: the function follows the boundary table in engine/src/app_dirs.rs, every row, LOCALAPPDATA on Windows, HOME under Library/Application Support on macOS, XDG_DATA_HOME then HOME under .local/share on other Unix, a value counting only when non-empty and absolute; that takes in the Windows row, which the first title left out (item 3 (b)). The override SPATIAL_IDE_AUDIT_LOG stays first and unchanged, and no row resolving stays an error naming no fallback path. Ordinary form and gating; the form says how the change is proved on Windows, an OPEN item on that to the advisor; it may not claim that the publish suite runs or passes off Windows. The first piece to run the publish suite off Windows gains this node in its depends_on. Skipped while PR B changes publish.mjs (rule (00)). From the reviewer gate of port-2, its O1."
     },
     {
-      "id": "property-testing-trial-proptest-and-fast-check",
-      "title": "A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03)",
-      "lane": "measurement",
-      "phase": "prototype",
-      "status": "ready",
-      "order": null,
-      "budget_minutes": 360,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8."
-    },
-    {
       "id": "advisor-session-merges-under-the-humans-rule",
       "title": "The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian)",
       "lane": "governance",
@@ -268,6 +249,25 @@
         "done": null
       },
       "summary": "APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-02 is the human words, its item 4 (a) the typed approval naming the two live checks of its item 6; a full form and both gates (ADV-2026-11-22-01 item 5); it may merge before the tag; next, its form. Before: WAITS FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-02 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md), reserved to the human under the grant item 4 (c), is acted on only when the human types approved and its id. Until this piece is live, nobody runs a push, a merge or a delete through Monitor, for every session, from the filing of the human message (ADV-2026-11-22-01 item 5). After the approval: full form, both gates, on cut/guardian-monitor in its own worktree; the two live checks after the merge, the update and the restart, as the draft names them. Placed by ADV-2026-11-22-01 items 5 and 8."
+    },
+    {
+      "id": "hooks-readme-subagent-compaction-sentences",
+      "title": "The hooks README gains the two sentences on a subagent compaction and on its SessionStart call, the human approved words of ADV-2026-11-22-06",
+      "lane": "governance",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 30,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "READY 2026-11-22: the human approved the draft ADV-2026-11-22-06 by their typed message (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md); its two sentences go into scripts/hooks/README.md by the custodian script, byte for byte; the five-line form and the reviewer alone; no script, test or settings file; it may merge before the tag."
     },
     {
       "id": "site-waiting-on-you-lists-open-questions",
@@ -787,6 +787,28 @@
       },
       "summary": "LANDED 2026-11-12: merged with 1c step 1 as PR #307 (9398efc6, the human's click), in ffc039d1, where the 1c form's Amendments 7 and 8 placed it; its consumer is milestone 4's PR B. It stays in progress until 1c's node is done: its gate is 1c's form, and a done node binds that form's claimed tests, steps 2 and 3's among them. Before: RULED 2026-11-11 by the human's message of 2026-11-11 (state/directives/2026-11-11-1c-open-7-1-a-p2-now-pan-anchor-route-b-diagnostic-now-stall-record-two-runs.md), item 1: OPEN-7-1 (a), in P2's one commit under P2's version (the 1c form's Amendment 8). Before: PLACED 2026-10-23 by the human (the 2026-10-23 directive's Milestone 4 line, OPEN-18 (b), and its Piece 1c line, OPEN-A2 (b)): inside 1c step 1 by class 9, declared in that form's Amendment 7; its commit place is OPEN-7-1 there. Its consumer is milestone 4's PR B (§2.3 (h); PB-R2), whose merge waits for it on main (round 8). It is done with step 1's merge, {pr} set only in that done commit. Before: PROPOSED 2026-10-21 by the custodian, from milestone 4's OPEN-4 (A′), ruled by the human (state/directives/2026-10-21-d-s10-go-adr-036-route-i-redaction-open-items-1c-and-milestone-4-ruled-docs-open-1-yes.md) and carried by ADR-036's pre-acceptance block (adr-036-pre-acceptance-block). The option's text (state/consults/2026-10-21-b1-shell-half-milestone-4-architect-draft.md, OPEN-4): a small data-lane piece widens record_step before milestone 4's PR B merges, or the widening is the first commit of 1c's step 1. It touches protocol/ (that draft's overlap section), so rule (00) keeps it apart from 1c's protocol/ steps. Which of the two is the human's; the human places it.",
       "evidence_label": "branch `cut/b2-piece-1c-save-and-reopen`"
+    },
+    {
+      "id": "property-testing-trial-proptest-and-fast-check",
+      "title": "A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03)",
+      "lane": "measurement",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 360,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/property-testing-trial"
+      },
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "IN PROGRESS 2026-11-22: the build dispatched on cut/property-testing-trial in its own worktree and build folder, the form Amendment 2 recording the approval, the end of the form gate (ADV-2026-11-22-08 item 5; next was the build, not a form gate) and the isolation check; the tests merge after the tag. Before: PINS APPROVED 2026-11-22 by the human, typed (state/directives/2026-11-22-the-humans-approvals-adv-2026-11-22-02-03-06-the-guardian-and-monitor-the-trial-pins-the-hooks-readme-sentences.md): the draft ADV-2026-11-22-03 is the human words, proptest 1.12.0 with the std feature alone in protocol/data-plane and fast-check 4.10.2 in frontends/shell, dev-dependencies only; the tests merge after the tag; next, the form gate. Before: PINS WAIT FOR THE HUMAN 2026-11-22: the advisor draft ADV-2026-11-22-03 (state/consults/2026-11-22-advisor-draft-adv-2026-11-22-03-the-property-testing-trials-two-dev-dependencies-and-their-pins-not-the-humans-words.md) holds the two dev-dependencies and their exact pins, reserved to the human under the grant item 4 (c); no dependency enters any branch before the human types approved and its id. Meanwhile the trial form and its architect gate go on now (ADV-2026-11-22-01 item 6): full form, both gates; the three properties, the re-centre within RECENTER_BUDGET_PX, the data-plane wire format (no panic on bounded bytes, and round-trip) and the architect choice. The month counts from the merge. Placed by ADV-2026-11-22-01 items 6 and 8.",
+      "evidence_label": "branch `cut/property-testing-trial`"
     },
     {
       "id": "verify-cites-shortened-target-list",
