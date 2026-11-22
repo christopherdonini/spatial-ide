@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-22T20:35:59.641Z",
-  "plan_hash": "c4b90f40b0d72f1cb82380c3ed4bd2f94417335d0568c9ddfff94ea145425958",
+  "generated_at": "2026-11-22T20:57:24.705Z",
+  "plan_hash": "7125648382c42c2cd639a09e8740e3aa56cde0707d92d18f16031b459027fb17",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -815,6 +815,28 @@
       },
       "summary": "NARROW RE-READS PASS 2026-11-22 (gate-log rows 846, 847); their words applied at 12251bc8, 829 of 850 lines; the e2e series running. Before: REVIEWER BUILD GATE PART 1 FAIL 2026-11-22 (EV-1, DOC-1 to DOC-5), gate-log row 845; the fix worker on both gates findings. Before: BUILT 2026-11-22: PR 359 draft at 4eae8c9c, 13 files, 819 of 850 lines, npm run verify green; architect build gate part 1 FAIL (E1, D1 to D8), the reviewer part 1 running; K2 clause replaced (ADV-2026-11-22-36); e2e and the measurement after them. Before: BUILD DISPATCHED 2026-11-22: commits 2 and 3 on cut/console-stream-lane from 1f72b1f7, the standard worker (OPEN-8); the words of ADV-2026-11-22-30 in Amendment 2; commit 4 after the sitting. Before: FORM GATE ATTEMPT 2 2026-11-22: PASS WITH NOTES (row 842); D1 to D6 applied as Amendment 2 under 31 (d); the build next; the words commit waits for the advisor (ADV-2026-11-22-28 item 5). Before: AMENDMENT 1 2026-11-22: the gate words for C1, E1 and D1 to D7 and the architect additions (the open own entries and the stop, rule W, the joined runs), by ADV-2026-11-22-28; attempt 2 next, on it alone. Before: FORM GATE FAIL 2026-11-22: the architect attempt 1 (gate-log row 837, state/consults/gates/2026-11-22-console-stream-lane-form-gate-architect.md), C1, E1 and D1 to D7; by ADV-2026-11-22-28 (state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-28-the-console-form-after-its-gate-amendment-1-then-attempt-2-the-five-open-items-as-recommended-the-stop-accounted-for-now.md) Amendment 1 holds the gate words and the architect two additions, then attempt 2 on it alone; OPEN-2, -3, -4, -7 and -8 as recommended; no build before a pass. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/CONSOLE-STREAM-LANE-PREREGISTRATION.md, a full form with both gates (ADV-2026-11-22-17 item 2), from the architect fifth draft (state/consults/2026-11-22-console-stream-lane-full-form-architect-draft-5.md); M-CB2 dropped by ADV-2026-11-22-26 item 2; next its architect form gate; the build after PASS, the tests commit first; the MEASURE run after the sitting of 2026-11-24; the merge waits for the tag (ADV-2026-11-21-15 item 1).",
       "evidence_label": "branch `cut/console-stream-lane`"
+    },
+    {
+      "id": "describe-fails-after-opened-closes-the-handle",
+      "title": "When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii))",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 300,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/describe-failed-close"
+      },
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 848); the build dispatched on cut/describe-failed-close. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 FILED 2026-11-22: E-1, E-2, D-1 to D-4 and the bound on the awaited close (ADV-2026-11-22-38, -39), a ceiling of 270 lines (class 9); attempt 2 on it alone next. Before: FORM GATE ATTEMPT 1 FAIL 2026-11-22 (E-1, E-2; D-1 to D-4), state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md; OPEN-2 to OPEN-6 ruled as recommended (ADV-2026-11-22-35); Amendment 1 waits for the architect reading on what bounds the awaited close (item 4); then attempt 2. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md, full, both gates, drafted by lead-data, standing as the form by ADV-2026-11-22-32 item 1; next its architect form gate; the merge waits for the tag (ADV-2026-11-21-15 item 1).",
+      "evidence_label": "branch `cut/describe-failed-close`"
     },
     {
       "id": "property-testing-trial-proptest-and-fast-check",
@@ -2250,25 +2272,6 @@
       "summary": "PROPOSED 2026-11-15 by the advisor's ruling ADV-2026-11-15-09 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-09-verify-quotes-and-the-docs-only-tool-read-files-over-one-mebibyte-a-node-in-the-docs-slot-now-s3-budget-60.md), item 5: two more reads in scripts/plan/ take the default buffer, the one in scripts/plan/verify-test-claims.mjs and the git helper of scripts/plan/verify-mutation.mjs; neither reads the plan, and by the advisor's listing no other tracked text file is over one mebibyte but site/data/plan.json. Not in verify-quotes-and-docsonly-read-files-over-one-mebibyte; one proposed node for the two, unplaced, so that the finding is on record. The reads in verify-cites.mjs, measure-reads.mjs and the three rotate scripts already set a buffer."
     },
     {
-      "id": "describe-fails-after-opened-closes-the-handle",
-      "title": "When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii))",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 FILED 2026-11-22: E-1, E-2, D-1 to D-4 and the bound on the awaited close (ADV-2026-11-22-38, -39), a ceiling of 270 lines (class 9); attempt 2 on it alone next. Before: FORM GATE ATTEMPT 1 FAIL 2026-11-22 (E-1, E-2; D-1 to D-4), state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md; OPEN-2 to OPEN-6 ruled as recommended (ADV-2026-11-22-35); Amendment 1 waits for the architect reading on what bounds the awaited close (item 4); then attempt 2. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md, full, both gates, drafted by lead-data, standing as the form by ADV-2026-11-22-32 item 1; next its architect form gate; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
-    },
-    {
       "id": "kernel-close-unbounded-waits-and-the-host-main-thread",
       "title": "The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6)",
       "lane": "kernel-protocol",
@@ -2304,7 +2307,7 @@
         "opened": "2026-11-22",
         "done": null
       },
-      "summary": "FORM COMMITTED 2026-11-22: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md, full, both gates, drafted by lead-data; next its architect form gate, after the form gate of node g; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
+      "summary": "FORM GATE PASS WITH NOTES 2026-11-22 (gate-log row 849): D-1 to D-9 to the form by amendment; OPEN-1 to OPEN-4 to the advisor. Before: FORM COMMITTED 2026-11-22: governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md, full, both gates, drafted by lead-data; next its architect form gate, after the form gate of node g; the merge waits for the tag (ADV-2026-11-21-15 item 1)."
     }
   ],
   "unscheduled": [

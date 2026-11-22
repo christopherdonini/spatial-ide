@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c4b90f40b0d72f1cb82380c3ed4bd2f94417335d0568c9ddfff94ea145425958`) at `2026-11-22T20:35:59.641Z`.
+Generated from `PLAN.yaml` (sha256 `7125648382c42c2cd639a09e8740e3aa56cde0707d92d18f16031b459027fb17`) at `2026-11-22T20:57:24.705Z`.
 
 ## 1. Next
 
@@ -57,6 +57,7 @@ Generated from `PLAN.yaml` (sha256 `c4b90f40b0d72f1cb82380c3ed4bd2f94417335d0568
 - **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete — evidence: branch `cut/untiled-reissue-mint-window`
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
+- **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) — evidence: branch `cut/describe-failed-close`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 - **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) — evidence: branch `cut/guardian-monitor`
 
@@ -137,7 +138,6 @@ Generated from `PLAN.yaml` (sha256 `c4b90f40b0d72f1cb82380c3ed4bd2f94417335d0568
 - **advisor-silence-two-hour-alarm** — Telegram's third alarm: one message when the advisor has not answered the custodian for two hours (the human's item 3 of 2026-11-13, 06:57Z); split from advisor-questions-and-telegram-three-alarms by ADV-2026-11-14-23 item 3 (d) and ADV-2026-11-14-24 item 4 (phase `prototype`) — never queued until placed
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
-- **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
 - **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) (phase `prototype`) — never queued until placed
 
