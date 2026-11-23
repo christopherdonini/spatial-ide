@@ -1280,7 +1280,7 @@ fn filter_surrogate(name: &str, field: &Field) -> std::result::Result<&'static s
 fn duckdb_type_name(ty: &DataType) -> Option<&'static str> {
     use DataType as D;
     match ty {
-        D::Utf8 | D::LargeUtf8 | D::Utf8View => Some("VARCHAR"),
+        D::Utf8 => Some("VARCHAR"),
         D::Boolean => Some("BOOLEAN"),
         D::Int8 => Some("TINYINT"),
         D::Int16 => Some("SMALLINT"),
@@ -2688,15 +2688,10 @@ mod tests {
     // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in `duckdb_type_name`,
     // remove the `D::Float32 => Some("REAL")` arm. Observed: this test fails by name -- "f32
     // (Float32) must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
-    // RECORDED MUTATION (observed at `ca3d7ae`): in `duckdb_type_name`, drop `LargeUtf8` and
-    // `Utf8View` from the `VARCHAR` arm. Observed: this test fails by name -- "large (LargeUtf8)
-    // must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
     #[test]
     fn every_type_the_filter_namespace_admits_carries_a_surrogate() {
         let cases = [
             ("s", DataType::Utf8),
-            ("large", DataType::LargeUtf8),
-            ("view", DataType::Utf8View),
             ("b", DataType::Boolean),
             ("i8", DataType::Int8),
             ("i16", DataType::Int16),

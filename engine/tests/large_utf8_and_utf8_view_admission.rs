@@ -17,7 +17,9 @@ fn exported_zone_field(conn: &Connection) -> Field {
     let mut stmt = conn
         .prepare("SELECT 'a'::VARCHAR AS zone")
         .expect("prepare the VARCHAR probe");
-    let arrow = stmt.query_arrow([]).expect("export the probe through Arrow");
+    let arrow = stmt
+        .query_arrow([])
+        .expect("export the probe through Arrow");
     let schema = arrow.get_schema();
     // Drained in full, as `dataset::probe_schema` does, before the connection is used again.
     arrow.for_each(drop);
@@ -32,9 +34,14 @@ fn exported_zone_field(conn: &Connection) -> Field {
 /// admission, which is what describe's `projectable` is computed from.
 #[test]
 fn a_large_utf8_or_utf8_view_column_duckdb_exports_is_not_projectable() {
+    // `produce_arrow_string_view` alone leaves VARCHAR as `Utf8` on the bundled DuckDB (tried at
+    // this piece's fix commit, recorded under I1); with `arrow_output_version` 1.4 it exports `Utf8View`.
     for (set, expected) in [
         ("SET arrow_large_buffer_size=true", DataType::LargeUtf8),
-        ("SET produce_arrow_string_view=true", DataType::Utf8View),
+        (
+            "SET produce_arrow_string_view=true; SET arrow_output_version='1.4'",
+            DataType::Utf8View,
+        ),
     ] {
         let conn = configured_connection().expect("configured connection");
         conn.execute_batch(set).expect(set);

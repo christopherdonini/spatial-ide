@@ -75,12 +75,14 @@ pub const MAX_PROJECTED_ATTRIBUTES: usize = 32;
 /// The list is deliberately short. Everything absent from it is refused with a message that says
 /// what would have had to happen to admit it. Returns the **emitted** field type: identical to `ty`
 /// for every directly-admitted type, and the **value type** for an admitted dictionary.
+///
+/// Of the three Arrow text types, `Utf8` alone is admitted: the product connection exports text only
+/// as plain `Utf8` (pinned by `engine/tests/large_utf8_and_utf8_view_admission.rs`), so `LargeUtf8`
+/// and `Utf8View`, and a dictionary over either, are refused rather than offered unproven.
 pub fn admit_attribute_type(column: &str, ty: &DataType) -> Result<DataType> {
     use DataType as D;
     match ty {
         D::Utf8
-        | D::LargeUtf8
-        | D::Utf8View
         | D::Boolean
         | D::Int8
         | D::Int16
@@ -123,8 +125,6 @@ fn is_admitted_scalar(ty: &DataType) -> bool {
     matches!(
         ty,
         D::Utf8
-            | D::LargeUtf8
-            | D::Utf8View
             | D::Boolean
             | D::Int8
             | D::Int16
@@ -615,7 +615,6 @@ mod tests {
     fn the_live_admissible_set_admits_float32_and_a_dictionary_over_an_admitted_value_type() {
         for ty in [
             DataType::Utf8,
-            DataType::LargeUtf8,
             DataType::Boolean,
             DataType::Int32,
             DataType::UInt64,
