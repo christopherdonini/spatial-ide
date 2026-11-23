@@ -53,7 +53,9 @@ describe("ProblemsTab (C-R2)", () => {
     act(() => root.unmount());
     container.remove();
   });
-  const render = (initial: ConditionsState) => act(() => root.render(<Harness initial={initial} />));
+  // A new key each time: the harness keeps its own reducer state, so a second render of one instance would not start from the state given.
+  let renders = 0;
+  const render = (initial: ConditionsState) => act(() => root.render(<Harness key={renders++} initial={initial} />));
   const rows = () => [...container.querySelectorAll(".problem-row")];
 
   // RECORDED MUTATION for C-R2: in `ProblemsTab.tsx` list only the top row. Expected failure: the rows after the top are absent.
