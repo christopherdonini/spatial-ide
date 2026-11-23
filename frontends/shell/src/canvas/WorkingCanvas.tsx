@@ -189,8 +189,13 @@ export interface WorkingCanvasHandle {
    * lifetime -- "the layer" the button fits is the layer the user is actually looking at right now:
    * (dataset, filter generation), not (dataset) alone. It also clears the area last reported, so a
    * size change asks nothing until the next report (the auto-fit that follows does not report).
+   *
+   * **`{ keepCamera: true }` (colour-by-refill-keeps-the-view).** With it the one-shot auto-fit flag (`hasAutoFitRef`) is left as it stands, so a refill after the first look has fitted does
+   * not fit again and the camera stays where the operator put it; the fit anchor and the area last reported are still cleared. A canvas still waiting to fit (the flag false: an open, an Apply
+   * or a Clear whose first batch has not arrived) stays waiting, and fits as it would have. Without the option the method does what it did before. Its one product caller is the Colour-by
+   * effect (`App.tsx`), through `issueQueryRef` and `reissueUnrestricted`.
    */
-  resetFitForNewGeneration(): void;
+  resetFitForNewGeneration(options?: { keepCamera: true }): void;
   /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
    * read directly off the same `ResidentSet` `pushBatch`/`clearStream` already maintain -- no new
    * counting logic, a read-only accessor. Reached from the DEV-only `residencyEndStep` E2E hook
@@ -1657,9 +1662,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         return computeAuthoritativeViewportBbox({ ...camera, widthPx, heightPx });
       },
 
-      resetFitForNewGeneration() {
+      resetFitForNewGeneration(options) {
         fitAnchorRef.current = null;
-        hasAutoFitRef.current = false;
+        if (options?.keepCamera !== true) hasAutoFitRef.current = false;
         lastQueriedRef.current = null;
       },
 
