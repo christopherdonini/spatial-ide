@@ -483,3 +483,111 @@ describe("T-17: the camera write (B2 piece 1c, Amendment 54 O-17)", () => {
     expect(Object.is(after.centre[0], centre[0]) && Object.is(after.centre[1], centre[1]) && Object.is(after.zoom, zoom), "no auto-fit after it").toBe(true);
   });
 });
+
+// colour-by-refill-keeps-the-view (the form's §4, Amendment 2 items 1 to 3, Amendment 4 items 2 and 3): the canvas's reset with `{ keepCamera: true }`, on the
+// candidate arm (U-FL4's shape), batches through `pushTileBatch`, and `clearAllTiles()` before each reset as the session does. A fit is observed through
+// `onViewShown`, which only an unreported camera write calls. Batch A is the default fixture (LV95 coordinates in the millions); batch B is
+// `attributeBatchIpc([10n], [])`, whose ring lies at (0..1, 0..1) in the batch's own coordinates (`ring`, `attributeBatchIpc.ts`), far from A.
+import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
+
+describe("RK-C: the canvas's reset keeps the camera when asked (colour-by-refill-keeps-the-view)", () => {
+  const tick = (target: [number, number], zoom: number, isDragging: boolean): void => {
+    act(() => {
+      theDeck().props.onViewStateChange({ viewState: { target: [target[0], target[1], 0], zoom }, interactionState: { isDragging } });
+    });
+  };
+  const batchA = (): Uint8Array => loadBatchFixture("lv95-polygon-batch");
+  const batchB = (): Uint8Array => attributeBatchIpc([10n], []).ipc;
+  /** The candidate arm mounted, with batch A pushed: the open's one-shot auto-fit. */
+  const fitted = (extra: Partial<WorkingCanvasProps> = {}) => {
+    __resetResidencyArmForTests();
+    setResidencyArm("candidate");
+    const onViewShown = vi.fn<NonNullable<WorkingCanvasProps["onViewShown"]>>();
+    const mounted = mount({ onViewShown, ...extra });
+    const push = (handle: string, ipc: Uint8Array): ReturnType<WorkingCanvasHandle["pushTileBatch"]> => {
+      let outcome: ReturnType<WorkingCanvasHandle["pushTileBatch"]> | undefined;
+      act(() => {
+        outcome = mounted.ref.current!.pushTileBatch(INITIAL_TILE_KEY, handle, 0, ipc, null);
+      });
+      return outcome!;
+    };
+    /** What the session does at a reissue: the clear, then the reset. */
+    const reset = (options?: { keepCamera: true }): void => {
+      act(() => {
+        mounted.ref.current!.clearAllTiles();
+        if (options === undefined) mounted.ref.current!.resetFitForNewGeneration();
+        else mounted.ref.current!.resetFitForNewGeneration(options);
+      });
+    };
+    return { ...mounted, onViewShown, push, reset, a: push("sh_a", batchA()) };
+  };
+
+  // RECORDED MUTATION for "RK-C1: after the auto-fit and a settled tick, a keepCamera reset then a batch elsewhere leaves the view and calls onViewShown no more" (M-C1): in
+  // `resetFitForNewGeneration` (WorkingCanvas.tsx) ignore the option and clear `hasAutoFitRef`. Expected failure: batch B refits.
+  it("RK-C1: after the auto-fit and a settled tick, a keepCamera reset then a batch elsewhere leaves the view and calls onViewShown no more", () => {
+    const { ref, onViewShown, push, reset } = fitted();
+    expect(onViewShown, "the auto-fit on batch A").toHaveBeenCalledTimes(1);
+    tick([1_000_000, -500_000.25], 7.5, false); // a settled tick that moves the camera off the fit
+    const before = ref.current!.currentView!()!;
+    reset({ keepCamera: true });
+    push("sh_b", batchB());
+    const after = ref.current!.currentView!()!;
+    expect(Object.is(after.centre[0], before.centre[0]) && Object.is(after.centre[1], before.centre[1]) && Object.is(after.zoom, before.zoom), "the view, bit for bit").toBe(true);
+    expect(onViewShown, "no fit after the reset").toHaveBeenCalledTimes(1);
+  });
+
+  // RECORDED MUTATION for "RK-C2: a keepCamera reset still restarts the fit anchor: batch B's anchor is its own extent, and Zoom to layer reports the box fitToBbox reports for it" (M-C2): in
+  // `resetFitForNewGeneration` (WorkingCanvas.tsx) leave `fitAnchorRef` when `keepCamera` is passed. Expected failure: the anchor is the union with batch A's extent.
+  it("RK-C2: a keepCamera reset still restarts the fit anchor: batch B's anchor is its own extent, and Zoom to layer reports the box fitToBbox reports for it", () => {
+    const onViewportChanged = vi.fn<WorkingCanvasProps["onViewportChanged"]>();
+    const { ref, a, push, reset } = fitted({ onViewportChanged });
+    reset({ keepCamera: true });
+    const b = push("sh_b", batchB());
+    const [ea, eb] = [a.batchExtent!, b.batchExtent!];
+    expect(ea.xmin >= eb.xmin && ea.ymin >= eb.ymin && ea.xmax <= eb.xmax && ea.ymax <= eb.ymax, "A's extent is not inside B's, or the union with A would be B's extent").toBe(false);
+    expect(b.fitAnchor, "B's anchor is its own extent").toEqual(b.batchExtent);
+    onViewportChanged.mockClear();
+    expect(ref.current!.fitToBounds()).toBe(true);
+    expect(onViewportChanged).toHaveBeenCalledTimes(1);
+    const zoomed = onViewportChanged.mock.calls[0][0];
+    act(() => ref.current!.fitToBbox!(eb));
+    expect(onViewportChanged).toHaveBeenCalledTimes(2);
+    expect(zoomed, "Zoom to layer frames batch B alone").toEqual(onViewportChanged.mock.calls[1][0]);
+  });
+
+  // RECORDED MUTATION for "RK-C3: after a keepCamera reset, a size change that shrinks inside the area last reported goes to onViewShown, not onViewportWithinLastQuery" (M-C3): in
+  // `resetFitForNewGeneration` (WorkingCanvas.tsx) leave `lastQueriedRef` when `keepCamera` is passed. Expected failure: the shrink is reported as within the last query.
+  it("RK-C3: after a keepCamera reset, a size change that shrinks inside the area last reported goes to onViewShown, not onViewportWithinLastQuery", () => {
+    const onViewportChanged = vi.fn<WorkingCanvasProps["onViewportChanged"]>();
+    const onViewportWithinLastQuery = vi.fn();
+    const { ref, onViewShown, reset } = fitted({ onViewportChanged, onViewportWithinLastQuery });
+    act(() => ref.current!.fitToBbox!({ xmin: 2_600_000, ymin: 1_200_000, xmax: 2_600_100, ymax: 1_200_100 }));
+    expect(onViewportChanged, "the fit reports an area").toHaveBeenCalledTimes(1);
+    reset({ keepCamera: true });
+    size = { w: 100, h: 100 };
+    theDeck().props.onResize();
+    expect(onViewportWithinLastQuery, "no area is asked for after the reset").not.toHaveBeenCalled();
+    expect(onViewShown, "the auto-fit, then the size change").toHaveBeenCalledTimes(2);
+  });
+
+  // RECORDED MUTATION for "RK-C4: a keepCamera reset before an Apply's first batch leaves the waiting fit armed" (M-C4): in `resetFitForNewGeneration` (WorkingCanvas.tsx)
+  // set `hasAutoFitRef` true when `keepCamera` is passed. Expected failure: batch B does not fit.
+  it("RK-C4: a keepCamera reset before an Apply's first batch leaves the waiting fit armed", () => {
+    const { ref, onViewShown, push, reset } = fitted();
+    expect(onViewShown, "the auto-fit on batch A").toHaveBeenCalledTimes(1);
+    reset(); // an Apply's
+    reset({ keepCamera: true }); // a refill before the Apply's first batch
+    push("sh_b", batchB());
+    expect(onViewShown, "batch B fits").toHaveBeenCalledTimes(2);
+    expect(onViewShown.mock.calls[1][0], "the box now shown").toEqual(ref.current!.shownViewportBbox!());
+  });
+
+  // RECORDED MUTATION for "RK-C5: a plain reset after the auto-fit still arms the fit: the next batch fits" (M-C5): in `resetFitForNewGeneration` (WorkingCanvas.tsx) leave
+  // `hasAutoFitRef` on a plain reset. Expected failure: batch B does not fit.
+  it("RK-C5: a plain reset after the auto-fit still arms the fit: the next batch fits", () => {
+    const { onViewShown, push, reset } = fitted();
+    reset();
+    push("sh_b", batchB());
+    expect(onViewShown, "the auto-fit, then batch B's").toHaveBeenCalledTimes(2);
+  });
+});
