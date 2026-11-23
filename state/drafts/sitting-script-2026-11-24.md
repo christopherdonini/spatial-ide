@@ -1201,7 +1201,7 @@ You asked for Step 358 on 2026-11-23, for your decision on PR 358. It comes afte
 **What the tester's run showed.** The script ran in a separate checkout of main without PR 358, in a debug build. It opened the file through a test hook, not the file picker, and it sent the Enter key itself. It made 20 tries.
 - One try met the case. There, Zoom to layer left only a thin line of parcels at the top edge, and the status line read as row 358.7's first sentence says. The view took 5 minutes 16 seconds to hold still. Three wheel notches on the empty band then filled it across the view in about a minute.
 - With Enter sent about 30 times a second from the open on, which is what this step asks of your hand, none of 10 tries met it. In 4 of those the command bar never emptied.
-- With one Enter sent at a set time after the file was admitted, 1 of 10 tries met it (at 400 ms).
+- With the first Enter sent at a set time after the file was admitted, and one to five presses in all, 1 of 10 tries met it (at 400 ms, with one press).
 - In 6 other tries the number of row 358.5 was between its two values. By arithmetic a wide view is then still filled. No one has looked.
 - Two pictures of the met try, `met-zoom-to-layer.png` and `met-zoom-in.png`, are in the run's evidence folder, which the custodian's note names.
 
