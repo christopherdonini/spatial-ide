@@ -389,7 +389,7 @@ impl fmt::Display for EngineError {
             ),
             Self::IdentityOrdinalPartitionedUnsupported { detail } => write!(
                 f,
-                "[P6 placeholder] refused: this path is read as a folder or a pattern, not \
+                "refused: this path is read as a folder or a pattern, not \
                  as one file ({detail}). This engine opens a single file only, and it \
                  refuses such a path before reading it, whether or not an identity column is \
                  declared"

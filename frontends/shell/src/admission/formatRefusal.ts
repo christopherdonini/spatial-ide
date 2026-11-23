@@ -65,10 +65,12 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
  * - `engine.internal_inconsistency` (the retyped provenance arm): a defect in this program, not in
  *   the operator's file, and the guidance says so rather than sending them to look at their data.
  *
- * **All four of the strings added here are the human's at P6** (`ADMISSION-PREREGISTRATION.md`
- * §12d's "the four new user-visible states whose strings are sighted at P6"). Three are
- * placeholders written so the states exist and can be read end to end; **their wording is not
- * settled** and no test asserts them verbatim.
+ * **All four of the strings added here were the human's at P6** (`ADMISSION-PREREGISTRATION.md`
+ * §12d's "the four new user-visible states whose strings are sighted at P6"). The guidance for
+ * `engine.identity_ordinal_partitioned_unsupported` is now the advisor's wording, under
+ * ADV-2026-11-23-27 item 7 and the human's delegation of 2026-11-13. The others it names as
+ * placeholders stay placeholders, written so the states exist and can be read end to end;
+ * **their wording is not settled** and no test asserts them verbatim.
  *
  * **`engine.source_changed` is the exception, and is asserted verbatim by its test.** The human
  * ruled its exact sentence on 2026-09-16 (round 5, item 1) because the placeholder described
@@ -125,7 +127,7 @@ export function refusalGuidance(code: string): string | null {
       // sends the same path and is refused again. A single file whose name holds `*` or `?` is
       // also refused, and this text does not name that case.
       return (
-        "[P6 placeholder] This app cannot open a folder or a pattern of files, and " +
+        "This app cannot open a folder or a pattern of files, and " +
         "declaring an identity column does not change that. Open a single file instead."
       );
     case "publish.geographic_crs_not_publishable":
