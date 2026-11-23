@@ -7837,5 +7837,5 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM ON MAIN 2026-11-23 (five-line, the reviewer alone; ADV-2026-11-23-11 items 3 and 5): the worker next, in idle time; merge after the tag."
+    summary: "BUILT 2026-11-23 (35 lines, 2 files); the reviewer alone PASS WITH NOTES (gate-log 861); D1 words applied with no re-gate; N1 to the closing amendment and item 68; merge after the tag."
     dates: {opened: 2026-11-23, done: null}
