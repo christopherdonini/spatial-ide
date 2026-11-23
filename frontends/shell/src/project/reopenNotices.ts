@@ -106,7 +106,7 @@ export const MACHINE_RECORD_REFUSED_NOTICE = "The project was not opened in this
 export const ENGINE_REFUSAL_NOTICE = "The project was not opened in this window. The claims this refusal names are the ones the project file recorded for the data. None was typed here.";
 /** R-CODE: beside a reopen refusal that has no line of its own. */
 export const REOPEN_REFUSAL_NOTICE = "The project was not opened in this window.";
-/** R-CODE, the data's locator: replaces R-CODE for `skp.project_target_unresolvable` when the refusal carries a `locator` field. It is also the owner place that `relinkOffer` in `admission/AdmissionPanel.tsx` reads to offer `RELINK_CHOICE` beside the refusal. */
+/** R-CODE, the data's locator: replaces R-CODE for `skp.project_target_unresolvable` when the refusal carries a `locator` field. Its words are the advisor's under the human's delegation of 2026-11-13, approved in ADV-2026-11-22-44 item 3 as RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md section 2 item 5 drafts them, and not the human's. It is also the owner place that `relinkOffer` in `admission/AdmissionPanel.tsx` reads to offer `RELINK_CHOICE` beside the refusal. */
 export const REOPEN_LOCATOR_REFUSAL_NOTICE = "The project was not opened in this window. If its data file was moved or renamed, put it back where the project recorded it and open the project again, or choose the file where it is now. The project records the new place when you save it.";
 /** S-PANIC: shown with `skp.open_project_panicked`. It promises no free lock. */
 export const OPEN_PANICKED_NOTICE = "The open failed inside the application, and this window did not receive the project. The project may stay held until the application is closed.";

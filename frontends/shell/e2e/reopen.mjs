@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// E2E TEST SURFACE (e2e/README.md) -- E-REOPEN (R1 to R10) and E-CHANGED of B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 54 item 9, with its
+// E2E TEST SURFACE (e2e/README.md) -- E-REOPEN (R1 to R10; R10 is RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md section 4's) and E-CHANGED of B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 54 item 9, with its
 // item 7 (a)): a project saved from the real app is reopened in the same window, and what the kernel answers (opened, question, not_found, a refusal) and what the shell
 // applies and shows are read from the real page. Sibling to `project.mjs`; one app process; the real `open_project` command, the real project file, the real machine store.
 //
@@ -17,6 +17,7 @@
 // A row that is not there by its bound fails the step by name; the close reads and R6 name the form's stop 13. Every bound below is a harness bound, never a claim about how long anything takes (ADR-018).
 //
 // RECORDED MUTATIONS: entries are added by the commit that observes them.
+// - M-E1 (RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md section 4): the refused block's `admission-reopen-relink` button not rendered in `src/admission/AdmissionPanel.tsx`; R10 fails at its button check ("the refused block shows no .admission-reopen-relink button"), observed by the tester's E-REOPEN run at 06a2825a.
 
 import { copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, renameSync, rmSync, statSync, utimesSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";

@@ -1171,7 +1171,7 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 **`skp/0.14` stands; no literal is bumped and no fixture changes.**
 
 - **The change.** §12.3's `relink` bullet names a second case in which a client sends one, after `skp.project_target_unresolvable` with a `locator`. The kernel already used a `relink` before any locator at `skp/0.14`, so its answers do not change.
-- **The machine.** §12.3 gains the bullet that says what "the machine" and "this machine" mean there.
+- **The machine.** §12.3 gains the bullet that says what "the machine" and "this machine" mean wherever §12 says them.
 - **What did not change.** No key, value, code, message or command is added or removed, and `protocol/data-plane/` has an empty diff.
 
 ## 9. Attribute projection on `viewport_query`
