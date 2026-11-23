@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-23T11:42:11.075Z",
-  "plan_hash": "3582234e6ba20884713049a7ba98f8273e3e67ab0aafc0927bff6050ff524696",
+  "generated_at": "2026-11-23T12:02:28.089Z",
+  "plan_hash": "e27efbbe4136a08645be080d2a7a2991f74e97fdff766e1f93fe8683a07b7a4f",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -859,6 +859,28 @@
       },
       "summary": "ARCHITECT BUILD GATE FAIL 2026-11-22 (gate-log row 852), words only: two pushed commit subjects, superseded in the PR body under AUTONOMY.md section 31 item d; a KM1 run recording HEAD and the diff before the closing amendment; the merge request after the tag. Before: REVIEWER BUILD GATE FAIL 2026-11-22 (gate-log row 851), words only: R1 to R4 applied as C4 (8d1f2f4e) under AUTONOMY.md section 31 item d, no re-gate; the architect build gate running at that head. Before: BUILT 2026-11-22 (C1 to C3, head 3755df81), draft PR 360; the reviewer build gate running. Before: FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 848); the build dispatched on cut/describe-failed-close. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 FILED 2026-11-22: E-1, E-2, D-1 to D-4 and the bound on the awaited close (ADV-2026-11-22-38, -39), a ceiling of 270 lines (class 9); attempt 2 on it alone next. Before: FORM GATE ATTEMPT 1 FAIL 2026-11-22 (E-1, E-2; D-1 to D-4), state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md; OPEN-2 to OPEN-6 ruled as recommended (ADV-2026-11-22-35); Amendment 1 waits for the architect reading on what bounds the awaited close (item 4); then attempt 2. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md, full, both gates, drafted by lead-data, standing as the form by ADV-2026-11-22-32 item 1; next its architect form gate; the merge waits for the tag (ADV-2026-11-21-15 item 1).",
       "evidence_label": "branch `cut/describe-failed-close`"
+    },
+    {
+      "id": "command-bar-enter-after-an-applied-result",
+      "title": "An Enter that lands after an applied filter result and before its render puts the applied text back in the command bar, can show the busy line with nothing pending, and leaves later presses refused (the held-Enter finding, ADV-2026-11-23-11 item 5)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 120,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/command-bar-enter-after-applied"
+      },
+      "dates": {
+        "opened": "2026-11-23",
+        "done": null
+      },
+      "summary": "FORM ON MAIN 2026-11-23 (five-line, the reviewer alone; ADV-2026-11-23-11 items 3 and 5): the worker next, in idle time; merge after the tag.",
+      "evidence_label": "branch `cut/command-bar-enter-after-applied`"
     },
     {
       "id": "property-testing-trial-proptest-and-fast-check",

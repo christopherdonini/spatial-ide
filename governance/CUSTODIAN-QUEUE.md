@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `3582234e6ba20884713049a7ba98f8273e3e67ab0aafc0927bff6050ff524696`) at `2026-11-23T11:42:11.075Z`.
+Generated from `PLAN.yaml` (sha256 `e27efbbe4136a08645be080d2a7a2991f74e97fdff766e1f93fe8683a07b7a4f`) at `2026-11-23T12:02:28.089Z`.
 
 ## 1. Next
 
@@ -59,6 +59,7 @@ Generated from `PLAN.yaml` (sha256 `3582234e6ba20884713049a7ba98f8273e3e67ab0aaf
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
 - **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) — evidence: branch `cut/describe-failed-close`
+- **command-bar-enter-after-an-applied-result** — An Enter that lands after an applied filter result and before its render puts the applied text back in the command bar, can show the busy line with nothing pending, and leaves later presses refused (the held-Enter finding, ADV-2026-11-23-11 item 5) — evidence: branch `cut/command-bar-enter-after-applied`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 
 ## 6. Proposed / unscheduled

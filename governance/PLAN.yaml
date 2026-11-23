@@ -7822,3 +7822,20 @@ nodes:
     entries: []
     summary: "AMENDMENT 2 ON MAIN 2026-11-23 (form gate attempt 2 PASS WITH NOTES, N-1 to N-4; ADV-2026-11-22-44 items 4 and 5 whole, ADV-2026-11-23-01 item 6); its code after the tag. Before: FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 854): Amendment 2 next, N-1 to N-4 with ADV-2026-11-22-44 items 4 and 5 by script (ADV-2026-11-23-01 item 6); code after the tag. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 APPENDED 2026-11-22 (ADV-2026-11-22-44); the form gate attempt 2 on it alone next. Before: RULED 2026-11-22 (ADV-2026-11-22-44): S12 and the piece's other words, OPEN-1 to OPEN-9; Amendment 1, then the form gate attempt 2 on it alone; the code starts when PR 353 and PR 359 are on main, after the tag. Before: FORM GATE FAIL 2026-11-22 (gate-log row 850): C-1, E-1 and D-1 to D-9 for an amendment; S12 words and OPEN-1 to OPEN-9 to the advisor. Before: FORM GATE RUNNING 2026-11-22 (architect, at main be11bd98). Before: FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag."
     dates: {opened: 2026-11-22, done: null}
+  - id: command-bar-enter-after-an-applied-result
+    title: "An Enter that lands after an applied filter result and before its render puts the applied text back in the command bar, can show the busy line with nothing pending, and leaves later presses refused (the held-Enter finding, ADV-2026-11-23-11 item 5)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: in-progress
+    order: null
+    depends_on: []
+    needs_human: {kind: none, minutes: 0}
+    gate: governance/forms/frontends/COMMAND-BAR-ENTER-AFTER-AN-APPLIED-RESULT-PREREGISTRATION.md
+    evidence: {branch: cut/command-bar-enter-after-applied}
+    budget_minutes: 120
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "FORM ON MAIN 2026-11-23 (five-line, the reviewer alone; ADV-2026-11-23-11 items 3 and 5): the worker next, in idle time; merge after the tag."
+    dates: {opened: 2026-11-23, done: null}

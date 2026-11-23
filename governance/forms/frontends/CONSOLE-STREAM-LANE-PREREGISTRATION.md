@@ -1138,3 +1138,54 @@ Rule W's item also says, as the gate report does, that the device pixel ratio of
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — 2026-11-23 — Amendment 3's sequence closed: its records, P4 for GROUP', S6, D1 and D2
+
+Read by the custodian at main 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9. The words outside the fences are the custodian's and are references only. Each fence is copied by script from the filed report its pin names; each pin gives the lines, the commit and the sha256 of those lines with their line ends. The rulings are `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-45-the-console-part-2-t1-to-t4-into-amendment-3-groups-clause-recorded-wrong-the-table-row-again-rule-ws-phrases.md` and `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-02-the-console-one-test-code-commit-t1-and-the-override-the-mutations-as-patch-files-outside-the-repository.md`.
+
+#### 1. The sequence, done (Amendment 3, The sequence)
+
+- The worker's one test-code commit: 8b8c38815a5fbc1e41e392366784a7c1c51a5783 on PR 359.
+- The reviewer's narrow read of it, with the recount, gate-log row 857 (PASS): `state/consults/gates/2026-11-23-console-stream-lane-a3-commit-reviewer-narrow.md`, its verdict `state/consults/gates/2026-11-23-console-stream-lane-a3-commit-reviewer-narrow.md:5-5` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:ef8888b9f6f89430d2a257f1aa2625ce1349ad6e3fda705491d83d92b3295bb1, the recount `state/consults/gates/2026-11-23-console-stream-lane-a3-commit-reviewer-narrow.md:60-60` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:b699535d436b05ee3e0a22e0b062eb2e6090aaaf7ad24d2679e9071daa477655.
+- The e2e rows again at that head, runs 0 to 12: `state/consults/2026-11-23-console-stream-lane-e2e-tester-2-report.md`, its filing note `state/consults/2026-11-23-console-stream-lane-e2e-tester-2-report.md:1-1` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:f3107029627aa5aefaae5570f92f2e4fcb0a55937f0ccef5d59428686c41303a, which records Doc-2 and Doc-3 applied and Doc-1 beside run 12.
+- The architect's narrow attempt, gate-log row 858 (PASS WITH NOTES): `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md`, its verdict `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:5-5` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:eb4f8d1151efc14772dacb257ab208667d997e7ff7a9c4b42f8d7a22c77d3d9e; each mutation run against its named set, `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:29-36` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:ddb1d7b36e69b3f3e8682c4a9c2a38388bdad2d9ed82ebbdf3e916669ec0e36a.
+- Its Doc-1, `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:78-78` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:1ed64c18fa336835ebd93ca7a5f912d2d7d69f98cc1521f5cbcc4e0dcc493ff1, closed by the reviewer, gate-log row 859 (PASS): `state/consults/gates/2026-11-23-console-stream-lane-a3-doc1-reviewer.md`, its verdict `state/consults/gates/2026-11-23-console-stream-lane-a3-doc1-reviewer.md:5-5` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:ef8888b9f6f89430d2a257f1aa2625ce1349ad6e3fda705491d83d92b3295bb1, the generated copy's sha256 `state/consults/gates/2026-11-23-console-stream-lane-a3-doc1-reviewer.md:15-15` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:619f88b65621b8541d008e278879a2ebaab67e136221c82a758cb91e8531d6dd.
+
+#### 2. P4 for GROUP' (Amendment 3, P4 for GROUP')
+
+The architect's narrow attempt, on run 1, byte for byte, `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:59-59` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:5d99162a66aafd22bb6a2d3815e161bac47a0782aae21ff182ca19c6688fea31:
+
+````text
+Run 1's GROUP' passed on its first branch (R=9 ≤ 128, drops 0/0), and LABEL' shows 0 other-kind drops. That agrees with Amendment 3's P4 entry for GROUP': no run shows GROUP' in the ordinary state.
+````
+
+So, as Amendment 3 asks the closing to say: no run shows GROUP' in the ordinary state, and no unmutated run passes by the capacity check's second branch, which is shown only from its failing side, by M-G1 (run 2).
+
+#### 3. S6 (Amendment 3, The table row and S6)
+
+- S6 is closed, `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:65-65` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:614a882590c9885a8958183ebc30f2e0c5ccadeb86a9539791e4e3dc072d5de2.
+
+#### 4. D1 and D2 (Amendment 3, D1 and D2)
+
+- D2 is met, `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:70-70` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:8aea2ccb51e51995f7dbb95afa50dede366d5be3a846714609f8a37432c1d39d.
+- The e2e report at the head, `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:71-71` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:727c95cc095226754742da6cf7b7f299c88482eefeff7c297b86cb062475e111.
+- PR 359's body, read at 2026-11-23T12:02:27Z at the head 8b8c38815a5fbc1e41e392366784a7c1c51a5783, has no sentence saying that P2 is met, or that E-AND or GROUP' passed in the ordinary state.
+- Of this piece's records, one sentence names a run's state as the ordinary state: run 5's, in the series report, `state/consults/2026-11-22-console-stream-lane-e2e-series-tester-reports.md:92-92` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:2f251d3fa4408c08fafe75dc6ec6a6e2ea16ca9254990afa0c508db4057a95ea. Under the part-2 gate's rule, `state/consults/gates/2026-11-22-console-stream-lane-build-gate-architect-part-2.md:167-167` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:4bbed385a8371a2b3fabde98057caa8b5ed3579b3ba27e9ac418f096955473a4, it is corrected in that gate's words, `state/consults/gates/2026-11-22-console-stream-lane-build-gate-architect-part-2.md:24-24` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:7b573f1e59dfa7c97bf63f28bcb296bfc9fc616edc3706f1f5e3c374277320f8:
+
+````text
+- **The run is not in the ordinary state.** N₀ = 153 with S₀ > 0, so the stream ring holds 128 and the other ring held 25 of 128 at R0. It had dropped none, and dropped none by R1.
+````
+
+- The series report is not edited; this item is its correction.
+
+#### 5. The architect's note for these references
+
+- `state/consults/gates/2026-11-23-console-stream-lane-a3-architect-narrow.md:103-103` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:7df7cf7ff6a5625c0ff684aba79737ff7a2c59cb93eda9bf270cf1376c806a4a. T3's clause on F2′ and section 4's line for M-A4-1 are pins of their commits; at the head the sets are named F2′, F4 and card A's wait line, as item 1's table gives them.
+
+#### 6. What is left
+
+- PR 359's body is brought up to the head before the merge check. Commit 4 comes after the sitting, and the merge after the tag (Amendment 3, The merge).
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -522,3 +522,38 @@ The two sentences name different commits: 378c6cfcd42b21691fe40a438d3fc54f0a4cbb
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-23 — the deny attribute's narrow read: section 1 gains the reviewer's sentence (ADV-2026-11-23-08 item 3)
+
+Read by the custodian at main 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9. The words outside the fence are the custodian's and are references only. The fence is copied by script from the filed gate report its pin names; each pin gives the lines, the commit and the sha256 of those lines with their line ends. The rulings are `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-08-node-d-the-architects-sentence-into-section-1-the-reviewers-reading-in-the-closing-the-deny-attribute-in-idle-time.md` (item 3) and `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-14-commit-4a5f886d-as-ruled-section-31-c-grades-no-finding-pr-361s-new-comment-line-the-moves-accepted.md` (item 3, the comment line).
+
+#### 1. Section 1 gains this sentence, after the architect's of Amendment 2 item 1 (ADV-2026-11-23-08 item 3)
+
+The reviewer's sentence from the run part of its narrow read, its line with its label, byte for byte, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:118-118` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:f55ec846f10a8f190a22cf3427981ea5835d85301f5ad88efcdbebdc6f734e2e:
+
+````text
+M5 sentence: At 0922c90a38ad91bf7922cf9a6baf0f8ed1344397 with M5 applied, `cargo build --locked -p spatial-kernel --lib` and `cargo build --locked -p spatial-kernel --all-targets` each exit 101 on the `#[deny(dead_code)]` error "method `reply_of` is never used", while `cargo test --locked -p spatial-kernel --lib --no-run`, the unit-test build in which K-D1 and K-D2 still call `reply_of`, exits 0.
+````
+
+#### 2. The deny attribute's commits and the narrow read
+
+- On PR 361: 12946382bbe766e686ec245f2ddfd625fdabab6c, the attribute and its comment line; 0922c90a38ad91bf7922cf9a6baf0f8ed1344397, the comment line written again by the worker with nothing built, after the read part's F1.
+- The read part, at 12946382bbe766e686ec245f2ddfd625fdabab6c with nothing run: `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-1-reviewer.md`, no gate-log row.
+- The run part, at 0922c90a38ad91bf7922cf9a6baf0f8ed1344397: `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md`; its verdict and the head it read, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:5-6` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:1c4c745e00b21ffe3d9ef3331e4a668f93d43049c1c4d8f522af234b2143ea11; gate-log row 860 (the reviewer, PASS WITH NOTES).
+
+#### 3. The architect's verdict, carried forward (ADV-2026-11-23-08 item 3)
+
+- The architect's build gate, gate-log row 856 (PASS WITH NOTES), stands for the head 0922c90a38ad91bf7922cf9a6baf0f8ed1344397. The run part finds nothing of correctness or evidence, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:122-122` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:42755d863cc6da9fb84841c1ef1d1af36507c0f68ba9856a240dc4233029be59.
+
+#### 4. What stays a record of its own commit
+
+- Amendment 1 item 1's M5 entry, which observes M5 as a warning, and the test doc line `RECORDED MUTATION M5` in `kernel/src/project/mod.rs` are records of 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c, the commit they name. Neither is edited. Item 1's sentence is what the build does at 0922c90a38ad91bf7922cf9a6baf0f8ed1344397. The run part's D1, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:124-124` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:9657e704bc0089b72718f93f827857d1eaf8bf6d827c180ec0467237297b3a4a, and N1, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:125-125` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:d8e90d5cd6eeb1f24104f0721227e933197b70962b8cece8e7c7f41eafcf803a.
+- Its N2, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:126-126` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:84a3ea437e98b1d9380c0693e36da90f7c15497d497934e32f4d26ebaf955479, is a note on its own run.
+
+#### 5. Amendment 2 item 4
+
+- What it names, the deny attribute's commit, its narrow read and its amendment, is done by items 1 to 3. PR 361 merges after the tag (ADV-2026-11-23-08 item 4).
+
+Read the last amendment first.
+
+Nothing above is edited.
