@@ -2383,3 +2383,107 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 12 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 7 (PASS WITH NOTES): that gate's replacement words for N-37 to N-40, carried byte for byte; N-41 to the advisor; the literal under ADV-2026-11-23-35
+
+*Written by the custodian before any code. It carries the attempt-7 gate's own replacement words for the form's sentences, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 7, PASS WITH NOTES (`state/consults/gates/2026-11-23-b2-piece-1c-step-3-recovery-offer-form-gate-architect-attempt-7.md`, gate-log row 885; the hand-back's sha256 40aadff6d4ee51e4063ae32d58696997a0b1e4ef521a9db6f4fc9c95a32e9e06), which read Amendment 10 alone with Amendments 9 and 11 (ADV-2026-11-23-29 item 3). It has no Correctness and no Evidence finding. Its Documentation findings N-37 to N-40 are on lead-data's sentences of Amendment 10: they are fixed before the merge, none asks for another attempt (ADV-2026-11-21-20), and by the gate's reading of §31 (d) the worker applies these New texts with no re-gate and the PR body lists them. Each Old text below occurs once in the form above this amendment, inside Amendment 10, no two overlap, each New text occurs nowhere above it, and no New text adds a cite. All are checked by script.
+
+2. **N-37:** inside Amendment 10 item 2.
+
+Old:
+
+````text
+A project's record with no step after its last mark is not listed and stays where it is, as §2.3 first had it (OPEN-2 (A) as filed).
+````
+
+New:
+
+````text
+A project's record with no step after its last mark is not listed and stays where it is, as §2.3 first had it (OPEN-2 (A) as filed), unless its header's `actions` is over `ACTIONS` or its kept lines hold a `restored` mark: such a record is listed `later-version` with Discard only (OPEN-4 (B); Amendment 4 item 7), as K-C36 asserts at an open.
+````
+
+3. **N-38:** inside Amendment 10 item 3.
+
+Old:
+
+````text
+Items 13 and 15 are read on Part 2's diff.
+````
+
+New:
+
+````text
+Every §8 item, the 1c form's items that §8 applies included, is read on each part's diff; items 13 and 15 bear on Part 2's diff in particular.
+````
+
+4. **N-39, first replacement:** inside Amendment 10 item 6.
+
+Old:
+
+````text
+That is about 25 to 50 lines, and Part 2's figures carry them.
+````
+
+New:
+
+````text
+That is about 25 to 50 lines that Part 2 rewrites. §2.11's command counts both numstat columns, so each Part 1 line that Part 2 deletes is counted twice in the parts and not at all in the whole: once as Part 1's addition and once as Part 2's deletion. The parts' counts together therefore pass the whole's by up to twice those lines, about 50 to 100, and Part 2's figures carry the share that falls in Part 2.
+````
+
+5. **N-39, second replacement:** inside Amendment 10 item 6.
+
+Old:
+
+````text
+So the sum of the parts' counts may pass 5,530 by up to about 35 lines.
+````
+
+New:
+
+````text
+So the sum of the parts' counts may pass 5,530 by up to about 85 lines.
+````
+
+6. **N-39, third replacement:** inside Amendment 10 item 11.
+
+Old:
+
+````text
+so the sum may pass 5,530 by up to about 35 lines (item 6)
+````
+
+New:
+
+````text
+so the sum may pass 5,530 by up to about 85 lines, twice the rewritten lines less the 15 unspent (item 6)
+````
+
+7. **N-40:** inside Amendment 10 item 11.
+
+Old:
+
+````text
+the 50 files of ADV-2026-11-23-29 item 3
+````
+
+New:
+
+````text
+the 50 files of ADV-2026-11-23-29 item 1
+````
+
+8. **N-41** is on the ADR-036 note's draft in Amendment 10. Those words are the advisor's to rule (ADV-2026-11-23-29, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-29-the-recovery-offer-5530-lines-accepted-in-two-gated-parts-one-pr-one-merge-adr-036-note-a-to-h.md`), so the gate's two replacements, (a) and (b), go to the advisor with the report and are not carried here. Each of their Old texts occurs once, inside Amendment 10, checked by script.
+
+9. **Left by the gate to the build.** It had no Bash, so it did not check the sha256 values in Amendment 11 items 1 and 3; the reviewer's build gate recomputes them. Its notes for the build, on K-C8's red reason and on K-C36's two halves, are read by the worker from the report.
+
+10. **To the advisor, in one message** (ADV-2026-11-23-15 item 8): Amendment 10 item 11's questions (i) to (iv) with the gate's reading; lead-data's question on the dated note under the grant's item 2; the gate's offer of a second mutation for K-C34; N-41. None is ruled here.
+
+11. **The literal.** ADV-2026-11-23-35 item 2 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-35-the-bases-identity-route-then-text-id-then-recovery-offer-each-the-next-unused-literal-recovery-build-held-until-a-green-head.md`) builds this piece on the text-id piece's head and gives it the next unused literal after that piece's, in place of the literal of ADV-2026-11-23-29. Amendment 10 item 2 already says the next unused literal. No tracked record of this piece names `skp/0.16` (this form, its consults and its gate reports, checked by script at this commit), so no number is corrected.
+
+12. Next: the build waits until the text-id build has a pushed head with its suites green (ADV-2026-11-23-35 item 3), and for the advisor's answers to item 10. No code is written before both. Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.

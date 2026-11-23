@@ -489,3 +489,40 @@ None yet.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2 — 2026-11-23 — the custodian's, under ADV-2026-11-23-35 and ADV-2026-11-23-36: the base and the literal; the refusal's last sentence removed, with three paths added to the Scope (class 9); the strings and D5 held by reference; a text named as found
+
+*Written by the custodian before any code. References and hashes only: the advisor's words are not copied here, and the build takes them from the rulings' files. Every check named below was made by script at 14d2fc717c671134e4029f1459046e49e79595f2.*
+
+1. **Authority.** The advisor's rulings ADV-2026-11-23-35 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-35-the-bases-identity-route-then-text-id-then-recovery-offer-each-the-next-unused-literal-recovery-build-held-until-a-green-head.md`) and ADV-2026-11-23-36 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-36-the-text-id-forms-open-a1-to-a4-strings-worded-the-refusals-last-sentence-removed-pr-360-in-the-base-d5-added.md`), under the human's delegation of 2026-11-13. Neither is the human's words. All of ADV-2026-11-23-36 rests on the human approving ADV-2026-11-23-34 with no added word; if the approval adds `narrow` or `C4`, its item 6 holds.
+2. **The base and the literal**, in place of §8's proposed literal and OPEN-A3:
+   - The base is the one ADV-2026-11-23-36 item 1 gives: the identity route's head, with PR 364, PR 361 and PR 360 taken in by merge commits. PR 360 is taken in unless the identity route's line already holds it.
+   - At the base, this Scope is compared with the changed paths of every unmerged head, as rule (00a) counts them (ADV-2026-11-23-15 item 4). Each head that shares a path is taken in, and the recorded base names them all.
+   - Milestone 5's PR A and `e2e/admission-remediation.mjs` are settled by that ruling's item 1.
+   - The literal is the next unused one after the identity route's (ADV-2026-11-23-35 item 2; ADV-2026-11-23-36 item 1). That is `skp/0.16` while the identity route takes `skp/0.15`.
+   - §8's clause that the recovery offer's `skp/0.16` would then move is replaced: the recovery offer takes the next unused literal after this piece's.
+3. **OPEN-A2.** The `IdentityUnusable` Display ends as ADV-2026-11-23-36 item 2 gives it.
+   - At 14d2fc71, the sentence beginning `Synthesizing a row ordinal instead` is held outside `state/` and `governance/` by six paths.
+   - Two of them are in §7's Scope already: `engine/src/error.rs` and `frontends/shell/e2e/admission-remediation.mjs`.
+   - Three are added to the Scope, class 9, for that sentence alone:
+     - `protocol/skp/tests/data/v0-error-identity_unusable-with-candidates.json`;
+     - `frontends/shell/e2e/regression.mjs`;
+     - `frontends/shell/MANUAL-WALKTHROUGH.md` row I4 of Part I (admission remediation), besides the new Part that §7 names. In that row only the quoted message changes; no past run record is touched.
+   - `engine/ADMISSION-RESULTS.md` is a dated record of results and is not edited.
+   - The worker runs the same search at the base before code. A path that holds the sentence there and is not named here is a stop.
+   - §7's ceilings are not changed.
+4. **OPEN-A1.** The words of ADV-2026-11-23-36 item 3 hold in place of §2's drafted S-1 to S-6c, byte for byte, without the placeholder mark. S-2 and S-5 differ from the drafts, for the reasons in its item 4. The merge check compares each string with that file (its item 8).
+5. **OPEN-A4.** In KNOWN-LIMITATIONS item 3:
+   - D4 of ADV-2026-11-23-26 item 2 stays byte for byte;
+   - D5 of ADV-2026-11-23-36 item 5 is added where that item places it;
+   - the item's comment says that D5 is the advisor's.
+6. **Named as found and not changed** (ADV-2026-11-23-35 item 7; ADV-2026-11-23-36 item 7): the refusal text at `engine/src/attributes.rs:253-256`, unless a gate asks for it. It is pinned below. The stale cites in item 3's comment (`engine/src/identity.rs:196-217`, `engine/src/error.rs:234-238`) are corrected in the piece.
+
+- `engine/src/attributes.rs:253-256` @ 14d2fc717c671134e4029f1459046e49e79595f2 sha256:b5faaa344b7bc943b6ab2be3b51ec3ae40c8d84ba9f7fc51181205cf7a9f5c13 — each line with its LF, computed by script
+
+7. **No further attempt of the form's gate is asked for these words alone** (ADV-2026-11-23-36 item 8). The form gate, attempt 1, reads this amendment. The build's gates check every string and sentence clause by clause, and a finding on a word of the advisor's goes to the advisor.
+8. **Next:** the form gate, attempt 1, on the unapproved draft. No code is written before the human approves ADV-2026-11-23-34 and the gate passes. Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
