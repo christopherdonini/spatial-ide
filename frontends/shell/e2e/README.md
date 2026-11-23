@@ -906,3 +906,13 @@ npm run e2e:second-open
 **What the launch rests on.** A is started first. B cannot be given a debug port of its own (the exe carries the overlay's port, and the browser-arguments variable is ignored); when A holds the port on 127.0.0.1, B's browser takes the same port on the IPv6 loopback. That needs the machine's IPv6 loopback on. This was observed on this machine; it is not called documented. The launcher refuses, by name, if A does not answer on 127.0.0.1 or something already answers on the IPv6 loopback before B starts, and if B does not answer there or the two `webSocketDebuggerUrl` browser ids are the same; such a run is a failed run, never a skip.
 
 **What it proves not.** The native pickers, any timing, or a second process on another machine's store. B's page comes from A's dev server and stays loaded after A's process tree is killed: E-CRASH-UNLOCK runs B's reopen after that kill and asserts nothing else of B after it. In the runs of this piece where the file was looked at, `e2e/out/app.log` stayed at 0 bytes; with such a log the step cannot tell at the bound whether the release thread's failure line was written.
+
+## Colour by refill keeps the view spec (colour-by-refill-keeps-the-view)
+
+```
+node e2e/colour-refill.mjs [--fixture <path>]
+```
+
+`e2e/colour-refill.mjs` (E-RK1) opens `colour-refill-300k.parquet` (300,000 features, made by `cargo test --locked -p spatial-kernel --test manual_walkthrough_fixtures generate_the_colour_refill_fixture -- --ignored --nocapture` into this checkout's `target/fixtures/manual-walkthrough`; `--fixture` names another copy) through `window.__SPATIAL_E2E__.openPath`, waits for the open's first look to plan, zooms out by the mouse wheel until the status bar says that attributes were not held, pans by pointer, then applies Colour by `zone` through the Style tab. It asserts (a) that the first `candidate-first-look-view-planned` session-log line after the Colour by has a box equal, within a pixel's world span, to the view shown before it (computed from the last `view-state` render-trace line at the canvas's client size), (b) that the resident feature count (`residentCounts`) then exceeds the first look's 10,000, and (c) that the not-held status still stands. It records the zoom steps taken and the fixture's feature count. Exit 0 when (a) to (c) pass, 1 when one fails, 2 when the run is VOID (the not-held status never stands, the pre-view is not away from the fit, input reaches the canvas after the Colour by, or the client size changes). It is operator-run and not in CI or in `npm run verify`.
+
+**What it proves not.** Any docs/08 figure, macOS or Linux, another file, a timing, or the refill's view on the baseline arm.
