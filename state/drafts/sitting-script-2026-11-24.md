@@ -226,6 +226,7 @@ The hero slice is open, filter in SQL, style, publish (`docs/07_Roadmap.md:9 @ a
 - `renderer/bundle-viewer/dist` built (`:286-289`) for AC5's serve.
 - DevTools in the dev build for Part L's re-arm.
 - For AC11, a real parcel file with many columns. For AC12, a file whose attribute data passes 268,435,456 bytes, which the human brings (`:1982`).
+- AC12's expected outcome (`:1998`) is out of date in one sentence. By an architect's reading of the code, not run: since the first look was fixed (PR 335), the map does not stay at the first 10,000 rows; once its first data load completes, it fills the view it shows. The view still moves to fit, as the row says. Of the felt question, answer the first half only.
 
 **(d) Strings.**
 
