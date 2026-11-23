@@ -924,7 +924,7 @@ impl Projects {
     /// no lock: it closes the dataset through the host, as [`Projects::open_project`] closes it
     /// after a refused write, and then calls [`Projects::release_ended`], which drops the entry and
     /// with it the identity's open lock.
-    // Fails the build if nothing calls this, so the opened arm cannot quietly stop using it.
+    // Fails a non-test build of the lib if the opened arm, its only caller outside tests, drops it.
     #[deny(dead_code)]
     fn reply_of(&self, o: Opened) -> OpenedProject {
         let dataset = o.dataset.clone();
