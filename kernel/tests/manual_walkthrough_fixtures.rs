@@ -833,6 +833,8 @@ fn generate_the_attributes_multitype_fixture() {
 /// `frontends/shell/src/canvas/limits.ts`), so the status bar says that attributes were not held. Colour by is applied to its `zone` column, the one a refill keeps. `AttributeMode::MultiType`'s `text` is about 1 KiB of hash hex per row (`text_for`),
 /// so 300,000 rows hold about 307,200,000 text bytes alone, over the ceiling, while the vertices stay under the shell's `MAX_RESIDENT_VERTICES` (2,000,000): `avg_vertices: 4` gives
 /// 4 to 6 per ring (`parcel()`'s floor is 4), and no hole. The file is not small (snappy does not shrink hash hex): the run that makes it states its bytes.
+// RECORDED MUTATION for "generate_the_colour_refill_fixture" (M-F1): set `FEATURES` to 200_000. Expected failure: the assertion "the text column alone must pass the attribute ceiling".
+// Not observed in this commit: the run writes the fixture file over the one E-RK1 opens.
 #[test]
 #[ignore = "generates a real file for the E2E colour-refill spec; not part of the default suite"]
 fn generate_the_colour_refill_fixture() {
