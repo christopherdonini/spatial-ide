@@ -1040,3 +1040,101 @@ Note: the advisor's ruling, `state/directives/2026-11-22-advisor-ruling-adv-2026
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-23 — post-result amendment after the architect's build gate, part 2 (FAIL, Evidence only): T1 to T4, rule W's two phrases, P4's clause recorded wrong (ADV-2026-11-22-45, as ADV-2026-11-23-02 reads it)
+
+**Authority.** The advisor's ruling ADV-2026-11-22-45 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-45-the-console-part-2-t1-to-t4-into-amendment-3-groups-clause-recorded-wrong-the-table-row-again-rule-ws-phrases.md`), items 1 to 9, and its ruling ADV-2026-11-23-02 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-02-the-console-one-test-code-commit-t1-and-the-override-the-mutations-as-patch-files-outside-the-repository.md`), which reads that ruling's items 5 and 7 and replaces them to that extent, both under the delegation of 2026-11-13. The architect's build gate, part 2, FAIL on Evidence only (`state/consults/gates/2026-11-22-console-stream-lane-build-gate-architect-part-2.md`, gate-log row 853). The failed gate stays FAIL in every record.
+
+**How the texts were copied.** Each old and new text below is copied by script, byte for byte, from the one-line fences of that gate report as filed on main: T1 to T4 from its section "Words for the form", rule W's phrases from its section 4. Each old text occurs exactly once in this form above this amendment, checked by script at main 08b4388ff15317d56c119993802c6afeda23f2ff; the line given with each is where it stands there. T1 to T4 are the gate's words. Rule W's two new phrases are the advisor's wording under the delegation of 2026-11-13 (ADV-2026-11-22-45 item 4), each also checked to occur in that ruling as quoted. None is the human's wording.
+
+**T1** (section 2.5, at line 261). Old:
+
+```text
+**R0, the first reading:** the label only, at `label0`'s position (`command-bar.mjs:479`), giving N₀, S₀ and O₀. R0 opens and clicks nothing.
+```
+
+New:
+
+```text
+**The fill, then R0, the first reading.** After card A's wait (`waitCommitted`) and before R0, one `page.evaluate` calls `document.querySelector(".console-disclosure").click()` 128 times, the suite's own DOM click (`command-bar.mjs:355-359`, `:385-386` at 12251bc8850127b72a9fb2b5fce63c33ef2d7075), never `page.click`: the Console sits in the Activity region, which E-CTRLK leaves closed as the app opens it (`command-bar.mjs:157`, `:176`; `frontends/shell/src/layout/layoutState.ts:51`). Each click records one `console.togglePanelExpanded` entry of the other kind (`ConsolePanel.tsx:80`) and flips the drawer (`:81`); 128 is even, so the drawer ends open, as card A's wait left it. The other ring then holds M at R0 whatever it held before, and with S₀ > 0 so does the stream ring: N₀ = 2M, the ordinary state (ADV-2026-11-22-24 item 1). R0 is the label only, read after the fill at `label0`'s position, giving N₀, S₀ and O₀; it opens and clicks nothing. The unmutated run records N₀; N₀ ≠ 2M with S₀ > 0 is a stop to the advisor (S11).
+```
+
+**T2** (section 4, at line 364). Old:
+
+```text
+M-G1 (test mutation): 200 clicks of `.console-disclosure`, inserted after the fill loop (`console.mjs:718-722`) and before the layer-tab click (`:723`). By arithmetic, R ≥ 200 > M, and ΔO > N_base − M, because 200 exceeds the stream ring's holding of at most M. The 200 clicks also evict the three style rows, so `pollConsole` returns not found; but the capacity check (`:733-736`) runs before the presence check (`:739`). Set {`GROUP': capacity:`}.
+```
+
+New:
+
+```text
+M-G1 (test mutation): one `page.evaluate` that calls `document.querySelector(".console-disclosure").click()` 200 times, the suite's own DOM click (`console.mjs:159-171` at 12251bc8850127b72a9fb2b5fce63c33ef2d7075), inserted after the fill loop (`:725-729`) and before the layer-tab click (`:730`); never `page.click`, because the Console sits in the Activity region, closed as the app opens it and never opened by this suite (`frontends/shell/src/layout/layoutState.ts:51`). Each click records one entry of the other kind (`ConsolePanel.tsx:80`) and flips the drawer (`:81`); 200 is even, so the drawer ends open. With h_o the other ring's holding at the baseline and room = N_base − M ≤ h_o (the stream ring holds at most M), dropO ≥ h_o + 203 − M > room, and R ≥ 203 > M. The clicks also evict the three style rows, so the presence poll ends not found after 5000 ms (`:72`); but the label check (`:740`) passes and the capacity check (`:746-750`) runs before the presence check (`:754`). Set {`GROUP': capacity:`}.
+```
+
+**T3** (section 4, at line 366). Old:
+
+```text
+**M-CB1** (test mutation): 200 clicks of `.console-disclosure`, inserted after R0 (`:479`) and before card B's `sendCondition` (`:480`). By arithmetic, a ≥ 200. ΔO = max(0, (N₀ − M) + a − M), which exceeds N₀ − M because a > M. Set {F2′}.
+```
+
+New:
+
+```text
+**M-CB1** (test mutation): one `page.evaluate` that calls `document.querySelector(".console-disclosure").click()` 200 times, inserted after R0 and before card B's `sendCondition` (`command-bar.mjs:465`, `:466` at 12251bc8850127b72a9fb2b5fce63c33ef2d7075); never `page.click`, for the reason the fill gives (§2.5). Each click records one entry of the other kind; 200 is even, so the drawer ends open. By arithmetic, a ≥ 200. ΔO = max(0, (N₀ − M) + a − M), which exceeds N₀ − M because a > M; S₀ > 0, so F7 (`:494`) is not reached first, and F2′ (`:496`) is thrown at the first kept reading. Set {F2′}.
+```
+
+**T4** (Amendment 1, section 1, at line 650). Old:
+
+```text
+**M-CB3:** `droppedOther` read as 0 in `collapsedCountSync.ts` and in `ConsolePanel`'s sync. Then ΔO reads 0, so a reads N₁ − N₀ (0 in the ordinary state, both rings full), and L = min(M, ΔS). The entries rendered after R0 are the stream entries still held and every other-kind entry recorded after R0, so the last L leave out the oldest of them, as many as there are other-kind entries. Card B's `record_step` is left out, and the set holds, when the held stream entries recorded after R0 and before it number no more than the other-kind entries recorded after it (R1's clicks among them); in the ordinary state, where card B's load adds more than M stream entries, that holds when the `record_step` is recorded before the oldest stream entry still held. By reading at 0f2078423378: the step is enqueued after the untiled request's issued outcome (`frontends/shell/src/App.tsx:394-395`, `:1072`) and recorded in the same call when no step is in flight (`frontends/shell/src/workspace/stepRecorder.ts:49-55`, `:69-75`; `frontends/shell/src/skp/client.ts:59`), and tiles are asked for only at that look's Completed terminal (`KNOWN-LIMITATIONS.md` item 67's comment). Set {F4 with n = 0}. The build checks the reading: the unmutated E-AND run records, from its final reading, ΔS, a and the number of held stream entries recorded after R0 and before card B's `record_step`; if that number is above 0, M-CB3 is not run as evidence and goes to the advisor as a possible pass case (ADV-2026-11-22-26 item 2); a pass of a run made is a finding.
+```
+
+New:
+
+```text
+**M-CB3:** `droppedOther` read as 0 in `collapsedCountSync.ts` and in `ConsolePanel`'s sync, run with §2.5's fill in place (both rings full at R0, N₀ = 2M). The label then shows O = 0 at both readings, so ΔO reads 0 while the true ΔO is a; a reads N₁ − N₀ = 0, since both rings stay full; and L = min(M, ΔS), so the last L rendered entries are the newest M of all held. Card B's `record_step` is among them only if fewer than M held entries are newer than it. In a run whose unmutated twin records ΔS ≥ M and no held stream entry recorded after R0 and before card B's `record_step` (run 3 at 12251bc8850127b72a9fb2b5fce63c33ef2d7075: ΔS = 223, 0), the M held stream entries are all newer than it, so added is empty; F2′ (0 ≤ N₀ − M) and F7 (S₀ > 0) are not reached, and after 30 s E-AND fails with F4, n = 0 (`command-bar.mjs:507`, `:489`). Set {F4 with n = 0}. A twin that records otherwise sends M-CB3 to the advisor unrun as evidence (ADV-2026-11-22-26 item 2); a pass of a run made is a finding. The run records its applied diff.
+```
+
+**Rule W, step 4, the first phrase** (section 6, at line 432). Old:
+
+```text
+in a window ⟨w⟩ by ⟨h⟩ pixels
+```
+
+New:
+
+```text
+with the page the app draws in set by the test to ⟨w⟩ by ⟨h⟩ pixels
+```
+
+**Rule W, step 4, the second phrase** (section 6, at line 432). Old:
+
+```text
+at the app's own window size, 1280 by 800
+```
+
+New:
+
+```text
+with the page set to 1280 by 800, the content area the app's window asks for when it opens, at 100% display scaling
+```
+
+Rule W's item also says, as the gate report does, that the device pixel ratio of the override is not recorded (ADV-2026-11-22-45 item 4).
+
+**P4 for GROUP', class 2 (ADV-2026-11-22-45 item 2).** Section 5's prediction P4 is recorded as wrong in its clause on the ordinary state, for GROUP', with no fill: GROUP' passes on its first branch, and a fill would not move it to the second. The closing says plainly that no run shows GROUP' in the ordinary state, and that no unmutated run passes by the capacity check's second branch, which is shown only from its failing side, by M-G1. For E-AND, T1's fill puts the unmutated run in the state that ADV-2026-11-22-24 item 1 speaks of, and M-CB3 differs from it by the mutation alone; that sentence is not claimed for GROUP'.
+
+**What is committed, and what is not (ADV-2026-11-23-02 items 1 and 2).** The worker's one test-code commit holds T1's fill in the unmutated step and the override cleared at the measurement's end as `layout.mjs` does it, and nothing else. The gate's note gives where: MEASURE' sets the override again at `console.mjs:1005`, where `layout.mjs:264` clears it (reading aids at 12251bc8). T2 and T3, and the M-CB3 mutation under T4, are never committed: the worker writes each as a patch file outside the repository, and the tester applies it for its run, records the applied diff, and reverts it (the gate's D2).
+
+**The table row and S6 (ADV-2026-11-22-45 item 3).** The table row runs again at the new head with the others. At that run the tester makes the oracle as `table.mjs`'s header says: the generator run into the tester's own folder, its printed counts recorded, its sha256 compared with the shared copy's. Run 12b's record stays as it is, with the gate's E4 beside it. S6, reached at run 12, is recorded with its cause: the launch left out a variable that the suite's README entry sets. It closes when the row passes at the new head, launched as that entry says, with the oracle sourced.
+
+**D1 and D2 (ADV-2026-11-22-45 item 6).** As the gate gives them: no record carries the tester's mechanism for runs 2 and 4, or for FIND'; the M-CB3 re-run records its applied diff. The pull request's body and this piece's records are read for any sentence saying that P2 is met, or that E-AND or GROUP' passed in the ordinary state, and each is corrected in the gate's words (its section 5) before the merge check.
+
+**The sequence (ADV-2026-11-22-45 item 7, as ADV-2026-11-23-02 item 3 reads it).** This amendment; the worker's one test-code commit; the reviewer's narrow read of that commit, with the recount of the lines (class 8 if over); the e2e rows again at the new head, M-G1, M-CB1, M-CB3, M-A4-1, M-A4-3, M-X2 and the table row among them, the mutations applied from their patch files; then the architect's narrow attempt, which reads each recorded applied diff against T2, T3 and T4, and each run against its named set.
+
+**The standing rule (ADV-2026-11-22-45 item 8).** From that ruling, a form or a gate that says a mutation has no known pass case names the recorded run, or the declared set-up, in which the mutated value differs from the true one; the ordinary state is not such a name unless a run shows the suite in it.
+
+**The merge.** After the tag; commit 4 after the sitting (ADV-2026-11-22-45 item 9).
+
+Read the last amendment first.
+
+Nothing above is edited.
