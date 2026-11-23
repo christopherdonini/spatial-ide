@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-23T13:11:48.923Z",
-  "plan_hash": "2c16d64cc5e8c6f91c29dbed236182693566c73660050d7a409b8eddfa55e426",
+  "generated_at": "2026-11-23T13:57:26.575Z",
+  "plan_hash": "5e355d4dbb1651decb60bb110cc8fc1c09ae6b8423cefdedd04931e6e43d0824",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -19,7 +19,7 @@
       "opened": "2026-11-16",
       "done": null
     },
-    "summary": "PLACED S3 2026-11-16, queued and paused for the week, by the advisor's ruling ADV-2026-11-16-06, item 1 (d) (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md). By the probes' filed report (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-probes-u1-u2-tester-report.md) no ordinary file reaches it: the export settings are at their defaults, and files of the three text types all describe and stream as plain text. What is left for the piece is the rule itself, which offers two types the decode refuses. Before: PROPOSED 2026-11-16, not placed: added as proposed by the advisor's ruling ADV-2026-11-16-01, item 5 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md); the custodian's records commit of that ruling named the node as added but did not write it to the plan, an omission put right here. Two read-only reads first, then the advisor grades and places it; no code before the placement (item 5 (a) to (c)). Both reads are filed: lead-data's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-lead-data.md) and the architect's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md). By the architect's reading the map fails as a whole if either type reaches the shell, with no refusal shown in the shipped tiled arm; by lead-data's, no shipped path emits either type while the bundled DuckDB exports text as plain Utf8, which reading cannot settle. The advisor's ruling ADV-2026-11-16-03 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-03-large-utf8-node-probes-u1-and-u2-by-a-tester-nothing-installed-s1-if-either-type-reaches-a-batch.md) orders the probes U1 and U2 by a tester as scratch probes, nothing installed; either setting on or either type in a batch is told at once and graded S1; otherwise the node is placed as a queued piece. Its two wider notes became the nodes shell-tiled-arm-stream-refusal-shown-to-the-user and dictionary-column-described-as-its-value-type-for-the-chooser (ADV-2026-11-16-04). Note, by the advisor's ruling ADV-2026-11-16-11, item 2 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-11-dictionary-column-node-closed-without-a-piece-its-premise-did-not-hold.md), at the closing of dictionary-column-described-as-its-value-type-for-the-chooser: the match-key rule judges by the described type alone, and the style-agreement data refuses a described dictionary type; by the probes no Parquet file read by this engine is described as a dictionary, as large text or as a text view; no other source was tried."
+    "summary": "PAUSE LIFTED FOR PREPARING 2026-11-23 (the human's message of 2026-11-23 items 3 (d) and 4; ADV-2026-11-23-15 items 2 and 7 (d)): the fourth gap piece; status unchanged. Before: PLACED S3 2026-11-16, queued and paused for the week, by the advisor's ruling ADV-2026-11-16-06, item 1 (d) (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md). By the probes' filed report (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-probes-u1-u2-tester-report.md) no ordinary file reaches it: the export settings are at their defaults, and files of the three text types all describe and stream as plain text. What is left for the piece is the rule itself, which offers two types the decode refuses. Before: PROPOSED 2026-11-16, not placed: added as proposed by the advisor's ruling ADV-2026-11-16-01, item 5 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md); the custodian's records commit of that ruling named the node as added but did not write it to the plan, an omission put right here. Two read-only reads first, then the advisor grades and places it; no code before the placement (item 5 (a) to (c)). Both reads are filed: lead-data's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-lead-data.md) and the architect's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md). By the architect's reading the map fails as a whole if either type reaches the shell, with no refusal shown in the shipped tiled arm; by lead-data's, no shipped path emits either type while the bundled DuckDB exports text as plain Utf8, which reading cannot settle. The advisor's ruling ADV-2026-11-16-03 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-03-large-utf8-node-probes-u1-and-u2-by-a-tester-nothing-installed-s1-if-either-type-reaches-a-batch.md) orders the probes U1 and U2 by a tester as scratch probes, nothing installed; either setting on or either type in a batch is told at once and graded S1; otherwise the node is placed as a queued piece. Its two wider notes became the nodes shell-tiled-arm-stream-refusal-shown-to-the-user and dictionary-column-described-as-its-value-type-for-the-chooser (ADV-2026-11-16-04). Note, by the advisor's ruling ADV-2026-11-16-11, item 2 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-11-dictionary-column-node-closed-without-a-piece-its-premise-did-not-hold.md), at the closing of dictionary-column-described-as-its-value-type-for-the-chooser: the match-key rule judges by the described type alone, and the style-agreement data refuses a described dictionary type; by the probes no Parquet file read by this engine is described as a dictionary, as large text or as a text view; no other source was tried."
   },
   "ready": [
     {
@@ -39,7 +39,7 @@
         "opened": "2026-11-16",
         "done": null
       },
-      "summary": "PLACED S3 2026-11-16, queued and paused for the week, by the advisor's ruling ADV-2026-11-16-06, item 1 (d) (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md). By the probes' filed report (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-probes-u1-u2-tester-report.md) no ordinary file reaches it: the export settings are at their defaults, and files of the three text types all describe and stream as plain text. What is left for the piece is the rule itself, which offers two types the decode refuses. Before: PROPOSED 2026-11-16, not placed: added as proposed by the advisor's ruling ADV-2026-11-16-01, item 5 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md); the custodian's records commit of that ruling named the node as added but did not write it to the plan, an omission put right here. Two read-only reads first, then the advisor grades and places it; no code before the placement (item 5 (a) to (c)). Both reads are filed: lead-data's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-lead-data.md) and the architect's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md). By the architect's reading the map fails as a whole if either type reaches the shell, with no refusal shown in the shipped tiled arm; by lead-data's, no shipped path emits either type while the bundled DuckDB exports text as plain Utf8, which reading cannot settle. The advisor's ruling ADV-2026-11-16-03 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-03-large-utf8-node-probes-u1-and-u2-by-a-tester-nothing-installed-s1-if-either-type-reaches-a-batch.md) orders the probes U1 and U2 by a tester as scratch probes, nothing installed; either setting on or either type in a batch is told at once and graded S1; otherwise the node is placed as a queued piece. Its two wider notes became the nodes shell-tiled-arm-stream-refusal-shown-to-the-user and dictionary-column-described-as-its-value-type-for-the-chooser (ADV-2026-11-16-04). Note, by the advisor's ruling ADV-2026-11-16-11, item 2 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-11-dictionary-column-node-closed-without-a-piece-its-premise-did-not-hold.md), at the closing of dictionary-column-described-as-its-value-type-for-the-chooser: the match-key rule judges by the described type alone, and the style-agreement data refuses a described dictionary type; by the probes no Parquet file read by this engine is described as a dictionary, as large text or as a text view; no other source was tried."
+      "summary": "PAUSE LIFTED FOR PREPARING 2026-11-23 (the human's message of 2026-11-23 items 3 (d) and 4; ADV-2026-11-23-15 items 2 and 7 (d)): the fourth gap piece; status unchanged. Before: PLACED S3 2026-11-16, queued and paused for the week, by the advisor's ruling ADV-2026-11-16-06, item 1 (d) (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-06-the-humans-directive-of-2026-11-16-put-in-force-focus-record-classes-runs-pieces-models-the-two-drafts-the-held-dispatches-go.md). By the probes' filed report (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-probes-u1-u2-tester-report.md) no ordinary file reaches it: the export settings are at their defaults, and files of the three text types all describe and stream as plain text. What is left for the piece is the rule itself, which offers two types the decode refuses. Before: PROPOSED 2026-11-16, not placed: added as proposed by the advisor's ruling ADV-2026-11-16-01, item 5 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-01-pr-327-the-two-p6-statements-one-colour-as-drafted-colour-by-one-clause-changed-the-node-added-not-placed-pr-326-lines-compared.md); the custodian's records commit of that ruling named the node as added but did not write it to the plan, an omission put right here. Two read-only reads first, then the advisor grades and places it; no code before the placement (item 5 (a) to (c)). Both reads are filed: lead-data's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-lead-data.md) and the architect's (state/consults/2026-11-16-large-utf8-and-utf8-view-attribute-columns-read-architect.md). By the architect's reading the map fails as a whole if either type reaches the shell, with no refusal shown in the shipped tiled arm; by lead-data's, no shipped path emits either type while the bundled DuckDB exports text as plain Utf8, which reading cannot settle. The advisor's ruling ADV-2026-11-16-03 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-03-large-utf8-node-probes-u1-and-u2-by-a-tester-nothing-installed-s1-if-either-type-reaches-a-batch.md) orders the probes U1 and U2 by a tester as scratch probes, nothing installed; either setting on or either type in a batch is told at once and graded S1; otherwise the node is placed as a queued piece. Its two wider notes became the nodes shell-tiled-arm-stream-refusal-shown-to-the-user and dictionary-column-described-as-its-value-type-for-the-chooser (ADV-2026-11-16-04). Note, by the advisor's ruling ADV-2026-11-16-11, item 2 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-11-dictionary-column-node-closed-without-a-piece-its-premise-did-not-hold.md), at the closing of dictionary-column-described-as-its-value-type-for-the-chooser: the match-key rule judges by the described type alone, and the style-agreement data refuses a described dictionary type; by the probes no Parquet file read by this engine is described as a dictionary, as large text or as a text view; no other source was tried."
     },
     {
       "id": "lod-tier-test-sweep-keeps-lock-until-folder-removed",
@@ -211,6 +211,25 @@
         "done": null
       },
       "summary": "PLACED S3 2026-11-15 as filler entry 18, after the current entries, by the advisor's ruling ADV-2026-11-15-13 (state/directives/2026-11-15-advisor-ruling-adv-2026-11-15-13-shell-e2e-publish-audit-log-follows-app-dirs-filler-18-s3-budget-30-the-whole-boundary-table-the-windows-row-included.md), budget 30, its lane kept, no dependency. It changes resolveAuditLogPath and its doc comment in frontends/shell/e2e/publish.mjs, nothing else: the function follows the boundary table in engine/src/app_dirs.rs, every row, LOCALAPPDATA on Windows, HOME under Library/Application Support on macOS, XDG_DATA_HOME then HOME under .local/share on other Unix, a value counting only when non-empty and absolute; that takes in the Windows row, which the first title left out (item 3 (b)). The override SPATIAL_IDE_AUDIT_LOG stays first and unchanged, and no row resolving stays an error naming no fallback path. Ordinary form and gating; the form says how the change is proved on Windows, an OPEN item on that to the advisor; it may not claim that the publish suite runs or passes off Windows. The first piece to run the publish suite off Windows gains this node in its depends_on. Skipped while PR B changes publish.mjs (rule (00)). From the reviewer gate of port-2, its O1."
+    },
+    {
+      "id": "shell-migration-milestone-5",
+      "title": "Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "ready",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-10-07",
+        "done": null
+      },
+      "summary": "FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (c); ADV-2026-11-23-15 item 7 (c)): drafted by the architect from section 9 of the migration plan, full form and both gates, a split proposed if it is larger than one piece. Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 9, bounded): typed conditions (seam 8), the attention strip with the most urgent condition, a Problems tab and a Jobs tab; after milestone 4 (b1-shell-half). Proposed."
     },
     {
       "id": "advisor-session-merges-under-the-humans-rule",
@@ -415,6 +434,28 @@
       "summary": "WORDS RULED 2026-11-11 by the human's message of 2026-11-11 (17:25Z) (state/directives/2026-11-11-adr-035-and-adr-029-notes-in-the-humans-words-table-as-consult-s3-waiting-on-you-open-questions.md), item 2: the appended note, its heading and its italic line are the human's words, and the ADR stays Proposed; the custodian's table of current lines is filed beside it as a consult, not in the ADR. Its place in the docs lane is unchanged, after module-docs-drift-sweep-area-d. Before: PLACED 2026-11-05 (evening) by the human's ruling (state/directives/2026-11-05-8c-full-form-nine-s2-placed-u12-slot-2-u1-reproducer-adr-notes-words-e2e-readme-words-8b-d3.md, item 2): the docs lane, 7 of 7, last. The note stays the human's typed words; the custodian's table of current lines at its turn, for the human's sight. Before: PROPOSED 2026-11-05 by the custodian, graded S2, from the docs-audit triage (state/consults/2026-11-05-docs-audit-task-c-unpinned-cites-triage-architect.md, rows 56 to 73, and state/consults/2026-11-05-docs-audit-tasks-a-b-triage-architect.md, Task B): confirmed by reading on main: ADR-029's cites for the mint site, the cancel parser, the ticket state and the no-wildcard rule now land on other code, and its four line cites into the admission form at its old path land on other rules; the custodian's earlier finding (its cite into SKP-V0.md for the cancel states, now at another line) is the same class. When the route is built (decision-adr-029-scan-progress-route, unscheduled) an implementer following them acts on the wrong text. ADR text is the human's: the fix is a dated note in the human's typed words, or the cites restated when the human takes up the decision; the custodian can supply a table of current lines for the human's sight. Placement the human's.",
       "blocked_by": [
         "module-docs-drift-sweep-area-d"
+      ]
+    },
+    {
+      "id": "b2-piece-1c-step-3-recovery-offer",
+      "title": "B2 piece 1c step 3 -- the recovery offer after a crash, split from b2-piece-1c-save-and-reopen; not in v0.2",
+      "lane": "kernel-protocol",
+      "phase": "prototype",
+      "status": "blocked",
+      "order": null,
+      "budget_minutes": 0,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-16",
+        "done": null
+      },
+      "summary": "FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (b); ADV-2026-11-23-15 item 7 (b)): a form of its own under governance/forms/kernel/, drafted by lead-data, full form and both gates; the build is placed by the advisor after the form's gate. Before: NOTE 2026-11-19 (ADV-2026-11-19-05 item 9, note 4): this step's form states what it does with an identity's folder in the machine store that no project file names; a first save refused after the lock leaves one, with its open.lock. CARRIES 2026-11-16, by the advisor's ruling ADV-2026-11-16-20 item 7 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-20-the-humans-five-approvals-s1-joins-v0-2-entry-79-at-the-sitting-on-a-condition-what-follows-from-each.md): the declared item of ADV-2026-11-16-16 item 2 (b), the session history's own writer of locations.json. Before: SPLIT 2026-11-16 from b2-piece-1c-save-and-reopen by the human's approval of ADV-2026-11-16-07 item 1 (b) (state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md) and the form's Amendment 32: the form's step 3, the recovery offer after a crash, under the same form; it is not in v0.2. KNOWN-LIMITATIONS item 43 stays as it is.",
+      "blocked_by": [
+        "b2-piece-1c-save-and-reopen"
       ]
     },
     {
@@ -859,6 +900,28 @@
       },
       "summary": "ARCHITECT BUILD GATE FAIL 2026-11-22 (gate-log row 852), words only: two pushed commit subjects, superseded in the PR body under AUTONOMY.md section 31 item d; a KM1 run recording HEAD and the diff before the closing amendment; the merge request after the tag. Before: REVIEWER BUILD GATE FAIL 2026-11-22 (gate-log row 851), words only: R1 to R4 applied as C4 (8d1f2f4e) under AUTONOMY.md section 31 item d, no re-gate; the architect build gate running at that head. Before: BUILT 2026-11-22 (C1 to C3, head 3755df81), draft PR 360; the reviewer build gate running. Before: FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 848); the build dispatched on cut/describe-failed-close. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 FILED 2026-11-22: E-1, E-2, D-1 to D-4 and the bound on the awaited close (ADV-2026-11-22-38, -39), a ceiling of 270 lines (class 9); attempt 2 on it alone next. Before: FORM GATE ATTEMPT 1 FAIL 2026-11-22 (E-1, E-2; D-1 to D-4), state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-form-gate-architect.md; OPEN-2 to OPEN-6 ruled as recommended (ADV-2026-11-22-35); Amendment 1 waits for the architect reading on what bounds the awaited close (item 4); then attempt 2. Before: FORM COMMITTED 2026-11-22: governance/forms/frontends/DESCRIBE-FAILS-AFTER-OPENED-CLOSES-THE-HANDLE-PREREGISTRATION.md, full, both gates, drafted by lead-data, standing as the form by ADV-2026-11-22-32 item 1; next its architect form gate; the merge waits for the tag (ADV-2026-11-21-15 item 1).",
       "evidence_label": "branch `cut/describe-failed-close`"
+    },
+    {
+      "id": "relink-after-refusal-at-the-recorded-place",
+      "title": "After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "in-progress",
+      "order": null,
+      "budget_minutes": 300,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": {
+        "branch": "cut/relink-after-refusal"
+      },
+      "dates": {
+        "opened": "2026-11-22",
+        "done": null
+      },
+      "summary": "BUILDING 2026-11-23 (the human's message of 2026-11-23 item 3 (a); ADV-2026-11-23-15 items 4 and 7 (a)): on base 0f02c164, main 0bcf5434 with the heads of PR 353, PR 358 and PR 359 taken in by merge commits; the form's Amendment 3; the worker dispatched; no run from 05:00Z on 2026-11-24 to the end of the sitting; the merge after the tag and after its bases. Before: AMENDMENT 2 ON MAIN 2026-11-23 (form gate attempt 2 PASS WITH NOTES, N-1 to N-4; ADV-2026-11-22-44 items 4 and 5 whole, ADV-2026-11-23-01 item 6); its code after the tag. Before: FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 854): Amendment 2 next, N-1 to N-4 with ADV-2026-11-22-44 items 4 and 5 by script (ADV-2026-11-23-01 item 6); code after the tag. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 APPENDED 2026-11-22 (ADV-2026-11-22-44); the form gate attempt 2 on it alone next. Before: RULED 2026-11-22 (ADV-2026-11-22-44): S12 and the piece's other words, OPEN-1 to OPEN-9; Amendment 1, then the form gate attempt 2 on it alone; the code starts when PR 353 and PR 359 are on main, after the tag. Before: FORM GATE FAIL 2026-11-22 (gate-log row 850): C-1, E-1 and D-1 to D-9 for an amendment; S12 words and OPEN-1 to OPEN-9 to the advisor. Before: FORM GATE RUNNING 2026-11-22 (architect, at main be11bd98). Before: FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag.",
+      "evidence_label": "branch `cut/relink-after-refusal`"
     },
     {
       "id": "command-bar-enter-after-an-applied-result",
@@ -1838,25 +1901,6 @@
       "summary": "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5, OPEN-7 (c)): out of milestone 3 and into a node of its own, with (a)'s shape as drafted in milestone 3's form (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, 2.8's OPEN-7 (a) part, 7's SC row and constants, row Y12): one read-only WorkingCanvasHandle method (a fourth exception under canvas/), a pure scaleBar.ts, a length in {1, 2, 5} times a power of ten in CRS units, shown only for a metre dataset, never as a ratio and never as distance on the ground. The human places it later."
     },
     {
-      "id": "shell-migration-milestone-5",
-      "title": "Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-10-07",
-        "done": null
-      },
-      "summary": "Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 9, bounded): typed conditions (seam 8), the attention strip with the most urgent condition, a Problems tab and a Jobs tab; after milestone 4 (b1-shell-half). Proposed."
-    },
-    {
       "id": "shell-real-app-run-macos-linux",
       "title": "Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds",
       "lane": "platform",
@@ -1874,25 +1918,6 @@
         "done": null
       },
       "summary": "ADDED 2026-10-12 by the human's OPEN-15 (B) ruling (state/directives/2026-10-12-round-72-217-third-round-open-13-to-open-15.md): check on macOS and Linux that the tap's pixel, by the rule Amendment 15 item 1 adopts (the tap event's own client coordinates truncated, less the canvas rect and border, over drawn / layout size; `tapPixel` in clickPick.ts), agrees with the hover's (claimed for WebView2 Edg/154.0.4258.62 at device pixel ratios 1, 1.25 and 1.5, Amendment 16 item 3). Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 5.7 and section 13, item 8; the portability directive of 2026-09-30, its section 5): a follow-on of milestone 1 that does not hold milestone 2. Proposed."
-    },
-    {
-      "id": "b2-piece-1c-step-3-recovery-offer",
-      "title": "B2 piece 1c step 3 -- the recovery offer after a crash, split from b2-piece-1c-save-and-reopen; not in v0.2",
-      "lane": "kernel-protocol",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 0,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-16",
-        "done": null
-      },
-      "summary": "NOTE 2026-11-19 (ADV-2026-11-19-05 item 9, note 4): this step's form states what it does with an identity's folder in the machine store that no project file names; a first save refused after the lock leaves one, with its open.lock. CARRIES 2026-11-16, by the advisor's ruling ADV-2026-11-16-20 item 7 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-20-the-humans-five-approvals-s1-joins-v0-2-entry-79-at-the-sitting-on-a-condition-what-follows-from-each.md): the declared item of ADV-2026-11-16-16 item 2 (b), the session history's own writer of locations.json. Before: SPLIT 2026-11-16 from b2-piece-1c-save-and-reopen by the human's approval of ADV-2026-11-16-07 item 1 (b) (state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md) and the form's Amendment 32: the form's step 3, the recovery offer after a crash, under the same form; it is not in v0.2. KNOWN-LIMITATIONS item 43 stays as it is."
     },
     {
       "id": "verify-quotes-dotted-paths",
@@ -2311,25 +2336,6 @@
         "done": null
       },
       "summary": "A FINDING BY READING 2026-11-22, minor until shown otherwise; placed after the tag by ADV-2026-11-22-38 item 6. The kernel close joins the open watch threads, which end when the operating system completes each cancelled directory read, and drops the dataset, whose idle DuckDB connections then close in a section this code does not bound. By Tauri documentation, not read in this repo, a command declared without async runs on the main thread, and the close binding is one. No one has seen it stall. Source: state/consults/2026-11-22-describe-fails-after-opened-closes-the-handle-open-3-bound-architect.md, and Amendment 1 item 5 of node describe-fails-after-opened-closes-the-handle."
-    },
-    {
-      "id": "relink-after-refusal-at-the-recorded-place",
-      "title": "After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73)",
-      "lane": "shell",
-      "phase": "prototype",
-      "status": "proposed",
-      "order": null,
-      "budget_minutes": 300,
-      "needs_human": {
-        "kind": "none",
-        "minutes": 0
-      },
-      "evidence": null,
-      "dates": {
-        "opened": "2026-11-22",
-        "done": null
-      },
-      "summary": "AMENDMENT 2 ON MAIN 2026-11-23 (form gate attempt 2 PASS WITH NOTES, N-1 to N-4; ADV-2026-11-22-44 items 4 and 5 whole, ADV-2026-11-23-01 item 6); its code after the tag. Before: FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-22 (gate-log row 854): Amendment 2 next, N-1 to N-4 with ADV-2026-11-22-44 items 4 and 5 by script (ADV-2026-11-23-01 item 6); code after the tag. Before: FORM GATE ATTEMPT 2 RUNNING 2026-11-22, on Amendment 1 alone. Before: AMENDMENT 1 APPENDED 2026-11-22 (ADV-2026-11-22-44); the form gate attempt 2 on it alone next. Before: RULED 2026-11-22 (ADV-2026-11-22-44): S12 and the piece's other words, OPEN-1 to OPEN-9; Amendment 1, then the form gate attempt 2 on it alone; the code starts when PR 353 and PR 359 are on main, after the tag. Before: FORM GATE FAIL 2026-11-22 (gate-log row 850): C-1, E-1 and D-1 to D-9 for an amendment; S12 words and OPEN-1 to OPEN-9 to the advisor. Before: FORM GATE RUNNING 2026-11-22 (architect, at main be11bd98). Before: FORM COMMITTED 2026-11-22 from lead-data draft (state/consults/2026-11-22-relink-after-refusal-at-the-recorded-place-lead-data-draft.md); its form gate next. Its code waits for the merges of PR 353 (protocol/) and PR 359 (e2e/reopen.mjs), both after the tag."
     }
   ],
   "unscheduled": [

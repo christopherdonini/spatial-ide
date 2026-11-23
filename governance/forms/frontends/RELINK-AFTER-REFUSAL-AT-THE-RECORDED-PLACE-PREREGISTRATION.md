@@ -729,3 +729,18 @@ A data file that you choose after a refusal for a missing file (item 73) is open
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — 2026-11-23 — the code starts now, on a base that holds the heads of PR 353, PR 358 and PR 359 (the human's message of 2026-11-23 item 3 (a); ADV-2026-11-23-15 items 4 and 7 (a))
+
+*Written by the custodian, 2026-11-23, before any of the piece's code. References and hashes only. Nothing below is a quotation.*
+
+1. **Authority.** The human's message of 2026-11-23, item 3 (a), filed at `state/directives/2026-11-23-the-humans-message-never-idle-product-first-what-to-build-now-the-pauses-lifted-for-product-pieces-what-does-not-change.md`; and the advisor's ruling ADV-2026-11-23-15, items 3, 4 and 7 (a), under the delegation of 2026-11-13, filed at `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-15-the-humans-message-filed-the-relink-built-now-on-three-held-heads-two-forms-now-the-gap-pieces-the-sitting-hour.md`. By that ruling's item 3, ADV-2026-11-22-44 item 8 is overturned by the human: the code no longer waits for the tag. Amendment 1 item 4's OPEN-6 sentence and Amendment 2's opening sentence on when the code starts are read with this amendment. The merge still waits for the tag, and for PR 353, PR 358 and PR 359 on main (ADV-2026-11-23-15 item 5).
+2. **The base.** Branch `cut/relink-after-refusal`. Its base is 0f02c164e070960c326573560815f2eb0a880684: main at 0bcf543452af79df6251cc7d86ab9f2cf644fcc2, then three merge commits, in the merge order, taking in the head of PR 353 (09ce1dfe8d6b05f2910ec9278c08a6839f55da36, by 083858308b99a807741751cbd2815305e85703a0), of PR 358 (7a3fd37b22bd43ab48fba8aa465fc7bf1b1cb2fd, by 61b35603a33d31b7aae95f8e77c23ad50a50e04d) and of PR 359 (8b8c38815a5fbc1e41e392366784a7c1c51a5783, by 0f02c164e070960c326573560815f2eb0a880684). Each merge was clean. The base differs from main by the union of the three PRs' files and nothing else (24 files, compared by script). PR 353 counts by rule (00), since both touch `protocol/`; PR 358 by `KNOWN-LIMITATIONS.md`; PR 359 by `frontends/shell/e2e/reopen.mjs` and `frontends/shell/e2e/README.md`.
+3. **The piece's range.** The piece's own diff is 0f02c164e070960c326573560815f2eb0a880684...head. Section 7's size and file list, section 4's mutations, and both gates are read on that range; section 7's counting command is read with that range in place of the merge base. Section 7 is not edited.
+4. **Block-on-sight item 13** (Amendment 1, D-2) is read as: a base that does not hold the heads of PR 353, PR 358 and PR 359 (ADV-2026-11-23-15 item 7 (a)).
+5. **A held head that moves.** If a base PR's head moves (PR 359's commit 4 is due after the sitting), the branch takes the new head in by a merge commit, and the reviewer reads once, narrowly, whether the piece's own lines or tests are affected (ADV-2026-11-23-15 item 4). If the human drops or changes a base PR, the piece goes to the advisor.
+6. **No run from 05:00Z on 2026-11-24** until the human says the sitting is over (ADV-2026-11-23-15 item 9). A run still going then is stopped by its own agent and recorded as not finished.
+
+Read the last amendment first.
+
+Nothing above is edited.

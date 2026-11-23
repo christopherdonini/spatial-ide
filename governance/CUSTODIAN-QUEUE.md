@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `2c16d64cc5e8c6f91c29dbed236182693566c73660050d7a409b8eddfa55e426`) at `2026-11-23T13:11:48.923Z`.
+Generated from `PLAN.yaml` (sha256 `5e355d4dbb1651decb60bb110cc8fc1c09ae6b8423cefdedd04931e6e43d0824`) at `2026-11-23T13:57:26.575Z`.
 
 ## 1. Next
 
@@ -18,6 +18,7 @@ Generated from `PLAN.yaml` (sha256 `2c16d64cc5e8c6f91c29dbed236182693566c7366005
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (lane `shell`, order null, budget 0 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
+- **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (lane `shell`, order null, budget 0 min)
 - **advisor-session-merges-under-the-humans-rule** — The advisor session merges the custodian PRs that pass their gates, under the human rule of 2026-11-13, from their message advisor live: the merge request, the advisor merge check and verdict, the verdict filed as a consult, the revert PR after a red main, the two-hour fallback to the human; AUTONOMY section 9 and ruling 25 poll changed with it (the governance lane; S3 by the custodian) (lane `governance`, order null, budget 120 min)
 - **site-waiting-on-you-lists-open-questions** — The site's Waiting on you also lists an in-progress node carrying an open question for the human, set by the custodian when a running piece stops for the human's ruling and cleared when the human answers (lane `governance`, order null, budget 45 min)
 - **macos-normalization-roots-uncanonicalized** — On macOS the audit log normalization roots are read uncanonicalized while recorded destinations are canonicalized, so a symlinked temporary-directory root never matches (lane `platform`, order null, budget 30 min)
@@ -36,6 +37,7 @@ Generated from `PLAN.yaml` (sha256 `2c16d64cc5e8c6f91c29dbed236182693566c7366005
 ## 4. Blocked on dependencies
 
 - **adr-029-stale-line-cites** — ADR-029 (Proposed, unbuilt): its line cites into the code and the admission form land on other text, so an implementer of the scan-progress route would follow them to the wrong places (the docs audits, Task C rows 56 to 73 and Task B) — blocked by: module-docs-drift-sweep-area-d
+- **b2-piece-1c-step-3-recovery-offer** — B2 piece 1c step 3 -- the recovery offer after a crash, split from b2-piece-1c-save-and-reopen; not in v0.2 — blocked by: b2-piece-1c-save-and-reopen
 - **docs-02-adr-017-entry-current** — docs/02's ADR-017 entry brought current with every appended section (the ADR-017 note's OPEN-4 (c), S4, the docs lane last) — blocked by: sitting-wording-n1-to-n7, adr-029-stale-line-cites
 - **fixture-determinism-off-windows-record** — kernel/FIXTURES.md on determinism (byte-identical on one machine, different across platforms, with the Linux sizes and hashes), and the G5 entry point gains the hash check the S entry point has — blocked by: posix-backslash-is-inside-and-redaction-label
 - **module-docs-drift-sweep-area-d** — Kernel and engine module docs: the never-refuses and unreachable claims the Table, record_step and publish have overtaken, the withdrawn cancellation bound, and smaller statements (drift sweep area D, findings 1 to 6) — blocked by: b2-piece-1c-save-and-reopen
@@ -59,6 +61,7 @@ Generated from `PLAN.yaml` (sha256 `2c16d64cc5e8c6f91c29dbed236182693566c7366005
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
 - **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) — evidence: branch `cut/describe-failed-close`
+- **relink-after-refusal-at-the-recorded-place** — After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73) — evidence: branch `cut/relink-after-refusal`
 - **command-bar-enter-after-an-applied-result** — An Enter that lands after an applied filter result and before its render puts the applied text back in the command bar, can show the busy line with nothing pending, and leaves later presses refused (the held-Enter finding, ADV-2026-11-23-11 item 5) — evidence: branch `cut/command-bar-enter-after-applied`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 
@@ -115,9 +118,7 @@ Generated from `PLAN.yaml` (sha256 `2c16d64cc5e8c6f91c29dbed236182693566c7366005
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
 - **shell-native-menus-macos** — Native application menus on macOS, built from the action registry (milestone 3's OPEN-6, deferred) (phase `prototype`) — never queued until placed
 - **shell-scale-display** — The scale display in the status bar: a bar of a round length in the CRS's unit, shown only for a metre dataset (milestone 3's OPEN-7, deferred) (phase `prototype`) — never queued until placed
-- **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (phase `prototype`) — never queued until placed
 - **shell-real-app-run-macos-linux** — Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds (phase `prototype`) — never queued until placed
-- **b2-piece-1c-step-3-recovery-offer** — B2 piece 1c step 3 -- the recovery offer after a crash, split from b2-piece-1c-save-and-reopen; not in v0.2 (phase `prototype`) — never queued until placed
 - **verify-quotes-dotted-paths** — verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked (phase `prototype`) — never queued until placed
 - **publish-dev-hook-attempt-from-effect** — The export panel's publishExecute dev hook reads the current attempt from a passive effect, so an execute sent as soon as the prepare answers can return unknown-attempt with no host call (the e2e export steps under load) (phase `prototype`) — never queued until placed
 - **lod-tiers-geographic-crs** — LOD tiers for a geographic CRS -- its own preregistered gate, owed by the LOD form's amendment (phase `prototype`) — never queued until placed
@@ -140,7 +141,6 @@ Generated from `PLAN.yaml` (sha256 `2c16d64cc5e8c6f91c29dbed236182693566c7366005
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
-- **relink-after-refusal-at-the-recorded-place** — After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
