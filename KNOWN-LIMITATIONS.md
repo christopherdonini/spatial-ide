@@ -280,18 +280,20 @@ header above describes. They move into the next release's list when that release
 20. **A partitioned source is refused; only a single file is admitted — including a single file whose
     own path contains `[`, `]`, `{` or `}`, but not one whose path contains `*` or `?`.** A
     directory of Parquet parts is a real dataset this engine will not admit, refused by name before
-    anything is read (code `engine.identity_ordinal_partitioned_unsupported`): *"refused: this source
-    is partitioned across more than one file (`<detail>`), and session identity is a row's position
-    within one file. Open a single file, or declare an identity column that is carried in the
-    data"*. The same code and message are reached by a path that contains `*` or `?`, whether or not
-    a file exists at it, and by a path that contains `[`, `]`, `{` or `}` at which no file exists —
-    read as naming a pattern rather than one file — with `<detail>` naming the metacharacter found.
+    anything is read (code `engine.identity_ordinal_partitioned_unsupported`): *"[P6 placeholder]
+    refused: this path is read as a folder or a pattern, not as one file (`<detail>`). This engine
+    opens a single file only, and it refuses such a path before reading it, whether or not an
+    identity column is declared"*. Declaring an identity column does not change this: the refusal
+    comes before any identity is read. The same code and message are reached by a path that contains
+    `*` or `?`, whether or not a file exists at it, and by a path that contains `[`, `]`, `{` or `}`
+    at which no file exists — read as naming a pattern rather than one file — with `<detail>`
+    naming the metacharacter found.
     A path that contains `[`, `]`, `{` or `}` and is an existing file is opened as that one file.
     This was observed on Windows, with the DuckDB the build bundles; it is not claimed for a
     bracket in the first component of an absolute path on Linux, for a path whose letter case
     differs from the directory listing's in a component that holds a bracket on Windows, or for
     what is read if the file is removed between the existence check and DuckDB's read.
-    <!-- engine/src/dataset.rs, `open_inner`'s gate and `partitioned_source_detail`'s doc (the five steps and what step 0 observed), and `duckdb_literal_path`; governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md Amendment 1 (what step 0 observed and the bounds); engine/src/error.rs:383-388 @ 4fd3259a3e274dbc1f0a9c3ad72d168096a20e23 sha256:26ebfe880888e518236a7338f573806b639a7a585a25aa1612b4217c48fdf6d4 (the Display); kernel/src/skp.rs:2092-2095 @ 4fd3259a3e274dbc1f0a9c3ad72d168096a20e23 sha256:071d32c0539426e6222c45f08077e7ac1745f9c7c439809e419b72cea51c5beb (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9 -->
+    <!-- engine/src/dataset.rs, `open_inner`'s gate and `partitioned_source_detail`'s doc (the five steps and what step 0 observed), and `duckdb_literal_path`; governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md Amendment 1 (what step 0 observed and the bounds); engine/src/error.rs, the IdentityOrdinalPartitionedUnsupported arm of the Display (by path and symbol, unpinned: the build base holds the old text); kernel/src/skp.rs:2092-2095 @ 4fd3259a3e274dbc1f0a9c3ad72d168096a20e23 sha256:071d32c0539426e6222c45f08077e7ac1745f9c7c439809e419b72cea51c5beb (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9. Whose words: the quoted message is the engine's Display text under the placeholder mark, D1 of governance/forms/frontends/PARTITIONED-ORDINAL-REFUSAL-OPENS-THE-IDENTITY-FORM-PREREGISTRATION.md, and the sentence after it is that form's D3, the worker's draft until the advisor words it (OPEN-5); neither is the human's wording -->
 
 21. **A dataset in degrees cannot be published.** The bundled viewer has no degrees path — it renders
     in the dataset's own CRS, and this shell's degrees display is a view-time convention a static

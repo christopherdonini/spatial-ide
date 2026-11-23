@@ -175,6 +175,10 @@ describe("refusalGuidance for Brief A P3's new states", () => {
   // identity column."). Expected failure: "engine.identity_ordinal_partitioned_unsupported: names
   // the single-file route and no declaration" fails at its second assertion -- an operator would be
   // offered a declaration that cannot help, because the refusal comes before any identity is read.
+  // RECORDED MUTATION (observed at `2b90ed511f119052d752c849c7507ba59218cf39`):
+  // the case's text ended "Open a single file, or declare an identity column." instead. Observed
+  // outcome: this test fails by name at its second assertion (`expected '[P6 placeholder] This app
+  // cannot open…' not to contain 'or declare an identity column'`).
   it("engine.identity_ordinal_partitioned_unsupported: names the single-file route and no declaration", () => {
     const guidance = refusalGuidance("engine.identity_ordinal_partitioned_unsupported");
     expect(guidance).not.toBeNull();
@@ -188,6 +192,9 @@ describe("refusalGuidance for Brief A P3's new states", () => {
   // would offer the declaration form whose submit sends the same path and is refused again. A guard,
   // green before the fix: a prior family is carried forward by `nextFormFamily`, which this does not
   // cover.
+  // RECORDED MUTATION (observed at `2b90ed511f119052d752c849c7507ba59218cf39`):
+  // `formFamilyForCode` in `AdmissionPanel.tsx` also returning "identity" for this code. Observed
+  // outcome: this test fails by name at its first assertion (`expected 'identity' to be null`).
   it("engine.identity_ordinal_partitioned_unsupported: opens no form", () => {
     const code = "engine.identity_ordinal_partitioned_unsupported";
     expect(formFamilyForCode(code)).toBeNull();
