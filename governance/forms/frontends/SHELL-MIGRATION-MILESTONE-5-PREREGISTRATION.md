@@ -1780,3 +1780,29 @@ and in the real app by C-E2. The save-notice route's batch is proven from the re
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 8 — 2026-11-23 — the custodian's: S-5 and its {n}, as ADV-2026-11-23-30 rules them
+
+*Written by the custodian before PR A's code, as the advisor's ruling ADV-2026-11-23-30 item 4 asks (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-30-milestone-5-strings-s-1-to-s-13-and-kl-a-to-kl-e-worded-s-5-counts-occurrences-recorded-before-pr-a.md`). It is a string and its number, so no further attempt of the form's gate is asked (that item). It words nothing of its own: the New text is the Old text with that ruling's S-5 and its definition of `{n}`.*
+
+1. **S-5.** The Old text occurs once in the form above this amendment, and the New text nowhere.
+
+Old:
+
+````text
+| S-5 | `[P6 placeholder] Raised again {n} times. The latest:` | ConditionView, when `occurrences > 1`; `{n}` is `occurrences − 1` (ADV-2026-11-23-17 item 9) |
+````
+
+New:
+
+````text
+| S-5 | `[P6 placeholder] Raised {n} times in all. The latest:` | ConditionView, when `occurrences > 1`; `{n}` is `occurrences` (ADV-2026-11-23-30 item 1, which replaces the definition of ADV-2026-11-23-17 item 9) |
+````
+
+2. The line is shown when `occurrences > 1`, so `{n}` is 2 or more (that ruling's item 1). The placeholder mark stays as the form has it. The other strings and KL-A to KL-E are built in that ruling's words; the build's gates check each clause by clause against the code, and the advisor compares each byte for byte at the merge check (its item 4).
+
+3. Next: PR A, built on colour-by-refill's head by a merge commit once that branch's commit 5 is pushed and green (ADV-2026-11-23-25 item 1, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-25-pr-a-on-colour-by-refills-head-item-11-refined-records-commits-in-the-sitting-with-the-read-only-checks.md`). Nothing of it builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
