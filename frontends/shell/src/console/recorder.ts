@@ -22,18 +22,20 @@
  * Zero DOM, zero React: this module imports nothing from either, matching `docs/02`'s
  * clients-only rule for anything that isn't UI.
  *
- * Imports `RecordableName` (a type only) from `./surfaceRegistry` -- reviewer gate S3
- * (action-console P7 fixes): `recordNamed`'s `name` parameter is typed against that literal
- * union rather than `string`, so a computed/template-string name fails `tsc`, not merely a
- * review. Type-only, so this is not a runtime dependency and does not create an import cycle
- * with `surfaceRegistry.ts` (which imports nothing from this module, or anywhere else).
+ * Imports `RecordableName` (a type) and `isStreamLaneName` (a function) from `./surfaceRegistry`.
+ * `RecordableName` -- reviewer gate S3 (action-console P7 fixes): `recordNamed`'s `name` parameter
+ * is typed against that literal union rather than `string`, so a computed/template-string name
+ * fails `tsc`, not merely a review. `isStreamLaneName` is the one runtime import: it says which
+ * ring an entry belongs in (known limitation 67), read from the registry's own marked rows, so the
+ * recorder keeps no list of names. `surfaceRegistry.ts` imports nothing from this module, or
+ * anywhere else, so neither import creates a cycle.
  */
 
 /** A caller-declared refusal -- the shape already carried by `SkpError` (`skp/client.ts`,
  * `skp/types.ts`): a stable code, a human message, and named fields. Kept as its own type here
  * rather than importing `SkpError` so this module has zero dependency on the SKP wire types --
  * P1/P2 (class B/C entries) will not need to know what an `SkpError` is to add a new `kind`. */
-import type { RecordableName } from "./surfaceRegistry";
+import { isStreamLaneName, type RecordableName } from "./surfaceRegistry";
 
 export interface ConsoleRefusal {
   code: string;
@@ -130,15 +132,55 @@ export function isGuiActionEntry(entry: ConsoleEntry): entry is GuiActionEntry {
   return entry.kind === "gui-action";
 }
 
-/**
- * A session's working set, not a log: the recorder is a bounded ring, not an unbounded history.
- * 256 entries is a fixed count, not a duration -- ADR-018's discipline applied to this comment,
- * not only to a cancellation figure: how long 256 entries lasts depends entirely on how often the
- * operator acts, so no minute estimate is claimed here, true or otherwise. What IS true by
- * construction: the ring never blocks, never grows past 256, and never silently truncates -- the
- * oldest entry is dropped on overflow and every drop is counted, see `droppedCount()`.
+/*
+ * Known limitation 67 (KNOWN-LIMITATIONS.md): where the code does each clause of the item, by symbol.
+ * Provenance: ADV-2026-11-19-06 item 5 and ADV-2026-11-19-08 item 6 (the item and its figures),
+ * ADV-2026-11-19-16 item 2 (the cancel clause), ADV-2026-11-22-17 item 4 (the words), and
+ * ADV-2026-11-22-22 items 2 and 5 (two rings of 128 from the start, and the sentence on what that
+ * costs); the advisor's ruling on these words is ADV-2026-11-22-30.
+ *  - the 128 of each kind, the oldest entry of a kind dropped, each drop counted: MAX_CONSOLE_ENTRIES,
+ *    `push` and `droppedCount` here, and `entries`, which merges the two rings by `seq`;
+ *  - which entries are of the first kind: `isStreamLaneName` in surfaceRegistry.ts and the three
+ *    marks `lane: "stream"` it reads, on the `viewport_query` and `cancel` rows and the
+ *    `binding_log_session_event` row;
+ *  - the label's two drop counts: `consoleLabelText` in consoleViewModel.ts, called by ConsolePanel in
+ *    ConsolePanel.tsx;
+ *  - a group of entries closing when its first entry is dropped, and two runs joining when the entries
+ *    between them are dropped and both runs are still kept: `ConsoleGroupRow` in ConsolePanel.tsx, keyed by its first entry's `seq`
+ *    (the group key), over `groupConsecutiveEntries` in consoleViewModel.ts;
+ *  - the present clauses' symbols, unchanged: `consoleRecorder.record` in skp/client.ts (every request is
+ *    an entry); the `viewportQuery` call in streaming/tileViewportStreamManager.ts (one request for each
+ *    tile it mints); `logSessionEvent` in diagnostics/log.ts, called with candidate-tile-terminal in the
+ *    tile manager's `onTerminal` callback in residency/candidateArmSession.ts (one line for each tile
+ *    terminal, which the manager does not report for a cancel of its own), an entry through
+ *    `recordNamed` below; the plan at the first look's Completed terminal, as item 64's comment names it.
+ * The figure 110 is the count of tile terminals after each first look in the S9 session logs of
+ * command-bar.mjs and project.mjs on filter-zoned.parquet, as the architect's diagnosis counts them; it
+ * is not a bound. Each terminal is one session-log write and follows one request, so the entries were at
+ * least 220: the advisor's reading of the code at e374eb711caaeae4dd898e8ddb49a35d4d80c619, not a count
+ * from a run. The figure item 67 gives for what one first look adds comes from MEASURE' in
+ * e2e/console.mjs; item 67's comment in KNOWN-LIMITATIONS.md names that report's path and commit.
+ * Not examined: how many entries a cancelled tile request adds.
  */
-export const MAX_CONSOLE_ENTRIES = 256;
+
+/**
+ * A session's working set, not a log: the recorder is two bounded rings, not an unbounded history.
+ * 128 entries is a fixed count, not a duration -- ADR-018's discipline applied to this comment,
+ * not only to a cancellation figure: how long 128 entries lasts depends entirely on how often the
+ * operator acts, so no minute estimate is claimed here, true or otherwise. What IS true by
+ * construction: each ring never grows past MAX_CONSOLE_ENTRIES and evicts only its own oldest
+ * entry; the recorder never blocks and never silently truncates -- every eviction is counted
+ * against its own ring, and count() plus droppedCount("stream") plus droppedCount("other") is
+ * every entry recorded.
+ *
+ * The two rings (known limitation 67): data requests, cancels and the app's session-log lines
+ * (`isStreamLaneName`) are the "stream" ring; every other entry is the "other" ring, so a load's
+ * traffic cannot push out the steps the operator recorded.
+ */
+export const MAX_CONSOLE_ENTRIES = 128;
+
+/** Which ring an entry is held in: `"stream"` for a named data request, cancel or session-log line, `"other"` for every other entry. */
+export type ConsoleLane = "stream" | "other";
 
 /**
  * A render-time ceiling for how many bytes of an entry's serialized text the console will ever
@@ -192,9 +234,11 @@ export type ConsoleListener = () => void;
  * than sharing global state across tests.
  */
 export class ConsoleRecorder {
-  private readonly buffer: ConsoleEntry[] = [];
+  private readonly stream: ConsoleEntry[] = [];
+  private readonly other: ConsoleEntry[] = [];
   private nextSeq = 0;
-  private dropped = 0;
+  private droppedStream = 0;
+  private droppedOther = 0;
   private readonly listeners = new Set<ConsoleListener>();
 
   /** Records `request` by reference (I2) and returns a handle to resolve its outcome once the
@@ -270,43 +314,70 @@ export class ConsoleRecorder {
     this.notify();
   }
 
+  /** The ring an entry belongs in, chosen by kind and name only: a `skp-request` or a `binding-command` whose name the registry marks as of the stream kind (`isStreamLaneName`), the "stream" ring; a `gui-action`, an unmarked name, or a `record()` with no command, the "other" ring. */
+  private laneOf(entry: ConsoleEntry): ConsoleLane {
+    switch (entry.kind) {
+      case "skp-request":
+        return entry.command !== undefined && isStreamLaneName("skp-request", entry.command) ? "stream" : "other";
+      case "binding-command":
+        return isStreamLaneName("binding-command", entry.command) ? "stream" : "other";
+      case "gui-action":
+        return "other";
+    }
+  }
+
   /** Drop-with-count on overflow (`engine/src/trace.rs`'s bounded-buffer shape, replicated here
-   * as a *shape*, not ported code): the buffer never grows past `MAX_CONSOLE_ENTRIES`, and every
-   * eviction increments `dropped` under the same synchronous call that performs it, so the count
-   * and the length can never disagree. Unlike `trace.rs` -- which refuses new records once full,
-   * because a trace times a fixed run it must not lie about -- this recorder evicts the OLDEST
-   * entry instead: it is a session's rolling working set (this file's header), so the newest
-   * action a user just took is the one worth keeping visible. Either policy keeps the invariant
-   * this module exists to guarantee: an overflow is counted, never silent.
+   * as a *shape*, not ported code): each ring never grows past `MAX_CONSOLE_ENTRIES`, and every
+   * eviction increments the counter of the ring it left under the same synchronous call that
+   * performs it, so a ring's count and its length can never disagree, and an entry of one ring is
+   * never evicted by an entry of the other. Unlike `trace.rs` -- which refuses new records once
+   * full, because a trace times a fixed run it must not lie about -- this recorder evicts the
+   * OLDEST entry of the ring instead: it is a session's rolling working set (this file's header),
+   * so the newest action a user just took is the one worth keeping visible. Either policy keeps
+   * the invariant this module exists to guarantee: an overflow is counted, never silent.
    */
   private push(entry: ConsoleEntry): void {
-    if (this.buffer.length >= MAX_CONSOLE_ENTRIES) {
-      this.buffer.shift();
-      this.dropped++;
+    const lane = this.laneOf(entry);
+    const ring = lane === "stream" ? this.stream : this.other;
+    if (ring.length >= MAX_CONSOLE_ENTRIES) {
+      ring.shift();
+      if (lane === "stream") this.droppedStream++;
+      else this.droppedOther++;
     }
-    this.buffer.push(entry);
+    ring.push(entry);
   }
 
-  /** How many entries the ceiling has evicted since this recorder was created. Never silent --
-   * see this class's `push`. */
-  droppedCount(): number {
-    return this.dropped;
+  /** How many entries the ceiling has evicted from one ring since this recorder was created. Never
+   * silent -- see this class's `push`. The lane is required: the count of both rings is the sum of
+   * the two calls. */
+  droppedCount(lane: ConsoleLane): number {
+    return lane === "stream" ? this.droppedStream : this.droppedOther;
   }
 
-  /** Every live entry, oldest first (insertion order survives eviction -- only the oldest ever
-   * leaves). A fresh array each call so a caller cannot mutate the recorder's own buffer -- an
-   * O(n) copy, deliberately, for that safety; a caller that only needs the COUNT should call
-   * `count()` below instead of `entries().length` (reviewer gate S6, action-console P7 fixes). */
+  /** Every live entry of both rings, oldest first by `seq` (a merge of the two rings, each of
+   * which is already in `seq` order: within a ring only its oldest ever leaves, and the other
+   * ring's entries never displace it). A fresh array each call so a caller cannot mutate the
+   * recorder's own buffers -- an O(n) merge, deliberately, for that safety; a caller that only
+   * needs the COUNT should call `count()` below instead of `entries().length` (reviewer gate S6,
+   * action-console P7 fixes). */
   entries(): readonly ConsoleEntry[] {
-    return [...this.buffer];
+    const merged: ConsoleEntry[] = [];
+    let i = 0;
+    let j = 0;
+    while (i < this.stream.length && j < this.other.length) {
+      merged.push(this.stream[i]!.seq < this.other[j]!.seq ? this.stream[i++]! : this.other[j++]!);
+    }
+    while (i < this.stream.length) merged.push(this.stream[i++]!);
+    while (j < this.other.length) merged.push(this.other[j++]!);
+    return merged;
   }
 
-  /** `entries().length` without the O(n) copy `entries()` deliberately pays for -- O(1), no
+  /** `entries().length` without the O(n) merge `entries()` deliberately pays for -- O(1), no
    * allocation. Exists so a collapsed-console caller (`collapsedCountSync.ts`'s own
    * `CountableRecorder`, I9's "zero per-entry DOM work") never has a reason to reach for the full
    * array just to read its length once per frame. */
   count(): number {
-    return this.buffer.length;
+    return this.stream.length + this.other.length;
   }
 
   /** Notified on every record and every resolution. Returns an unsubscribe function. A plain

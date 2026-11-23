@@ -4,7 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { ClassBRow } from "./surfaceRegistry";
-import { classBRows, classCRows } from "./surfaceRegistry";
+import { classARows, classBRows, classCRows, isStreamLaneName } from "./surfaceRegistry";
 
 /**
  * NEXT-CUT.md P2, part C: tests beyond the completeness scan. `surfaceCompleteness.test.ts`
@@ -82,6 +82,30 @@ describe("no B/C registry string contains a JSON brace block (cheap regex guard 
         if (typeof value !== "string") continue;
         expect(braceBlock.test(value), `${field} on ${JSON.stringify(row)} looks like a JSON block`).toBe(false);
       }
+    }
+  });
+});
+
+describe("the stream lane's marks (known limitation 67)", () => {
+  it("SR1: exactly viewport_query, cancel and binding_log_session_event are of the stream kind, and no class-C row carries a lane", () => {
+    const streamA = classARows()
+      .filter((row) => isStreamLaneName("skp-request", row.command))
+      .map((row) => row.command)
+      .sort();
+    const streamB = classBRows()
+      .filter((row) => isStreamLaneName("binding-command", row.command))
+      .map((row) => row.command)
+      .sort();
+    expect(streamA).toEqual(["cancel", "viewport_query"]);
+    expect(streamB).toEqual(["binding_log_session_event"]);
+
+    // A name is of the kind only under its own entry kind: a class-A name is not a binding command.
+    expect(isStreamLaneName("binding-command", "viewport_query")).toBe(false);
+    expect(isStreamLaneName("skp-request", "binding_log_session_event")).toBe(false);
+    expect(isStreamLaneName("skp-request", "no_such_command")).toBe(false);
+
+    for (const row of classCRows()) {
+      expect("lane" in row, `${row.action} must carry no lane`).toBe(false);
     }
   });
 });

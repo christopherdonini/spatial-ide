@@ -277,7 +277,7 @@ for its N >= 2 rows of one key; no two adjacent items share a key (a run of cons
 entries forms one item, and a session-log line between the rows ends the run and passes); some group
 shows 2+ rows inside the window, else it fails as `GROUP': grouping not exercised` (round 71); each
 class-A row there parses on its own, never a merged/synthetic one (I8); and the label's total may grow
-by at most the recorder's 256 so none of its own rows can have been evicted. It reports the window's
+by at most one ring's 128, or else each kind's drops since the baseline must be at most the baseline's held count less 128, so none of its own rows can have been evicted. It reports the window's
 items. After the group is found, one click on its header must write exactly one entry: the class-C row
 for `console.toggleGroupExpanded`, its owner naming docs/03 and its statement containing
 `no API equivalent`. `COPYTRUNC'`
@@ -893,7 +893,7 @@ The folders and files come through three DEV-only hooks (`src/e2e-test-surface.t
 
 Asserted, each as a named step: `R1` (the fixture is admitted from a project folder), `R2` (two clauses with the second off, a `#112233` fill and a camera pose), `R3` (the save through the hook; the file's locators include `project-relative` and its clauses read on, off), `R4` (reopening the open project is refused as `skp.project_open_elsewhere` with S9's own-window place; the open and its clauses are kept), `R5` (opening another file shows the first handle's `close_dataset` row at `ok`, read right after the call), `R6` (the reopen's `open_project` request carries answer and relink null at `ok`; filter, clauses, fill colour, opacity and the view equal the file's, the view bit for bit), `R7` (a save with no slot answers `not-asked` and leaves the file unchanged), `R8` (another file is opened first and P's `close_dataset` row read; a hand copy of the project then gives S8, whose text is read from its constant; the `same` choice opens it and `folders.json` lists both folders), `R9` (the data file moved: S11 names it, and the re-link slot's file opens the project) and `E-CHANGED` (the data file's mtime moved 60 s: the notice names `mtime` alone). A close row is known by its request text, not by a count, and the suite prints the Console's label and the entries newer than the row at each read.
 
-**What it proves not.** The native folder and file pickers: the hooks supply the answers, so only the operator's Part (the form's section 9) shows them. It takes no timing and makes no performance claim; every wait is a harness bound on a condition. The Console ring keeps 256 entries, so a row missing at its read right after its call fails the step by name rather than being searched for later. The recorded mutations are in the file's header.
+**What it proves not.** The native folder and file pickers: the hooks supply the answers, so only the operator's Part (the form's section 9) shows them. It takes no timing and makes no performance claim; every wait is a harness bound on a condition. The Console keeps 128 entries of each kind, so a row missing at its read right after its call fails the step by name rather than being searched for later. The recorded mutations are in the file's header.
 
 ## Second-open spec (b2-piece-1c-save-and-reopen, P4b)
 

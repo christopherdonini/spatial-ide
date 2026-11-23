@@ -10,6 +10,7 @@ import { attachCollapsedCountSync, type ConsoleCountSnapshot } from "./collapsed
 import {
   buildRowViewModel,
   CLASS_B_THREW_SENTENCE,
+  consoleLabelText,
   groupConsecutiveEntries,
   standingHeaderModel,
   type ConsoleEntryGroup,
@@ -38,7 +39,7 @@ import { consoleRecorder, recordNamed, type ConsoleEntry } from "./recorder";
  */
 export default function ConsolePanel() {
   const [expanded, setExpanded] = useState(false);
-  const [snapshot, setSnapshot] = useState<ConsoleCountSnapshot>({ count: 0, dropped: 0 });
+  const [snapshot, setSnapshot] = useState<ConsoleCountSnapshot>({ count: 0, droppedStream: 0, droppedOther: 0 });
   const [entries, setEntries] = useState<readonly ConsoleEntry[]>([]);
 
   useEffect(() => {
@@ -48,7 +49,11 @@ export default function ConsolePanel() {
     const sync = () => {
       const live = consoleRecorder.entries();
       setEntries(live);
-      setSnapshot({ count: live.length, dropped: consoleRecorder.droppedCount() });
+      setSnapshot({
+        count: live.length,
+        droppedStream: consoleRecorder.droppedCount("stream"),
+        droppedOther: consoleRecorder.droppedCount("other"),
+      });
     };
     const coalesced = coalesceOncePerFrame(sync);
     sync();
@@ -61,11 +66,7 @@ export default function ConsolePanel() {
 
   const groups = expanded ? groupConsecutiveEntries(entries) : [];
   const header = standingHeaderModel(expanded);
-  const actionsWord = snapshot.count === 1 ? "action" : "actions";
-  const label =
-    snapshot.dropped > 0
-      ? `Console — ${snapshot.count} ${actionsWord} (${snapshot.dropped} dropped)`
-      : `Console — ${snapshot.count} ${actionsWord}`;
+  const label = consoleLabelText(snapshot);
 
   return (
     <div className="console-panel">
