@@ -41,7 +41,7 @@ Run the first once, before the first start: it builds the map viewer that the ap
 
 The minutes are the custodian's estimate. The blocks run in this order (the ruling's item 3). Each block's content (what to copy, what to have ready, the strings with their clause checks, and the questions) is in section 3 under the same number, and its Parts are in section 5.
 
-The custodian's note (2026-11-23): the minutes of Step 358 and Step 68 are the architect's estimates, not the custodian's. Both steps, and section 6 where they stand, were added on the advisor's ruling ADV-2026-11-23-05 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-05-the-sitting-steps-358-and-68-approved-with-five-changes-section-6-the-architects-finding-right.md`), under the delegation of 2026-11-13.
+The custodian's note (2026-11-23): the minutes of Step 358 and Step 68 are the architect's estimates, not the custodian's. Both steps, and section 6 where they stand, were added on the advisor's ruling ADV-2026-11-23-05 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-05-the-sitting-steps-358-and-68-approved-with-five-changes-section-6-the-architects-finding-right.md`), under the delegation of 2026-11-13. Section 6's Step 358 was changed after a tester's run of the case on 2026-11-23, on the advisor's ruling ADV-2026-11-23-09 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-09-the-grid-run-step-358-changed-no-further-run-grid358-freed-the-slip-and-one-finding.md`), under the same delegation. The tester's report is filed whole at `state/consults/2026-11-23-operator-sitting-queue-grid358-tester-report.md`. The run's evidence folder, which holds the two pictures of the met try, `met-zoom-to-layer.png` and `met-zoom-in.png`, is C:\dev\spatial-ide-local\evidence\2026-11-23-grid358 on the laptop: paste that into File Explorer's address bar.
 
 **The custodian's notes on section 3.**
 - Its task 5 item 1: L1, L2 and L5 have no blank field in the walkthrough; type them in the session like the rest, and the custodian adds them to Part L's log.
@@ -1196,7 +1196,16 @@ This Part is the operator gate of `frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC
 
 # 6. Step 358 and the optional Step 68: PR 358's two cases (added 2026-11-23)
 
-You asked for Step 358 on 2026-11-23, for your decision on PR 358. It comes after block (v) and before block (vi). Everything it expects is read from the code or worked out by arithmetic. None of it has been run or measured.
+You asked for Step 358 on 2026-11-23, for your decision on PR 358. It comes after block (v) and before block (vi). A tester's script tried the case on 2026-11-23 and met it once. What a hand at the keyboard meets is still not known.
+
+**What the tester's run showed.** The script ran in a separate checkout of main without PR 358, in a debug build. It opened the file through a test hook, not the file picker, and it sent the Enter key itself. It made 20 tries.
+- One try met the case. There, Zoom to layer left only a thin line of parcels at the top edge, and the status line read as row 358.7's first sentence says. The view took 5 minutes 16 seconds to hold still. Three wheel notches on the empty band then filled it across the view in about a minute.
+- With Enter sent about 30 times a second from the open on, which is what this step asks of your hand, none of 10 tries met it. In 4 of those the command bar never emptied.
+- With one Enter sent at a set time after the file was admitted, 1 of 10 tries met it (at 400 ms).
+- In 6 other tries the number of row 358.5 was between its two values. By arithmetic a wide view is then still filled. No one has looked.
+- Two pictures of the met try, `met-zoom-to-layer.png` and `met-zoom-in.png`, are in the run's evidence folder, which the custodian's note names.
+
+So the case is real in this build, and five tries by hand may well all miss. The tester's result is there for your decision whether you make the tries or not.
 
 ## Step 358 — the largest file opened, a filter applied at once, then a wide view (PR 358's grid case; PR 358's fix is not in this build)
 
@@ -1207,18 +1216,18 @@ This step tries whether a filter applied while the file's first data load is sti
 | # | Step | Expected outcome |
 |---|---|---|
 | 358.1 | Press Ctrl+K and type `/filter id < 1000 OR id >= 3900000`. Do not press Enter yet. | The text stays in the command bar. |
-| 358.2 | Click **Open GeoParquet…** and pick `slow-filter-scan.parquet`. As soon as the file picker closes, press Ctrl+K (or click the command bar) and **hold Enter** until the command bar empties. Then let go. | While the app checks the file (this can take a while), each Enter only shows a note under the bar; that is expected and harmless. When the file is admitted, the filter is sent and the bar empties. |
+| 358.2 | Click **Open GeoParquet…** and pick `slow-filter-scan.parquet`. As soon as the file picker closes, press Ctrl+K (or click the command bar) and **hold Enter** until the command bar empties, or until the map has shown parcels for about five seconds. Then let go. | While the app checks the file, each Enter only shows a note under the bar; that is expected and harmless. In the tester's run the check took under a second; it can take longer the first time a file is read. When the file is admitted, the filter is sent and the bar empties. In 4 of the tester's 10 tries with Enter held, the bar kept its text and the line under it read "[P6 placeholder] Not applied: the card id < 1000 OR id >= 3900000 can only be used on its own. Turn it off first." If you see that, note it and go on to 358.3: the log tells in any case. |
 | 358.3 | Hands off: no pan, zoom or resize. Wait until the map and the status line hold still. | The map shows a short strip of parcels at the bottom-left of the data. It may fill slowly. |
 | 358.4 | In File Explorer, open the newest `session-….log` in the folder above with Notepad. Press Ctrl+End, then search upwards (Find, direction Up) for `candidate-grid-frame-established`. Read that line's `baseSpan=` value. | One number. |
-| 358.5 | Read the number. **About 160000:** not met. This try shows nothing; note it and start the next try at 358.1. **Under 50000 (about 20800 expected):** met; go on to 358.6. **Anything between:** note the value; the try shows nothing visible; start the next try. | — |
-| 358.6 | The wide view: click **Zoom to layer**. Hands off until the status line holds still; this can take several minutes. | The map shows the whole data: a strip along the bottom-left and parcels along the top edge. |
+| 358.5 | Read the number. **About 160000:** not met. This try shows nothing; note it and start the next try at 358.1. **Under 50000** (33168.2 in the tester's met try): met; go on to 358.6. **Anything between** (103331.8 five times and 82371.5 once in the tester's run): note the value; by arithmetic the try shows nothing visible; start the next try. | — |
+| 358.6 | The wide view: click **Zoom to layer**. Hands off until the status line holds still; this can take several minutes (5 minutes 16 seconds in the tester's run). | The map shows the whole data: a strip along the bottom-left and parcels along the top edge. |
 | 358.7 | Look at the top edge of the data and at the status line. | **If the case shows:** only a thin line of parcels at the top edge, with the band above it empty, and the status line reads "Filling has finished for this view — some areas were not loaded; pan or zoom to load them." **If it does not show:** a band about ten times as thick is filled across the top, and the status line reads "Showing all … features in view". Note that too: after a number under 50000 the reading expects the case to show. |
-| 358.8 | Optional: zoom in on the empty band, or pan it towards the middle of the map, and wait until the status line holds still. | By reading, not run: zooming in on the empty band, or panning it towards the middle, fills it there. What stays until the file is opened again is the small tile grid: any view this wide leaves its far part unfilled at first. |
+| 358.8 | Optional: zoom in on the empty band, or pan it towards the middle of the map, and wait until the status line holds still. | In the tester's run three wheel notches on the band filled it across the view in about a minute, and the status line then read "Showing all … features in view". By reading, not run: what stays until the file is opened again is the small tile grid, so any view this wide leaves its far part unfilled at first. |
 
-358.1 to 358.5 (or to 358.8) is one try. For the next try, do not press Clear and do not touch the filter's card: the card from the last try keeps the held Enter from changing the old file. Start again at 358.1 and reopen the log in Notepad each time. The step is done after the first try that reaches 358.7, or after five tries that miss. If the bar still holds the text well after the file is on the map, let go and note the line under the bar: the try has failed in a way the step does not expect.
+358.1 to 358.5 (or to 358.8) is one try. For the next try, do not press Clear and do not touch the filter's card: the card from the last try keeps the held Enter from changing the old file. If the bar still holds the text from the last try, do not type it again. Start again at 358.1 and reopen the log in Notepad each time. The step is done after the first try that reaches 358.7, or after five tries that miss.
 
 **Questions.**
-- For each try: the `baseSpan` value from 358.4, and, if you went on, what 358.7 showed, and 358.8 if you did it.
+- For each try: whether the bar emptied, the `baseSpan` value from 358.4, and, if you went on, what 358.7 showed, and 358.8 if you did it.
 - Overall: met, or not met, in how many tries. Neither answer says how often a user meets this case.
 - Your decision on PR 358, in your own words, if you want to give it now. Until you say otherwise it merges after the tag and limitation 68 gets the approved sentences, as your message of 2026-11-23 says.
 
