@@ -88,6 +88,7 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
   const inputRef = useRef<HTMLInputElement>(null);
   const taking = useRef(false);
   const caretAfterRender = useRef<number | null>(null);
+  const latestDraft = useRef("");
 
   const draft = resolveDraft(pos.draft, registry, available, caret);
   const candidates = "candidates" in draft ? draft.candidates : [];
@@ -108,6 +109,7 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
         taking.current = false;
         if (text === undefined) input.select();
         else {
+          latestDraft.current = text;
           setPos(typeDraft(text));
           setCaret(text.length);
           setNote(null);
@@ -137,6 +139,7 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
   /** The draft `completion` leaves, with the caret after the part it put in: the list stays closed until the next typed character. */
   function complete(completion: string): void {
     const at = trigger === null || fieldList === null ? completion.length : completion.length - (pos.draft.length - trigger.end);
+    latestDraft.current = completion;
     setPos({ draft: completion, open: false, active: null, completed: true });
     setCaret(at);
     caretAfterRender.current = at;
@@ -161,6 +164,7 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
     if (filterPending) return setNote(CLAUSE_BUSY_LINE);
     const result = await run(id, condition);
     if (result.kind === "applied") {
+      latestDraft.current = "";
       setPos(typeDraft(""));
       setCaret(0);
       setNote(null);
@@ -169,6 +173,7 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
 
   function onKeyDown(event: KeyboardEvent<HTMLInputElement>): void {
     if (event.ctrlKey || event.metaKey || event.altKey) return; // the chords belong to the window's listener
+    if (latestDraft.current !== pos.draft) return; // this render is behind the draft: an applied result cleared it and React has not drawn that yet
     const composing = event.nativeEvent.isComposing || event.keyCode === 229;
     const step = commandBarKey({ ...pos, open: shown, completions }, { key: event.key, shiftKey: event.shiftKey, isComposing: composing });
     if (step.preventDefault) event.preventDefault();
@@ -208,6 +213,7 @@ const CommandBar = forwardRef<CommandBarHandle, CommandBarProps>(function Comman
         spellCheck={false}
         value={pos.draft}
         onChange={(event) => {
+          latestDraft.current = event.target.value;
           setPos(typeDraft(event.target.value));
           setCaret(event.target.selectionStart ?? event.target.value.length);
           setNote(null);
