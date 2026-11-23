@@ -641,7 +641,7 @@ mod tests {
 
     /// T2 (`LARGE-UTF8-AND-UTF8-VIEW-ATTRIBUTE-COLUMNS-PREREGISTRATION.md` §4): a dictionary over
     /// either refused text type is refused as well, through the same final arm.
-    // RECORDED MUTATION (observed at `cea0ef8c`, line numbers at that commit): in `is_admitted_scalar`,
+    // RECORDED MUTATION (observed at `cea0ef8c`, line number in the mutated file): in `is_admitted_scalar`,
     // restore `| D::LargeUtf8 | D::Utf8View`. Observed: this test fails by name -- "Dictionary(Int32,
     // LargeUtf8) must be refused" at `engine/src/attributes.rs:650`. Reverted.
     #[test]
