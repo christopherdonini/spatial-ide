@@ -626,3 +626,302 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — 2026-11-23 — post-result amendment after the architect's form gate, attempt 2 (FAIL), and ADV-2026-11-23-19: E5, the documentation findings, the display-scaling question and the rulings
+
+*Post-result amendment (class 1): written after the outcome of the architect's form gate, attempt 2 (FAIL), and the advisor's ruling ADV-2026-11-23-19 were seen. Written before any code.*
+
+1. **Basis.**
+- The gate report is `state/consults/gates/2026-11-23-shell-scale-display-form-gate-architect-attempt-2.md`, cited by finding id.
+- The ruling is ADV-2026-11-23-19, cited by item. It is the advisor's ruling under the human's delegation of 2026-11-13, not the human's words. The custodian adds its filed path.
+- Every `path:line` this amendment adds is read at a846072d4be622ade7356d36bccd13c346ffa34a, which is on main. Item 9 lists these pins.
+- Nothing was run.
+- Each Old text below occurs once in this form above this amendment, Amendments 2 and 3 included. Where an Old text is part of a longer line, only that part is replaced.
+
+2. **The rulings (ADV-2026-11-23-19).**
+- OPEN-1: (A), the existing `currentView?()`, with no new method and only the comment edit under `canvas/` (item 1). The advisor's reason why this does not need the human's word: (A) keeps every other part of the shape the human ruled at milestone 3's OPEN-7 (c) and narrows it by one exception under `canvas/`. That is a scope change to a thing the human ruled, and the grant's item 2 gives such changes to the advisor. The advisor tells the human.
+- OPEN-2: (a), `{L} m (CRS)`, with S-2 as the title. (c) is refused, because a bare length in metres reads as a distance on the ground (item 2).
+- OPEN-3: (a), k in [-3, 7], with S-4 outside it (item 3). OPEN-4: (a), groups of three joined by commas, never the locale (item 4). OPEN-5: (a). OPEN-6: (a), last in the status bar. OPEN-7: the path as taken (item 5).
+- S-1 to S-4 and the KNOWN-LIMITATIONS item stay drafts (item 6). They are built under the placeholder mark, as ADV-2026-11-23-16 item 10 sets out. The advisor words them from the filed text after this form's gate has passed and before the build's words commit.
+
+3. **Item 7, the display-scaling question: no.** E-SCALE cannot run again at a forced scale factor other than 1 without either a change to the launch that another suite would feel or a factor that is not a real display scaling. The reasons, from the code:
+- **The only argument that reaches the browser is shared.**
+  - WebView2 ignores the `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS` variable under wry. Browser arguments reach it only through the window config's `additionalBrowserArgs` (`frontends/shell/e2e/lib.mjs:16-25`).
+  - The suites set that config in one place, `writeConfigOverlay` (`frontends/shell/e2e/lib.mjs:97-114`). `frontends/shell/src-tauri/tauri.conf.json` sets no such key and no scale (searched).
+  - Every suite that launches through `attachOrLaunch` writes and uses that same overlay (`frontends/shell/e2e/lib.mjs:169`, `frontends/shell/e2e/lib.mjs:193-200`). E-SCALE's suite is one of them (`frontends/shell/e2e/layout.mjs:540`).
+  - The merged config is compiled into the dev binary (`frontends/shell/e2e/lib.mjs:92-93`).
+  - So a scale argument added there would be felt by any later suite that attaches to the running app (`frontends/shell/e2e/lib.mjs:158-167`). It would also be felt by `attachSecondApp`, which runs that same debug exe with its compiled config (`frontends/shell/e2e/lib.mjs:316-318`, `frontends/shell/e2e/lib.mjs:325`).
+  - No record in the tree shows that WebView2 honours a scale argument passed this way.
+- **The in-session mechanism is not a display scaling.**
+  - CDP `Emulation.setDeviceMetricsOverride` needs no launch change, and the suites already use it and clear it (`frontends/shell/e2e/layout.mjs:264`).
+  - In this WebView2, its `deviceScaleFactor` was measured to move `window.devicePixelRatio` to 1.25 and 1.5 while the drawing buffer's ratio stayed at 1.000 (`governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:202-205`). A second report saw the same (`state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md:42`).
+  - The pan-anchor form committed in advance not to record such an override as a second DPR (`governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:64-67`).
+  - E-SCALE asserts CSS widths and DOM text computed from the camera's zoom (§2 item 1), and the override changes neither. A run under it would pass while showing nothing about a scaled display.
+- **So, as item 7 rules for this case:** the operator Part gains one row at the human's own display scaling, and §2 item 8's last sentence stays. The precedent is milestone 2's Part W row (`governance/forms/frontends/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md:1377`).
+
+Addition to §9, Operator, after the row `- 4: the P6 sight of S-1 to S-4.` (a sketch; the words go to the advisor):
+````text
+- 5: at your own display scaling (record the percentage Windows shows for Scale), open `100k-happy-path.parquet` (`frontends/shell/MANUAL-WALKTHROUGH.md:146`) and zoom with the wheel until the label reads 200 m. Mark the bar's two ends on the edge of a sheet of paper held to the screen, lay the marks across the map, and count the parcels between them. The parcels are 40 m apart (`frontends/shell/e2e/pan-anchor.mjs:47-50`; `engine/src/fixture.rs:93`), so the marks are five parcels apart, within half a parcel. Record the percentage and the count. Red: fewer than four and a half or more than five and a half (I7).
+````
+- Check. The 200 m bar exists while 0.3 ≤ 2^zoom < 0.6, a band one zoom unit wide. One notch adds about 0.93 (P5 in item 8), so some notch lands inside the band. A bar wrong by the ratio of a 125% or 150% scaling would span about 4 or 6.25 parcels, or about 3.3 or 7.5. Each of these is red.
+
+Addition to §5, Invalidators, after I6:
+````text
+- I7 (stop): row 5 of the operator Part is red. The bar would then show the user a wrong length at that display scaling; the result goes to the advisor (ADV-2026-11-23-19 item 7), whenever the row is run.
+````
+
+4. **E5, one unit check and a bounded search.** These are the gate's words, with one sentence of mine added to the first New text: the one about the return type. The gate's clause check (E5) holds against the code at a846072d (`frontends/shell/tsconfig.json:16`; `frontends/shell/src/project/openProject.ts:143`; P19 and P20 in item 8).
+- The added sentence is there because Amendment 2 item 2's P0 stub returns `{kind:"none"}`, and a return type narrower than `scaleReading`'s would not type-check that stub.
+- At 0 and Infinity, the guard on `pxPerUnit` and the bounded search give the same answer, `out-of-range`. A mutation that removed the guard would survive, so none is named for it. The added U-SB4 cases prove the outcome, not the guard.
+````text
+Otherwise, `readingAtPxPerUnit(unit, 2 ** zoom)`: the smallest m × 10^k with m × 10^k × pxPerUnit ≥ SCALE_BAR_MIN_PX, and `widthPx` is that same product. `readingAtPxPerUnit` is pure and exported. Its product caller is `scaleReading`, and U-SB1 also calls it at exact pixels per unit (Amendment 2, item 4).
+````
+````text
+Otherwise, `readingAtPxPerUnit(2 ** zoom)`. It returns `out-of-range` when `pxPerUnit` is 0 or not finite, or when the smallest m × 10^k with m × 10^k × pxPerUnit ≥ SCALE_BAR_MIN_PX has k outside [SCALE_EXPONENT_MIN, SCALE_EXPONENT_MAX]; otherwise that bar, with `widthPx` that same product. Its search is bounded by those exponents, so it ends for every input. It takes no unit: the unit is checked once, by `scaleReading`'s `not-metre` case above. It returns the same type as `scaleReading`, so the P0 stub's `{kind:"none"}` type-checks. `readingAtPxPerUnit` is pure and exported. Its product caller is `scaleReading`, and U-SB1 also calls it at exact pixels per unit (Amendment 2, item 4).
+````
+````text
+- The comparison is made by a pure exported `readingAtPxPerUnit(unit, pxPerUnit)` in `scaleBar.ts`
+````
+````text
+- The comparison is made by a pure exported `readingAtPxPerUnit(pxPerUnit)` in `scaleBar.ts`
+````
+````text
+`readingAtPxPerUnit(…, 30)` returns `none`
+````
+````text
+`readingAtPxPerUnit(30)` returns `none`
+````
+````text
+Cases include NaN and ±Infinity.
+````
+````text
+Cases include NaN and ±Infinity, and zoom 1100 and -1100, where `2 ** zoom` is Infinity and 0, which give S-4.
+````
+The S-4 clause check in §2 item 7 follows E5:
+````text
+S-4 is shown exactly when k is out of range.
+````
+````text
+S-4 is shown exactly when `scaleReading` returns `out-of-range`: k is outside [SCALE_EXPONENT_MIN, SCALE_EXPONENT_MAX], or the zoom is finite and `2 ** zoom` is 0 or Infinity (Amendment 4, item 4).
+````
+
+5. **D7, the float caveat.** The gate's words.
+````text
+At any other zoom, 2^zoom is irrational.
+````
+````text
+At any other zoom, 2^zoom is irrational in exact arithmetic; that the rounded floating-point product never equals 60 is not shown.
+````
+````text
+M1 does pass U-SB2, because the sweep never reaches equality (item 4).
+````
+````text
+M1 is expected to pass U-SB2, since the sweep is not shown to reach equality (item 4).
+````
+
+6. **D8, the 0.93 cite.** The gate's words. Checked: the figure 0.93 is on `frontends/shell/e2e/regression.mjs:730`, and the sentence that states it runs from :729.
+````text
+one notch adds about 0.93 to the zoom (`frontends/shell/e2e/regression.mjs:729`)
+````
+````text
+one notch adds about 0.93 to the zoom (`frontends/shell/e2e/regression.mjs:729-730`; the readouts measured at :730-731 agree)
+````
+````text
+- `frontends/shell/e2e/regression.mjs:729`
+````
+````text
+- `frontends/shell/e2e/regression.mjs:729-731`
+````
+
+7. **D9, W's label assertion.** The gate's words. Checked: S-1 is `{L} m (CRS)` (§2 item 7), and `scaleLabel` builds only the decimal (§2 item 1).
+````text
+that the label and the width (within 1 CSS px) equal `scaleLabel` and `scaleReading` at that zoom
+````
+````text
+that the label is S-1 with `scaleLabel`'s decimal for `scaleReading`'s mantissa and exponent at that zoom, and the width is that reading's `widthPx` within 1 CSS px
+````
+
+8. **D10, the pins of Amendment 2 items 1 and 12.**
+- Each pin below is `path:line @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e`. That commit is on main.
+- The custodian's Amendment 5 is filed with this amendment. It carries each pin's sha256 under its id, computed by script over the cited whole lines with LF, and the reviewer recomputes each one.
+- This amendment writes no sha256.
+- P5 to P7 are the spans as D8 amends them.
+- P26 to P29 are item 1's pins that item 12's list leaves out (item 7's prose and its New text).
+````text
+Item 12 lists each pin, and the custodian adds each sha256 by script before the commit.
+````
+````text
+Item 12 lists each pin; each pin's sha256 is in Amendment 5, the custodian's, under the pin's id in Amendment 4's item 8, computed by script and recomputed by the reviewer.
+````
+````text
+Pins, each `path:line @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e`, with each sha256 added by the custodian's script:
+````
+````text
+Pins, each `path:line @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e`; each sha256 is in Amendment 5, under the pin's id in Amendment 4's item 8:
+````
+
+| Id | Pin (@ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e) | Cited by Amendment 2 |
+|---|---|---|
+| P1 | `frontends/shell/src/canvas/WorkingCanvas.tsx:2409` | item 5 |
+| P2 | `frontends/shell/e2e/lib.mjs:618` | item 5 |
+| P3 | `frontends/shell/e2e/layout.mjs:26` | item 5 |
+| P4 | `frontends/shell/e2e/tsModuleLoader.mjs:77-80` | item 5 |
+| P5 | `frontends/shell/e2e/regression.mjs:729-730` | item 5, as D8 amends it |
+| P6 | `frontends/shell/e2e/regression.mjs:730-731` | item 5, as D8 amends it |
+| P7 | `frontends/shell/e2e/regression.mjs:729-731` | item 12, as D8 amends it |
+| P8 | `frontends/shell/src/canvas/WorkingCanvas.tsx:2169` | item 5 |
+| P9 | `frontends/shell/src/canvas/WorkingCanvas.tsx:2200-2210` | items 5 and 9 |
+| P10 | `frontends/shell/src/App.tsx:1475` | item 5 |
+| P11 | `frontends/shell/src/App.tsx:2388` | item 6 |
+| P12 | `frontends/shell/src/App.tsx:2362-2364` | item 6 |
+| P13 | `frontends/shell/src/feature/FeaturePanel.tsx:13-19` | item 6 |
+| P14 | `frontends/shell/src/App.tsx:2438` | item 6 |
+| P15 | `governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md:90` | item 7 |
+| P16 | `governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md:96` | item 7 |
+| P17 | `governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md:121` | item 7 |
+| P18 | `governance/forms/frontends/SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md:293-319` | item 7 |
+| P19 | `frontends/shell/src/App.tsx:1836` | item 9 |
+| P20 | `frontends/shell/src/App.tsx:2034` | item 9 |
+| P21 | `frontends/shell/src/canvas/WorkingCanvas.tsx:1646-1650` | item 9 |
+| P22 | `frontends/shell/src/canvas/WorkingCanvas.tsx:1458` | item 9 |
+| P23 | `frontends/shell/src/canvas/WorkingCanvas.tsx:1591` | item 9 |
+| P24 | `frontends/shell/src/canvas/WorkingCanvas.tsx:1819` | item 9 |
+| P25 | `frontends/shell/src/canvas/WorkingCanvas.tsx:2116-2127` | item 9 |
+| P26 | `frontends/shell/src/canvas/WorkingCanvas.tsx:193` | item 7 (prose) |
+| P27 | `frontends/shell/src/canvas/WorkingCanvas.tsx:1660-1664` | item 7 (prose and New text) |
+| P28 | `frontends/shell/src/canvas/WorkingCanvas.tsx:164-193` | item 7 (New text) |
+| P29 | `frontends/shell/src/canvas/WorkingCanvas.tsx:148` | item 7 (New text) |
+
+9. **This amendment's own pins.** Each is `path:line @ a846072d4be622ade7356d36bccd13c346ffa34a`, which is on main. Amendment 5 carries each one's sha256 under its id, by the same script, and the reviewer recomputes them.
+
+| Id | Pin (@ a846072d4be622ade7356d36bccd13c346ffa34a) | Cited by Amendment 4 |
+|---|---|---|
+| Q1 | `frontends/shell/e2e/lib.mjs:16-25` | item 3 |
+| Q2 | `frontends/shell/e2e/lib.mjs:92-93` | item 3 |
+| Q3 | `frontends/shell/e2e/lib.mjs:97-114` | item 3 |
+| Q4 | `frontends/shell/e2e/lib.mjs:158-167` | item 3 |
+| Q5 | `frontends/shell/e2e/lib.mjs:169` | item 3 |
+| Q6 | `frontends/shell/e2e/lib.mjs:193-200` | item 3 |
+| Q7 | `frontends/shell/e2e/lib.mjs:316-318` | item 3 |
+| Q8 | `frontends/shell/e2e/lib.mjs:325` | item 3 |
+| Q9 | `frontends/shell/e2e/layout.mjs:540` | item 3 |
+| Q10 | `frontends/shell/e2e/layout.mjs:264` | item 3 |
+| Q11 | `governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:64-67` | item 3 |
+| Q12 | `governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:202-205` | item 3 |
+| Q13 | `state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md:42` | item 3 |
+| Q14 | `governance/forms/frontends/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md:1377` | item 3 |
+| Q15 | `frontends/shell/MANUAL-WALKTHROUGH.md:146` | item 3 (row 5) |
+| Q16 | `frontends/shell/e2e/pan-anchor.mjs:47-50` | item 3 (row 5) |
+| Q17 | `engine/src/fixture.rs:93` | item 3 (row 5) |
+| Q18 | `frontends/shell/tsconfig.json:16` | item 4 |
+| Q19 | `frontends/shell/src/project/openProject.ts:143` | item 4 |
+| Q20 | `frontends/shell/e2e/regression.mjs:730` | item 6 |
+
+10. **Every new or changed test.** The files are as in §4. The P0 reasons follow from Amendment 2 item 2's stubs. Each "fails at" set has no known case in which its mutation passes.
+
+| Test | File | Red at P0 because | Mutation | Fails at |
+|---|---|---|---|---|
+| U-SB1 (changed: direct calls take no unit) | `frontends/shell/src/layout/scaleBar.test.ts` | `readingAtPxPerUnit(30)` returns `none`, not L 2 | M1 (`≥` becomes `>`) | 30 and 12 |
+| U-SB4 (changed: zoom 1100 and -1100 added) | same | `metre` returns `none`, not a bar; the added cases also return `none`, not `out-of-range` | M4 (`unit === "metre"` becomes `unit !== "degree"`, at the one unit check) | `other` and `unestablished` |
+| E-SCALE (changed: W's label assertion, D9) | `frontends/shell/e2e/layout.mjs` | no `.status-scale` at Z1 (I4) | M6 (`readZoom` returns 0) | Z2; it would also fail at W |
+- M4 now has one site, so U-SB4's `other` case sends a mutated `other` on to the bar search, which returns a bar, and the test fails. The same holds for `unestablished`.
+- Row 5 is an operator row, not a test. I7 governs its red result.
+
+11. **Scope (class 9), declared before any code.** §7 is not edited, and each addition stays within its declared ceiling:
+- `frontends/shell/src/layout/scaleBar.ts`: E5's guard and bounded search, about +6 lines, within 90.
+- `frontends/shell/src/layout/scaleBar.test.ts`: U-SB4's two cases, about +4 lines, within 180.
+- `frontends/shell/MANUAL-WALKTHROUGH.md`: row 5 and its line in the result log, about +4 lines, within the ≤ 45 declared outside the count.
+- I7 adds no file. The totals (760 lines over 10 counted files) are unchanged. An overrun is class 8.
+
+12. **The gate's notes ("The drafter's unsettled points"):**
+- Hashes: acted on here (item 8), and Amendment 5 carries the hashes.
+- The gate report on main: no action; resolved at a846072d. The custodian files attempt 2's report.
+- The departures D1, D3, E1 and E4: no action; each holds.
+- E4 resting on deck's wheel step: left to the code's gates; the proof is the zoom W records at the tester's run.
+- §1's "over 260 lines" and the seam's write id: no action; these are notes.
+- Very large zooms: acted on by item 4 (E5).
+- The colour-by form's handle signature change: left to the custodian, as the order of the two pieces.
+
+13. **For the advisor, unruled here:**
+- S-1 to S-4, the KNOWN-LIMITATIONS draft and row 5's words (item 3) are drafts.
+- If row 5 is run at a scaling other than 100% and passes, the word "only" in the draft's last sentence no longer matches what was checked. The wording is the advisor's, under item 6.
+- E5 is the drafter's words, not the human's. Whether it lands under `governance/AUTONOMY.md` §31 (d) without a re-gate, or goes to the architect's attempt 3, is the advisor's call (gate E5).
+
+**Superseded index.** By this amendment:
+- §2 item 1's "Otherwise" sentence, as Amendment 2 item 4 replaced it.
+- §2 item 7's S-4 clause check.
+- §4: U-SB4's cases sentence.
+- Amendment 2 item 4: the irrationality sentence and the comparison bullet's signature.
+- Amendment 2 item 5: the 0.93 cite and W's label assertion.
+- Amendment 2 item 1's pin sentence.
+- Amendment 2 item 11: U-SB1's P0 reason and the M1 sentence on U-SB2.
+- Amendment 2 item 12: the pins heading and the `regression.mjs` pin.
+- Added: §5 I7; §9 Operator row 5.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 5 — 2026-11-23 — the custodian's, at the commit that files Amendment 4: references and the pins' hashes
+
+*Written by the custodian at the commit that files Amendment 4, before any code. References, and the hashes Amendment 4 item 8 asks for.*
+
+1. Amendment 4 is the architect's draft, appended byte for byte from its consult, `state/consults/2026-11-23-shell-scale-display-amendment-4-architect-draft.md` (the hand-back's sha256 9c28854187c363a77831557b85f7bab74f530f26ca57c1b561ecc4eb68c362fe): the text between its two marker lines.
+2. Its evidence is the architect's form gate, attempt 2, FAIL (`state/consults/gates/2026-11-23-shell-scale-display-form-gate-architect-attempt-2.md`, gate-log row 872), and the advisor's ruling ADV-2026-11-23-19 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-19-the-scale-display-open-1-a-without-the-humans-word-the-rest-as-recommended-a-question-on-display-scaling.md`), whose item 7 answer the advisor accepted in ADV-2026-11-23-22 item 8 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-22-the-bullet-as-ruled-op6-accepted-no-narrow-read-the-third-place-takes-work-5260-not-accepted-yet-c2-fix-i.md`).
+3. The pins of Amendment 4 items 8 and 9, as Amendment 4 item 8 asks (the gate's D10). Each entry names the file and lines the pin is read as, the sha256 of those lines at the pin's commit (each line with its LF, computed by script from the blob at that commit), and the pin's id and citing items as Amendment 4 lists them. The reviewer recomputes each one. Nothing else in Amendment 4 is hashed here.
+
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:2409` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:742ac88b851d01ca3fee02744a604fca0b577351c49d6a8d48f6195b9b3473e5 — P1 (item 5)
+- `frontends/shell/e2e/lib.mjs:618` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:45aaaf385b057e547b98b34e144b906f2ee1facc72519be6955a359c56f836f1 — P2 (item 5)
+- `frontends/shell/e2e/layout.mjs:26` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:1d6acc189adf7b6ff73c54767a4243cf4bd78cb491c43dab0bd733c30a1a7ec4 — P3 (item 5)
+- `frontends/shell/e2e/tsModuleLoader.mjs:77-80` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:71bb03d27cef7826cc7a7efb27e5a9348917d283b323a0aefacfdae63af8980b — P4 (item 5)
+- `frontends/shell/e2e/regression.mjs:729-730` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:a0013293557f74b7af0a98a37480f78cf0343a0101983cb6993cda3958acdf58 — P5 (item 5, as D8 amends it)
+- `frontends/shell/e2e/regression.mjs:730-731` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:b30843402f21e020fe80ac5f96a09be119cd08d5ba21b9bad0650115ab1e8a01 — P6 (item 5, as D8 amends it)
+- `frontends/shell/e2e/regression.mjs:729-731` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:945c28b9b02d02368079b60b7a6df2f95ca4d7cf7d44abfd2167aa54b3a260f2 — P7 (item 12, as D8 amends it)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:2169` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:d3a2c4f75c4992e18a038f56b6248f3411e54c1375e1957818ea50814e50b5f2 — P8 (item 5)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:2200-2210` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:56e1173c56a20266ab6ec306e3e028bf077d7c50903820974c3af04c65193ba2 — P9 (items 5 and 9)
+- `frontends/shell/src/App.tsx:1475` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:f05efb1f1050d59a94b373e2e40675538bbe4615aba088967e3352a5a65da934 — P10 (item 5)
+- `frontends/shell/src/App.tsx:2388` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:dbd5746b99c9f22a6634ddc26f3072af8ca298f74eca887f274fe3f4b223529b — P11 (item 6)
+- `frontends/shell/src/App.tsx:2362-2364` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:865844271ffb755e59a5d7b8c6a81eb47a73c1c82bd35dbd8f83247e43966415 — P12 (item 6)
+- `frontends/shell/src/feature/FeaturePanel.tsx:13-19` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:7ca74ba45496e098f11569622328ed2daca8c88f997e79a744637891b8770b4e — P13 (item 6)
+- `frontends/shell/src/App.tsx:2438` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:de4ffe933a3d8caaf7f142d758e450c081c50c4fc95fd0db09da2a060ef4474a — P14 (item 6)
+- `governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md:90` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:d6564e3afa3d937a10c3c8a48d1e2e24f7e8b60f2f72507d3ae0d5aaf4f26b78 — P15 (item 7)
+- `governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md:96` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:3ddb25496ff58c2f2b74b80c2bca17503b7c458c58dd2298358989c1de700560 — P16 (item 7)
+- `governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md:121` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:23c0d1c0814c45cec62d790a3a7125a8865b17e605804cb3a299730e380864ea — P17 (item 7)
+- `governance/forms/frontends/SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md:293-319` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:5dd30a51e92a368ad87dd8ba6fc0817420c8108ec33a310e1eda378d6748a5e6 — P18 (item 7)
+- `frontends/shell/src/App.tsx:1836` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:6920325d0f45716a5ffe54f7b0248ff2ed4a7fd5e2e68fe7688f73ad8377df37 — P19 (item 9)
+- `frontends/shell/src/App.tsx:2034` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:9f2acd17b5d6aa59b46d155cc654fe8b430fa224617d91d7be4b62b3150bc68f — P20 (item 9)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:1646-1650` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:d1da1acc724510ba996761da20d03dc0db23bf55393e09380cdb209b3d30d09c — P21 (item 9)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:1458` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:bed54217f16955b0f2b9c0a4d84ca0992b0250ad55d1d3325d4135bea5926cd4 — P22 (item 9)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:1591` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:2b8f88dc7fbc4d71211b93fa8782e6ff49e81d1839b1b9e8b600caaa80cf66df — P23 (item 9)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:1819` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:1888da38288257b416ba8a99a0e25d74ac697859628e1bc4c01b40f2acd1b6c7 — P24 (item 9)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:2116-2127` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:835c7ccada0359ef52dc635ce28149d04da8e59e886de28dff9f3c3fec43576d — P25 (item 9)
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:193` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:c0c7ce858b1deaf5648596d1fb88ab9bfe96b51b88f4f0992802edd8a578442e — P26 (item 7 (prose))
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:1660-1664` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:e82b33496db058c3b71421e7cabd6b3facbe4a6e6b4b7ebd3b7546f2aa7ac706 — P27 (item 7 (prose and New text))
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:164-193` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:234f79fff59d739de68b2127d4d316709e3b647c4c31dc7ea4e57c73f7696003 — P28 (item 7 (New text))
+- `frontends/shell/src/canvas/WorkingCanvas.tsx:148` @ b42c0ed72a8a94885bdd1f057c5c7463e5127a0e sha256:ba148574b2f205e6d489159bc8d699652cc173220963bbe4f9a47d9df4fb08fe — P29 (item 7 (New text))
+- `frontends/shell/e2e/lib.mjs:16-25` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:a4ed3cecfaef51e2767e656cc208eb2e1b2d722425c1ad9eea8a0ca4f9d7f202 — Q1 (item 3)
+- `frontends/shell/e2e/lib.mjs:92-93` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:7deeff60340722ace09056140242fad5f89105bb9248bdc4822b60cfbbda39a7 — Q2 (item 3)
+- `frontends/shell/e2e/lib.mjs:97-114` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:0d1a011f4f9455f51306d199ba294ef6a160cc1f01346371f635a884739c82c0 — Q3 (item 3)
+- `frontends/shell/e2e/lib.mjs:158-167` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:4d80ec0e9b6e319a158d5cb9c12c4233314fb0a6128a6bdcb400ee41b7a99416 — Q4 (item 3)
+- `frontends/shell/e2e/lib.mjs:169` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:3e4d9b17a54eb856a672ed8bcea4cf5bd886b7739e90be6a473838f670649564 — Q5 (item 3)
+- `frontends/shell/e2e/lib.mjs:193-200` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:2302ab8d03b0a28842a478d7c8d7f004ced0b50a0342e9f1894a513370e931a3 — Q6 (item 3)
+- `frontends/shell/e2e/lib.mjs:316-318` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:f2e638324a5dc16f15240d36305a0f66e831e00ab7329557e7e8530efa6abfcc — Q7 (item 3)
+- `frontends/shell/e2e/lib.mjs:325` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:5467cc8d58ab2bcf224a01018da2ec4b834efa39f3dc816fccf4bac8d2c9aa83 — Q8 (item 3)
+- `frontends/shell/e2e/layout.mjs:540` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:7d06a556e967782a5d9b541c43c35a1048045ec2a8a68c8fe36a5ec382302a8f — Q9 (item 3)
+- `frontends/shell/e2e/layout.mjs:264` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:f07e83aa57a16b8a8219c0622394d8c07075f788c33d4adf1e45290d92a2f7d4 — Q10 (item 3)
+- `governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:64-67` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:2ad1a7010b9aa03c5e5767fca0b2312cf6108a4ecad519723fa35195ad9e6b0a — Q11 (item 3)
+- `governance/forms/frontends/PAN-ANCHOR-PREREGISTRATION.md:202-205` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:3841c58a43c30e0ca2d5a1a17fe83e6e284048d661dc53fe86694e3ef20fdbda — Q12 (item 3)
+- `state/consults/2026-10-08-shell-pick-paths-disagree-at-1280x801-diagnosis-report.md:42` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:dd223f77ccbda0aa35964e9060225372623cf6920565c7d623dfcab57fcf304e — Q13 (item 3)
+- `governance/forms/frontends/SHELL-MIGRATION-MILESTONE-2-PREREGISTRATION.md:1377` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:5d278614002e2dfa1d9e1dc67750d6e68def18df927c835314fc601adcc37b2f — Q14 (item 3)
+- `frontends/shell/MANUAL-WALKTHROUGH.md:146` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:82e9d1db32e6f8800d98a33cdc2a53b55a2ec07ade717e57b12efc741b8868de — Q15 (item 3 (row 5))
+- `frontends/shell/e2e/pan-anchor.mjs:47-50` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:38a3241200a45f7bdc2928c23ea8a48102af1b4e4c091454af1dbb13ccaf0344 — Q16 (item 3 (row 5))
+- `engine/src/fixture.rs:93` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:111e19e1f5635e8cee5159fc900e85b3585b3aed0e349f4d45aa860cc4c05aa4 — Q17 (item 3 (row 5))
+- `frontends/shell/tsconfig.json:16` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:979334adbd35a8653f412fdfc803b09841514bd574472a7c28712e5836357423 — Q18 (item 4)
+- `frontends/shell/src/project/openProject.ts:143` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:2924d5abb239640b4b855685250a7e8909ba26a78495dde765b271c5c64de6ca — Q19 (item 4)
+- `frontends/shell/e2e/regression.mjs:730` @ a846072d4be622ade7356d36bccd13c346ffa34a sha256:581c37bcd2fc6f8128e2d3aedb33b066ef520a8d8c9b20917650a2a155a0fafb — Q20 (item 6)
+4. Its drafts and the points it could not settle go to the advisor in one message (ADV-2026-11-23-15 item 8); none is ruled here. Any finding of its own goes to the architect's attempt 3.
+5. Next: the architect's form gate, attempt 3, on Amendment 4. No code is written before it ends PASS or PASS WITH NOTES.
+
+Read the last amendment first.
+
+Nothing above is edited.
