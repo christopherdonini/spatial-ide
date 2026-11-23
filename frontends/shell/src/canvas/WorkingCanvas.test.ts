@@ -851,8 +851,9 @@ describe("WorkingCanvas.tsx: the one reporting function and deck's onResize (she
   // the clear in resetFitForNewGeneration deleted -> FAILED, "expected 'resetFitForNewGeneration() {\n ...' to contain
   // 'lastQueriedRef.current = null;'"; the else branch in fitToExtent deleted -> FAILED, "expected 'function fitToExtent(...' to
   // match /if \(notifyViewport\) .../"; the fit's cameraRef write duplicated -> FAILED, "expected 4 to be 3".
+  // RECORDED MUTATION (Amendment 7, item 2), applied, run by test name, reverted (tree clean), OBSERVED AT da55b7a608369030a88182955840c6b33b9cebcf: the clear in resetFitForNewGeneration(options) deleted -> FAILED RF10 by name, "expected 'resetFitForNewGeneration(options) {\n...' to contain 'lastQueriedRef.current = null;'".
   it("RF10: a new filter generation and the unreported fit clear lastQueriedRef, and the camera is written in exactly three places", () => {
-    const reset = source.indexOf("resetFitForNewGeneration() {");
+    const reset = source.indexOf("resetFitForNewGeneration(options) {");
     expect(source.slice(reset, source.indexOf("},", reset))).toContain("lastQueriedRef.current = null;");
     const fit = source.indexOf("function fitToExtent(");
     expect(source.slice(fit, source.indexOf("\n  }\n", fit))).toMatch(/if \(notifyViewport\) \{[\s\S]*?\} else \{[^}]*lastQueriedRef\.current = null;/);
