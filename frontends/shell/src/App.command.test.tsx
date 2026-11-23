@@ -699,7 +699,7 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     setValue(bar(), `/filter ${A}`);
     await inAct(() => void press(bar(), "Enter"));
     expect(mocks.manager.requests.length - before, "the first Enter's change is held in flight").toBe(1);
-    // The window: the held change is released and the bar's continuation runs as microtasks, outside any React event, before React renders what it set. Nothing here is a timer. jsdom leaves the last focus event as window.event, which would make React render at once as it does for a key press; a browser has none outside an event.
+    // The window: the held change is released and the bar's continuation runs as microtasks, outside any React event, before React renders what it set. Nothing here is a timer. React's development build puts window.event back by assignment after a handler it calls, and vitest's global keeps an assigned value, so window.event stays an earlier event and React would render the continuation's updates at once, as for a key press; a browser has no window.event outside an event.
     const eventSlot = Object.getOwnPropertyDescriptor(window, "event");
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
     try {
