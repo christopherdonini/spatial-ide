@@ -264,3 +264,25 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 6 — 2026-11-23 — class 1: M-E1, refused by Guardian G1 as predicted (section 5 item 2)
+
+1. **The restart.** The human asked for a clean stop (`state/directives/2026-11-23-the-humans-message-a-clear-stop-asked-again-before-the-restart-for-the-guardian.md`); the session started again by resume at 2026-11-23T05:29:22.818Z, with the same session id, and the human ran /reload-plugins at 2026-11-23T05:29:51.002Z and typed that it should be good now (`state/directives/2026-11-23-the-humans-message-should-be-good-now-after-the-restart-and-the-plugin-reload.md`). The installed copy, the main checkout's `tools/mods/spatial-guardian` at 9bd7bc05c3b84f37cf3d96db16b08f95d511eef2, is the same as at the merge commit 6c0f1eee238e8a10859d71862f421afd95afda33 (a git diff of that folder between them is empty). `claude --version` read at this filing: 2.1.330 (Claude Code). The custodian did not reload anything.
+2. **The command,** copied by script from the draft's item 6 (a) (`state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md`, its line 43, the text between its two backticks), 72 bytes. One Monitor call in the custodian's session, by its transcript at 2026-11-23T05:31:44.657Z, its input's `command` equal to it.
+3. **The result.** Refused, with the tool result at 2026-11-23T05:31:44.672Z an error whose text is G1's reason byte for byte inside the engine's error tags: G1_REASON at `tools/mods/spatial-guardian/hooks/register.js` line 41. No Git output and no other layer's refusal: the prediction held.
+4. **The log.** The refusal log's day folder for 2026-11-23 (the README's `<name of the main checkout>-local/guardian/<YYYY-MM-DD>/`) was listed by script before the call, at 2026-11-23T05:31:37.644Z by the transcript, and after its result, at 2026-11-23T05:31:49.870Z. Exactly one new file appeared, `053144662-73d6745b2c7fbba4.json`, 295 bytes, one JSON line and an LF. Its fields: schema spatial-guardian/v1, time 2026-11-23T05:31:44.662Z, rule G1, tool Monitor, agent main, target_sha256 ac982899086acd720960bd01c9a9f1bbac1da0f0c5e7d5e6b0eb87759398bb67, and reason equal to G1's reason byte for byte. That sha256 was recomputed by script from the UTF-8 bytes of the `command` string in the call's input in the transcript, with no newline added, and is equal. No other field.
+5. **The one file before it.** The folder did not exist at the first listing, at 2026-11-23T05:31:16.184Z. Between that listing and the second, one Bash call of the custodian's own, at 2026-11-23T05:31:23.036Z, was refused by G1, and the folder was created with its log file, `053123041-a29bee51ae6d949e.json` (rule G1, tool Bash, agent main, its target_sha256 recomputed from that command and equal). The call held the draft's command as quoted text in a test of a stray file's content before removing it; nothing in it pushes. It is a false refusal of the kind the README's Over-refusals list gives first (text that is never run, holding a force-push spelling; the custodian's words, not the README's), classified against the transcript. It is not routed around: the stray file is left for the human. The second listing was taken after it, so the count of new files is M-E1's alone.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 7 — 2026-11-23 — class 1: M-E2, run as predicted; the hold of section 5 item 4 ends
+
+1. **The command,** copied by script from the draft's item 6 (b) (its line 46, the text between its two backticks), 27 bytes. One Monitor call in the custodian's session, by its transcript at 2026-11-23T05:31:54.942Z, its input's `command` equal to it.
+2. **The result.** It ran: the tool result at 2026-11-23T05:31:55.389Z is not an error and starts the watch, and its one line, `guardian-monitor-probe`, the echo's output, arrived as an event in the completed watch's notification, queued at 2026-11-23T05:31:55.512Z by the transcript. No log file was written: the day folder, listed by script after it at 2026-11-23T05:31:59.270Z, holds the same two files as after M-E1. The prediction held.
+3. **The hold.** M-E1 is recorded as refused by Guardian G1 (Amendment 6) and M-E2 as run (this amendment). By section 5 item 4 and ADV-2026-11-22-25, the hold on a push, a merge or a delete through Monitor ends when both are recorded on main, at this commit. Nothing here shows G7, G8 or G9 live through Monitor: the draft names exactly two live checks, and those rules rest on the inert tests of section 4.
+
+Read the last amendment first.
+
+Nothing above is edited.

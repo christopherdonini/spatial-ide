@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `45407ee715c01b8a359eabd9e8054351845c9e4b34263a390396d524599c0f9c`) at `2026-11-23T04:05:35.876Z`.
+Generated from `PLAN.yaml` (sha256 `99fe5b170c454d4c2bda4bd29b2123b3c9f0d432020d5a70b46cd27c9d12ea7a`) at `2026-11-23T05:44:49.016Z`.
 
 ## 1. Next
 
@@ -60,7 +60,6 @@ Generated from `PLAN.yaml` (sha256 `45407ee715c01b8a359eabd9e8054351845c9e4b3426
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
 - **describe-fails-after-opened-closes-the-handle** — When describe fails after opened or open_dataset, the shell closes the handle it was given, so a reopen frees the project lock (node g of ADV-2026-11-21-15 item 4 (iii)) — evidence: branch `cut/describe-failed-close`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
-- **guardian-checks-monitor-commands** — The Guardian checks a Monitor command as it checks a Bash command: G1, G7, G8 and G9, the refusal log names Monitor, a commandless ws watch stays allowed (the human message of 2026-11-22, item 2 (b); the draft ADV-2026-11-22-02) — evidence: branch `cut/guardian-monitor`
 
 ## 6. Proposed / unscheduled
 
