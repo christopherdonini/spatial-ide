@@ -330,3 +330,199 @@ Assertions only: typed codes, field presence, equality and substring properties.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 1 (PASS WITH NOTES): that gate's replacement words for F1 to F10, carried byte for byte, and the pins of the cites its New texts add
+
+*Written by the custodian before any code. It carries the attempt-1 gate's own replacement words, each copied by script from the filed report in the report's order, and the pins the gate leaves to the custodian; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 1, PASS WITH NOTES (`state/consults/gates/2026-11-23-partitioned-ordinal-refusal-opens-the-identity-form-form-gate-architect.md`, gate-log row 881; the hand-back's sha256 4dd90572502adf34c34f55faaea53c491eb564247bd632d7906b7991f41fedfc). It has no Correctness and no Evidence finding. Its ten Documentation findings, F1 to F10, are fixed before the merge, F1 and F9 before the string drafts go to the advisor, and none asks for another attempt (ADV-2026-11-21-20). Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **F1:** §2.4, D1's first clause and its check.
+
+Old:
+
+````text
+  > refused: this source is partitioned across more than one file ({detail}). This engine opens a single file only, and it refuses a partitioned source before reading it, whether or not an identity column is declared
+  - "partitioned … ({detail})": unchanged from today's text.
+````
+
+New:
+
+````text
+  > refused: this path is read as a folder or a pattern, not as one file ({detail}). This engine opens a single file only, and it refuses such a path before reading it, whether or not an identity column is declared
+  - "read as a folder or a pattern, not as one file ({detail})": the only two refusal arms are `dataset.rs:1885-1886` and :1911-1914, whose detail says which; the engine never counts parts (:1881-1883), so today's "more than one file" is untrue for an empty or one-part folder and for a bracket path with no file at it.
+````
+
+3. **F2:** §1, a claim with no test.
+
+Old:
+
+````text
+  - the refusal's message and the shell's guidance offer no declaration, and state that a declaration does not change the refusal;
+````
+
+New:
+
+````text
+  - the refusal's message offers no declaration (K1 (c)); the shell's guidance offers none (S1 (2)) and states that a declaration does not change the refusal (S1 (3)); that the message says the same is read from the arm's text by the reviewer at the words commit, and no test asserts it;
+````
+
+4. **F3:** §4, S1's known pass case.
+
+Old:
+
+````text
+- **S1** asserts: (1) the guidance is not null and matches /single file/i; (2) it lacks "or declare an identity column"; (3) it matches /does not change/i. Properties only, since the words are a placeholder.
+````
+
+New:
+
+````text
+- **S1** asserts: (1) the guidance is not null and matches /single file/i; (2) it lacks "or declare an identity column"; (3) it matches /does not change/i. Properties only, since the words are a placeholder. Known pass case, recorded: K1 (c) and S1 (2) each test the absence of one phrase, so words that offer a declaration in other terms pass both; the reviewer of the words commit reads the final words for any offer of a declaration.
+````
+
+5. **F4:** §4, S2's claim.
+
+Old:
+
+````text
+the guidance and the panel agree, and no form opens for this code
+````
+
+New:
+
+````text
+`formFamilyForCode` returns `null` for this code and `nextFormFamily(null, code)` returns `null`: no form opens for this code when none was open before it (a prior family is carried forward by `nextFormFamily`, `AdmissionPanel.tsx:53-56`, which this claim does not cover)
+````
+
+6. **F5:** OPEN-2 (a)'s reading of its cite.
+
+Old:
+
+````text
+the identity route by ADV-2026-11-23-20 item 7, which adds them by class 9
+````
+
+New:
+
+````text
+the identity route or the recovery offer, whichever takes the `protocol/` place first after the re-link (ADV-2026-11-23-20 item 7), which would add them by class 9 (proposed here, not ruled)
+````
+
+7. **F6, first replacement:** §9a's row for `formatRefusal.ts`.
+
+Old:
+
+````text
+| `formatRefusal.ts` | the recovery offer (its four new cases). Disjoint regions by symbol (ADV-2026-11-16-06 item 4). Whichever piece goes later takes main in before its gate. |
+````
+
+New:
+
+````text
+| `formatRefusal.ts` | the recovery offer (its four new cases). Disjoint regions by symbol (ADV-2026-11-16-06 item 4). The two are never built at the same time on separate branches (ADV-2026-11-23-17 item 11): the one built first is the one whose form passes first, or the earlier in the human's order if both have passed; the other is built on its head once its code is committed, and merges after it. |
+````
+
+8. **F6, second replacement:** §9a's line on the identity route.
+
+Old:
+
+````text
+Under OPEN-1 (a) it no longer touches `AdmissionPanel.tsx`, so the identity route does not need to build on it.
+````
+
+New:
+
+````text
+Under OPEN-1 (a) it no longer touches `AdmissionPanel.tsx`; it still shares `KNOWN-LIMITATIONS.md` with the identity route (items 20 and 3), so whether one is built on the other is the custodian's comparison under ADV-2026-11-23-17 item 11, recorded at dispatch.
+````
+
+9. **F7:** §0, the two readers not named.
+
+Old:
+
+````text
+**No test pins the message text** (I searched the tree for the message's phrases outside `state/`, `governance/` and `spikes/`).
+````
+
+New:
+
+````text
+**No test pins the message text** (I searched the tree for the message's phrases outside `state/`, `governance/` and `spikes/`). Two more readers stay unchanged: `engine/tests/admission_p4_corpus.rs:442-445` records the `Display` into the generated `engine/ADMISSION-RESULTS.md` (an `#[ignore]`d run; no row there holds the old text), and `protocol/skp/SKP-V0.md:31-37` names the code and the paths it refuses, with no remedy.
+````
+
+10. **F8:** §2.4 D3, whose words item 20 holds.
+
+Old:
+
+````text
+  - Item 20 is the human's wording by the human's message of 2026-11-07 (`state/directives/2026-11-07-8g-open-1-b-adr-016-note-open-6-a-294-not-held-index-sites-narrowed-entry-13-x2-into-item-20.md:12`: the human said they would word item 20 at the click). See OPEN-5.
+````
+
+New:
+
+````text
+  - Item 20 is the worker's draft, merged as drafted by the human at the click (`governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md:493` and `:496` @ 49a6964701fd55cc64a3cca15311d827a922043b), as the human's message of 2026-11-07 said they would (`state/directives/2026-11-07-8g-open-1-b-adr-016-note-open-6-a-294-not-held-index-sites-narrowed-entry-13-x2-into-item-20.md:12`). See OPEN-5.
+````
+
+11. **F9:** §2.4 D2, the P6 reservation.
+
+Old:
+
+````text
+Today's text is one of the three placeholders "whose wording is not settled" (`formatRefusal.ts:67-70`). Not the human's wording.
+````
+
+New:
+
+````text
+Today's text is one of the three placeholders whose wording that doc calls not settled (`formatRefusal.ts:67-70`; paraphrase). Not the human's wording: the doc reserves these strings for the human's sight at P6 (:67-68), and ADV-2026-11-23-17 item 8 reads the grant's item 2 as putting the app's strings with the advisor. At the words commit, :67-70 is updated to say whose words D2 is.
+````
+
+12. **F10, first replacement:** §2.3, item 20's comment.
+
+Old:
+
+````text
+Its comment re-pins the `Display` at the build base and names whose words are in the item (OPEN-5).
+````
+
+New:
+
+````text
+Its comment cites the `Display` by path and symbol, unpinned (`engine/src/error.rs`, the `IdentityOrdinalPartitionedUnsupported` arm), since the build base holds the old text, and names whose words are in the item (OPEN-5).
+````
+
+13. **F10, second replacement:** Amendment 1's PLAN pin.
+
+Old:
+
+````text
+- `governance/PLAN.yaml:7842-7858` @ a12ab7e212af4dd7d1ba0f25d0fcf7149fc9a201 sha256:8651e57f493e8f5cd2a8bc2de3a3c57d85f3cf5290876719d574ef5ef4791a39 — the header
+````
+
+New:
+
+````text
+- `governance/PLAN.yaml:7842-7858` @ a12ab7e212af4dd7d1ba0f25d0fcf7149fc9a201 sha256:8651e57f493e8f5cd2a8bc2de3a3c57d85f3cf5290876719d574ef5ef4791a39 — the header; historical: item 2 changes the node in the form's own commit, and the tree on main is authoritative for the node
+````
+
+14. **Pins of the cites the New texts add.** Each entry gives the sha256 of those lines at 49a6964701fd55cc64a3cca15311d827a922043b (each line with its LF, computed by script), and the findings whose New text cites it. A short name is read as the file named here; a bare `:n` as the file named before it in the same New text. F10's second New text carries its own pin.
+
+- `engine/src/dataset.rs:1885-1886` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:043933d305f9908f17259c98bb11da4aee928ce279480e6cf9a663e97947a94d — F1; as written `dataset.rs:1885-1886`
+- `engine/src/dataset.rs:1911-1914` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:05167fbdd9b76b1224cd1437be74ec2cdc0d7368f441657424c7bb6c8af67dc5 — F1; as written `:1911-1914`
+- `engine/src/dataset.rs:1881-1883` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:6bc9732081d33ef501076dfbddb8fdb93b4f85c581d561ce6a12c0abcb9f0cd6 — F1; as written `:1881-1883`
+- `frontends/shell/src/admission/AdmissionPanel.tsx:53-56` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:ae7ced2a5c1d9a429a4e367ce6d99f00d6acb5463e68c4551f552ddfe91814c3 — F4; as written `AdmissionPanel.tsx:53-56`
+- `engine/tests/admission_p4_corpus.rs:442-445` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:ce90e3145ad88506ba0000999f1bea8f42d4838fb750934185a0315db26856e6 — F7
+- `protocol/skp/SKP-V0.md:31-37` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:47f0b3a82274f891b947926042eeb1faeb4410be82fd1c988df44c7a543ab1a5 — F7
+- `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md:493` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:53c001166b94ac03b4cb0665d2ba1eff9c237baf72f38bfdccd5601049a199e6 — F8
+- `governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md:496` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:419906737bcefae3c57e1864b2308ec2652b601ca88344c5093ce5a46d89bd97 — F8; as written `:496`
+- `state/directives/2026-11-07-8g-open-1-b-adr-016-note-open-6-a-294-not-held-index-sites-narrowed-entry-13-x2-into-item-20.md:12` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:da0f5dca894d261e6654d1ea0941c27f3c861b563ce6af07803e8a10824c80b9 — F8
+- `frontends/shell/src/admission/formatRefusal.ts:67-70` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:63b08760f86a1baaef4fe74545cbc979fae6cf0ae858ca393af80cfc3ecce6a6 — F9; as written `formatRefusal.ts:67-70`, `:67-70`
+- `frontends/shell/src/admission/formatRefusal.ts:67-68` @ 49a6964701fd55cc64a3cca15311d827a922043b sha256:21e16a8edb833672bf77952d4f805e11f376e96635b8c9a60da5c7141a41eb09 — F9; as written `:67-68`
+
+15. Next: the form has passed. The build shares `KNOWN-LIMITATIONS.md` with colour-by-refill, whose build runs; under ADV-2026-11-23-17 item 11 it is built on that build's head once its code is committed, and merges after it (F6). Nothing of it builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over. Its OPEN-1 to OPEN-5 and string drafts go to the advisor in one message (ADV-2026-11-23-15 item 8).
+
+Read the last amendment first.
+
+Nothing above is edited.
