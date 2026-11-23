@@ -1688,3 +1688,129 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 4 (FAIL): that gate's replacement words for C-11, C-12 and N-27 to N-31, carried byte for byte
+
+*Written by the custodian before any code. It carries the attempt-4 gate's own replacement words, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 4, FAIL (`state/consults/gates/2026-11-23-b2-piece-1c-step-3-recovery-offer-form-gate-architect-attempt-4.md`, gate-log row 880; the hand-back's sha256 a517e323e9d8da33ab815a1437a90bc16de545eafe639baa47e245b843fabead). Its two Correctness findings, C-11 and C-12, are fixed by words alone, as the gate says; its five Documentation findings, N-27 to N-31, are fixed before the merge. Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **C-11, first replacement:** the open's step for a folder with no history (Amendment 6 item 11's New text).
+
+Old:
+
+````text
+It reads the metadata of `history.jsonl`. When that file is absent, the folder holds no step: a save's move that ended before its rename (`kernel/src/session_history.rs:551-562`), or a Discard that ended between its removals, left it. It is cleared at that open with no question: its `locations.json`, any `history.jsonl.tmp-` file and the folder are removed. No run can be moving a history into it, because this open holds the project's `open.lock` (`kernel/src/project/mod.rs:781`, :876; ADR-036 Amendment 1 item 3) and a first save takes it (:396).
+````
+
+New:
+
+````text
+It reads the metadata of the folder, then of `history.jsonl`. When the folder is absent, nothing is listed and nothing is removed. When the folder is there and `history.jsonl` is absent, the folder holds no step: a save's move that ended before its rename (`kernel/src/session_history.rs:551-562`), or a Discard that ended between its removals, left it. It is cleared at that open with no question: its `locations.json`, any `history.jsonl.tmp-` file and the folder are removed; a removal that fails is ignored, as `end_session`'s are (`kernel/src/session_history.rs:444-446`), and the reply lists nothing for it. No other run can be moving a history into it: a first save mints a new identity (`kernel/src/project/mod.rs:320`), and a later save is of an open that holds its project's `open.lock` (:312-314, :409-415, :876; ADR-036 Amendment 1 item 3), which this open holds (:781). This open's own save cannot move into the folder while it is there, because the move's `create_dir` refuses a folder that exists (`kernel/src/session_history.rs:551`); a save during that one listing takes no move and moves at its next save (:347-348).
+````
+
+3. **C-11, second replacement:** the row K-C40, added after K-C39 (it adds a test; see item 9).
+
+Old:
+
+````text
+| K-C39 | `a_projects_folder_with_no_history_is_cleared_at_its_open` (the same folder, then `list_recoverable(handle)`: no entry, and the folder is gone) | the folder left in place | K-C39 |
+````
+
+New:
+
+````text
+| K-C39 | `a_projects_folder_with_no_history_is_cleared_at_its_open` (the same folder, then `list_recoverable(handle)`: no entry, and the folder is gone) | the folder left in place | K-C39 |
+| K-C40 | `a_reopen_with_no_record_folder_lists_nothing_and_removes_nothing` (a project saved, its recorder ended normally, then reopened in a new recorder with no `<hex>` folder: `list_recoverable(handle)` is `Ok` with no entry, and the root's folder names are unchanged) | the clear run on an absent folder, its removal errors returned | K-C40 |
+````
+
+4. **C-12:** C-9's answer on the callers of the two steps (Amendment 6 item 2's New text).
+
+Old:
+
+````text
+The start's listing is the only product caller of both, and no parameter exists for the test)
+````
+
+New:
+
+````text
+The start's listing calls both, and `recover_session`'s step 3a calls the same dedupe for its one record (Amendment 4 items 4 and 5); no parameter exists for the test, and the mutation carries the first names inside the walk's returned value, so K-C27's calls compile unchanged)
+````
+
+5. **N-27:** held fixtures are not empty.
+
+Old:
+
+````text
+"The test holds" means a `File` the test opens and locks itself.
+````
+
+New:
+
+````text
+"The test holds" means a `File` the test opens and locks itself; in K-C25 to K-C28, K-C34 and K-C37 the history so held holds a header and at least one step line, so that no `metadata` check reads it as absent or 0 bytes (Amendment 6 items 10 and 14).
+````
+
+6. **N-28:** the stale sub-bullet under the known pass cases.
+
+Old:
+
+````text
+     - K-C28 and K-C34 drop the test's own handle before reading by path, so on Windows a removal the mutation made while that handle was open shows whichever delete semantics the system uses (H2). On macOS/Linux the file is unlinked.
+````
+
+New:
+
+````text
+     - K-C28 and K-C34 drop the test's own handle before reading by path. On Windows neither mutation removes a file, because its read through its own handle fails first (H1); on macOS/Linux the mutation unlinks the files (H3), and the read by path finds them gone.
+````
+
+7. **N-29:** point (2), with N-19's per-candidate `metadata` call.
+
+Old:
+
+````text
+     - per candidate, one lock probe and at most `MAX_HEADER_LINE_BYTES` + `MAX_STEP_LINE_BYTES` + 2 bytes.
+````
+
+New:
+
+````text
+     - per candidate, one `metadata` call on its `history.jsonl`, and, unless that history is absent or 0 bytes, one lock probe and at most `MAX_HEADER_LINE_BYTES` + `MAX_STEP_LINE_BYTES` + 2 bytes.
+````
+
+8. **N-30:** the ceilings (Amendment 6 item 23's words).
+
+Old:
+
+````text
+C-9's two private steps and N-19's rows K-C38 and K-C39 add product and test lines, which the gate puts at roughly 30 to 60 and 60 to 80. A row that passes its figure is re-declared by amendment before code, as the gate says.
+````
+
+New:
+
+````text
+C-9's two private steps, N-19's open step and dedupe check, N-20's twin check, C-11's words and K-C27's unit test add about 45 to 80 lines to `kernel/src/recovery.rs`; K-C38 to K-C40, K-C28's added assertion and K-C36's fixture add about 100 to 145 lines to `kernel/tests/recovery.rs`. Re-declared here, before code: kernel product 1,070 to 1,160; kernel tests 1,800 to 1,950; total ≤ 5,500, ≤ 50 files.
+````
+
+9. **N-31:** K-C36's fixture (Amendment 6 item 22's New text).
+
+Old:
+
+````text
+a `saved-here` mark after s3; listed `later-version`, and the folder is still there)
+````
+
+New:
+
+````text
+a `saved-here` mark after s3; listed `later-version`, and the folder is still there; and the same lines without that mark as an `unsaved-` record at a start: listed `later-version`)
+````
+
+10. **For the advisor**, in one message with the other drafts (ADV-2026-11-23-15 item 8): item 8's re-declared figures, which the gate gives and whose acceptance is the advisor's; and, for K-C34's red on macOS or Linux, the gate's reading that the form is sound if that observation waits, on the two conditions it names. None is ruled here.
+11. Next: the architect's form gate, attempt 5, on this amendment. No code is written before it ends PASS or PASS WITH NOTES. Nothing of it builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -893,3 +893,134 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 2 (PASS WITH NOTES): that gate's replacement words for D-1 to D-3, carried byte for byte, and D-4's span hashes
+
+*Written by the custodian before any code. It carries the attempt-2 gate's own replacement words, each copied by script from the filed report in the report's order, and the span hashes D-4 leaves to the custodian; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 2, PASS WITH NOTES (`state/consults/gates/2026-11-23-identity-declaration-route-for-session-tier-form-gate-architect-attempt-2.md`, gate-log row 878; the hand-back's sha256 185848aec8a155b41cf2554e631b57227fb783102256925c6552e64256ef0eea). It has no Correctness and no Evidence finding. Its four Documentation findings, D-1 to D-4, are fixed before the merge, and none asks for another attempt (ADV-2026-11-21-20). Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **D-1, first replacement:** order A's literal files (Amendment 2 item 1).
+
+Old:
+
+````text
+and the literal's files are those that `git grep -l 'skp/0\.14'` lists at the recorded base.
+````
+
+New:
+
+````text
+and the literal's files are those that `git grep -l 'skp/0\.14'` lists at the recorded base where the literal is the version a request, a fixture, a test or a constant carries; a doc comment that names the version a member came in stays as it is (for example `protocol/skp/src/v0/mod.rs:124`, `frontends/shell/src/skp/client.ts:160`, `frontends/shell/src-tauri/src/commands.rs:8`). Any such file not in §7's Scope is a class-9 addition, recorded before its code.
+````
+
+3. **D-1, second replacement:** order B's literal files (Amendment 2 item 1).
+
+Old:
+
+````text
+Its literal files are those that `git grep -l 'skp/0\.15'` lists at the recorded base, which includes the recovery offer's own new files that carry the literal. Any of those not in §7's Scope is a class-9 addition, recorded before its code.
+````
+
+New:
+
+````text
+Its literal files are those that `git grep -l 'skp/0\.15'` lists at the recorded base where the literal is the version a request, a fixture, a test or a constant carries, which includes the recovery offer's own new files that carry it so; a doc comment that names the version a member came in stays as it is. Any of those not in §7's Scope is a class-9 addition, recorded before its code, and so is any recovery-offer file that holds an `admitted` panel `State` literal or calls `runAdmitPath` and must change for §2 item 4 (a) or (d).
+````
+
+4. **D-2, first replacement:** §2 item 4 (d).
+
+Old:
+
+````text
+sets it when `prev` is `admitted` with an offer for the same path.
+````
+
+New:
+
+````text
+sets it when `prev` is `admitted` for the same path and `identityDeclarationOffer(prev, prev.admitted.dataset)` is non-null; `runAdmitPath` does not see the dataset on the map, and the render decides the offer, with `datasetOnMap`, from whatever state it shows.
+````
+
+5. **D-2, second replacement:** §9 item 14 (Amendment 2 item 9).
+
+Old:
+
+````text
+The offer is decided anywhere but `identityDeclarationOffer`, or without `datasetOnMap`.
+````
+
+New:
+
+````text
+The offer the render shows is decided anywhere but `identityDeclarationOffer`, or without `datasetOnMap`; `runAdmitPath`'s `resume` test of §2 item 4 (d) is the one other call, with the state's own handle.
+````
+
+6. **D-3:** the cite of Amendment 1's tiers (Amendment 2 item 2).
+
+Old:
+
+````text
+Amendment 1's tiers (:186-208)
+````
+
+New:
+
+````text
+Amendment 1's tiers (:186-228)
+````
+
+7. Span hashes. Every `path:line` cite in Amendment 2 is read at 6cf6140cd8dfcc6fc52b82011e5dae5799edf300; each entry below names the file and lines, the sha256 of those lines at that commit (each line with its LF, computed by script), and the Amendment 2 item that cites it.
+
+   A short name is read as the one tracked file it names; a bare `:n` as the file named before it in the same passage; an entry marked (r) was read by the custodian against the file its sentence names. 36 entries:
+
+- `protocol/skp/src/v0/mod.rs:136` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:882a5865fce789fe6efebc9b9ae98c9c0436eea3cd8c78f6137e8b0e6b4112fc — item 1
+- `frontends/shell/src/skp/types.ts:15` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:1a4761d0f73ed545af307709e902d068249b554ec5c66f6522e864ca0f85b6b0 — item 1
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:242-246` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:18319f4200da36ed2f6a6d99d6598839f0035a7d1fd1ae7a7cf83356a110e892 — item 2; as written `:242-246` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:238` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:8c5b637b3df21df6032500cb3794b772a1e2ead1e74aa81949556e88c5d0978c — item 2; as written `:238` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:165-169` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:505ce7ffbc4a7b0ab897902ab7d001545d3ebdcd940b05191b64869ec3eb7273 — item 2; as written `:165-169` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:150-151` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:30824ecd8cc1e454df8907b1e51a6a2ce7ac4b5c305364e35ec34d525dc44b7c — item 2; as written `:150-151` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:165` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:b971d2e72ef58a8e630dc8768b5ebd2a130afff6fd42da341ff7560a127bc7a3 — item 2; as written `:165` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:165-166` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:58e9f7d67db37f279241c3c7e8e3766519b55abf0aa663ba3f84e3119fdafd53 — item 2; as written `:165-166` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:64-69` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:1be77e2b826913b0e757614de6db4ac04cf0309520e93e3718c843d2efbd5325 — item 2; as written `:64-69` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:81-92` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:de54b84f91ea7aafa560366bc5c8ae26b4251d3fde14b546bb44a6f78dab717f — item 2; as written `:81-92` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:161-164` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:d2fac86ac54fc69ece245a09524e176297df456add92519063f411e5c348d30c — item 2; as written `:161-164` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:186-208` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:e80d72471b382a40e2052519a2386e1e2b59aa8d7071066826997baf3c591499 — item 2; as written `:186-208` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:230-232` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:8e2bc012195b51aaebeb836c0691c2388eb143ab8f444f2fbe0b04d16180e63b — item 2; as written `:230-232` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:234-236` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:9637e4f451a68f97d30671cd1e3ec585a1f58829e948f1cd8f1b722eace723c4 — items 2, 8; as written `:234-236` (r)
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:171-178` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:4c526272d4d2ec98cc73ad946a59bdcc1c9289c75925af4b9b3e42c4637d4471 — item 2; as written `:171-178` (r)
+- `engine/src/identity.rs:333` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:5d3220ce2f4dc9c695d8f96a175b405c9d1939882138510ec11dde59c530dafd — item 3
+- `engine/src/dataset.rs:2045-2069` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:0219ff397ea9a0ac1378ec2f60d2287c48707c600d49c57bcbabc4ef089947b3 — item 3
+- `kernel/src/skp.rs:1754-1762` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:c709f2980623f0f0ffd48c85c7d7fd782843622b0de72e2c7b021e8b7c99d778 — item 3
+- `engine/src/dataset.rs:2076-2086` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:ba47336c4e34e546f18b261ea7241e8b59125489d9bfe5370d564ea9ef855e47 — item 3; as written `dataset.rs:2076-2086`
+- `engine/src/dataset.rs:2088-2097` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:2578a490fbbe07c7947e26c5bb07c771fa1eaaf9a6bf2baa54bc37a433e0ce93 — item 3; as written `:2088-2097`
+- `engine/src/dataset.rs:1998-2003` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:db9b0619894c6b6f228994838ac380097aba5df1ca396c0d3821c0536ec41935 — item 3; as written `:1998-2003`
+- `engine/src/dataset.rs:2019-2025` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:e1fa58a465aa9aeaa106af0aed647af0a8d5e712fd2a36eb43ea5c0b55ff0985 — item 3; as written `:2019-2025` (r)
+- `engine/src/dataset.rs:2028` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:b734f91d845c2eda2ca8b3b835dc1a990bb860830fc08fe808a16bc6c36030a9 — item 3; as written `:2028`
+- `engine/src/identity.rs:336-344` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:702c6e5a52124354d67249bfeb803b3b66ea7f3e76ebe73c6b2f64e665600b80 — item 3; as written `identity.rs:336-344`
+- `engine/src/dataset.rs:2071-2073` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:bb98dabe01b8c4954873c482bf62b1d161ba611aae9f7a4eb442a763cac23ad7 — item 3; as written `:2071-2073` (r)
+- `engine/src/dataset.rs:2046` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:6cdde51b1682fe37f8abed467a8ebaee3303a78cb48e5f494869fe08e11b36a5 — item 3; as written `:2046` (r)
+- `engine/src/dataset.rs:2088` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:7adf800c146534f8490028c796d9dd511d42c32ad633459587f0f0a2bccbb92e — item 3; as written `:2088` (r)
+- `frontends/shell/src/App.tsx:853` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:5139b641742f48055c649ded8321ed89023f0b1e6d203af039ad07fde176bb6f — items 4, 9; as written `:853`, `App.tsx:853`
+- `frontends/shell/src/App.tsx:2234-2237` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:ac05a25b049c2ec1a1195a93a877785e27333ab3b4c43ba8df5837e0e975db2d — item 4; as written `:2234-2237`
+- `frontends/shell/src/App.tsx:921-923` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:01e45844aff554df6bcb4fb81f87efa36faec489b77571545d676c66ae484ff5 — item 4; as written `:921-923`
+- `frontends/shell/src/admission/admitDataset.ts:12-19` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:e9ca4581d0cb8d03bfba2827ad319dad9c0138b789b2017f08d1c51fa7105000 — item 4
+- `frontends/shell/src/App.tsx:2221` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:c524952e103f10634a499a73dded08d5f428f5a05f61de5c657f91c0287d5ed9 — items 4, 9; as written `App.tsx:2221`, `:2221`
+- `frontends/shell/src/admission/IdentityDeclarationForm.tsx:14-16` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:a865553b483973edc07c6c2a430ed7ab2eb0a9fff23d2b751327854201209815 — item 8; as written `:14-16` (r)
+- `frontends/shell/src/admission/AdmissionPanel.tsx:216-220` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:ea3b2461fe5ad9a1083da560436cc927c039d38827bfdccf562f5cbc3303207e — item 9; as written `AdmissionPanel.tsx:216-220`
+- `governance/forms/engine/ADMISSION-PREREGISTRATION.md:282-289` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:3535fd7241a62181929f79d0ce56482fe81f0281a283672871bef194664671f8 — item 9; as written `ADMISSION-PREREGISTRATION.md:282-289`
+- `kernel/src/skp.rs:3022-3095` @ 6cf6140cd8dfcc6fc52b82011e5dae5799edf300 sha256:9846a5879fb1017786de179c7f7d686b15786381b6fc28119668db1d82c417da — item 9
+
+8. **Pins of the cites the New texts add.** The New texts of items 2 and 6 cite these lines, read by the gate at 5bc4011bf7c592e77fc393d84fe7403f651a48ed; each entry gives the sha256 of those lines at that commit (each line with its LF, computed by script):
+
+- `protocol/skp/src/v0/mod.rs:124` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:4bde65ebbb9f6ddf5a97cbe27c79b2e5fdea39e53f18d205f38256e919a392af — item 2
+- `frontends/shell/src/skp/client.ts:160` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:ac8d777346b8d730b62c44e4d151e5fb0d40a07e9faf45974bdc46110bf5c8d1 — item 2
+- `frontends/shell/src-tauri/src/commands.rs:8` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:e50ff98ee2026a4357f2597f98b0f6b5e15da924e6ff447a019c322460e0ba9a — item 2
+- `docs/adr/ADR-016-stable-feature-identity-admission.md:186-228` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:9573f9a1059d1b8f412962a53b1fcbcb9556d4cfaaa9a20f8e67fc2ae4dcf02f — item 6; as written `:186-228` (r)
+
+9. **For the advisor**, in one message with the other drafts (ADV-2026-11-23-15 item 8): whether the draft's italic status line, which opens with Proposed, changes when its heading reads Accepted (Amendment 2 item 2); ADV-2026-11-23-20 item 8 against ADV-2026-11-23-17 item 11; and that under §8's base line this piece merges after any `App.tsx` piece its base takes in, milestone 5's PR A included. None is ruled here.
+10. Next: no further form gate. The code waits for the advisor's ruling on the words of ADR-016's Amendment 2 (ADV-2026-11-23-20 item 2) and is built on the base §8 names. Nothing of it builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.

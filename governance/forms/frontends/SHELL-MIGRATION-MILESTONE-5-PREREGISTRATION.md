@@ -1711,3 +1711,72 @@ S-1 to S-12 and KL-A to KL-D stay drafts and are built under the placeholder mar
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 4 (PASS WITH NOTES): that gate's replacement words for D-8 to D-10, carried byte for byte
+
+*Written by the custodian before any code. It carries the attempt-4 gate's own replacement words, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 4, PASS WITH NOTES (`state/consults/gates/2026-11-23-shell-migration-milestone-5-form-gate-architect-attempt-4.md`, gate-log row 879; the hand-back's sha256 bb740e4c0f512505000f796c9fc4f0f01b844e460488566b9c723abf06e214ae). It has no Correctness and no Evidence finding. Its three Documentation findings, D-8 to D-10, are fixed before the merge, and none asks for another attempt (ADV-2026-11-21-20). Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **D-8, first replacement:** the reasoning about the top at the cap (Amendment 6 item 5's New text).
+
+Old:
+
+````text
+Until a kept condition is dismissed, a raise that is not kept is newer than every kept condition.
+````
+
+New:
+
+````text
+Until a kept condition ends (by a dismissal, its owner's clear or its owner's replacement), a raise that is not kept is newer than every kept condition.
+````
+
+3. **D-8, second replacement** (Amendment 6 item 6's New text).
+
+Old:
+
+````text
+A dismissal frees a place, so a later raise can be kept while an earlier one was not. If the operator then dismisses every kept refusal older than one that was not kept, the strip shows a newer refusal, a notice or nothing where that refusal would have been the top.
+````
+
+New:
+
+````text
+A condition that ends frees a place, so a later raise can be kept while an earlier one was not. If every kept refusal older than one that was not kept then ends, by the operator's dismissal or, for a viewport refusal, its owner's clear (`App.tsx:1613`), the strip shows a newer refusal, a notice or nothing where that refusal would have been the top.
+````
+
+4. **D-9:** the null-answering picker (Amendment 6 item 2's New text).
+
+Old:
+
+````text
+the harness reaches no folder picker that answers `null` without mocking `skp/dialog`, which it does not mock (I5).
+````
+
+New:
+
+````text
+a folder picker that answers `null` needs a mock of `skp/dialog` or of `project/saveProject`'s `pickProjectFolder` (as `App.save.test.tsx:69-75` has), and this piece's App tests mock neither (I5, form §4's "What may be mocked").
+````
+
+5. **D-10:** §2.5 seam 1, as Amendment 4 replaced it.
+
+Old:
+
+````text
+and in the real app by C-E2. The canvas-ceiling route is proven
+````
+
+New:
+
+````text
+and in the real app by C-E2. The save-notice route's batch is proven from the real App by C-A6, and its empty batch at store level only (C-U8). The canvas-ceiling route is proven
+````
+
+6. **KL-E** stays a draft for the advisor, with the gate's reading of each sentence and the leftover case at the top it names. It is not reworded here.
+7. Next: the build of PR A. It shares `frontends/shell/src/App.tsx`, `frontends/shell/src/canvas/WorkingCanvas.tsx`, `KNOWN-LIMITATIONS.md`, `frontends/shell/e2e/README.md` and `frontends/shell/MANUAL-WALKTHROUGH.md` with colour-by-refill, whose build started before this gate ended; under ADV-2026-11-23-17 item 11 it does not build while that build changes them, and its base is put to the advisor. Nothing of it builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
