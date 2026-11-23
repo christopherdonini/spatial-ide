@@ -58,8 +58,9 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
  *   reinterpreted -- protective behavior, not an error in the operator's file.
  * - `engine.source_changed` (Brief A boundary 4): states what happened and what to do, and nothing
  *   that is not true at this commit -- see its own case below for the human's round-5 ruling.
- * - `engine.identity_ordinal_partitioned_unsupported` (boundary 7, P3): states that a partitioned
- *   source has no single-file row position, and names the two real routes forward.
+ * - `engine.identity_ordinal_partitioned_unsupported` (boundary 7, P3): states that this app cannot
+ *   open a folder or a pattern of files, names the single-file route, and says that declaring an
+ *   identity column does not change the refusal (the refusal comes before any identity is read).
  * - `publish.geographic_crs_not_publishable` (boundary 8, held at P2 and closed at P3).
  * - `engine.internal_inconsistency` (the retyped provenance arm): a defect in this program, not in
  *   the operator's file, and the guidance says so rather than sending them to look at their data.
@@ -117,10 +118,15 @@ export function refusalGuidance(code: string): string | null {
         "cleared, and features here can no longer be identified; reopen the dataset to continue."
       );
     case "engine.identity_ordinal_partitioned_unsupported":
+      // The gap the operator can see: in the shell this refusal is reached only through the
+      // dev-only `openPath` hook, or from another client (section 0, Reach, of
+      // governance/forms/frontends/PARTITIONED-ORDINAL-REFUSAL-OPENS-THE-IDENTITY-FORM-PREREGISTRATION.md).
+      // `AdmissionPanel` opens no form for this code (`formFamilyForCode`): the declaration form
+      // sends the same path and is refused again. A single file whose name holds `*` or `?` is
+      // also refused, and this text does not name that case.
       return (
-        "This source is spread across more than one file. Without an identity column carried in " +
-        "the data, a feature's identity here would have to be its position -- and a position is " +
-        "only meaningful within one file. Open a single file, or declare an identity column."
+        "[P6 placeholder] This app cannot open a folder or a pattern of files, and " +
+        "declaring an identity column does not change that. Open a single file instead."
       );
     case "publish.geographic_crs_not_publishable":
       return (
