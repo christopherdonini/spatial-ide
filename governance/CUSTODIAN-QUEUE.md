@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `4147e19620b7baf5926c704c152f63d0ccfc8e9fb352219f90def5d49f50132f`) at `2026-11-23T14:23:01.259Z`.
+Generated from `PLAN.yaml` (sha256 `1e870b98396cc93d8575b0f382a225b37c0f7c10ec63abd7a499c51cddb399f5`) at `2026-11-23T14:58:38.956Z`.
 
 ## 1. Next
 
@@ -16,6 +16,7 @@ Generated from `PLAN.yaml` (sha256 `4147e19620b7baf5926c704c152f63d0ccfc8e9fb352
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (lane `shell`, order null, budget 0 min)
+- **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (lane `shell`, order null, budget 120 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (lane `shell`, order null, budget 0 min)
@@ -113,7 +114,6 @@ Generated from `PLAN.yaml` (sha256 `4147e19620b7baf5926c704c152f63d0ccfc8e9fb352
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **filter-identity-alias-ambiguous-guidance-line-and-note** — A guidance line in the app for skp.filter_identity_alias_ambiguous, in the human's wording at P6, and a KNOWN-LIMITATIONS note: a declared identity beside the file's own id column refuses the first filter on id, and the message does not say what to do (phase `prototype`) — never queued until placed
-- **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
