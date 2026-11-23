@@ -623,3 +623,109 @@ By the custodian's summary, not the ruling's words: attempt 2 reads this amendme
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-23 — post-result amendment after the architect's form gate, attempt 2 (PASS WITH NOTES): the gate's words for N-1 to N-4; ADV-2026-11-22-44 items 4 and 5 copied whole (ADV-2026-11-23-01 item 6)
+
+Post-result amendment, written after the architect's form gate, attempt 2 (PASS WITH NOTES), whose notes are this round's results. Nothing above is edited: each new text below is read in place of its old text, and the form's own text, Amendment 1's included, stays as filed. The code still starts as Amendment 1 says: after PR 353 and PR 359 are on main, after the tag.
+
+**Evidence.** The gate report, `state/consults/gates/2026-11-22-relink-after-refusal-at-the-recorded-place-form-gate-architect-attempt-2.md` (gate-log row 854). It gives N-1 to N-4 as Documentation, each to be fixed before the merge by an appended amendment, with no Correctness or Evidence finding.
+
+**How the texts were copied.** Every old and new text in sections 1 to 4 is the architect's, from that report, each the one line between its fence lines, copied by the custodian's script; each old text occurs once in this file, checked at main 54710d4cd39880a0ea075658263dcdc6f048bdc4. None of them is the human's wording or the advisor's. Section 6 is the advisor's wording under the delegation of 2026-11-13, copied whole by the same script from the filed ruling. N-1 puts on the form what ADV-2026-11-22-44 items 4 and 5 ruled and Amendment 1 left off: the custodian's slip.
+
+#### 1. N-1 (Amendment 1 item 3; ADV-2026-11-22-44 items 4 and 5)
+
+**Text 1 of 2.** Old:
+
+````text
+**Item 73's changed sentence (§2 item 6), with the gate's D-5 (ADV-2026-11-22-44 item 4).** Old:
+````
+
+New:
+
+````text
+**Item 73's changed sentence (§2 item 6), with the gate's D-5 (ADV-2026-11-22-44 item 4).** Item 73's title and the rest of its paragraph are approved as §2 item 6 drafts them; this sentence alone changes. Old:
+````
+
+**Text 2 of 2.** Old:
+
+````text
+The item's comment says that this sentence is added by ADV-2026-11-22-44.
+````
+
+New:
+
+````text
+The sentence is placed at the end of the item's paragraph (ADV-2026-11-22-44 item 5). The item's comment says that this sentence is added by ADV-2026-11-22-44.
+````
+
+#### 2. N-2 (Amendment 1 item 3, S12's source comment)
+
+**Text 1 of 1.** Old:
+
+````text
+The change is in the same constant.
+````
+
+New:
+
+````text
+The change is in the same constant. The file's header, or S12's own doc comment, names ADV-2026-11-22-44 item 2 as the source of S12's words, and names the case a gate gave as not ordinary use: a save that is refused records nothing (`SaveFailure::LineageNotKept`, item 71).
+````
+
+#### 3. N-3 (Amendment 1's opening paragraph)
+
+**Text 1 of 1.** Old:
+
+````text
+(ADV-2026-11-22-35 item 1; ADV-2026-11-22-44 item 1)
+````
+
+New:
+
+````text
+(ADV-2026-11-22-44 item 1)
+````
+
+#### 4. N-4 (Amendment 1 item 2, D-4, case (iv))
+
+**Text 1 of 1.** Old:
+
+````text
+- (iv) a dataset-open refusal, built with `options.reopen` absent and owner `REOPEN_LOCATOR_REFUSAL_NOTICE`, gives null;
+````
+
+New:
+
+````text
+- (iv) a dataset-open refusal, built with `options.reopen` absent, `inFlight` false and owner `REOPEN_LOCATOR_REFUSAL_NOTICE`, gives null;
+````
+
+#### 5. For the build
+
+The report also names two cases for the source comments, not blocking: for item 69's, a name on the path whose metadata cannot be read; for item 73's, a link or a wrong kind put at the old place. They are the worker's words at the build, read by the build's two gates.
+
+The checks that attempt 2 could not make, because the words had not reached the form (item 69's "a refusal for a missing file", and item 73's changed sentence), are made by the architect's gate on the build, after the tag (ADV-2026-11-23-01 item 6, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-01-the-humans-four-lines-in-force-the-sitting-step-the-2026-11-16-directive-to-the-tag-the-spend-limit.md`). Attempt 2 checked S12's two clauses on both routes; N-2 goes into the constant's source comment as the architect words it, and S12's text stands (ADV-2026-11-23-03 item 4, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-03-the-reuse-lookup-is-a-piece-the-held-pieces-wait-for-the-tag-known-limitations-not-shipped-nodes-f-and-d.md`).
+
+#### 6. ADV-2026-11-22-44 items 4 and 5, whole
+
+Copied by script, byte for byte, from the filed ruling (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-44-node-f-s12s-new-words-the-pieces-other-words-open-1-to-open-9-its-code-starts-after-the-tag.md`, at main 54710d4cd39880a0ea075658263dcdc6f048bdc4), from the line that opens item 4 to the line before item 6. The advisor's wording under the delegation of 2026-11-13; not the human's.
+
+`````text
+4. **Item 73: approved as section 2 item 6 drafts it, title and paragraph, with the gate's D-5.** The one changed sentence reads:
+
+```text
+The project file still records the old place until you save the project, so an open before that save, while the file is not back at that place, is refused again and the choice is offered again.
+```
+
+5. **Item 69's added sentence (OPEN-7): approved with three words changed**, placed at the end of the item's paragraph. The draft's "after such a refusal" could be read of a refusal for a link, where no choice is offered (OPEN-5). The sentence:
+
+```text
+A data file that you choose after a refusal for a missing file (item 73) is opened as you chose it, with no check of the names on its path.
+```
+
+   The attempt checks "a refusal for a missing file" once against the one refusal that offers the choice. The item's comment says that this sentence is added by this ruling.
+`````
+
+Read the last amendment first.
+
+Nothing above is edited.
