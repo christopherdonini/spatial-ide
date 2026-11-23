@@ -279,3 +279,11 @@ item 2).
 *Appended on the human's typed words (`state/directives/2026-11-06-8e-open-1-words-open-4-a-e2e-readme-c9-c14-c19-heading-open-6-a-filler-order-docs-02-adr-022-kl-178.md`; one clause as reworded in `state/directives/2026-11-06-8e-words-replaced-u1-h1-h2-class-8-m10-kl-c1-c3-draft-marks-u12-mark-n1-n3-slot-2-order-clippy-placed-288-clicked.md`); the note below is theirs, byte for byte. Nothing above this heading is changed.*
 
 Note 2026-11-06 — `skp.filter_dialect_unsupported` is struck (SKP-V0's note of 2026-11-05; the piece skp-filter-dialect-unsupported-ruling): no host produced it, since a dialect other than the one literal fails at deserialization. Decision 8's list and the Notes' count of twelve read with that code removed, eleven, and Decision 8's exhaustive mapping stands over the eleven. Nothing else changes.
+
+## Note 2026-11-23 — the filter namespace narrows by reference to ADR-023: `LargeUtf8` and `Utf8View` leave it
+
+*Appended under the advisor's ruling ADV-2026-11-23-28, item 2, under the human's delegation of 2026-11-13, not the human's words. The text above is unchanged, the Status line and the earlier Notes included. Implementation: `governance/forms/engine/LARGE-UTF8-AND-UTF8-VIEW-ATTRIBUTE-COLUMNS-PREREGISTRATION.md`.*
+
+1. **The narrowing, stated rather than implicit.** The Note 2026-09-24, item 1, takes the namespace's type set from ADR-023 §2's admitted-type list, as the one admission function decides it. ADR-023's Note 2026-11-23 records that the function now admits plain `Utf8` alone of §2's three text types. So `LargeUtf8` and `Utf8View` columns leave the namespace; against the namespace as it stood before this note, they are the two types removed.
+2. A predicate that names such a column is refused with the existing `skp.filter_column_not_filterable` (fields `column`, `reason`), with the `reason` text the namespace already gives a type the function refuses. No code is added, and decision 8's eleven codes stand.
+3. The Note 2026-09-24, item 2, is unchanged: dictionary-encoded columns stay excluded by name, whatever their value type.
