@@ -1002,7 +1002,7 @@ async function stepMeasure(page, consoleHandle) {
     failure = e;
     out.stopped = e.message;
   } finally {
-    await page.setViewportSize({ width: 1280, height: 800 }).catch(() => {});
+    await (async () => { const cdp = await page.context().newCDPSession(page); await cdp.send("Emulation.clearDeviceMetricsOverride"); })().catch(() => {});
     mkdirSync(OUT_DIR, { recursive: true });
     out.fixturesAfter = fixtureHashes();
     writeFileSync(join(OUT_DIR, `console-measure-${Date.now()}.json`), JSON.stringify(out, null, 2));

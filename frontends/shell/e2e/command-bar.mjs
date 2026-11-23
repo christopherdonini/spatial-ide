@@ -462,6 +462,8 @@ async function stepAnd(page, consoleHandle) {
   if (fractionA >= unfiltered * FRACTION_MARGIN || fractionA <= FRACTION_BLANK) throw new Error(`E-AND: card A's map is ${(fractionA * 100).toFixed(2)}% non-background against ${(unfiltered * 100).toFixed(2)}% unfiltered; expected under ${FRACTION_MARGIN * 100}% of it and not blank`);
   const settledRows = await waitCommitted(page, committed);
   if (!settledRows.ok) throw new Error(`E-AND: the newest record_step rows did not end with card A's step at ok before card B (${JSON.stringify(settledRows.last?.map((row) => [stepKey(row.request), row.outcome]).slice(-3))})`);
+  // The fill (form section 2.5, Amendment 3, T1): 128 DOM clicks, an even count, so the drawer ends open.
+  await page.evaluate(() => { for (let i = 0; i < 128; i++) document.querySelector(".console-disclosure").click(); });
   const text0 = await consoleLabel(page), label0 = parseLabel(text0); if (label0 === null) throw new Error(`E-AND: the Console's label could not be read after card A's wait (${JSON.stringify(text0)})`);
   const sentB = await sendCondition(page, ZONE_B);
   if (!sentB.cleared) throw new Error(`E-AND: card B was not applied (${JSON.stringify(sentB)})`);
