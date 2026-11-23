@@ -918,11 +918,12 @@ impl Projects {
         })
     }
 
-    /// The `opened` reply of a reopen, built by [`opened_of`]. Its one caller is
-    /// [`Projects::open_project_command`]'s `Reopen::Opened` arm. If [`opened_of`] panics, its
-    /// guard runs during the unwind, holding no lock: it closes the dataset through the host, as
-    /// [`Projects::open_project`] closes it after a refused write, and then calls
-    /// [`Projects::release_ended`], which drops the entry and with it the identity's open lock.
+    /// The `opened` reply of a reopen, built by [`opened_of`]. Its one product caller is
+    /// [`Projects::open_project_command`]'s `Reopen::Opened` arm; K-D1 and K-D2 in this module's
+    /// tests call it directly. If [`opened_of`] panics, its guard runs during the unwind, holding
+    /// no lock: it closes the dataset through the host, as [`Projects::open_project`] closes it
+    /// after a refused write, and then calls [`Projects::release_ended`], which drops the entry and
+    /// with it the identity's open lock.
     fn reply_of(&self, o: Opened) -> OpenedProject {
         let dataset = o.dataset.clone();
         let _guard = ReplyGuard {
