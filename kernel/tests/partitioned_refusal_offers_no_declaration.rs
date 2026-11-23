@@ -25,12 +25,10 @@ const OLD_OFFER: &str = "or declare an identity column";
 /// the two `SkpError`s are equal; the message does not offer a declaration; and it equals the
 /// engine's `Display` for that detail.
 ///
-/// RECORDED MUTATION (observed at `2b90ed511f119052d752c849c7507ba59218cf39`):
-/// the old last clause of the `IdentityOrdinalPartitionedUnsupported` arm of the engine's
-/// `Display` put back after the message ("... declared. Open a single file, or declare an
-/// identity column that is carried in the data"). Observed outcome: this test fails by name at
-/// (c), the message-offers-no-declaration assertion, with the message text as the panic. Applied,
-/// run, and reverted; `cmp` against the committed file passed.
+/// RECORDED MUTATION (observed at `2b90ed511f119052d752c849c7507ba59218cf39`): the old last clause of the
+/// `Display` arm put back ("... declared. Open a single file, or declare an identity column that
+/// is carried in the data"). Observed outcome: this test fails by name at (c), the message
+/// assertion, with the message text as the panic. Applied, run, reverted; `cmp` passed.
 #[test]
 fn a_folder_opened_with_or_without_a_declared_identity_is_refused_by_name_and_offered_no_declaration(
 ) {
