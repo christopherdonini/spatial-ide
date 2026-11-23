@@ -923,3 +923,73 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 3 (PASS WITH NOTES): that gate's replacement words for N-1 to N-4, carried byte for byte
+
+*Written by the custodian before any code. It carries the attempt-3 gate's own replacement words, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 3, PASS WITH NOTES (`state/consults/gates/2026-11-23-colour-by-refill-keeps-the-view-form-gate-architect-attempt-3.md`, gate-log row 876; the hand-back's sha256 a739cc389f3587ba77d7ef603a759eda10b13382ce44cb94bfdd6c6b6d5c9048). It has no Correctness and no Evidence finding. Its four Documentation findings, N-1 to N-4, are to be fixed before the merge and ask for no further attempt (ADV-2026-11-21-20); they are carried here before any code, so the build reads them as the form's text, and the PR body lists them (AUTONOMY §31). Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **N-1:** Amendment 4 item 5, its first paragraph: which terminal writes the planned line.
+
+Old:
+
+````text
+Every first look's terminal writes `candidate-first-look-view-planned` (`frontends/shell/src/residency/candidateArmSession.ts:1509`), the open's first look included.
+````
+
+New:
+
+````text
+A first look's Completed terminal writes `candidate-first-look-view-planned` (`frontends/shell/src/residency/candidateArmSession.ts:1509`) when every term at `:1498-1505` holds and a frame and a shown box exist (`:1508`); the open's first look writes one.
+````
+
+3. **N-2:** Amendment 4 item 6, D-c's New: what the fit frames.
+
+Old:
+
+````text
+The fit frames only the first look's 10,000 rows, which, if they are the file's first rows, lie in the first rows of `parcel()`'s square grid (`engine/src/fixture.rs:1405-1406`), so at about 250,000 features the fit view alone may hold too few rows; I5 governs.
+````
+
+New:
+
+````text
+The fit frames only the open's first batch, since the auto-fit runs once, on the first batch (`WorkingCanvas.tsx:1817-1819`); that batch holds at most the first look's 10,000 rows, which, if they are the file's first rows, lie in the first rows of `parcel()`'s square grid (`engine/src/fixture.rs:1405-1406`), so at about 250,000 features the fit view alone may hold too few rows; I5 governs.
+````
+
+4. **N-3:** Amendment 4 item 1, the item-6 bullet.
+
+Old:
+
+````text
+- **Item 6.** The piece is built where §10 (as Amendment 2's D1 changes it) says, with ADV-2026-11-23-17 item 11 for `App.tsx` and `WorkingCanvas.tsx`.
+````
+
+New:
+
+````text
+- **Item 6.** The piece is built where §10 says, with ADV-2026-11-23-17 item 11 for `App.tsx` and `WorkingCanvas.tsx`. The advisor read §10 at caea224a, before Amendment 2's D1 changed its fallback base and its Ordered bullet; D1 follows ADV-2026-11-23-15 item 4, and it goes to the advisor in the one message of Amendment 5 item 4.
+````
+
+5. **N-4:** Amendment 5 item 4: when the drafts go to the advisor.
+
+Old:
+
+````text
+4. Its drafts and the points it could not settle go to the advisor in one message (ADV-2026-11-23-15 item 8); none is ruled here. Any finding of its own goes to the architect's attempt 3.
+````
+
+New:
+
+````text
+4. The points it could not settle go to the advisor in one message (ADV-2026-11-23-15 item 8), with Amendment 2's D1 and D6 and Amendment 4's D-c, which ADV-2026-11-23-18 was read before; its drafts go after the build gates' clause check and land in the build's words commit (ADV-2026-11-23-18 item 5). None is ruled here. Any finding of its own goes to the architect's attempt 3.
+````
+
+6. **For the advisor**, in the one message N-4's New names: Amendment 2's D1 and D6 and Amendment 4's D-c, which ADV-2026-11-23-18 was read before; the §8 bullet that holds the merge until the advisor rules; and the gate's point on AC12, that in its second cell the view may read the same before and after the fix.
+7. **For the code's gates**, as the gate names them: both client sizes recorded at E-RK1's two boxes; RK-A1's typed stand-in at the final candidate; PR 358's head and the re-link head (stop I1).
+8. Next: the build, on the base §10 names as Amendment 2's D1 changes it, under ADV-2026-11-23-17 item 11 for `App.tsx` and `WorkingCanvas.tsx`. No build, test or app start runs from 05:00Z on 2026-11-24 until the human says the sitting is over (ADV-2026-11-23-15 item 9).
+
+Read the last amendment first.
+
+Nothing above is edited.

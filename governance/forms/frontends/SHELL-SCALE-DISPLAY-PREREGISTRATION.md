@@ -925,3 +925,121 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 3 (FAIL): that gate's replacement words for E6 and D11 to D15, carried byte for byte, and the pins of the cites they add
+
+*Written by the custodian before any code. It carries the attempt-3 gate's own replacement words, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes, the pins, and what follows.*
+
+1. Evidence: the architect's form gate, attempt 3, FAIL (`state/consults/gates/2026-11-23-shell-scale-display-form-gate-architect-attempt-3.md`, gate-log row 877; the hand-back's sha256 be843a4aa2f57fbda2cee614a148dd28adbe5268233da7a6ba8fdfb923aa3ebd). Its one blocking finding is E6, Evidence, a matter of words. Its Documentation findings are D11 to D15. Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **E6, first replacement:** Amendment 4 item 3, the sentence on the record.
+
+Old:
+
+````text
+  - No record in the tree shows that WebView2 honours a scale argument passed this way.
+````
+
+New:
+
+````text
+  - A forced factor has reached WebView2 once, outside the suites' launch: milestone 2's custodian run 5 added `--force-device-scale-factor` to WebView2's browser arguments in a scratch launch script and recorded `devicePixelRatio` 1.25 and 1.5, with the CSS viewport shrunk to 1024 by 640 and 854 by 534 (`state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md:3`, `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md:45-48`). Through the suites' own `attachOrLaunch`, the argument could go only in the shared overlay above.
+````
+
+3. **E6, second replacement:** Amendment 4 item 3, the sentence on what E-SCALE asserts.
+
+Old:
+
+````text
+  - E-SCALE asserts CSS widths and DOM text computed from the camera's zoom (§2 item 1), and the override changes neither. A run under it would pass while showing nothing about a scaled display.
+````
+
+New:
+
+````text
+  - E-SCALE asserts CSS widths and DOM text computed from the camera's zoom (§2 item 1). Neither the override nor a forced factor changes them, because both are in CSS pixels at any ratio, so the width predicted beforehand is the same at every factor. A run under either would pass while showing nothing about whether the map is drawn at 2^zoom CSS pixels per unit at that ratio, which is what row 5 checks.
+````
+
+4. **D11:** Amendment 4 item 4, the reason for the return type.
+
+Old:
+
+````text
+and a return type narrower than `scaleReading`'s would not type-check that stub.
+````
+
+New:
+
+````text
+and a return type that leaves out `{kind:"none"}` would not type-check that stub.
+````
+
+5. **D12:** Amendment 4 item 4, S-4's clause check.
+
+Old:
+
+````text
+S-4 is shown exactly when `scaleReading` returns `out-of-range`: k is outside [SCALE_EXPONENT_MIN, SCALE_EXPONENT_MAX], or the zoom is finite and `2 ** zoom` is 0 or Infinity (Amendment 4, item 4).
+````
+
+New:
+
+````text
+S-4 is shown exactly when `scaleReading` returns `out-of-range`: the unit is `metre`, the zoom is finite, and either `2 ** zoom` is 0 or Infinity or k is outside [SCALE_EXPONENT_MIN, SCALE_EXPONENT_MAX] (Amendment 4, item 4).
+````
+
+6. **D13:** Amendment 4 item 1, the commit its cites are read at.
+
+Old:
+
+````text
+- Every `path:line` this amendment adds is read at a846072d4be622ade7356d36bccd13c346ffa34a, which is on main. Item 9 lists these pins.
+````
+
+New:
+
+````text
+- Every `path:line` this amendment adds is read at a846072d4be622ade7356d36bccd13c346ffa34a, which is on main, and item 9 lists these pins; the exception is the `regression.mjs` spans in item 6's New texts, which join Amendment 2's text and are read at b42c0ed72a8a94885bdd1f057c5c7463e5127a0e as P5 to P7 (item 8).
+````
+
+7. **D14:** Amendment 4 item 3, the sentence on the CDP override.
+
+Old:
+
+````text
+  - CDP `Emulation.setDeviceMetricsOverride` needs no launch change, and the suites already use it and clear it (`frontends/shell/e2e/layout.mjs:264`).
+````
+
+New:
+
+````text
+  - CDP `Emulation.setDeviceMetricsOverride` needs no launch change. No suite sends it; `layout.mjs` only clears it after resizing the page (`frontends/shell/e2e/layout.mjs:248`, `frontends/shell/e2e/layout.mjs:264`).
+````
+
+8. **D15:** Amendment 2 item 4, M1's site.
+
+Old:
+
+````text
+- M1: `≥` becomes `>`. Fails at 30 and 12.
+````
+
+New:
+
+````text
+- M1: `≥` becomes `>` at every comparison with SCALE_BAR_MIN_PX in `readingAtPxPerUnit`, the bounded search's included. Fails at 30 and 12.
+````
+
+9. **Pins.** The gate leaves the pins of the cites its New texts add to the custodian, as in Amendment 5. Each entry names the file and lines the pin is read as and the sha256 of those lines at the pin's commit, which is on main (each line with its LF, computed by script from the blob at that commit). The other cites in these New texts are pinned already.
+
+- `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md:3` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:002e077e572e695b3d37ce79a781ea9ea226143378cb7ec3eb79a01b571516f7 — R1 (item 2)
+- `state/consults/2026-10-12-shell-migration-milestone-2-phase-b-e2e-custodian-run-5.md:45-48` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:78e805f71e19a9bf1b99417d2c2348bc49011fa2b9ae542daf8df79ed1f320cf — R2 (item 2)
+- `frontends/shell/e2e/layout.mjs:248` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:797fe057084a013db3ab6dadb9402c56aa199781fa8854e813f01e55b6b3a0ca — R3 (item 7)
+- `frontends/shell/e2e/layout.mjs:264` @ 5bc4011bf7c592e77fc393d84fe7403f651a48ed sha256:f07e83aa57a16b8a8219c0622394d8c07075f788c33d4adf1e45290d92a2f7d4 — R4 (item 7)
+
+10. **For the advisor.** ADV-2026-11-23-22 item 8 accepted item 3's answer as first stated; E6 corrects its record, and the answer no stands on the gate's two grounds. Whether these words land under AUTONOMY §31 (d) without an attempt 4 is the advisor's, as it was for E5. The gate's other points for the advisor: row 5 resting on 0.93, with its note on the parcels' pitch at the low end; §8 item 8's word landed.
+11. Next: the advisor's call on E6, asked in the custodian's next message; if it is not §31 (d), the architect's form gate, attempt 4, on this amendment. No code is written before the form ends PASS or PASS WITH NOTES.
+
+Read the last amendment first.
+
+Nothing above is edited.

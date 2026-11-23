@@ -1377,3 +1377,314 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 3 (FAIL): that gate's replacement words for C-9, C-10, E-5 and N-19 to N-26, carried byte for byte
+
+*Written by the custodian before any code. It carries the attempt-3 gate's own replacement words, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 3, FAIL (`state/consults/gates/2026-11-23-b2-piece-1c-step-3-recovery-offer-form-gate-architect-attempt-3.md`, gate-log row 875; the hand-back's sha256 22c664362fb5fdd06089064d4da6aa0049809ca33b8f13647410b9cab032522b). Its blocking findings are C-9 and C-10, Correctness, and E-5, Evidence. Its Documentation findings are N-19 to N-26; it names N-19 a Correctness case that does not block and must be fixed before code. Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **C-9, first replacement:** K-C27's row in the tests table.
+
+Old:
+
+````text
+| K-C27 | `the_project_side_is_read_after_the_unsaved_locks_not_from_the_first_names` (unit test in `kernel/src/recovery.rs`; the start walk's private parameter, called after the locks and before the dedupe's names read, which the product passes as a no-op, makes U's twin folder there, its history held by the test: U not listed) | the dedupe's `<hex>` names taken from the walk's first read | K-C27 |
+````
+
+New:
+
+````text
+| K-C27 | `the_project_side_is_read_after_the_unsaved_locks_not_from_the_first_names` (unit test in `kernel/src/recovery.rs`; it calls the start's two private steps in the product's order: the walk, which takes and locks U and returns no folder names; then, after the test makes U's twin `<hex>` folder with its history held by the test, the dedupe, which reads the names itself: U not listed. The start's listing is the only product caller of both, and no parameter exists for the test) | the walk's first names passed to the dedupe and used for its `<hex>` side | K-C27 |
+````
+
+3. **C-9, second replacement:** the bullet on what K-C27 calls.
+
+Old:
+
+````text
+     - K-C27 calls the start walk and its parameter, which do not exist then either.
+````
+
+New:
+
+````text
+     - K-C27 calls the start walk and the dedupe, which do not exist then either.
+````
+
+4. **C-9, third replacement:** the dedupe's first step.
+
+Old:
+
+````text
+     1. The folder names under the root are read again. The names read before the locks are not used for it (C-8 (3)).
+````
+
+New:
+
+````text
+     1. The folder names under the root are read again, by the dedupe itself. The walk returns its taken records and no folder names, so the names read before the locks cannot reach it (C-8 (3)).
+````
+
+5. **C-10:** point (2)'s count of `metadata` calls.
+
+Old:
+
+````text
+     - at most `MAX_DEDUPE_RECORDS` `metadata` calls on `<hex>` `locations.json` files;
+````
+
+New:
+
+````text
+     - one `metadata` call on the `locations.json` of each `<hex>` folder that the second read of the names returns, until `MAX_DEDUPE_RECORDS` + 1 of them have found one. A `<hex>` folder that holds no `locations.json` costs a call and does not count, so this count is bounded by the folders in the store, not by `MAX_DEDUPE_RECORDS`;
+````
+
+6. **E-5, first replacement:** K-C28's row.
+
+Old:
+
+````text
+| K-C28 | `a_project_record_a_live_run_holds_is_neither_cleared_nor_offered_at_its_open` (the record has nothing after its mark, and the test holds it; after the call, the test drops its handle and reads both files by path, byte for byte) | `WouldBlock` taken as clearable | K-C28 |
+````
+
+New:
+
+````text
+| K-C28 | `a_project_record_a_live_run_holds_is_neither_cleared_nor_offered_at_its_open` (the record has nothing after its mark, and the test holds it; the reply lists no entry, in any state; after the call, the test drops its handle and reads both files by path, byte for byte) | `WouldBlock` taken as a lock held, so the record is read and judged through the listing's own handle (Windows: the read fails, H1, and an entry is listed `cannot-be-offered`; macOS/Linux: the record is cleared) | K-C28 |
+````
+
+7. **E-5, second replacement:** K-C34's row.
+
+Old:
+
+````text
+| K-C34 | `a_twin_a_live_run_holds_is_left_when_its_projects_record_is_discarded` (after the call, the test drops its handle and reads the twin's files by path, byte for byte) | `WouldBlock` taken as removable | K-C34 |
+````
+
+New:
+
+````text
+| K-C34 | `a_twin_a_live_run_holds_is_left_when_its_projects_record_is_discarded` (after the call, the test drops its handle and reads the twin's files by path, byte for byte) | `WouldBlock` taken as a lock held, so the twin is read, judged and removed through the search's own handle (Windows: the read fails, H1, the twin is left and K-C34 passes, a named pass case; macOS/Linux: removed, observed on a macOS or Linux runner by a pushed mutation commit) | K-C34 |
+````
+
+8. **E-5, third replacement:** the known pass cases.
+
+Old:
+
+````text
+   - **Known pass cases.** None is known for any mutation.
+````
+
+New:
+
+````text
+   - **Known pass cases.** None is known for any mutation but K-C34's on Windows, which its row names.
+````
+
+9. **E-5, fourth replacement:** the §5 addition after Predicted.
+
+Old:
+
+````text
+   - **§5, added after "Predicted":** K-C28 and K-C34 fail under their mutations on Windows (H2) and on macOS/Linux (H3).
+````
+
+New:
+
+````text
+   - **§5, added after "Predicted":** K-C28 fails under its mutation on Windows (H1: an entry is listed) and on macOS/Linux (H3: the record is cleared). K-C34 fails under its mutation on macOS/Linux (H3) and passes on Windows (H1), as its row names.
+````
+
+10. **N-19, first replacement:** the start's rule for a taken record.
+
+Old:
+
+````text
+On `WouldBlock`, any other failure, or a header the reader refuses, the taken record is withheld.
+````
+
+New:
+
+````text
+A candidate whose `history.jsonl` is absent, or 0 bytes, by its metadata is not a twin and is not locked. A save's move renames in a history that is full and already locked (`kernel/src/session_history.rs:558-562`), and the taken record's lock is held only after that mover has released it, so the taken record is the only copy and is listed. On `WouldBlock`, any other failure, or a header the reader refuses, the taken record is withheld.
+````
+
+11. **N-19, second replacement:** step 1 at the project's open.
+
+Old:
+
+````text
+     1. It runs `try_lock` on the history. `WouldBlock` means a live run holds it: nothing is cleared and nothing is listed. Any other failure gives `cannot-be-offered` (`no-step`), as Amendment 2's C-4 text says.
+````
+
+New:
+
+````text
+     1. It reads the metadata of `history.jsonl`. When that file is absent, the folder holds no step: a save's move that ended before its rename (`kernel/src/session_history.rs:551-562`), or a Discard that ended between its removals, left it. It is cleared at that open with no question: its `locations.json`, any `history.jsonl.tmp-` file and the folder are removed. No run can be moving a history into it, because this open holds the project's `open.lock` (`kernel/src/project/mod.rs:781`, :876; ADR-036 Amendment 1 item 3) and a first save takes it (:396). Otherwise it runs `try_lock` on the history. `WouldBlock` means a live run holds it: nothing is cleared and nothing is listed. Any other failure gives `cannot-be-offered` (`no-step`), as Amendment 2's C-4 text says.
+````
+
+12. **N-19, third replacement:** K-C37's row, with the new rows K-C38 and K-C39 after it.
+
+Old:
+
+````text
+| K-C37 | `recovering_an_unsaved_record_whose_twin_a_live_run_holds_is_refused_as_locked` (asserted on the reply) | step 3a skipped | K-C37 |
+````
+
+New:
+
+````text
+| K-C37 | `recovering_an_unsaved_record_whose_twin_a_live_run_holds_is_refused_as_locked` (asserted on the reply) | step 3a skipped | K-C37 |
+| K-C38 | `an_unsaved_record_whose_projects_folder_holds_no_history_is_listed` (a `<hex>` folder holding a byte copy of U's `locations.json` and a `history.jsonl.tmp-` file, and no `history.jsonl`: U listed) | a candidate with no history withholds | K-C38 |
+| K-C39 | `a_projects_folder_with_no_history_is_cleared_at_its_open` (the same folder, then `list_recoverable(handle)`: no entry, and the folder is gone) | the folder left in place | K-C39 |
+````
+
+13. **N-20, first replacement:** the twin rule's bullet on kept step ids.
+
+Old:
+
+````text
+     - U's kept step ids, in order, are the first kept step ids of R, or neither holds a step.
+````
+
+New:
+
+````text
+     - U's history holds a header the reader accepts, and either U holds at least one kept step and its kept step ids, in order, are the first kept step ids of R, or neither holds a step.
+````
+
+14. **N-20, second replacement:** the probe on equal bytes.
+
+Old:
+
+````text
+        - on equal bytes, `try_lock` on its history. `WouldBlock` leaves it, because a live run holds it, this run included (H1, H3), and any other failure leaves it too;
+````
+
+New:
+
+````text
+        - on equal bytes, `metadata` of its `history.jsonl`. An absent or 0-byte history is left unlocked: a history is created empty and locked only after that (`kernel/src/session_history.rs:516-523`), so an empty one may be another run's in that gap. Otherwise `try_lock` on its history. `WouldBlock` leaves it, because a live run or another instance's listing holds it, this run included (H1, H3), and any other failure leaves it too;
+````
+
+15. **N-21, first replacement:** item 76's first draft sentence.
+
+Old:
+
+````text
+A saved project's session history leaves when that project is next opened, as item 70 says.
+````
+
+New:
+
+````text
+A saved project's session history with no change after its last save leaves when that project is next opened. One with changes after it leaves when its offer there is answered, as item 70 says.
+````
+
+16. **N-21, second replacement:** item 76's third bullet.
+
+Old:
+
+````text
+  - When more than 256 sessions that never saved are kept, a saved project's session history that is recovered, discarded or cleared may leave behind the session it was moved from. That session is then listed at a later start, and holds only changes the project's history held.
+````
+
+New:
+
+````text
+  - When more than 256 sessions that never saved are kept, or when another window of the app is listing its sessions at that moment, a saved project's session history that is recovered, discarded or cleared may leave behind the session it was moved from. That session is then listed at a later start, and holds only changes the project's history held.
+````
+
+17. **N-22, first replacement:** where item 4's first Old text sits.
+
+Old:
+
+````text
+The first of these Old texts sits in Amendment 2's C-4 New text; the other two are bullets of Amendment 2's item 4:
+````
+
+New:
+
+````text
+The first of these Old texts sits in §2.3's **At start** bullet; the other two are bullets of Amendment 2's item 4, an addition replaced in place by the same rule:
+````
+
+18. **N-22, second replacement:** the word skipped.
+
+Old:
+
+````text
+whose `locations.json` bytes equal a `<hex>` record's and whose first kept step id equals that record's (Amendment 4 item 4) is skipped
+````
+
+New:
+
+````text
+whose `locations.json` bytes equal a `<hex>` record's and whose first kept step id equals that record's (Amendment 4 item 4) is not listed, and counts toward `MAX_RECOVERABLE_RECORDS`
+````
+
+19. **N-23:** the class label.
+
+Old:
+
+````text
+These are class-9 scope additions, recorded before any code.
+````
+
+New:
+
+````text
+These are additions that the gate's answer and ADV-2026-11-23-16 bring, declared before any code. They are not class 9, because the ruling is not a standing rule, and not class 8, because no code exists.
+````
+
+20. **N-24:** the draft of the ADR-036 note for item 2, the advisor's to word.
+
+Old:
+
+````text
+A draft, to follow that sentence: "A project's record that another run left, that no running session holds, and that holds no step after its last `saved-here` mark is cleared when that project is next opened, with no offer: nothing in it is unsaved."
+````
+
+New:
+
+````text
+A draft, to follow that sentence: "A project's record that another run left, that no running session holds, whose header names no action this version lacks, whose kept lines end with a `saved-here` mark and hold no `restored` mark, and in which the reader refuses no line but a torn last one, is cleared when that project is next opened, with no offer: its steps reach the project file that mark followed."
+````
+
+21. **N-25:** question (g), added after (f).
+
+Old:
+
+````text
+   - (f) **The P6 drafts:** item 70 and item 76 (item 10), and R-S8 and R-S9 for step 3a's refusals.
+````
+
+New:
+
+````text
+   - (f) **The P6 drafts:** item 70 and item 76 (item 10), and R-S8 and R-S9 for step 3a's refusals.
+   - (g) **Item 5's bound.** The ruling removes the twin unless a live run holds it. Item 3 also leaves a twin past `MAX_DEDUPE_RECORDS` `unsaved-` folders, and one that another instance's listing holds at that moment. Item 76's third bullet names both. Is that qualifier accepted?
+````
+
+22. **N-26:** K-C36's row.
+
+Old:
+
+````text
+| K-C36 | `a_record_holding_a_restored_mark_is_listed_with_discard_only` (a header, s1, s2, a `restored` mark to s1, s3) | `restored` marks not considered | K-C36 |
+````
+
+New:
+
+````text
+| K-C36 | `a_record_holding_a_restored_mark_is_listed_with_discard_only` (a project's record at its open: a header, s1, s2, a `restored` mark to s1, s3, a `saved-here` mark after s3; listed `later-version`, and the folder is still there) | `restored` marks not considered (the record is then cleared) | K-C36 |
+````
+
+23. **The ceilings.** C-9's two private steps and N-19's rows K-C38 and K-C39 add product and test lines, which the gate puts at roughly 30 to 60 and 60 to 80. A row that passes its figure is re-declared by amendment before code, as the gate says. Whether 5,260 is accepted stays with the advisor (ADV-2026-11-23-22 item 5).
+24. **For the advisor.** N-24's note words and N-25's question (g) go to the advisor with the other drafts. E-5's K-C34 is observed on macOS or Linux by a pushed mutation commit on such a runner; whether that waits for the macOS and Linux work paused until the tag is asked of the advisor.
+25. Next: the architect's form gate, attempt 4, on this amendment. No code is written before it ends PASS or PASS WITH NOTES.
+
+Read the last amendment first.
+
+Nothing above is edited.

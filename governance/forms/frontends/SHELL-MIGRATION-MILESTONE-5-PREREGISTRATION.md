@@ -1578,3 +1578,136 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 3 (FAIL): that gate's replacement words for E-3 and D-5 to D-7, carried byte for byte
+
+*Written by the custodian before any code. It carries the attempt-3 gate's own replacement words, each copied by script from the filed report in the report's order; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 3, FAIL (`state/consults/gates/2026-11-23-shell-migration-milestone-5-form-gate-architect-attempt-3.md`, gate-log row 874; the hand-back's sha256 92c51714868dadbb1c120fba24b77a99d9853eabc35b3659aea4a0f4d3f3011b). Its one blocking finding is E-3, Evidence: a save's notices as one batch has no test from the real App. Its Documentation findings are D-5, D-6 and D-7. Each Old text below occurs once in the form above this amendment, in Amendment 4; each New text occurs nowhere above it.
+
+2. **E-3, Fix 1:** the A4-1 sentence of Amendment 4.
+
+Old:
+
+````text
+App's record-notice site (`:879`) and save site (`:2193`) dispatch it.
+````
+
+New:
+
+````text
+App's record-notice site (`:879`) and save site (`:2193`) dispatch it. C-A6 proves the save site's batch from the real App. The empty batch is proven at store level only (C-U8): the harness reaches no folder picker that answers `null` without mocking `skp/dialog`, which it does not mock (I5).
+````
+
+3. **E-3, Fix 2:** a new row of §4's table, added after the row C-A5 as Amendment 4 adds it:
+
+````text
+| C-A6 | A | **a save's notices are one batch, from the real App on the shipped candidate arm:** the canvas stand-in answers `currentView` (`App.tsx:2190`); the transport mock gains `saveProject` (`src/skp/client.ts:155`), answering with `history_mark: "withheld"` and a `project_relative` that adds no notice; a save through the `e2eSaveProjectToFolder` hook (`App.tsx:1454-1462`) gives exactly `[SAVED_NOTICE, MARK_WITHHELD_NOTICE]` (`src/project/saveProject.ts:115-117`): the strip's top is the `.save-notice` holding `SAVED_NOTICE`, S-3 reads 1, and Problems' other row is the `.save-notice` holding `MARK_WITHHELD_NOTICE` | App dispatches one `replaceBatch` per notice at `:2193`; {C-A6} |
+````
+
+4. **E-3, Fix 3:** its row in the tests table.
+
+Old:
+
+````text
+| C-A5 | `src/App.conditions.test.tsx` |
+````
+
+New:
+
+````text
+| C-A6 | `src/App.conditions.test.tsx` | no store; as drafted, the second notice's raise ends the first | one `replaceBatch` per notice at `:2193`; {C-A6} |
+| C-A5 | `src/App.conditions.test.tsx` |
+````
+
+5. **D-5, first replacement:** the reasoning about the top at the cap.
+
+Old:
+
+````text
+A raise that is not kept is newer than every kept condition.
+````
+
+New:
+
+````text
+Until a kept condition is dismissed, a raise that is not kept is newer than every kept condition.
+````
+
+6. **D-5, second replacement.**
+
+Old:
+
+````text
+If the operator dismisses every kept refusal while one that was not kept would still stand, the strip shows a notice or nothing.
+````
+
+New:
+
+````text
+A dismissal frees a place, so a later raise can be kept while an earlier one was not. If the operator then dismisses every kept refusal older than one that was not kept, the strip shows a newer refusal, a notice or nothing where that refusal would have been the top.
+````
+
+7. **D-6, first replacement:** `replaceBatch` takes the route's code.
+
+Old:
+
+````text
+Its owner's report is one `replaceBatch(route, target, generation, displays)` event.
+````
+
+New:
+
+````text
+Its owner's report is one `replaceBatch(route, code, target, generation, displays)` event, `code` being the route's typed code (`step-record-<kind>` from `report.kind`, `App.tsx:878`, or `project.save_notice`).
+````
+
+8. **D-6, second replacement.**
+
+Old:
+
+````text
+`replaceBatch(save-notice, resource, R, [a, b])`
+````
+
+New:
+
+````text
+`replaceBatch(save-notice, project.save_notice, resource, R, [a, b])`
+````
+
+9. **D-6, third replacement.**
+
+Old:
+
+````text
+`replaceBatch(save-notice, resource, R, [])`
+````
+
+New:
+
+````text
+`replaceBatch(save-notice, project.save_notice, resource, R, [])`
+````
+
+10. **D-7:** item 8's reach.
+
+Old:
+
+````text
+S-1 to S-13 and KL-A to KL-E stay drafts and are built under the placeholder mark.
+````
+
+New:
+
+````text
+S-1 to S-12 and KL-A to KL-D stay drafts and are built under the placeholder mark (item 8); this amendment holds S-13 (Amendment 2) and KL-E (below) to the same, as item 8 does not name them.
+````
+
+11. **§7 is not edited.** C-A6 adds about 30 lines to App.conditions, recorded as class 8 at the count in PR A's closing amendment (ADV-2026-11-23-17 item 12), as the gate says.
+12. **KL-E** stays a draft for the advisor. The gate finds one of its sentences untrue as drafted, since the 64th place is held for an ended session; it is not reworded here.
+13. Next: the architect's form gate, attempt 4, on this amendment. No code is written before it ends PASS or PASS WITH NOTES.
+
+Read the last amendment first.
+
+Nothing above is edited.
