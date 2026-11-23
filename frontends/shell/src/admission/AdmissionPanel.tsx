@@ -6,7 +6,7 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { admitProject, type Reopened } from "../project/openProject";
-import { fileNotFoundNotice, QUESTION_CANCEL, QUESTION_COPY, QUESTION_SAME, QUESTION_TEXT, RELINK_CHOICE } from "../project/reopenNotices";
+import { fileNotFoundNotice, QUESTION_CANCEL, QUESTION_COPY, QUESTION_SAME, QUESTION_TEXT, RELINK_CHOICE, REOPEN_LOCATOR_REFUSAL_NOTICE } from "../project/reopenNotices";
 import { cancel as cancelClient } from "../skp/client";
 import { crsCatalog } from "../skp/crsCatalog";
 import { pickFile, pickProjectFolder } from "../skp/dialog";
@@ -143,9 +143,18 @@ export function openCancelKey(state: State): string | null {
 }
 
 /** The re-link choice a state offers (KNOWN-LIMITATIONS item 73), or `null`: the folder to re-enter the run for, and the run's own `AdmitOptions`, so that
- * the choice re-enters it with the answer it gave. The DEV hook `e2eRelinkFile` reads it. */
+ * the choice re-enters it with the answer it gave. It is offered in two states and no other:
+ * - `not_found` (S11), as before;
+ * - `refused`, when the run is a reopen (`options.reopen` is set), nothing is in flight and the owner place is `REOPEN_LOCATOR_REFUSAL_NOTICE`, which
+ *   `reopenRefusalPlace` in `project/openProject.ts` gives only to `skp.project_target_unresolvable` with a `locator`. A refusal for a link or a wrong kind at the
+ *   recorded place has another code, so another place, and no choice (OPEN-5). The kernel already uses a `relink` before any locator (`Projects::open_project`).
+ * The owner place stays the one decision site; the refused block's render and the DEV hook `e2eRelinkFile` both read this function. */
 export function relinkOffer(state: State): { folder: string; options: AdmitOptions } | null {
-  return state.kind === "not_found" ? { folder: state.folder, options: state.options } : null;
+  if (state.kind === "not_found") return { folder: state.folder, options: state.options };
+  if (state.kind === "refused" && state.options.reopen !== undefined && !state.inFlight && state.owner === REOPEN_LOCATOR_REFUSAL_NOTICE) {
+    return { folder: state.path, options: state.options };
+  }
+  return null;
 }
 
 /** The `AdmitOptions` the in-flight open (if any) is actually running with -- see the `State`
@@ -485,6 +494,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   }, [inFlightCancelKey]);
 
   const openLivenessMessage = showOpenLiveness ? openLivenessText(state) : null;
+  const offer = state.kind === "refused" ? relinkOffer(state) : null;
 
   return (
     <div className="admission-panel">
@@ -551,6 +561,12 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       {state.kind === "refused" && (
         <>
           <RefusalBlock refusal={state.refusal} reopen={state.options.reopen !== undefined} owner={state.owner ?? null} />
+          {/* Item 73: the refusal at the recorded place offers the same choice S11 does; `handleRelink` and the run's own options are unchanged. */}
+          {offer !== null && (
+            <button type="button" className="admission-reopen-relink" onClick={() => void handleRelink(offer.folder, offer.options)}>
+              {RELINK_CHOICE}
+            </button>
+          )}
           {state.formFamily === "crs" && (
             <>
               {/* MF2 honesty requirement: a carried identity option is the operator's own earlier
