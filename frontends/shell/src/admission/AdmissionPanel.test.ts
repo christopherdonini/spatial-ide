@@ -15,11 +15,19 @@ import {
   openLivenessText,
   openLivenessTextShouldShow,
   OPEN_LIVENESS_DELAY_MS,
+  relinkOffer,
   requestOpenCancel,
   runAdmitPath,
   State,
 } from "./AdmissionPanel";
 import { FormattedRefusal } from "./formatRefusal";
+import {
+  ENGINE_REFUSAL_NOTICE,
+  OPEN_ELSEWHERE_OTHER_NOTICE,
+  OPEN_ELSEWHERE_OWN_NOTICE,
+  REOPEN_LOCATOR_REFUSAL_NOTICE,
+  REOPEN_REFUSAL_NOTICE,
+} from "../project/reopenNotices";
 
 // `AdmissionPanel.tsx` runs unmocked inside the mounted `App` (`App.layout.test.tsx`); here
 // `formFamilyForCode`/`nextFormFamily` are tested as pure functions. They are exported
@@ -597,4 +605,47 @@ describe("UB13 (Amendment 1 B3): runAdmitPath asks confirmOpen before it admits 
     expect(harness.state.kind).toBe("admitted");
     expect(onAdmitted).toHaveBeenCalledTimes(1);
   });
+});
+
+// S-1 (RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md section 4): the re-link choice is offered after the one refusal item 73 names, and nowhere else.
+const RELINK_FOLDER = "C:/projects/p";
+const RELINK_OPTIONS: AdmitOptions = { reopen: { answer: null, relink: null } };
+
+/** A reopen's refused state with the given owner place, not in flight; `over` replaces members of it. */
+function refusedReopen(owner: string | null, over: Partial<Extract<State, { kind: "refused" }>> = {}): State {
+  return {
+    kind: "refused",
+    path: RELINK_FOLDER,
+    refusal: refusal("skp.project_target_unresolvable", [["locator", "project-relative"]]),
+    formFamily: null,
+    options: RELINK_OPTIONS,
+    inFlight: false,
+    cancelKey: null,
+    pendingOptions: null,
+    owner,
+    ...over,
+  };
+}
+
+it("relinkOffer offers the re-link after a refused locator and nowhere else", () => {
+  const offered = { folder: RELINK_FOLDER, options: RELINK_OPTIONS };
+
+  // (i) `not_found` gives an offer.
+  const notFound: State = { kind: "not_found", folder: RELINK_FOLDER, options: RELINK_OPTIONS, fileName: "parcels.parquet" };
+  expect(relinkOffer(notFound), "(i)").toEqual(offered);
+
+  // (ii) a reopen refused with owner `REOPEN_LOCATOR_REFUSAL_NOTICE` gives `{folder: path, options}`.
+  expect(relinkOffer(refusedReopen(REOPEN_LOCATOR_REFUSAL_NOTICE)), "(ii)").toEqual(offered);
+
+  // (iii) a reopen refused with `REOPEN_REFUSAL_NOTICE`, either `OPEN_ELSEWHERE_*` or `ENGINE_REFUSAL_NOTICE` gives null.
+  for (const owner of [REOPEN_REFUSAL_NOTICE, OPEN_ELSEWHERE_OWN_NOTICE, OPEN_ELSEWHERE_OTHER_NOTICE, ENGINE_REFUSAL_NOTICE]) {
+    expect(relinkOffer(refusedReopen(owner)), `(iii) ${owner}`).toBeNull();
+  }
+
+  // (iv) a dataset-open refusal, built with `options.reopen` absent, `inFlight` false and owner `REOPEN_LOCATOR_REFUSAL_NOTICE`, gives null.
+  expect(relinkOffer(refusedReopen(REOPEN_LOCATOR_REFUSAL_NOTICE, { options: {} })), "(iv)").toBeNull();
+
+  // (v) case (ii) with `inFlight: true` gives null.
+  const inFlight = refusedReopen(REOPEN_LOCATOR_REFUSAL_NOTICE, { inFlight: true, cancelKey: "k1", pendingOptions: RELINK_OPTIONS });
+  expect(relinkOffer(inFlight), "(v)").toBeNull();
 });

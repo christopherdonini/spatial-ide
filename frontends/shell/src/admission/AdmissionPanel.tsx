@@ -142,6 +142,12 @@ export function openCancelKey(state: State): string | null {
   return null;
 }
 
+/** The re-link choice a state offers (KNOWN-LIMITATIONS item 73), or `null`: the folder to re-enter the run for, and the run's own `AdmitOptions`, so that
+ * the choice re-enters it with the answer it gave. The DEV hook `e2eRelinkFile` reads it. */
+export function relinkOffer(state: State): { folder: string; options: AdmitOptions } | null {
+  return state.kind === "not_found" ? { folder: state.folder, options: state.options } : null;
+}
+
 /** The `AdmitOptions` the in-flight open (if any) is actually running with -- see the `State`
  * union's own field comments for why this is not simply `state.options` in the `"refused"` case. */
 function inFlightOptions(state: State): AdmitOptions | null {
@@ -450,10 +456,10 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       try { return answer(await handleProjectPick()); } finally { e2eFolderRef.current = null; }
     });
     registerE2eHook("e2eRelinkFile", async (file) => {
-      const at = stateRef.current;
-      if (at.kind !== "not_found") return "not-asked";
+      const offer = relinkOffer(stateRef.current);
+      if (offer === null) return "not-asked";
       e2eFileRef.current = file;
-      try { return answer(await handleRelink(at.folder, at.options)); } finally { e2eFileRef.current = null; }
+      try { return answer(await handleRelink(offer.folder, offer.options)); } finally { e2eFileRef.current = null; }
     });
     return () => {
       unregisterE2eHook("e2eOpenProjectFolder");

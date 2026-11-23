@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// E2E TEST SURFACE (e2e/README.md) -- E-REOPEN (R1 to R9) and E-CHANGED of B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 54 item 9, with its
+// E2E TEST SURFACE (e2e/README.md) -- E-REOPEN (R1 to R10) and E-CHANGED of B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md Amendment 54 item 9, with its
 // item 7 (a)): a project saved from the real app is reopened in the same window, and what the kernel answers (opened, question, not_found, a refusal) and what the shell
 // applies and shows are read from the real page. Sibling to `project.mjs`; one app process; the real `open_project` command, the real project file, the real machine store.
 //
@@ -30,6 +30,7 @@ const mk = (name) => mkdtempSync(join(TEMP_BASE, `spatial-reopen-${name}-`));
 const FOLDER_P = mk("p");
 const FOLDER_Q = mk("q");
 const FOLDER_P2 = mk("p2");
+const FOLDER_P3 = mk("p3");
 const FOLDER_C = mk("changed");
 const FOLDER_SPARE = mk("spare");
 const DATA_DIR = mk("data");
@@ -56,7 +57,7 @@ const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 
 function dropFolders() {
-  for (const path of [FOLDER_P, FOLDER_Q, FOLDER_P2, FOLDER_C, FOLDER_SPARE, DATA_DIR, SCRATCH]) {
+  for (const path of [FOLDER_P, FOLDER_Q, FOLDER_P2, FOLDER_P3, FOLDER_C, FOLDER_SPARE, DATA_DIR, SCRATCH]) {
     try {
       rmSync(path, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
     } catch (e) {
@@ -353,6 +354,29 @@ async function stepR9(page, consoleHandle) {
   return `P2's handle closed (${ring}); P2's data moved; S11 named ${basename(dataD)}; the re-link slot's file opened the project`;
 }
 
+/** R10 (the form RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md, section 4): data saved inside the project folder is renamed there, so the reopen is refused at the recorded place, and the refused block offers the re-link. */
+async function stepR10(page, consoleHandle) {
+  const data = join(FOLDER_P3, "parcels.parquet");
+  const project = await openAndSave(page, consoleHandle, FOLDER_P3, data);
+  const kinds = project.datasets?.[0]?.resource?.locators?.map((l) => l.kind).join();
+  if (kinds === undefined || !kinds.includes("project-relative")) throw new Error(`P3's dataset locators read ${kinds}, expected a project-relative one`);
+  const known = closedTexts(await readConsole(page));
+  let closed;
+  await openFile(page, consoleHandle, FIXTURE, "another file", async () => { closed = await waitClosed(page, known, "P3's data handle"); });
+  const ring = `${closed.label}; the close_dataset row has ${closed.rows.length - 1 - closed.fresh.index} entries after it`;
+  const moved = join(FOLDER_P3, "found-again.parquet");
+  await retrying("renaming P3's data file", () => renameSync(data, moved));
+  expectAnswer(await hookOpen(page, FOLDER_P3), "skp.project_target_unresolvable", "the reopen of P3");
+  const shown = await page.evaluate(() => ({
+    code: document.querySelector(".admission-panel .admission-refusal-code")?.textContent ?? null,
+    relink: document.querySelector(".admission-panel .admission-reopen-relink") !== null,
+  }));
+  if (shown.code !== "skp.project_target_unresolvable") throw new Error(`the refusal block shows the code ${shown.code}`);
+  if (!shown.relink) throw new Error("the refused block shows no .admission-reopen-relink button");
+  expectAnswer(await hookRelink(page, moved), "admitted", "the re-link");
+  return `P3's handle closed (${ring}); P3's data (locators ${kinds}) renamed in its folder; refused as skp.project_target_unresolvable with the re-link choice shown; the re-link slot's file opened the project`;
+}
+
 async function stepChanged(page, consoleHandle) {
   const data = join(FOLDER_C, "parcels.parquet");
   await openAndSave(page, consoleHandle, FOLDER_C, data);
@@ -383,7 +407,7 @@ async function main() {
     dropFolders();
     return;
   }
-  console.log(`reopen: the store for this run is ${SCRATCH}; the folders are ${[FOLDER_P, FOLDER_Q, FOLDER_P2, FOLDER_C, FOLDER_SPARE, DATA_DIR].join(", ")}`);
+  console.log(`reopen: the store for this run is ${SCRATCH}; the folders are ${[FOLDER_P, FOLDER_Q, FOLDER_P2, FOLDER_P3, FOLDER_C, FOLDER_SPARE, DATA_DIR].join(", ")}`);
   let session;
   try {
     session = await attachOrLaunch();
@@ -440,6 +464,7 @@ async function main() {
       (await runStep("R7", 120_000, () => stepR7(page, ctx))) &&
       (await runStep("R8", 240_000, () => stepR8(page, consoleHandle, ctx))) &&
       (await runStep("R9", 400_000, () => stepR9(page, consoleHandle))) &&
+      (await runStep("R10", 400_000, () => stepR10(page, consoleHandle))) &&
       (await runStep("E-CHANGED", 300_000, () => stepChanged(page, consoleHandle)));
     console.log("\n== Summary ==");
     for (const r of results) console.log(`${r.id.padEnd(9)}  ${r.status.padEnd(6)}  ${r.note}`);
