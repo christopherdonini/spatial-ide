@@ -403,8 +403,8 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
     return folder === null ? null : reopenPath(folder, { answer: null, relink: null });
   }, [reopenPath]);
 
-  // S11's choice: the file picker, then the re-link call with the answer the run already gave (Amendment 54 item 5 (d)). A dismissed picker ends
-  // the run at the cancelled note.
+  // S11's choice, and item 73's after a refusal at the recorded place (`relinkOffer`): the file picker, then the re-link call with the answer the run already gave
+  // (Amendment 54 item 5 (d)). A dismissed picker ends the run at the cancelled note. A Cancel of the call returns to the same refusal, with its choice.
   const handleRelink = useCallback(
     async (folder: string, options: AdmitOptions): Promise<AdmissionOutcome | null> => {
       const file = await takeSlot(e2eFileRef, pickFile);

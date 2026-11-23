@@ -1166,6 +1166,14 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 §1 and §4 are updated in place to count eight commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.13"` → `"skp/0.14"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the three shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.14` as an unsupported future version is renumbered to name `skp/0.15`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
 
+### Note: a `relink` after a refused locator (2026-11-23; no literal change)
+
+**`skp/0.14` stands; no literal is bumped and no fixture changes.**
+
+- **The change.** §12.3's `relink` bullet names a second case in which a client sends one, after `skp.project_target_unresolvable` with a `locator`. The kernel already used a `relink` before any locator at `skp/0.14`, so its answers do not change.
+- **The machine.** §12.3 gains the bullet that says what "the machine" and "this machine" mean there.
+- **What did not change.** No key, value, code, message or command is added or removed, and `protocol/data-plane/` has an empty diff.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1429,8 +1437,9 @@ refused   = { reason: "over-bound", line: n | null, limit } | { reason: "damaged
 - **Two calls, no state between them.** The kernel keeps nothing between the first call and the second. A `question` or a `not_found` is answered by calling again, with `answer` or with `relink`.
 - **`question`** means the folder is not one the machine remembers for the project, and the folder it remembers first still holds a project file of this identity, or one the reader refuses, or cannot be read, it or its project file. Nothing was written. The answer `copy` mints a new identity into this folder; the answer `same` is remembered for this folder.
 - **The data** is found by the project-relative locator the file carries, through the resolver's check, which refuses a locator it cannot resolve; otherwise by the location this machine's store holds for the dataset, and a location that is absent, or whose file is missing, is `not_found`.
-- **A `relink`** is an absolute UTF-8 path to a file the client chose after `not_found`. It replaces the dataset's entry in the machine store whatever the entry held. A client sends one after a `not_found`.
+- **A `relink`** is an absolute UTF-8 path to a file the client chose after a `not_found`, or after a refusal as `skp.project_target_unresolvable` that names a `locator`. It is used in place of every locator the project file carries, and the resolver's check is not made on it. It replaces the dataset's entry in the machine store whatever the entry held. The project file keeps its locators until a later `save_project` judges them again (§11.3), so a call without a `relink` before that save is refused again while the file is not at the place the locator records.
 - **The open** is `open_dataset`'s, with the claims the project file recorded and the request's `cancel_key`. A project is open once at a time within one user's machine store, where its lock is kept: a reopen of a project whose lock another open holds is refused as `skp.project_open_elsewhere`. The lock does not reach another user's store on the same machine.
+- **The machine.** Wherever §12 says "the machine" or "this machine", it means one user's machine store: the `spatial-ide/projects` folder in the per-user data directory, with one folder for each project identity, holding that identity's `folders.json`, `locations.json`, `open.lock` and the lineage file kept on this machine. Another user of the same computer has a store of its own, which this user's calls neither read nor write.
 - **No reply carries a path.** A refusal may name the request's own `folder` or `relink` as sent, a locator's JSON path and its segment as the project file spells it, a machine-store file by its fixed name, and an identity. One exception: an engine refusal keeps the engine's own message, unedited (§5), and that message may name the path the engine was given.
 - **Cancellable**, through `cancel` and the request's `cancel_key`, as `open_dataset` is, and not progress-reporting. A key that a live `open_dataset` or `open_project` call holds is refused as `skp.cancel_key_in_use`. A cancel that the call sees before the engine's open returned refuses it as `engine.cancelled`. The call looks between its steps, so a `question`, a `not_found` or another refusal already decided can still be the reply. A cancel after the engine's open returned a dataset is not seen: the call goes on as it would with none.
 
