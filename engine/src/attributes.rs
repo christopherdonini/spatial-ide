@@ -640,6 +640,19 @@ mod tests {
         }
     }
 
+    /// T2 (`LARGE-UTF8-AND-UTF8-VIEW-ATTRIBUTE-COLUMNS-PREREGISTRATION.md` §4): a dictionary over
+    /// either refused text type is refused as well, through the same final arm.
+    #[test]
+    fn a_dictionary_over_large_utf8_or_utf8_view_is_not_admitted() {
+        for value in [DataType::LargeUtf8, DataType::Utf8View] {
+            let ty = DataType::Dictionary(Box::new(DataType::Int32), Box::new(value));
+            assert!(
+                admit_attribute_type("c", &ty).is_err(),
+                "{ty} must be refused"
+            );
+        }
+    }
+
     /// E-1: `float32_is_admitted_as_its_own_type_and_never_widened`.
     #[test]
     fn float32_is_admitted_as_its_own_type_and_never_widened() {

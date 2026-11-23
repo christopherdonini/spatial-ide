@@ -2727,6 +2727,23 @@ mod tests {
         }
     }
 
+    /// T4 (`LARGE-UTF8-AND-UTF8-VIEW-ATTRIBUTE-COLUMNS-PREREGISTRATION.md` §4): a `LargeUtf8` or
+    /// `Utf8View` column is not filterable. Constructed fields, the accepted pattern for types
+    /// `read_parquet` cannot yield.
+    #[test]
+    fn a_large_utf8_or_utf8_view_column_is_not_filterable() {
+        for ty in [DataType::LargeUtf8, DataType::Utf8View] {
+            let field = Field::new("zone", ty.clone(), true);
+            assert!(
+                matches!(
+                    filterable_column_type("zone", &field),
+                    Err(FilterError::ColumnNotFilterable { .. })
+                ),
+                "{ty} must not be filterable"
+            );
+        }
+    }
+
     #[test]
     fn a_predicate_over_the_byte_ceiling_is_refused_before_parsing() {
         let long = format!("zone = '{}'", "a".repeat(MAX_PREDICATE_BYTES));
