@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c49a972a910bf7b9a15222d04bf13dcd68c55fb9d5b6657d6bcccc9e6a8e2f30`) at `2026-11-23T16:42:55.794Z`.
+Generated from `PLAN.yaml` (sha256 `da80394055f74139201c212e317200f2df7efd327798c848013aecd9dba17c02`) at `2026-11-23T17:04:39.711Z`.
 
 ## 1. Next
 
@@ -141,6 +141,7 @@ Generated from `PLAN.yaml` (sha256 `c49a972a910bf7b9a15222d04bf13dcd68c55fb9d5b6
 - **pan-anchor-drag-waits-for-its-own-lines** — e2e/pan-anchor.mjs: drag waits for the view-state lines its own gesture produces, not a wall-clock quiet period (test only) (phase `prototype`) — never queued until placed
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
+- **partitioned-ordinal-refusal-opens-the-identity-form** — A partitioned source refused for its ordinal identity tells the user to declare an identity column, but the panel opens no form for that refusal (the identity route's note, item 4; ADV-2026-11-23-20 item 8) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

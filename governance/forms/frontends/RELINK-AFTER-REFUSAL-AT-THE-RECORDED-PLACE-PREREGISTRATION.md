@@ -744,3 +744,31 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — 2026-11-23 — the closing amendment, after both build gates (PASS WITH NOTES): references and hashes only (the architect's D-7, the reviewer's D-6)
+
+Written after both build gates' outcomes were seen. References and hashes only, under the record cap; nothing in §1 to §9 changes.
+
+1. **The commits** on `cut/relink-after-refusal`, over the base `0f02c164e070960c326573560815f2eb0a880684` (Amendment 3):
+   - P0, `3885d02bc4dbb4e02a15ca208b5a0f41085766eb`;
+   - the code, `32342fd4e9579381121b0925f27d5c1287b1133c`;
+   - the words, `d03eaae777b34304daeb1b1d40043cdb4016f72f`;
+   - commit 4, `06a2825a1dd9e55649605487f1065810905dad58`, which the brief did not name and which changed test text only: comments and one assertion message;
+   - the gates' words, `e4e6493d92ec941425dd6566c0a4ec154c7eb633`: comments and docs only, so no narrow read (ADV-2026-11-22-05).
+2. **Each mutation and the commit it was observed at:**
+   - M-S1 to M-S3, M-K1, M-K2 and M-K2b: by the worker at `32342fd4`, and again by the reviewer's build gate at `06a2825a`;
+   - M-E1: by the tester at `06a2825a`;
+   - P0: observed at `3885d02b`. The code's RECORDED MUTATIONS lines do not carry it.
+3. **M-K2 as §4 words it** fails K-F1 at the first save's `at` check, not at F-4's `at` check. Its prediction is missed in its place only. **M-K2b**, the same mutation at a later save only, was added after the result, and it fails at F-4's `at` check.
+4. **No `verify-mutation` run** is an observation here. `frontends/shell/e2e/reopen.mjs` records M-E1 after its RECORDED MUTATIONS line from `e4e6493d`.
+5. **The evidence**, each by its path, the commit that filed it, and the sha256 of its bytes as filed:
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-worker-report.md`, filed at `a21d5de7d44035339e2cce56112c54178932afb2`, sha256 `0a56ccb9b70be32c2954a95604fb84fa129f988ac07838b5dd9fa573328d26e6`;
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-e2e-tester-report.md`, filed at `a846072d4be622ade7356d36bccd13c346ffa34a`, sha256 `71a55bbfc4cf3dc1f1870aa7cb2a7c52246661c43ddd2f6f1355d8dbec721f94`;
+   - `state/consults/gates/2026-11-23-relink-after-refusal-at-the-recorded-place-build-gate-architect.md`, filed at `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`, sha256 `a29778fc2839c78e37e28de676f2833fd467054ab5d21f3c2e8e56dcece1cf49`;
+   - `state/consults/gates/2026-11-23-relink-after-refusal-at-the-recorded-place-build-gate-reviewer.md`, filed at `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`, sha256 `23620871e1b6c26cb0c2f4ffb66fad632c08fb9efecdeb7fcf9880ee26c26f2a`;
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-fix-worker-report.md`, filed by this amendment's commit, sha256 `53ac1cf80b8d460d8a3bf8952db03e1d2da71036936f82344454cfcf24125d7e`.
+6. **The architect's D-8**, the words of `client.ts`'s doc, lies outside §7. It goes to the docs lane.
+
+Read the last amendment first.
+
+Nothing above is edited.
