@@ -5418,7 +5418,7 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: proposed
+    status: ready
     order: null
     depends_on: [shell-migration-milestone-2]
     needs_human: {kind: none, minutes: 0}
@@ -5428,7 +5428,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5, OPEN-7 (c)): out of milestone 3 and into a node of its own, with (a)'s shape as drafted in milestone 3's form (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, 2.8's OPEN-7 (a) part, 7's SC row and constants, row Y12): one read-only WorkingCanvasHandle method (a fourth exception under canvas/), a pure scaleBar.ts, a length in {1, 2, 5} times a power of ten in CRS units, shown only for a metre dataset, never as a ratio and never as distance on the ground. The human places it later."
+    summary: "FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (d); ADV-2026-11-23-15 item 7 (d)): placed as the second gap piece; the architect drafts its form, its class by ADV-2026-11-16-06 item 2. Before: PROPOSED 2026-10-11 by the human (state/directives/2026-10-11-merges-210-211-pilot-recorder-2f-milestone-3-rulings.md, item 5, OPEN-7 (c)): out of milestone 3 and into a node of its own, with (a)'s shape as drafted in milestone 3's form (frontends/shell/SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md, 2.8's OPEN-7 (a) part, 7's SC row and constants, row Y12): one read-only WorkingCanvasHandle method (a fourth exception under canvas/), a pure scaleBar.ts, a length in {1, 2, 5} times a power of ten in CRS units, shown only for a metre dataset, never as a ratio and never as distance on the ground. The human places it later."
     dates: {opened: 2026-10-11, done: null}
   - id: shell-migration-milestone-5
     title: "Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work"
@@ -5439,13 +5439,13 @@ nodes:
     order: null
     depends_on: [b1-shell-half]
     needs_human: {kind: none, minutes: 0}
-    gate: none
+    gate: governance/forms/frontends/SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md
     evidence: null
     budget_minutes: 0
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (c); ADV-2026-11-23-15 item 7 (c)): drafted by the architect from section 9 of the migration plan, full form and both gates, a split proposed if it is larger than one piece. Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 9, bounded): typed conditions (seam 8), the attention strip with the most urgent condition, a Problems tab and a Jobs tab; after milestone 4 (b1-shell-half). Proposed."
+    summary: "FORM FILED 2026-11-23: governance/forms/frontends/SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md from the architect's draft (state/consults/2026-11-23-shell-migration-milestone-5-architect-draft.md), its Amendment 1 with the span hashes; two PRs, A (the condition store, the strip, Problems) then B (Jobs), OPEN-7; its gates next, architect and reviewer; OPEN-1 to OPEN-8 to the advisor (item 8). Before: FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (c); ADV-2026-11-23-15 item 7 (c)): drafted by the architect from section 9 of the migration plan, full form and both gates, a split proposed if it is larger than one piece. Before: Recorded 2026-10-07 by the human's ruling of the migration plan (state/directives/2026-10-07-migration-plan-v2-ruled.md; state/directives/SHELL-MIGRATION-PLAN-2026-10-07.md, section 9, bounded): typed conditions (seam 8), the attention strip with the most urgent condition, a Problems tab and a Jobs tab; after milestone 4 (b1-shell-half). Proposed."
     dates: {opened: 2026-10-07, done: null}
   - id: shell-real-app-run-macos-linux
     title: "Run the real app once on macOS and once on Linux after migration milestone 1 merges, and record what it finds"
@@ -5764,13 +5764,13 @@ nodes:
     order: null
     depends_on: [b2-piece-1c-save-and-reopen, second-open-history-before-1c-step-3]
     needs_human: {kind: none, minutes: 0}
-    gate: governance/forms/kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md
+    gate: governance/forms/kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md
     evidence: null
     budget_minutes: 0
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (b); ADV-2026-11-23-15 item 7 (b)): a form of its own under governance/forms/kernel/, drafted by lead-data, full form and both gates; the build is placed by the advisor after the form's gate. Before: NOTE 2026-11-19 (ADV-2026-11-19-05 item 9, note 4): this step's form states what it does with an identity's folder in the machine store that no project file names; a first save refused after the lock leaves one, with its open.lock. CARRIES 2026-11-16, by the advisor's ruling ADV-2026-11-16-20 item 7 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-20-the-humans-five-approvals-s1-joins-v0-2-entry-79-at-the-sitting-on-a-condition-what-follows-from-each.md): the declared item of ADV-2026-11-16-16 item 2 (b), the session history's own writer of locations.json. Before: SPLIT 2026-11-16 from b2-piece-1c-save-and-reopen by the human's approval of ADV-2026-11-16-07 item 1 (b) (state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md) and the form's Amendment 32: the form's step 3, the recovery offer after a crash, under the same form; it is not in v0.2. KNOWN-LIMITATIONS item 43 stays as it is."
+    summary: "FORM FILED 2026-11-23: governance/forms/kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md from lead-data's draft (state/consults/2026-11-23-b2-piece-1c-step-3-recovery-offer-lead-data-draft.md), its Amendment 1 with the span hashes; it replaces the 1c form as this node's gate (ADV-2026-11-23-15 item 7 (b)); its gates next, architect and reviewer; OPEN-1 to OPEN-4 to the advisor (item 8). Before: FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (b); ADV-2026-11-23-15 item 7 (b)): a form of its own under governance/forms/kernel/, drafted by lead-data, full form and both gates; the build is placed by the advisor after the form's gate. Before: NOTE 2026-11-19 (ADV-2026-11-19-05 item 9, note 4): this step's form states what it does with an identity's folder in the machine store that no project file names; a first save refused after the lock leaves one, with its open.lock. CARRIES 2026-11-16, by the advisor's ruling ADV-2026-11-16-20 item 7 (state/directives/2026-11-16-advisor-ruling-adv-2026-11-16-20-the-humans-five-approvals-s1-joins-v0-2-entry-79-at-the-sitting-on-a-condition-what-follows-from-each.md): the declared item of ADV-2026-11-16-16 item 2 (b), the session history's own writer of locations.json. Before: SPLIT 2026-11-16 from b2-piece-1c-save-and-reopen by the human's approval of ADV-2026-11-16-07 item 1 (b) (state/directives/2026-11-16-the-humans-message-five-drafts-approved-v0-1-0-records-what-v0-2-waits-for-the-machine-queue-the-alarm-timer-the-limits-of-the-advisors-merges.md) and the form's Amendment 32: the form's step 3, the recovery offer after a crash, under the same form; it is not in v0.2. KNOWN-LIMITATIONS item 43 stays as it is."
     dates: {opened: 2026-11-16, done: null}
   - id: verify-quotes-dotted-paths
     title: "verify-quotes: the hash-reference path grammar cannot begin with a dot, so a pinned cite into .github/ can never be checked"
@@ -7343,7 +7343,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "READY 2026-11-19: its last dependency, open-first-look-fills-fit-view, done at the merge of PR 335 (f73a131c); the status the derivation gives. Before: PLACED 2026-11-14 by the advisor's ruling ADV-2026-11-14-18 (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-18-the-step-1-read-stands-colour-by-refill-keeps-the-view-placed-after-the-first-look-node-s3-filler-queue.md), item 2: built after open-first-look-fills-fit-view merges, which by ADV-2026-11-13-02 covers every first look, so the refill's 10,000-row state goes with that fix; what is left is the cleared map and the camera fitted again. Grade S3; the filler queue, in its own order, once that node has merged; its form drafted against the code as the first-look node leaves it. Whether a release waits for it is the human's. Before: PROPOSED 2026-11-14 by the custodian under the advisor's ruling ADV-2026-11-14-15, item 6 (a) (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-15-pr-b-open-4-a-the-re-issue-stays-residency-not-edited-the-move-stated-in-item-51-a-read-before-code-a-refill-node.md): PR B's Colour-by re-issue on a new column, while the open's attributes are not held, goes through the candidate arm's re-issue, which clears every tile and lets the first batch fit the camera again, and may leave the map on the untiled first look until a pan or zoom (that ruling, item 3). This node's form decides a refill that keeps the view, and may edit residency/. Not placed: the advisor places it after the worker's read of each arm's re-issue path (that ruling, items 4 and 6 (a)). Budget set by its form."
+    summary: "FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (d); ADV-2026-11-23-15 item 7 (d)): the first gap piece; the architect drafts its form, its class by ADV-2026-11-16-06 item 2. Before: READY 2026-11-19: its last dependency, open-first-look-fills-fit-view, done at the merge of PR 335 (f73a131c); the status the derivation gives. Before: PLACED 2026-11-14 by the advisor's ruling ADV-2026-11-14-18 (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-18-the-step-1-read-stands-colour-by-refill-keeps-the-view-placed-after-the-first-look-node-s3-filler-queue.md), item 2: built after open-first-look-fills-fit-view merges, which by ADV-2026-11-13-02 covers every first look, so the refill's 10,000-row state goes with that fix; what is left is the cleared map and the camera fitted again. Grade S3; the filler queue, in its own order, once that node has merged; its form drafted against the code as the first-look node leaves it. Whether a release waits for it is the human's. Before: PROPOSED 2026-11-14 by the custodian under the advisor's ruling ADV-2026-11-14-15, item 6 (a) (state/directives/2026-11-14-advisor-ruling-adv-2026-11-14-15-pr-b-open-4-a-the-re-issue-stays-residency-not-edited-the-move-stated-in-item-51-a-read-before-code-a-refill-node.md): PR B's Colour-by re-issue on a new column, while the open's attributes are not held, goes through the candidate arm's re-issue, which clears every tile and lets the first batch fit the camera again, and may leave the map on the untiled first look until a pan or zoom (that ruling, item 3). This node's form decides a refill that keeps the view, and may edit residency/. Not placed: the advisor places it after the worker's read of each arm's re-issue path (that ruling, items 4 and 6 (a)). Budget set by its form."
     dates: {opened: 2026-11-14, done: null}
   - id: docsonly-wording-licenses-no-merge
     title: "The docs-only tool licenses no merge: the header and the two output lines of scripts/plan/docsOnly.mjs and its paragraph in scripts/plan/README.md reworded, since the advisor merges on the custodian merge check under the grant of 2026-11-13 (text only)"
