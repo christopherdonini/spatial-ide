@@ -691,3 +691,77 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 2 (PASS WITH NOTES): that gate's replacement words for D7 to D9, carried byte for byte, and the pin of the cite its New texts add
+
+*Written by the custodian before any code. It carries the attempt-2 gate's own replacement words, each copied by script from the filed report in the report's order, and the pin the gate leaves to the custodian; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 2, PASS WITH NOTES (`state/consults/gates/2026-11-23-large-utf8-and-utf8-view-attribute-columns-form-gate-architect-attempt-2.md`, gate-log row 883; the hand-back's sha256 fb494d258176217167d6c0c64b75deed12acc4e76186c2f4064bfbde8848fd30). It has no Correctness and no Evidence finding. Its three Documentation findings, D7 to D9, are fixed before the merge, and none asks for another attempt (ADV-2026-11-21-20). Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it.
+
+2. **D7:** Amendment 2 item 2, the line on the five paths.
+
+Old:
+
+````text
+No other held piece or filed form names any of the five paths above. For ADR-023's file, joined by Amendment 2, the custodian compares it with every held PR's files before any code (ADV-2026-11-23-15 item 4).
+````
+
+New:
+
+````text
+Of the five paths above, engine/README.md is also in PR 350's Scope (`cut/cancel-stamp-order`), which the Branch bullet's base takes in. For the other four, and for ADR-023's file, joined by Amendment 2, the custodian compares them with every held PR's files before any code (ADV-2026-11-23-15 item 4).
+````
+
+3. **D8, first replacement:** OPEN-2's sentence under (A).
+
+Old:
+
+````text
+Under (A) the namespace refuses the two types through `admit_attribute_type` (engine/src/predicate.rs:1249), so it departs from that note too.
+````
+
+New:
+
+````text
+Under (A) the namespace refuses the two types through `admit_attribute_type` (engine/src/predicate.rs:1249). That note takes the list as the one admission function decides it, so no sentence of it becomes untrue: the set it names narrows with ADR-023's note, and whether ADR-021 states that change in a note of its own is OPEN-6.
+````
+
+4. **D8, second replacement:** the Cost line.
+
+Old:
+
+````text
+Cost: it departs from ADR-023 §2's list and from ADR-021's Note 2026-09-24 item 1, which defines the filter namespace by that list (OPEN-2).
+````
+
+New:
+
+````text
+Cost: it departs from ADR-023 §2's text list, and the filter namespace that ADR-021's Note 2026-09-24 item 1 defines by that list narrows with it (OPEN-2).
+````
+
+5. **D9:** §1's sentence on the filter namespace.
+
+Old:
+
+````text
+The filter namespace, which ADR-021's Note 2026-09-24 item 1 defines by that list, departs with it;
+````
+
+New:
+
+````text
+The filter namespace, which ADR-021's Note 2026-09-24 item 1 defines by that list, narrows with it;
+````
+
+6. **Pin of the cite the New texts add.** Each entry gives the sha256 of those lines at fe99e848713768a6d8338b96ee2b8ac4c9c891cb (each line with its LF, computed by script), and the findings whose New text cites it. A bare `:n` is read as the file named before it in the same New text.
+
+- `engine/src/predicate.rs:1249` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:a986c26169e4ef81f2719adb4fdbb9d84a77c905e43918feb6ddbfa275f31f52 — D8
+
+7. **For the advisor**, in one message (ADV-2026-11-23-15 item 8): OPEN-5 to OPEN-9, with the gate's points on them in its sections 3 and 5.
+
+8. Next: the form has passed. The build is made on PR 350's head, taken in by a merge commit (ADV-2026-11-23-15 item 4), after the custodian's comparison of item 2's New text. The merge waits on the ADR-023 note's ruled words (ADV-2026-11-23-21 item 2). Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.

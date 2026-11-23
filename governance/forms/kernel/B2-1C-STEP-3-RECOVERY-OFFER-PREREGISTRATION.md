@@ -1814,3 +1814,97 @@ a `saved-here` mark after s3; listed `later-version`, and the folder is still th
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 8 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 5 (FAIL): that gate's replacement words for C-13, N-32 and N-33, carried byte for byte, and the pins of the cites its New texts add
+
+*Written by the custodian before any code. It carries the attempt-5 gate's own replacement words, each copied by script from the filed report in the report's order, and the pins the gate leaves to the custodian; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 5, FAIL (`state/consults/gates/2026-11-23-b2-piece-1c-step-3-recovery-offer-form-gate-architect-attempt-5.md`, gate-log row 882; the hand-back's sha256 0b807e022ca5bacd9c3385653609dba7e89dfc54a5c9f91b09ab46354c22eebe). Its one Correctness finding, C-13, is fixed by words that change what the code does, so §31's path without a re-gate does not cover it; its two Documentation findings, N-32 and N-33, are fixed before the merge. Each Old text below occurs once in the form above this amendment, no two overlap, and each New text occurs nowhere above it. The Old texts of items 3 to 6 are inside Amendment 7, and each is replaced where it stands there.
+
+2. **C-13, first replacement:** the open's step, the 0-byte check before `try_lock`.
+
+Old:
+
+````text
+Otherwise it runs `try_lock` on the history.
+````
+
+New:
+
+````text
+When the folder holds a `history.jsonl` of 0 bytes by its metadata, nothing is locked, listed or removed (§8 item 12): a history is created empty and locked only after that (`kernel/src/session_history.rs:516-523`), and while this open holds the project's `open.lock` only this open's own step can be making one. A 0-byte history that a crash between those lines left stays, and a save's move into its folder is refused (:551); that needs a crash inside one step, and is named. Otherwise it runs `try_lock` on the history.
+````
+
+3. **C-13, second replacement:** the row K-C41, added after K-C40 (Amendment 7 item 3's New text).
+
+Old:
+
+````text
+| K-C40 | `a_reopen_with_no_record_folder_lists_nothing_and_removes_nothing` (a project saved, its recorder ended normally, then reopened in a new recorder with no `<hex>` folder: `list_recoverable(handle)` is `Ok` with no entry, and the root's folder names are unchanged) | the clear run on an absent folder, its removal errors returned | K-C40 |
+````
+
+New:
+
+````text
+| K-C40 | `a_reopen_with_no_record_folder_lists_nothing_and_removes_nothing` (a project saved, its recorder ended normally, then reopened in a new recorder with no `<hex>` folder: `list_recoverable(handle)` is `Ok` with no entry, and the root's folder names are unchanged) | the clear run on an absent folder, its removal errors returned | K-C40 |
+| K-C41 | `a_projects_folder_with_an_empty_history_is_left_unlocked_at_its_open` (a `<hex>` folder holding a `locations.json` and a 0-byte `history.jsonl`, then `list_recoverable(handle)`: no entry, and both files are still there, byte for byte) | the 0-byte check removed at an open (the empty history is locked, read and listed `cannot-be-offered`, `no-step`) | K-C41 |
+````
+
+4. **C-13, third replacement:** the ceilings (Amendment 7 item 8's New text).
+
+Old:
+
+````text
+kernel tests 1,800 to 1,950; total ≤ 5,500, ≤ 50 files.
+````
+
+New:
+
+````text
+kernel tests 1,800 to 1,980; total ≤ 5,530, ≤ 50 files. K-C41 and the open's 0-byte check add about 20 to 30 test lines and about 5 product lines, inside the product figure.
+````
+
+5. **N-32:** C-11's last sentence (Amendment 7 item 2's New text).
+
+Old:
+
+````text
+This open's own save cannot move into the folder while it is there, because the move's `create_dir` refuses a folder that exists (`kernel/src/session_history.rs:551`); a save during that one listing takes no move and moves at its next save (:347-348).
+````
+
+New:
+
+````text
+A folder that was there before this open's own save or step began is never written into by it, because `create_dir` refuses a folder that exists (`kernel/src/session_history.rs:551` for a save's move, :486 for a step's new record); such a save returns its error and moves at its next save (:347-348). Named, and not blocking, because each case needs timing inside this listing's one request round trip: this open's own save's move (:551-562), or a step of this open after a save bound it (:484-523), has made the folder and not yet put `history.jsonl` in it when this listing reads them, and the clear then removes what it has written there, or the folder, so that save or step returns an error, or the project's record is left with no `locations.json`; or this open's `open.lock` is released during this listing, after its close, and another instance's save of the project then moves into the folder.
+````
+
+6. **N-33:** Amendment 7 item 3's pointer.
+
+Old:
+
+````text
+(it adds a test; see item 9)
+````
+
+New:
+
+````text
+(it adds a test; see item 8)
+````
+
+7. **Pins of the cites the New texts add.** Each entry gives the sha256 of those lines at fe99e848713768a6d8338b96ee2b8ac4c9c891cb (each line with its LF, computed by script), and the findings whose New text cites it. A bare `:n` is read as the file named before it in the same New text.
+
+- `kernel/src/session_history.rs:516-523` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:ec0c96af3a2a7ffac036aa9198566b3f05d44a3026e517808e2a712495f31673 — C-13
+- `kernel/src/session_history.rs:551` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:a823bc686ba96974047e2e5a91f2cde8da092662fcd8993450e0d6138ba9925e — C-13, N-32; as written `:551`
+- `kernel/src/session_history.rs:486` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:1ea8687200beaf81912ac1d0ee5fdaf0e22f08d3ab3b38c43447d01259569e04 — N-32; as written `:486`
+- `kernel/src/session_history.rs:347-348` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:63469eaf5c5d0ab72b9f14bd0a8fa3323e0e2f675df7e8da6b95c5f7180ab03b — N-32; as written `:347-348`
+- `kernel/src/session_history.rs:551-562` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:5136e2249e6231d994d14e70e7c70306253391187e0a91588af61cc00e247dbc — N-32; as written `:551-562`
+- `kernel/src/session_history.rs:484-523` @ fe99e848713768a6d8338b96ee2b8ac4c9c891cb sha256:a971ee56357dc3225a677507127bdec489eb13311b3d3b40f6416ab1aee973b2 — N-32; as written `:484-523`
+
+8. **For the advisor**, with Amendment 7 item 10, in one message (ADV-2026-11-23-15 item 8): item 4's New text re-declares the ceilings as kernel tests 1,800 to 1,980 and a total of at most 5,530 lines over at most 50 files; ADV-2026-11-23-22 item 5 did not accept 5,260, and whether these figures are accepted is the advisor's.
+
+9. Next: the architect's form gate, attempt 6, on this amendment. No code is written before it ends PASS or PASS WITH NOTES. Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
