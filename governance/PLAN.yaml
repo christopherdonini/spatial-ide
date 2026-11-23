@@ -5035,6 +5035,23 @@ nodes:
     summary: "ADR-016 AMENDMENT 2 ACCEPTED AND D1 TO D4 RULED 2026-11-23 (ADV-2026-11-23-26); NEXT: the code, with the protocol/ place, order A, skp/0.15; App.tsx by ADV-2026-11-23-25 item 2; its PR also lands the ADR-016 Note 2026-11-23 (ADV-2026-11-23-27 item 4) and, if built on the partitioned head, that piece wire finding (item 2); it merges after every piece its base takes in. FORM GATE ATTEMPT 2 PASS WITH NOTES 2026-11-23 (gate-log row 878, state/consults/gates/2026-11-23-identity-declaration-route-for-session-tier-form-gate-architect-attempt-2.md): no Correctness or Evidence finding; D-1 to D-3 carried byte for byte by the custodian Amendment 4, with 36 span hashes for D-4; NEXT: the build, after the advisor rules the words of ADR-016 Amendment 2 (ADV-2026-11-23-20 item 2); no build, test or app start from 05:00Z on 2026-11-24 until the sitting is over. AMENDMENT 2 FILED 2026-11-23 (state/consults/2026-11-23-identity-declaration-route-for-session-tier-amendment-2-architect-draft.md; ADV-2026-11-23-20 and -22 recorded, ADR-016 Amendment 2 drafted for the advisor, C2 fix (i), both section 7 ceilings predicted overrun as class 8) with the custodian Amendment 3; the architect form gate attempt 2 next. Before: C2 RULED FIX (I) 2026-11-23 (ADV-2026-11-23-22 item 6): the offer binds to the dataset on the map, App.tsx joins the Scope as class 9; Amendment 2 by the architect drafting. Before: FORM GATE FAIL 2026-11-23 (state/consults/gates/2026-11-23-identity-declaration-route-for-session-tier-form-gate-architect.md, gate-log row 866); RULED ADV-2026-11-23-20: OPEN-1 (A); ADR-016 Amendment 2 for the advisor to rule, drafted by the architect in the next amendment, no code before that ruling; OPEN-3 to OPEN-5 (a); the partitioned-refusal node added, built ahead of this piece. Before: FORM FILED 2026-11-23: governance/forms/frontends/IDENTITY-DECLARATION-ROUTE-FOR-SESSION-TIER-PREREGISTRATION.md from the architect's draft (state/consults/2026-11-23-identity-declaration-route-for-session-tier-architect-draft.md), its Amendment 1 with the span hashes; full form, both gates, next; its OPEN items to the advisor (ADV-2026-11-23-15 item 8), OPEN-1 (how the candidate columns reach the shell) with the architect's recommendation. Before: FORM DRAFTING 2026-11-23 (the human's message of 2026-11-23 item 3 (d); ADV-2026-11-23-15 item 7 (d)): placed as the third gap piece; the architect drafts its form, its class by ADV-2026-11-16-06 item 2, with the question of how the candidate columns reach the shell as its OPEN-1, which goes to the advisor with the architect's recommendation. Before: PROPOSED 2026-10-09 by the human's additions of 2026-10-09 (state/directives/2026-10-09-rulings-additions-reaim-identity-route-documents.md), item 3, graded S2 by the human: the summary tells the user to declare an identity column, and the app offers no way to do it (the e2e triage, state/consults/2026-10-09-e2e-failures-present-at-the-base-triage-report.md, its adjacent observation). The human places it after milestone 2 merges. It is not part of the re-aim and it blocks nothing. Its form asks the human how the candidate columns reach the shell."
     dates: {opened: 2026-10-09, done: null}
 
+  - id: text-id-opens-for-the-session-by-row-position
+    title: "A file whose own id column is text is refused, and can open only if it holds a unique 64-bit integer column; the identity form offers, by the user choice, to open it for this session only, identified by row position (the human, 2026-11-23)"
+    kind: task
+    lane: shell
+    phase: prototype
+    status: proposed
+    order: null
+    depends_on: []
+    needs_human: {kind: ruling, minutes: 10}
+    gate: none
+    evidence: null
+    budget_minutes: 60
+    generation: 1
+    felt_verdict: false
+    entries: []
+    summary: "OPENED 2026-11-23 by the human message filed at state/directives/2026-11-23-the-humans-message-text-id-files-open-for-the-session-by-row-position-ahead-of-the-recovery-offer-and-a-bbox-consult.md: second in the order of that day, after the re-link and ahead of the recovery offer; chosen by the user, never taken silently, the summary says so, nothing of it saved or published. NEXT: the behaviour confirmed on main with a generated file that has a text id (a tester runs it, the architect having no Bash), then the architect drafts the ADR-016 amendment it needs, for the human approval; the form after."
+    dates: {opened: 2026-11-23, done: null}
   - id: e2e-stale-expectations-reaim
     title: "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4"
     kind: task

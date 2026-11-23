@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `d710b4cf8d0a7621dbf97cdaff3128e1e06cdba70c771ec76f4e1bbf57366eca`) at `2026-11-23T20:47:20.695Z`.
+Generated from `PLAN.yaml` (sha256 `ff20a1ca131b4ac71c0044d731f9f6f84fe6b68b9851b5556d4a524b58fba992`) at `2026-11-23T21:15:48.052Z`.
 
 ## 1. Next
 
@@ -114,6 +114,7 @@ Generated from `PLAN.yaml` (sha256 `d710b4cf8d0a7621dbf97cdaff3128e1e06cdba70c77
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **filter-identity-alias-ambiguous-guidance-line-and-note** — A guidance line in the app for skp.filter_identity_alias_ambiguous, in the human's wording at P6, and a KNOWN-LIMITATIONS note: a declared identity beside the file's own id column refuses the first filter on id, and the message does not say what to do (phase `prototype`) — never queued until placed
+- **text-id-opens-for-the-session-by-row-position** — A file whose own id column is text is refused, and can open only if it holds a unique 64-bit integer column; the identity form offers, by the user choice, to open it for this session only, identified by row position (the human, 2026-11-23) (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed

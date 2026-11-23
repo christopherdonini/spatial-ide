@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-23T20:47:20.695Z",
-  "plan_hash": "d710b4cf8d0a7621dbf97cdaff3128e1e06cdba70c771ec76f4e1bbf57366eca",
+  "generated_at": "2026-11-23T21:15:48.052Z",
+  "plan_hash": "ff20a1ca131b4ac71c0044d731f9f6f84fe6b68b9851b5556d4a524b58fba992",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -1823,6 +1823,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-10-10 by the human, not placed (state/directives/2026-10-10-reaim-t2-base-f0fccfaf-filter-identity-no-shell-run-guidance-node.md, line 18, with line 17: the reachability piece's PR body quotes the message in full, because the human has not read it as an operator). The human's words: a user who declares an identity column on a file that has its own id column meets this refusal the first time they filter on id, and the message does not say what to do. Two parts: a guidance line for this code in the shell's refusal formatting, its wording the human's at P6 (none exists: no file under frontends/ names the code, at main 7b3d8040 or at the tag, checked by git grep, rc 1 each); and a KNOWN-LIMITATIONS note. The message, unchanged since the tag (the format string at engine/src/predicate.rs:338-343 @ 7b3d8040aafd37c554f43b506663c884669e5dbb sha256:bd41792b1a4079ec07d5e0f7d74ca4ba098a68ef684ad329bdaa71599c842f8d, the same three lines at the tag), reads with column id: refused: `id` is ambiguous — this dataset's identity is mapped from `<column>`, and the file also carries its own, unrelated column literally named `id`; a predicate cannot say which one it means. The engine rule tests only that a column named id is present, whatever its type. ALSO TRUE OF THE v0.1.0 ARTIFACT, by reading the code at the tag b391e436 and not by a run of the packaged build: the identity form opens on engine.identity_unusable (frontends/shell/src/admission/AdmissionPanel.tsx:28 @ b391e43622056324c56d35cc33065305140a8415 sha256:9f9c939234b0cca355b2be809ae19be08873e3ed8383b31ff78e32d4583b6033); open_dataset passes the declared identity to the catalog (kernel/src/skp.rs:344-348 @ b391e43622056324c56d35cc33065305140a8415 sha256:9658772bd62f6453e1561122eb8d12cdea093cff8ed8090db723bd7fad7e9446); the engine makes it Mapped (engine/src/dataset.rs:751 @ b391e43622056324c56d35cc33065305140a8415 sha256:536334aa906aec9152731eb43190212bc6cf45583fb248798bbe9f302567c25e); the rule is there (engine/src/predicate.rs:875 @ b391e43622056324c56d35cc33065305140a8415 sha256:1e95aceda4bf1b2c6e2a67374daca77e26b87f53d19fa67641418d87ea966a07), with the same message (engine/src/predicate.rs:269-274 @ b391e43622056324c56d35cc33065305140a8415 sha256:bd41792b1a4079ec07d5e0f7d74ca4ba098a68ef684ad329bdaa71599c842f8d); a refused filter goes through the generic formatting (frontends/shell/src/App.tsx:306 @ b391e43622056324c56d35cc33065305140a8415 sha256:815102d8cdfdecb2034b4d8ba1e7219bc63564d49a501940a265a74b67158a3f), with no guidance for this code. So a v0.1.0 user meets the same refusal with the same message. The route through SKP is proven on main only when filter-identity-alias-ambiguous-reached-through-skp's T-1 lands. Out of scope: the message itself, the engine rule, and the wire."
+    },
+    {
+      "id": "text-id-opens-for-the-session-by-row-position",
+      "title": "A file whose own id column is text is refused, and can open only if it holds a unique 64-bit integer column; the identity form offers, by the user choice, to open it for this session only, identified by row position (the human, 2026-11-23)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "ruling",
+        "minutes": 10
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-23",
+        "done": null
+      },
+      "summary": "OPENED 2026-11-23 by the human message filed at state/directives/2026-11-23-the-humans-message-text-id-files-open-for-the-session-by-row-position-ahead-of-the-recovery-offer-and-a-bbox-consult.md: second in the order of that day, after the re-link and ahead of the recovery offer; chosen by the user, never taken silently, the summary says so, nothing of it saved or published. NEXT: the behaviour confirmed on main with a generated file that has a text id (a tester runs it, the architect having no Bash), then the architect drafts the ADR-016 amendment it needs, for the human approval; the form after."
     },
     {
       "id": "docs-14-corpus-attribution-vs-docs-08",
