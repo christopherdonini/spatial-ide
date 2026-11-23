@@ -54,6 +54,25 @@ vi.mock("@deck.gl/core", async (importOriginal) => {
   return { ...actual, Deck: FakeDeck };
 });
 
+/**
+ * C-K2 (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md Amendment 4, N-1): the `./limits` mock passes every call through to the original unless
+ * armed. Once armed, the next `checkPickCeiling` call -- `ResidentSet.addBatch`'s own (`residentSet.ts:73`) -- throws the original module's
+ * `PickCeilingExceeded` or `ResidentVertexCeilingExceeded`, and the throw reaches `WorkingCanvas`'s catch from `addBatch`.
+ */
+const ceilingArm = vi.hoisted(() => ({ next: null as "pick" | "vertex" | null }));
+vi.mock("./limits", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./limits")>();
+  return {
+    ...actual,
+    checkPickCeiling: (pickOrdinalCount: number): void => {
+      const armed = ceilingArm.next;
+      if (armed === null) return actual.checkPickCeiling(pickOrdinalCount);
+      ceilingArm.next = null;
+      throw armed === "pick" ? new actual.PickCeilingExceeded(pickOrdinalCount) : new actual.ResidentVertexCeilingExceeded(pickOrdinalCount);
+    },
+  };
+});
+
 import { __resetResidencyArmForTests, setResidencyArm } from "../residency/residencyArm";
 import { FILTER_DIALECT_DUCKDB_EXPR_0 } from "../skp/types";
 import { DEFAULT_STYLE_STATE } from "../style/document";
@@ -77,6 +96,7 @@ let container: HTMLDivElement;
 let root: Root;
 
 beforeEach(() => {
+  ceilingArm.next = null;
   decks.length = 0;
   size = { w: 400, h: 300 };
   Object.defineProperty(HTMLCanvasElement.prototype, "clientWidth", { configurable: true, get: () => size.w });
@@ -589,5 +609,32 @@ describe("RK-C: the canvas's reset keeps the camera when asked (colour-by-refill
     reset();
     push("sh_b", batchB());
     expect(onViewShown, "the auto-fit, then batch B's").toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("the producer passes the ceiling's kind (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md OPEN-2 (a), C-K2)", () => {
+  // RECORDED MUTATION for C-K2: in `WorkingCanvas.tsx`'s catch pass the constant "vertex-ceiling" as the kind, not `ceilingKindOf(e)`. Expected failure: the pick class's kind.
+  it("C-K2: a pick ceiling reaches onCanvasRefusal with pick-ceiling, and a vertex ceiling with vertex-ceiling", () => {
+    const onCanvasRefusal = vi.fn();
+    const { push } = mount({ onCanvasRefusal });
+    ceilingArm.next = "pick";
+    push();
+    expect(onCanvasRefusal).toHaveBeenCalledTimes(1);
+    expect(onCanvasRefusal.mock.calls[0][0]).toBe("sh_a");
+    expect(onCanvasRefusal.mock.calls[0][2]).toBe("pick-ceiling");
+    expect(onCanvasRefusal.mock.calls[0][1], "the message is the class's own").toContain("24-bit picking ceiling");
+
+    ceilingArm.next = "vertex";
+    push();
+    expect(onCanvasRefusal).toHaveBeenCalledTimes(2);
+    expect(onCanvasRefusal.mock.calls[1][2]).toBe("vertex-ceiling");
+    expect(onCanvasRefusal.mock.calls[1][1]).toContain("MAX_RESIDENT_VERTICES");
+  });
+
+  it("C-K2: an unarmed push calls through to the original ceiling check and refuses nothing", () => {
+    const onCanvasRefusal = vi.fn();
+    const { push } = mount({ onCanvasRefusal });
+    push();
+    expect(onCanvasRefusal).not.toHaveBeenCalled();
   });
 });
