@@ -627,6 +627,7 @@ function refusedReopen(owner: string | null, over: Partial<Extract<State, { kind
   };
 }
 
+// RECORDED MUTATIONS for "relinkOffer offers the re-link after a refused locator and nowhere else": M-S1, the owner test removed from `relinkOffer`, fails at (iii); M-S2, the `inFlight` test removed, fails at (v); M-S3, the `options.reopen` test removed, fails at (iv).
 it("relinkOffer offers the re-link after a refused locator and nowhere else", () => {
   const offered = { folder: RELINK_FOLDER, options: RELINK_OPTIONS };
 

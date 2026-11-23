@@ -175,8 +175,9 @@ fn refused_unresolvable(got: Result<Value, SkpError>, case: &str) {
 /// `relink` replies `opened`, and the project file's `project-relative` `at` is the new name.
 ///
 /// RECORDED MUTATIONS: (a) in `open_project`, `data_at` is consulted before the `relink`; expected
-/// failure: F-2's reply. (b) in `Projects::save`, `judge` is skipped and the `reference` written;
-/// expected failure: F-4's `at`.
+/// failure: F-2's reply. (b) in `Projects::save`, `judge` is skipped at a later save and the
+/// `reference` written; expected failure: F-4's `at`. With `judge` skipped at the first save too, the
+/// file records no `project-relative` locator at the start, and the test fails at its first check of one.
 #[test]
 fn a_relink_after_a_refused_locator_opens_the_chosen_file_and_the_next_save_records_its_place() {
     let rig = rig("k-f1");
@@ -185,7 +186,12 @@ fn a_relink_after_a_refused_locator_opens_the_chosen_file_and_the_next_save_reco
     let handle = rig.open(&old);
     let project = rig.save(&handle);
     rig.close(&handle);
-    assert_eq!(rig.relative_at().as_deref(), Some("data/parcels.parquet"));
+    let first = rig.relative_at();
+    assert_eq!(
+        first.as_deref(),
+        Some("data/parcels.parquet"),
+        "the first save's `at`"
+    );
     let new = rig.folder.join("data/renamed.parquet");
     std::fs::rename(&old, &new).expect("renamed");
 
