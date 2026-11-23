@@ -32,6 +32,10 @@ fn exported_zone_field(conn: &Connection) -> Field {
 /// T1. Each of the two types is made by the bundled DuckDB's own Arrow export on a connection the
 /// product configures, with one `SET` added (H-SET); the engine then refuses it at projection
 /// admission, which is what describe's `projectable` is computed from.
+// RECORDED MUTATION (observed at `cea0ef8c`, line numbers at that commit): in `admit_attribute_type`,
+// restore `| D::LargeUtf8 | D::Utf8View` to the admitted arm. Observed: this test fails by name --
+// "LargeUtf8 must be refused by admit_projection_column" at
+// `engine/tests/large_utf8_and_utf8_view_admission.rs:56`; T4 fails with it. Reverted.
 #[test]
 fn a_large_utf8_or_utf8_view_column_duckdb_exports_is_not_projectable() {
     // `produce_arrow_string_view` alone leaves VARCHAR as `Utf8` on the bundled DuckDB (tried at
@@ -74,6 +78,10 @@ fn a_large_utf8_or_utf8_view_column_duckdb_exports_is_not_projectable() {
 /// T3. The premise pin: on a connection configured as the product configures it, with no `SET`
 /// added, VARCHAR is exported as plain `Utf8`. Green before and after the change; red if a DuckDB
 /// bump or a configuration change makes ordinary text reach either refused type.
+// RECORDED MUTATION (observed at `cea0ef8c`): append `; SET arrow_large_buffer_size=true` to
+// `CONFIGURE_SQL` (`engine/src/pool.rs`), run in this file's own test binary. Observed: this test
+// fails by name -- `assertion left == right failed`, `left: LargeUtf8`, at
+// `engine/tests/large_utf8_and_utf8_view_admission.rs:80`. Reverted.
 #[test]
 fn the_product_configured_connection_exports_text_as_plain_utf8() {
     let conn = configured_connection().expect("configured connection");

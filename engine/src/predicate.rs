@@ -2725,6 +2725,10 @@ mod tests {
     /// T4 (`LARGE-UTF8-AND-UTF8-VIEW-ATTRIBUTE-COLUMNS-PREREGISTRATION.md` §4): a `LargeUtf8` or
     /// `Utf8View` column is not filterable. Constructed fields, the accepted pattern for types
     /// `read_parquet` cannot yield.
+    // RECORDED MUTATION (observed at `cea0ef8c`, line numbers at that commit): in
+    // `filterable_column_type`, return `Ok(field.data_type().clone())` for `LargeUtf8 | Utf8View`
+    // before the gate. Observed: this test fails by name -- "LargeUtf8 must not be filterable" at
+    // `engine/src/predicate.rs:2735`. Reverted.
     #[test]
     fn a_large_utf8_or_utf8_view_column_is_not_filterable() {
         for ty in [DataType::LargeUtf8, DataType::Utf8View] {
