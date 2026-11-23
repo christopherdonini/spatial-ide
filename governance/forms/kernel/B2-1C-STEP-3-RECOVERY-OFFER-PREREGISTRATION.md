@@ -1908,3 +1908,79 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 9 — 2026-11-23 — the custodian's, after the architect's form gate, attempt 6 (PASS WITH NOTES): that gate's replacement words for N-34 to N-36, carried byte for byte, and the pin of the cite its New texts add
+
+*Written by the custodian before any code. It carries the attempt-6 gate's own replacement words, each copied by script from the filed report in the report's order, and the pin the gate leaves to the custodian; it words nothing of its own but where each goes and what follows.*
+
+1. Evidence: the architect's form gate, attempt 6, PASS WITH NOTES (`state/consults/gates/2026-11-23-b2-piece-1c-step-3-recovery-offer-form-gate-architect-attempt-6.md`, gate-log row 884; the hand-back's sha256 7e9f33d25e95b6ff0146e0b608760cae5ceb2b53864995e43a8cff7454338c09). It has no Correctness and no Evidence finding, so the form has passed. Its three Documentation findings, N-34 to N-36, are fixed before the merge, and none asks for another attempt (ADV-2026-11-21-20); by the gate's reading of §31 (d), the worker applies these New texts with no re-gate and the PR body lists them. Each Old text below occurs once in the form above this amendment, inside Amendment 8, no two overlap, and each New text occurs nowhere above it.
+
+2. **N-34, first replacement:** inside Amendment 8 item 5's New text.
+
+Old:
+
+````text
+A folder that was there before this open's own save or step began is never written into by it
+````
+
+New:
+
+````text
+A folder with no `history.jsonl` that was there before this open's own save or step began is never written into by it
+````
+
+3. **N-34, second replacement:** inside Amendment 8 item 5's New text.
+
+Old:
+
+````text
+such a save returns its error and moves at its next save
+````
+
+New:
+
+````text
+such a save's move returns its error and is tried again at its next save
+````
+
+4. **N-35:** inside Amendment 8 item 5's New text.
+
+Old:
+
+````text
+so that save or step returns an error
+````
+
+New:
+
+````text
+so that save's move or that step returns an error
+````
+
+5. **N-36:** inside Amendment 8 item 2's New text.
+
+Old:
+
+````text
+A 0-byte history that a crash between those lines left stays, and a save's move into its folder is refused (:551)
+````
+
+New:
+
+````text
+A 0-byte history that a crash left after it was made and before its header was written (:516-532) stays, and a save's move into its folder is refused (:551)
+````
+
+6. **Pin of the cite the New texts add.** It gives the sha256 of those lines at 55969f9849bce50230f7ae7c19c03bc73289517a (each line with its LF, computed by script). The cite `:551` in item 5's New text is in its Old text too, and is pinned in Amendment 8.
+
+- `kernel/src/session_history.rs:516-532` @ 55969f9849bce50230f7ae7c19c03bc73289517a sha256:764b861b603f9c97aa87fbe43e23de0bfe10b60c1802b759bd79af339ad8d90d — N-36; as written `:516-532`, with no file named in that text: the file is the one the finding names
+
+7. **Left by the gate to the build.** It had no Bash, so it could not check the six sha256 values of Amendment 8's pins: the reviewer's build gate recomputes them. On the ceilings, it reads the product headroom as about 5 lines, and a product figure past 1,160 as a class-8 record before code, never an edit of §7.
+
+8. **The size.** The advisor's ruling ADV-2026-11-23-29 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-29-the-recovery-offer-5530-lines-accepted-in-two-gated-parts-one-pr-one-merge-adr-036-note-a-to-h.md`) accepts at most 5,530 lines over at most 50 files, on the condition that the piece is built in two gated parts inside one pull request with one merge.
+
+9. Next: lead-data's Amendment 10, which gives the two parts, read alone by the architect (that ruling's item 3). The base is compared at dispatch; the identity route holds the `protocol/` place first (ADV-2026-11-23-26 item 3; ADV-2026-11-23-29 item 11). Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -1043,3 +1043,11 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-23 — the custodian's: the closing of E6
+
+1. E6 is closed with the attempt-3 gate's words, as Amendment 6 items 2 and 3 carry them, by the advisor's ruling ADV-2026-11-23-24 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-24-the-scale-displays-e6-closed-under-section-31-d-no-attempt-4-row-877-stays-fail-row-5-the-strings-ruled-apart.md`) under §31 (d), with no attempt 4; gate-log row 877 stays FAIL and is not relabelled, and from that ruling the form counts as passed.
+
+Read the last amendment first.
+
+Nothing above is edited.

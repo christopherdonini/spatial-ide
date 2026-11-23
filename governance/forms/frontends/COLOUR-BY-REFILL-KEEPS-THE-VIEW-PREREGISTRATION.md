@@ -993,3 +993,21 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-23 — post-result amendment, after the build stopped at step 6 on I2: RF10's file joins the Scope for one line; two deviations recorded
+
+*Written by the custodian after the build's result, as drafted in the custodian's message to the advisor and ruled as drafted by the advisor's ADV-2026-11-23-23 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-23-colour-by-refill-amendment-7-as-drafted-no-narrow-read-deviations-class-2-runs-before-05z-or-after-the-sitting.md`), with no architect's narrow read first. It names that ruling and the stop I2.*
+
+1. **What was seen.** The build (worker-high, dispatched at 2026-11-23T18:28:54Z, its transcript from 2026-11-23T18:28:54Z to 2026-11-23T19:23:28Z) stopped at step 6 on I2. Its head da55b7a608369030a88182955840c6b33b9cebcf is pushed to `cut/colour-by-refill-keeps-the-view` (base e4e6493d, the re-link head), with no PR: 922 of 980 lines over the 11 paths; P0 red as registered; every mutation failed the tests the register names; every suite exit 0 but the shell's `npm run verify`, which fails one test of 1609. It is RF10, in `frontends/shell/src/canvas/WorkingCanvas.test.ts`, a file outside §7, declared unchanged. RF10 finds the reset by the text `resetFitForNewGeneration() {` (:855 at the head); §2.2 (i)'s signature makes the method `resetFitForNewGeneration(options) {`, so the search finds nothing. The worker did not edit the test and did not bend the signature. Its proposed search, the method's name with an open parenthesis, would first find the interface's declaration (:198 at the head), not the method (:1665).
+
+2. **Scope.** `frontends/shell/src/canvas/WorkingCanvas.test.ts` joins the paths §7 names, for RF10 alone. The text RF10 searches for (:855 at the head) becomes `resetFitForNewGeneration(options) {`, which occurs once in `WorkingCanvas.tsx` at the head. One comment line beside RF10 records its first recorded mutation (the clear in the reset deleted), re-run at the new head, failing RF10 by name; if it passes, that is a stop to the advisor. RF10's name, its assertions and its earlier records are unchanged.
+
+3. **§7 is not edited.** The lines count toward the ceiling of 980 (about 925 after).
+
+4. **Deviations, recorded (class 2), with no rework.** (a) The worker made the e2e fixture without first stating its bytes, as ADV-2026-11-23-18 item 3 asks: 328,242,802 bytes, sha256 2ce715fd1a9e797099bcbe252b462069a523f390fd7561a99de813818830af84; C: 43,501 MB free after it. (b) A fourth commit, da55b7a6, adds a 2-line recorded-mutation comment for the fixture generator (path 9), because verify-mutation named that test as unrecorded.
+
+5. **Next.** The worker makes the change as commit 5 on the same branch, runs `npm run verify` and the suites again, and pushes. Then the build gates, whose reviewer reads the changed line and the re-run with the rest of the diff, and E-RK1 by the tester. Commit 5, the suites and E-RK1 are runs: each is done before 05:00Z on 2026-11-24 or after the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
