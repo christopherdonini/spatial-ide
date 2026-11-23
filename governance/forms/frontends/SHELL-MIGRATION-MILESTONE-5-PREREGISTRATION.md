@@ -1806,3 +1806,22 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 9 — 2026-11-23 — the custodian's, under ADV-2026-11-23-37: three existing tests join PR A's Scope (class 9), the three N8 assertions re-aimed, KL-B and KL-C with PR B
+
+*Written by the custodian before more of PR A's code, as the advisor's ruling ADV-2026-11-23-37 item 2 asks. It holds that ruling by reference and words none of its conditions. No further attempt of the form's gate is asked (its item 6).*
+
+1. **Authority.** The advisor's ruling ADV-2026-11-23-37 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-37-milestone-5-pr-a-three-n8-assertions-re-aimed-under-six-conditions-2-2-unchanged-three-tests-in-scope-kl-b-and-c-with-pr-b.md`), under the human's delegation of 2026-11-13; it is not the human's words. The evidence it rules on is the build worker's report to its stop (`state/consults/2026-11-23-shell-migration-milestone-5-pr-a-build-worker-report-stop-1.md`): at head `021d125a0874e9f24fd8b8d7fa778e325eb2a9b1` on `cut/shell-migration-milestone-5-pr-a`, base `6bc401267d2ea4532215397b79264869b4c83570`, three existing tests outside §2.6's list fail with PR A's change, and one of them also fails `tsc`.
+2. **Scope, class 9, declared before their code.** PR A's Tests (§2.6) gain three existing files:
+   - `frontends/shell/src/App.table.test.tsx`: the expected list of Activity's tabs gains Problems, which is §2.3's own change (that ruling's item 2).
+   - `frontends/shell/src/App.test.ts`: the source-text pin on the line the design replaces moves to the line that replaces it, and still pins a line of product code (that ruling's item 2). No other line of the file changes.
+   - `frontends/shell/src/App.lateResult.test.tsx`: the two calls of `onCanvasRefusal` that the form now makes take a kind pass it (that ruling's item 4); the three N8 assertions that read the first `.canvas-refusal` are replaced under that ruling's item 3, conditions (a) to (f), as written there.
+3. **H5 (§5).** H5 holds that `App.test.ts` stays green and unedited. Under item 2 above it is edited at the one pin, so the word unedited no longer holds for that line; the rest of H5 stands, and the helpers it names keep their signatures. The closing amendment pins this as superseded for that line.
+4. **§7.** The three files' lines are counted in PR A's count under A-T, which names no ceiling for them; §7 is never edited. The build reports each file's lines, and an overrun of PR A's 3,094 is class 8, recorded in the closing amendment.
+5. **Mutations.** Item 3 (e) of that ruling (one mutation for each replaced assertion) and item 3 (f) (the three guard mutations named in those tests' comments, observed again at PR A's head, as dated lines beside the lines of 2026-09-23) are recorded by name with their commit in the build report and in the closing amendment.
+6. **KNOWN-LIMITATIONS.** KL-A, KL-D and KL-E land with PR A; KL-B and KL-C, which describe Jobs, land with PR B (that ruling's item 5). No word of ADV-2026-11-23-30 changes.
+7. **Next.** The build of PR A goes on from `021d125a0874e9f24fd8b8d7fa778e325eb2a9b1` with the worker's saved change, before 04:30Z on 2026-11-24; nothing of it builds, tests or starts the app from 05:00Z until the sitting is over. If a condition of that ruling's item 3 cannot be met as written, the build stops again and the advisor is told (its item 6). PR A's build gates read the three files and item 3's conditions with the rest of the diff.
+
+Read the last amendment first.
+
+Nothing above is edited.
