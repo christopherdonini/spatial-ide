@@ -34,10 +34,14 @@ Run the first once, before the first start: it builds the map viewer that the ap
 | (iii) | The hero path and milestone 4: Parts A, L, G, Y and AC, entry 79, W1 and W2 | 33 rows or answers | 80 |
 | (iv) | The felt verdicts: P1, P2, T1, T2, T4 and entry 95 | 6 | 15 |
 | (v) | The proposed split of the marked strings into set A and set B (section 4) | 1 answer: accept, or move strings by number | 15 |
+| Step 358 | The largest file opened, a filter applied at once, then a wide view: the step you asked for on 2026-11-23, for your decision on PR 358 (section 6) | 8 rows a try, up to five tries | 20 |
+| Step 68 | Optional: item 68 of the known limitations as it stands today (section 6) | 6 rows a try | 15 |
 | (vi) | Every other Part and sight: Parts P, T, W, V, Z, AA, AB and R, item 40 and the Reset line | 52 | 110 |
-| | Total | | 280 |
+| | Total | | 300, or 315 with the optional Step 68 |
 
 The minutes are the custodian's estimate. The blocks run in this order (the ruling's item 3). Each block's content (what to copy, what to have ready, the strings with their clause checks, and the questions) is in section 3 under the same number, and its Parts are in section 5.
+
+The custodian's note (2026-11-23): the minutes of Step 358 and Step 68 are the architect's estimates, not the custodian's. Both steps, and section 6 where they stand, were added on the advisor's ruling ADV-2026-11-23-05 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-05-the-sitting-steps-358-and-68-approved-with-five-changes-section-6-the-architects-finding-right.md`), under the delegation of 2026-11-13.
 
 **The custodian's notes on section 3.**
 - Its task 5 item 1: L1, L2 and L5 have no blank field in the walkthrough; type them in the session like the rest, and the custodian adds them to Part L's log.
@@ -1187,3 +1191,58 @@ This Part is the operator gate of `frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC
 ---
 
 
+
+---
+
+# 6. Step 358 and the optional Step 68: PR 358's two cases (added 2026-11-23)
+
+You asked for Step 358 on 2026-11-23, for your decision on PR 358. It comes after block (v) and before block (vi). Everything it expects is read from the code or worked out by arithmetic. None of it has been run or measured.
+
+## Step 358 — the largest file opened, a filter applied at once, then a wide view (PR 358's grid case; PR 358's fix is not in this build)
+
+This step tries whether a filter applied while the file's first data load is still running can set the map's tile grid from only part of the filtered data. If it does, a wide view is then left partly unfilled. The step can only meet the case by timing; the session log tells you after each try whether it was met. A try that misses shows nothing.
+
+**Have ready.** `slow-filter-scan.parquet` (4,000,000 parcels, the largest file in `target\fixtures\manual-walkthrough\`), made by section 1's fixture command. The app freshly started with section 1's start command, with **no file open**. File Explorer and Notepad, for the session log in `%LOCALAPPDATA%\dev.spatialide.shell\logs\`.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| 358.1 | Press Ctrl+K and type `/filter id < 1000 OR id >= 3900000`. Do not press Enter yet. | The text stays in the command bar. |
+| 358.2 | Click **Open GeoParquet…** and pick `slow-filter-scan.parquet`. As soon as the file picker closes, press Ctrl+K (or click the command bar) and **hold Enter** until the command bar empties. Then let go. | While the app checks the file (this can take a while), each Enter only shows a note under the bar; that is expected and harmless. When the file is admitted, the filter is sent and the bar empties. |
+| 358.3 | Hands off: no pan, zoom or resize. Wait until the map and the status line hold still. | The map shows a short strip of parcels at the bottom-left of the data. It may fill slowly. |
+| 358.4 | In File Explorer, open the newest `session-….log` in the folder above with Notepad. Press Ctrl+End, then search upwards (Find, direction Up) for `candidate-grid-frame-established`. Read that line's `baseSpan=` value. | One number. |
+| 358.5 | Read the number. **About 160000:** not met. This try shows nothing; note it and start the next try at 358.1. **Under 50000 (about 20800 expected):** met; go on to 358.6. **Anything between:** note the value; the try shows nothing visible; start the next try. | — |
+| 358.6 | The wide view: click **Zoom to layer**. Hands off until the status line holds still; this can take several minutes. | The map shows the whole data: a strip along the bottom-left and parcels along the top edge. |
+| 358.7 | Look at the top edge of the data and at the status line. | **If the case shows:** only a thin line of parcels at the top edge, with the band above it empty, and the status line reads "Filling has finished for this view — some areas were not loaded; pan or zoom to load them." **If it does not show:** a band about ten times as thick is filled across the top, and the status line reads "Showing all … features in view". Note that too: after a number under 50000 the reading expects the case to show. |
+| 358.8 | Optional: zoom in on the empty band, or pan it towards the middle of the map, and wait until the status line holds still. | By reading, not run: zooming in on the empty band, or panning it towards the middle, fills it there. What stays until the file is opened again is the small tile grid: any view this wide leaves its far part unfilled at first. |
+
+358.1 to 358.5 (or to 358.8) is one try. For the next try, do not press Clear and do not touch the filter's card: the card from the last try keeps the held Enter from changing the old file. Start again at 358.1 and reopen the log in Notepad each time. The step is done after the first try that reaches 358.7, or after five tries that miss. If the bar still holds the text well after the file is on the map, let go and note the line under the bar: the try has failed in a way the step does not expect.
+
+**Questions.**
+- For each try: the `baseSpan` value from 358.4, and, if you went on, what 358.7 showed, and 358.8 if you did it.
+- Overall: met, or not met, in how many tries. Neither answer says how often a user meets this case.
+- Your decision on PR 358, in your own words, if you want to give it now. Until you say otherwise it merges after the tag and limitation 68 gets the approved sentences, as your message of 2026-11-23 says.
+
+Step 68, which follows, is an optional second part: it tries item 68 of the known limitations as it stands today, a different case in the same build, and takes about 15 minutes (an estimate).
+
+## Step 68 — a filter change made while the previous data load is finishing (KNOWN-LIMITATIONS item 68; PR 358's fix is not in this build)
+
+This build is main's, without PR 358, so the step tries item 68's fault as main has it. The fault needs the filter's data load to end after you press Clear but before the app has set up the Clear's own load, which takes one request to the engine and back. No hand can aim at a moment that short: a try meets it only by chance, and most tries show nothing. A try that shows nothing says nothing about whether the fault is there, and no result of this step says how often a user meets it. **From 68b to 68e, do not touch the map, the panels or the window size:** a pan, a zoom or a resize asks for the view again and ends the case. Press Clear once per try.
+
+**Have ready.** `slow-filter-scan.parquet` (4,000,000 parcels, the largest file in `target\fixtures\manual-walkthrough\`), made by section 1's fixture command. The app started as section 1 says. File Explorer and Notepad, for the session log in `%LOCALAPPDATA%\dev.spatialide.shell\logs\`.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| 68a | Click **Open GeoParquet…** and open `slow-filter-scan.parquet`. Wait until the map stops changing. | The map shows parcels. The open can take a while: the app checks every id in the file first. |
+| 68b | In the Filter section, type `id > 3999900` and press **Apply**. Watch the map. Do not press Cancel. | The map empties. While it stays empty, this filter's first data load has not ended. After a moment the map moves to one short row of parcels at the top right of the data (99 parcels). On the first try, let them appear and note roughly how long they took. Then press Clear and go on to 68c; that try is practice and shows nothing. |
+| 68c | On each later try: after 68b's Apply, press **Clear** just before the moment you expect the 99 parcels to appear. Then wait, hands off, until the map holds still. | Note whether the map was still empty when you pressed Clear. The map then moves to the bottom edge of the data, where the file's first parcels are. |
+| 68d | Look at the map and the status line, still with no pan or zoom. | **If the fault was met:** parcels lie only in a thin band along the bottom edge of the data (the file's first 10,000 parcels, five rows of the grid; at this zoom the band can be as thin as a line). The map above the band stays empty, although the file has parcels there. The status line can read `Showing all`, a number, and `features in view`. **If it was not met:** parcels appear above the band too, at least near the middle of the view. |
+| 68e | In File Explorer, open the newest `session-….log` in that folder with Notepad. Press Ctrl+End. Use Find, direction Up, for `candidate-untiled-terminal`, twice: those two lines are the ends of 68b's and 68c's loads. Then search down from the lower of the two for `candidate-first-look-view-planned`. | **(1)** Either line contains `superseded`: the Clear went in before the filter's load ended, but that load ended after the Clear's own was set up. Not met; the try shows nothing. **(2)** Neither contains it, and a `candidate-first-look-view-planned` line comes after the lower one: the filter's load had ended before you pressed Clear. Not met; the try shows nothing. **(3)** Neither contains it, and no `candidate-first-look-view-planned` line comes after the lower one: the fault was met. |
+| 68f | The wide view: scroll out by one wheel notch at the map's centre, and wait. | This zoom asks for the view's tiles, so the case ends here either way. If the fault was met, the empty area above the band now fills; if not, it was filled already. Do not scroll far out: near the whole file, the render budget leaves areas empty in its own words, which are not item 68's. |
+
+68b to 68f is one try. Make as many tries as the step's minutes allow; after 68f, the next try starts again at 68b.
+
+**Questions.**
+1. For each try: 68e's outcome (1, 2 or 3); whether the map was empty when you pressed Clear; and whether 68d showed the band alone with the map empty above it.
+2. Overall: met in a try / not met in N tries. Not met does not show the fault absent, and neither answer says how often a user meets it.
+
+After Step 358, and after Step 68 if you do it, close the window and start the app again with section 1's second command before block (vi).
