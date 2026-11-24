@@ -2487,3 +2487,18 @@ the 50 files of ADV-2026-11-23-29 item 1
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 13 — 2026-11-23 — the custodian's, under ADV-2026-11-23-38 and ADV-2026-11-23-39: references only
+
+*Written by the custodian before any code. It holds the two rulings by reference and words nothing of its own.*
+
+1. **Authority.** The advisor's rulings ADV-2026-11-23-38 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-38-the-recovery-offers-seven-points-after-attempt-7-as-the-gate-recommends-k-c34-a-second-mutation-the-adr-036-notes-words.md`) and ADV-2026-11-23-39 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-39-the-recovery-offers-strings-r-s1-to-r-s12-and-known-limitations-items-43-70-and-the-new-item-worded.md`), under the human's delegation of 2026-11-13; neither is the human's words.
+2. **Amendment 10 item 11 (i) to (iv)** are ruled by ADV-2026-11-23-38 items 1 to 4, as written there: the cap of the lines is for the whole over `B...H2`, the two part figures are budgets, and its item 1 says when a part's overrun is class 8 and when it comes to the advisor before the code; the count of files is the union over `B...H2` (its item 2); the third case of a twin and the folder with no history are named in the note (its items 3 and 4).
+3. **K-C34** gains the second mutation of ADV-2026-11-23-38 item 6. Lead-data drafts its row in an amendment before code; what that item says follows if the mutation does not fail on Windows at H2.
+4. **The ADR-036 note** is the text fenced in ADV-2026-11-23-38 item 8. Part 2 appends it to `docs/adr/ADR-036-project-folder-step-record-and-dataset-reference.md` after Amendment 4, byte for byte, with `<date>` filled with the date of the commit that lands it (its item 8); Part 2's gates check each clause of it against the code, and the advisor compares it byte for byte at the merge check (its item 10). It replaces lead-data's draft of the note in this form.
+5. **The strings and the KNOWN-LIMITATIONS items.** R-S1 to R-S12 are the words of ADV-2026-11-23-39 item 1 and land in Part 1; KNOWN-LIMITATIONS items 43, 70 and the new item are the words of its items 3 to 5 and land in Part 2, the new item at the next free number at Part 2's base (its item 5); where the new item depends on the build is its item 6, and how they land is its item 7. The build's gates check every clause, and the advisor compares each byte for byte at the merge check.
+6. **Next.** Lead-data's K-C34 row, as an amendment before code. The build stays held until the text-id piece's build has a pushed head with its suites green (ADV-2026-11-23-35 item 3, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-35-the-bases-identity-route-then-text-id-then-recovery-offer-each-the-next-unused-literal-recovery-build-held-until-a-green-head.md`). Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
