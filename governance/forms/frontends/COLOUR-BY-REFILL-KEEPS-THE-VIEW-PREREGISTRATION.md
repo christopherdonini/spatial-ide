@@ -1024,3 +1024,18 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 9 — 2026-11-24 — the custodian's, after the architect's build gate (PASS WITH NOTES, gate-log row 896): references only
+
+1. **The gate.** Row 896. Its report is `state/consults/gates/2026-11-24-colour-by-refill-keeps-the-view-build-gate-architect.md`, read at d636c3b6a952779a9ef2652cfd891541d3d53339, the head of PR 365. It has no Correctness or Evidence finding. It checked item 51, item 61's changed span, AC12's third cell and the e2e README entry clause by clause.
+2. **D-A1 and D-A2.** These are that report's words for two comments in `KNOWN-LIMITATIONS.md`. They are applied on the branch with no re-gate (AUTONOMY §31), and the PR body lists them. They are applied in one commit after the advisor rules the words, with the ruling's id in place of each "landed for the advisor's ruling" clause, as the report says.
+3. **OQ-1 and OQ-2 go to the advisor.**
+   - OQ-1: what "at the final candidate" means for §4's no-regression series.
+   - OQ-2: whether item 61's comment is a verbatim mark.
+
+   The merge request waits for both answers.
+4. **The closing amendment** records what the report's last list names, references and hashes only.
+
+Read the last amendment first.
+
+Nothing above is edited.

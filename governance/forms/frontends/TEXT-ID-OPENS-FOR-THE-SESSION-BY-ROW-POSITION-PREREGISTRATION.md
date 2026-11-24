@@ -586,3 +586,114 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — 2026-11-24 — the custodian's, after the architect's form gate, attempt 2 (FAIL, gate-log row 895): that gate's replacement words for C5, E4 and D3, and its section 2 item 14 for S-8, carried byte for byte
+
+The words below are the architect's, from row 895's report (`state/consults/gates/2026-11-24-text-id-opens-for-the-session-by-row-position-form-gate-architect-attempt-2.md`). Each item names the place, then the Old text it replaces and the New text, each exactly as the report gives it. Nothing above is edited. Like the form, they bind nothing until ADV-2026-11-23-34 is approved (ADV-2026-11-23-33 item 5).
+
+The file ceiling stays 84 (ADV-2026-11-24-05 item 1). With item 1 below, the 84th path is `engine/tests/identity.rs`, and a wire fixture found at the base is a stop. The report's check 6 words, for the ADR-016 Amendment 3 draft, are not in this form: they go to the advisor (ADV-2026-11-23-34 item 6).
+
+1. **C5, Amendment 3, item 3 (the 84 count).**
+
+   Old:
+
+```text
+That is 83 paths. The 84th is the place for a wire fixture that holds the detail, if item 5's search at the base finds one outside the Scope.
+```
+
+   New:
+
+```text
+That is 83 paths. The 84th is `engine/tests/identity.rs`, class 9, declared before code: its test `a_declared_mapping_to_a_non_integer_column_is_refused_not_hashed` asserts that the type refusal's detail contains `synthesized`, which the new second sentence does not hold, and that assertion changes to the new sentence's `no stable identity`. A wire fixture that holds the detail, if item 5's search at the base finds one outside the Scope, would be an 85th path: that is a stop, and the file ceiling goes to the advisor before code.
+```
+
+2. **C5, Amendment 3, item 5 (the four places).**
+
+   Old:
+
+```text
+All four are in the Scope (§7 and Amendment 2, item 3).
+```
+
+   New:
+
+```text
+All four are in the Scope (§7 and Amendment 2, item 3). A fifth place pins a part of the sentence and is not found by that search: `engine/tests/identity.rs`, whose test asserts that the detail contains `synthesized` (item 3).
+```
+
+3. **C5, Amendment 3, item 5 (the search at the base).**
+
+   Old:
+
+```text
+The worker runs the same search at the base before code, and every place that pins the sentence there changes in this piece, a wire fixture included (that item; item 2 of ADV-2026-11-23-36).
+```
+
+   New:
+
+```text
+The worker runs the same search at the base before code, and also searches `engine/`, `kernel/`, `protocol/` and `frontends/` for the parts `synthesized`, `ADR-016 refuses` and `is not a mapping`, since a test may pin a part of the sentence and not the whole. Every place that pins the sentence, or a part of it that the new words do not hold, changes in this piece, a wire fixture included (that item; item 2 of ADV-2026-11-23-36). `engine/ADMISSION-RESULTS.md` is not edited.
+```
+
+4. **E4, section 4, the shell table: the S-T6 row, followed by the rows S-T6b and S-T8.**
+
+   Old:
+
+```text
+| S-T6 | same: `declaring_from_a_row_position_open_carries_no_set_aside` | sends it | M-23: `declarationOptions` keeps the flag |
+```
+
+   New:
+
+```text
+| S-T6 | same: `declaring_from_a_row_position_open_carries_no_set_aside` | sends it | M-23: `declarationOptions` keeps the flag |
+| S-T6b (C2) | same: `a_declaration_after_a_refused_set_aside_carries_no_set_aside`. `refusedDeclarationOptions` over options that carry `setAsideFileId: true` and a `crsAssertion` returns the declared `identity` and the `crsAssertion`, and no `setAsideFileId`. | sends both: at the skeleton `refusedDeclarationOptions` exists and returns `{ ...options, identity }` | M-23b: `refusedDeclarationOptions` keeps the flag |
+| S-T8 (S-8) | `src/project/reopenNotices.test.ts`, with `../skp/client` and `../diagnostics/log` mocked the way `openProject.test.ts` mocks them: `a_reopen_refused_after_the_choice_names_the_choice`. With `options.setAsideFileId: true`, `admitProject` refused `engine.identity_set_aside_refused`, and refused `engine.query`, each has S-8's constant as its owner; the same refusals without the choice have `ENGINE_REFUSAL_NOTICE`; with the choice, `engine.cancelled` has no owner and an `skp.*` code keeps its own place. It compares constants, never words. | the owner is `ENGINE_REFUSAL_NOTICE` with the choice: at the skeleton S-8's constant is exported and `admitProject` takes the owner from `reopenRefusalPlace` alone | M-26: `admitProject` takes the owner from `reopenRefusalPlace` alone, whatever `options.setAsideFileId` is |
+```
+
+5. **D3, Amendment 3, item 5 (the four places by name).**
+
+   Old:
+
+```text
+is held by `engine/src/identity.rs` (line 341), `frontends/shell/MANUAL-WALKTHROUGH.md` (line 598, row I4 of Part I), `frontends/shell/e2e/admission-remediation.mjs` (line 82) and `frontends/shell/e2e/regression.mjs` (line 115)
+```
+
+   New:
+
+```text
+is held by `engine/src/identity.rs` (`admit_column_type`'s detail), `frontends/shell/MANUAL-WALKTHROUGH.md` (row I4 of Part I), `frontends/shell/e2e/admission-remediation.mjs` (`STRING_ID_MESSAGE`) and `frontends/shell/e2e/regression.mjs` (`STRING_ID_MESSAGE`)
+```
+
+6. **D3, Amendment 3, item 6 (the reopen notice).**
+
+   Old:
+
+```text
+(`frontends/shell/src/project/reopenNotices.ts`, line 100 at 4630fa09)
+```
+
+   New:
+
+```text
+(`frontends/shell/src/project/reopenNotices.ts`, R-ENG)
+```
+
+7. **Check 4, section 2: item 13, followed by the new item 14 (S-8, ADV-2026-11-24-05 item 2 (b)).**
+
+   Old:
+
+```text
+13. `src/admission/describeSummaryText.ts` (`:37-39`, `:56-58`) and `DescribeSummary.tsx` (`:65-70`): S-3 is shown beside the session statement when `set_aside_column` is not null.
+```
+
+   New:
+
+```text
+13. `src/admission/describeSummaryText.ts` (`:37-39`, `:56-58`) and `DescribeSummary.tsx` (`:65-70`): S-3 is shown beside the session statement when `set_aside_column` is not null.
+14. `src/project/openProject.ts` and `src/project/reopenNotices.ts` (S-8, ADV-2026-11-24-05 item 2 (b)). The shell tells the two reopen attempts apart in `admitProject`, the one place that holds both the refusal and the attempt's options: when `reopenRefusalPlace(refusal, heldProject)` returns `ENGINE_REFUSAL_NOTICE` and `options.setAsideFileId` is true, the owner is S-8 instead. `reopenRefusalPlace` keeps its signature, so its other callers and its test do not change. S-8 is a new exported constant beside `ENGINE_REFUSAL_NOTICE`, and its one product caller is `admitProject`; `ENGINE_REFUSAL_NOTICE` stays for a reopen attempt that carries no choice. Three doc comments this makes untrue are corrected in the piece: `ENGINE_REFUSAL_NOTICE`'s, which places it beside every engine refusal at a reopen; `openProject.ts`'s header, which says the owner place is chosen from the code alone; and `reopenNotices.test.ts`'s header, which says each test there checks a builder's slots. S-T8 tests it (M-26).
+```
+
+Read the last amendment first.
+
+Nothing above is edited.
