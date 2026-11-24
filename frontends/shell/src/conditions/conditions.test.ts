@@ -167,6 +167,7 @@ describe("conditions: how a condition ends (C-U6)", () => {
 describe("conditions: a raise under another generation is dropped (C-U6a)", () => {
   // RECORDED MUTATION for C-U6a: in `raise` delete the generation drop. Expected failure: the stale raise mints. Also fails C-U7b.
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U6a: after opened(R) a raise under R2, and in a fresh state a raise before any opened, leave byId, nextId, nextSeq and notKept unchanged": AssertionError: expected { 'condition-1': { …(10) }, …(1) } to deeply equal { 'condition-1': { …(10) } }. Also failed: C-U7b. Reverted after observing.
+  // OBSERVED 2026-11-24 at 7c816dd4: FAILED -- "C-U6a: after opened(R) a raise under R2, and in a fresh state a raise before any opened, leave byId, nextId, nextSeq and notKept unchanged": AssertionError: expected { 'condition-1': { …(10) }, …(1) } to deeply equal { 'condition-1': { …(10) } }. Also failed: C-U7b (AssertionError: expected 1 to be +0). The mutation is the first line of `raise` alone (`if (event.generation !== state.current) return state;`). Reverted after observing.
   it("C-U6a: after opened(R) a raise under R2, and in a fresh state a raise before any opened, leave byId, nextId, nextSeq and notKept unchanged", () => {
     const state = fold([opened(R), raise("stream-terminal", "a")]);
     const stale = conditionsReducer(state, raise("stream-terminal", "b", { generation: R2 }));
