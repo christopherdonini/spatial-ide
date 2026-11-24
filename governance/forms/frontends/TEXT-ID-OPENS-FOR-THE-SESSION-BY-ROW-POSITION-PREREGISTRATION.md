@@ -697,3 +697,97 @@ is held by `engine/src/identity.rs` (`admit_column_type`'s detail), `frontends/s
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5 — 2026-11-24 — the custodian's, after the architect's form gate, attempt 3 (PASS WITH NOTES, gate-log row 897): that gate's replacement words for D4, D5 and D6, carried byte for byte
+
+The words below are the architect's, from row 897's report (`state/consults/gates/2026-11-24-text-id-opens-for-the-session-by-row-position-form-gate-architect-attempt-3.md`). Each item names the place, then the Old text it replaces and the New text, each exactly as the report gives it. Nothing above is edited. Like the form, they bind nothing until ADV-2026-11-23-34 is approved (ADV-2026-11-23-33 item 5).
+
+The file ceiling stays 84 (ADV-2026-11-24-11 item 1). Item 4 below carries ADV-2026-11-24-11 item 5 into the form. The report's paragraph headed ADV-2026-11-24-11 item 4 changes nothing here: it goes to the advisor, who chooses between the gate's words for Decision 1 and that change.
+
+1. **D4, section 2 item 14, as Amendment 4 item 7 gives it: where the shell tells the two reopen attempts apart.**
+
+   Old:
+
+```text
+The shell tells the two reopen attempts apart in `admitProject`, the one place that holds both the refusal and the attempt's options:
+```
+
+   New:
+
+```text
+The shell tells the two reopen attempts apart in `admitProject`, where the owner place is chosen today and which holds both the refusal and the attempt's options:
+```
+
+2. **D4, the same item: `reopenRefusalPlace` and its test.**
+
+   Old:
+
+```text
+`reopenRefusalPlace` keeps its signature, so its other callers and its test do not change.
+```
+
+   New:
+
+```text
+`reopenRefusalPlace` keeps its signature, so its test in `openProject.test.ts` does not change; `admitProject` is its one product caller.
+```
+
+3. **D4, the same item: the doc comments this makes untrue.**
+
+   Old:
+
+```text
+Three doc comments this makes untrue are corrected in the piece: `ENGINE_REFUSAL_NOTICE`'s, which places it beside every engine refusal at a reopen; `openProject.ts`'s header, which says the owner place is chosen from the code alone; and `reopenNotices.test.ts`'s header, which says each test there checks a builder's slots.
+```
+
+   New:
+
+```text
+Six doc comments this makes untrue are corrected in the piece: `ENGINE_REFUSAL_NOTICE`'s, which places it beside every engine refusal at a reopen; `openProject.ts`'s header, which says the owner place is chosen from the code alone; `reopenRefusalPlace`'s, which calls its result the owner's place beside a reopen refusal; in `AdmissionPanel.tsx`, the `owner` member's, which names `reopenRefusalPlace` as the owner place's source, and `runAdmitPath`'s, which says a reopen's claims are the project file's and not the user's; and `reopenNotices.test.ts`'s header, which says each test there checks a builder's slots.
+```
+
+4. **D5, Amendment 3 item 2: E1's row N-S.**
+
+   Old:
+
+```text
+   - E1: §4's row N-9, and the new row N-S in its own new file;
+```
+
+   New:
+
+```text
+   - E1: §4's row N-9, and the new row N-S in its own new file; N-S also asserts, before its scan counts, that N-3's input opens on the session tier, so that its red at the skeleton is the reason its row names;
+```
+
+5. **D6, Amendment 4 item 1's New: the stop at the base.**
+
+   Old:
+
+```text
+A wire fixture that holds the detail, if item 5's search at the base finds one outside the Scope, would be an 85th path: that is a stop, and the file ceiling goes to the advisor before code.
+```
+
+   New:
+
+```text
+Any place that item 5's search at the base finds outside the Scope, a wire fixture included, would be an 85th path: that is a stop, and the file ceiling goes to the advisor before code.
+```
+
+6. **D6, Amendment 4's preamble: the stop at the base.**
+
+   Old:
+
+```text
+With item 1 below, the 84th path is `engine/tests/identity.rs`, and a wire fixture found at the base is a stop.
+```
+
+   New:
+
+```text
+With item 1 below, the 84th path is `engine/tests/identity.rs`, and any place outside the Scope that item 5's search finds at the base, a wire fixture included, is a stop.
+```
+
+Read the last amendment first.
+
+Nothing above is edited.
