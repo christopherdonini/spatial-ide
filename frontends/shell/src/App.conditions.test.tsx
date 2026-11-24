@@ -336,6 +336,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   afterEach(() => h.teardown());
 
   // RECORDED MUTATION for C-A1: in `App.tsx` the session-ended raise also dispatches `ownerClear` of the viewport-refusal (the clear before the raise, as the form's table words it). Expected failure: Problems has 2 entries, not 3.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A1: a refused first look, a refused record and a session end: the top is session ended, S-3 reads 2, and Problems has 3 entries": AssertionError: expected '1 more in Problems' to be '2 more in Problems' // Object.is equality. Also failed: C-A3. Reverted after observing.
   it("C-A1: a refused first look, a refused record and a session end: the top is session ended, S-3 reads 2, and Problems has 3 entries", async () => {
     mocks.refuseUntiled.push(refusedWith(EXHAUSTED));
     await h.open("C:/data/a.parquet");
@@ -366,6 +367,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   });
 
   // RECORDED MUTATION for C-A2: in `App.tsx`'s `onCanvasRefusal` pass the constant "vertex-ceiling" as the kind to the raise, whatever the canvas gave. Expected failure: the second refusal merges into the first (one condition).
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A2: two ceiling refusals with identical text, one vertex and one pick, through the captured onCanvasRefusal, give two conditions": AssertionError: two conditions, each once in the DOM: expected [ <div …(2)>…(2)</div> ] to have a length of 2 but got 1. Reverted after observing.
   it("C-A2: two ceiling refusals with identical text, one vertex and one pick, through the captured onCanvasRefusal, give two conditions", async () => {
     await h.open("C:/data/a.parquet");
     const props = mocks.canvas.props!;
@@ -391,6 +393,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   });
 
   // RECORDED MUTATION for C-A3: in `App.tsx`'s `confirmOpen`, which every open attempt calls before its admission, dispatch the store's `opened` with a fresh resource first (a clear on the attempt, which a refused admission makes too). Expected failure: the refused reopen ends session ended.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A3: a refused reopen keeps session ended standing": AssertionError: session ended still stands: expected [] to have a length of 1 but got +0. Reverted after observing.
   describe("C-A3: how the conditions end, through the real App", () => {
     it("C-A3: Dismiss ends the one condition and is recorded as today", async () => {
       mocks.refuseUntiled.push(refusedWith(EXHAUSTED));
@@ -454,6 +457,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   });
 
   // RECORDED MUTATION for C-A4: in `App.tsx`'s `reportViewportOutcome` rejection arm raise the viewport-refusal condition for a session-ended refusal too. Expected failure: a `.canvas-refusal` stands beside session ended and S-3 shows.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A4: a first look refused with engine.source_changed gives one condition, session ended, not two": AssertionError: no viewport-refusal condition: expected [ …(1) ] to have a length of +0 but got 1. Reverted after observing.
   it("C-A4: a first look refused with engine.source_changed gives one condition, session ended, not two", async () => {
     mocks.refuseUntiled.push(refusedWith(SOURCE_CHANGED));
     await h.open("C:/data/a.parquet");
@@ -466,6 +470,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   });
 
   // RECORDED MUTATION for C-A6: in `App.tsx`'s `handleSaveProject` dispatch one `replaceBatch` per notice. Expected failure: the second batch replaces the first, so only MARK_WITHHELD_NOTICE stands.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A6: a save's notices are one batch: SAVED_NOTICE is the top, S-3 reads 1, and the other row is MARK_WITHHELD_NOTICE; a second save replaces both": AssertionError: expected [ Array(1) ] to deeply equal [ 'The project was saved.', …(1) ]. Reverted after observing.
   it("C-A6: a save's notices are one batch: SAVED_NOTICE is the top, S-3 reads 1, and the other row is MARK_WITHHELD_NOTICE; a second save replaces both", async () => {
     mocks.historyMark = "withheld";
     await h.open("C:/data/a.parquet");
@@ -499,6 +504,7 @@ describe("App: the stream-terminal raise on the pinned baseline arm (C-A5)", () 
   afterEach(() => h.teardown());
 
   // RECORDED MUTATION for C-A5: in `App.tsx`'s baseline `onFailureTerminal` do not raise the stream-terminal condition. Expected failure: no `.canvas-refusal` stands.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A5: the manager's terminal ProducerFailed gives one stream-terminal condition: the strip's top, no S-3, one Problems row": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("C-A5: the manager's terminal ProducerFailed gives one stream-terminal condition: the strip's top, no S-3, one Problems row", async () => {
     await h.open("C:/data/a.parquet");
     expect(mocks.managerOptions, "App built the baseline manager").not.toBeNull();

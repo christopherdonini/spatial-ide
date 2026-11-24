@@ -41,6 +41,7 @@ const codesOf = (list: readonly Condition[]): string[] => list.map((condition) =
 describe("conditions: the routes table (C-U1)", () => {
   // RECORDED MUTATION for C-U1: in `conditions.ts`'s routes table give the `stream-terminal` route `replaced-by-owner` among its `ends`.
   // Expected failure: the table is not whole, and an urgency-2 route declares a replacement. Also fails C-U3 (a raise on that route is refused).
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U1: the routes table is whole, as section 2.2; no urgency 1 or 2 route declares replaced-by-owner; Condition has no remedy member": AssertionError: expected [ [ 'session-ended', …(4) ], …(6) ] to deeply equal [ [ 'session-ended', …(4) ], …(6) ]. Also failed: C-U6. Reverted after observing.
   it("C-U1: the routes table is whole, as section 2.2; no urgency 1 or 2 route declares replaced-by-owner; Condition has no remedy member", () => {
     expect(CONDITION_ROUTES.map((entry) => [entry.route, entry.owner, entry.target, entry.urgency, [...entry.ends]])).toEqual([
       ["session-ended", "session", "resource", 1, ["next-open"]],
@@ -64,6 +65,7 @@ describe("conditions: the routes table (C-U1)", () => {
 
 describe("conditions: the strip's top, and the count of the others (C-U2)", () => {
   // RECORDED MUTATION for C-U2: in `ordered` sort the seq descending (newest first) within an urgency. Expected failure: the order of the two refusals.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U2: urgency first, then oldest; others is n - 1; an empty list gives null": AssertionError: expected [ 'engine.source_changed', 'b', …(2) ] to deeply equal [ 'engine.source_changed', 'a', …(2) ]. Also failed: C-U3, C-U7. Reverted after observing.
   it("C-U2: urgency first, then oldest; others is n - 1; an empty list gives null", () => {
     const state = fold([opened(R), raise("reopen-notice", "n1", { ordinal: 0 }), raise("stream-terminal", "a"), raise("stream-terminal", "b"), sessionEnded()]);
     const list = shown(state);
@@ -78,6 +80,7 @@ describe("conditions: the strip's top, and the count of the others (C-U2)", () =
 
 describe("conditions: a newer raise never ends an older blocker or refusal (C-U3)", () => {
   // RECORDED MUTATION for C-U3: in `raise` end every condition of the same target before minting. Expected failure: refusal A does not stand.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U3: refusals A and B (stream-terminal, one view and generation, two codes), a notice, then session ended: all four stand, and the top goes from A to session ended": AssertionError: expected [ 'b', 'n' ] to deeply equal [ 'a', 'b', 'n' ]. Also failed: C-U2, C-U5, C-U6, C-U7, C-U7a, C-U7b, C-U7c, C-U8. Reverted after observing.
   it("C-U3: refusals A and B (stream-terminal, one view and generation, two codes), a notice, then session ended: all four stand, and the top goes from A to session ended", () => {
     const before = fold([opened(R), raise("stream-terminal", "a"), raise("stream-terminal", "b"), raise("reopen-notice", "n", { ordinal: 0 })]);
     expect(codesOf(shown(before))).toEqual(["a", "b", "n"]);
@@ -92,6 +95,7 @@ describe("conditions: a newer raise never ends an older blocker or refusal (C-U3
 
 describe("conditions: a view's condition is absent from another view of the same source (C-U4)", () => {
   // RECORDED MUTATION for C-U4: in `visibleFor` drop the target test, so a condition matches on its generation alone. Expected failure: view-2 lists the view-1 condition.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U4: view-1's condition is absent from visibleFor({view-2, R}); the resource's is present in both; another generation's is absent": AssertionError: expected [ 'a', 'engine.source_changed' ] to deeply equal [ 'engine.source_changed' ]. Reverted after observing.
   it("C-U4: view-1's condition is absent from visibleFor({view-2, R}); the resource's is present in both; another generation's is absent", () => {
     const state = fold([opened(R), raise("stream-terminal", "a", { target: VIEW_1 }), sessionEnded()]);
     expect(codesOf(visibleFor(state, { view: "view-1", resource: R }))).toEqual(expect.arrayContaining(["a", "engine.source_changed"]));
@@ -103,6 +107,7 @@ describe("conditions: a view's condition is absent from another view of the same
 
 describe("conditions: no merge by display text (C-U5)", () => {
   // RECORDED MUTATION for C-U5: in `raise` match an existing condition by its display text instead of by the identity key. Expected failure: equal texts under different codes merge.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U5: equal text with different keys gives two conditions; the same key with different text gives one, occurrences 2, first kept": AssertionError: expected [ { id: 'condition-1', …(9) } ] to have a length of 2 but got 1. Reverted after observing.
   it("C-U5: equal text with different keys gives two conditions; the same key with different text gives one, occurrences 2, first kept", () => {
     const twoKeys = fold([opened(R), raise("stream-terminal", "a", { display: text("same words") }), raise("stream-terminal", "b", { display: text("same words") })]);
     expect(all(twoKeys)).toHaveLength(2);
@@ -132,6 +137,7 @@ describe("conditions: no merge by display text (C-U5)", () => {
 
 describe("conditions: how a condition ends (C-U6)", () => {
   // RECORDED MUTATION for C-U6: in `opened` end nothing (keep every condition). Expected failure: the conditions of the earlier open stand after the next one.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U6: dismiss ends one; opened(R2) ends all not in R2; owner-clear only on viewport-refusal; replacement only on notice routes": AssertionError: expected [ { id: 'condition-1', …(9) }, …(3) ] to deeply equal []. Also failed: C-U7a. Reverted after observing.
   it("C-U6: dismiss ends one; opened(R2) ends all not in R2; owner-clear only on viewport-refusal; replacement only on notice routes", () => {
     const base = fold([opened(R), raise("stream-terminal", "a"), raise("stream-terminal", "b"), raise("viewport-refusal", "v"), sessionEnded()]);
     const idOf = (state: ConditionsState, code: string) => all(state).find((condition) => condition.reason.code === code)!.id;
@@ -160,6 +166,7 @@ describe("conditions: how a condition ends (C-U6)", () => {
 
 describe("conditions: a raise under another generation is dropped (C-U6a)", () => {
   // RECORDED MUTATION for C-U6a: in `raise` delete the generation drop. Expected failure: the stale raise mints. Also fails C-U7b.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U6a: after opened(R) a raise under R2, and in a fresh state a raise before any opened, leave byId, nextId, nextSeq and notKept unchanged": AssertionError: expected { 'condition-1': { …(10) }, …(1) } to deeply equal { 'condition-1': { …(10) } }. Also failed: C-U7b. Reverted after observing.
   it("C-U6a: after opened(R) a raise under R2, and in a fresh state a raise before any opened, leave byId, nextId, nextSeq and notKept unchanged", () => {
     const state = fold([opened(R), raise("stream-terminal", "a")]);
     const stale = conditionsReducer(state, raise("stream-terminal", "b", { generation: R2 }));
@@ -182,6 +189,7 @@ const manyRaises = (count: number, generation: string = R): ConditionsEvent[] =>
 
 describe("conditions: the cap (C-U7, C-U7a, C-U7b, C-U7c)", () => {
   // RECORDED MUTATION for C-U7: in `raise` at the cap drop the oldest kept condition and keep the new raise. Expected failure: the top is not the first raise.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U7: after opened(R), CONDITIONS_MAX raises, each with its own key: the oldest CONDITIONS_MAX - 1 are kept, notKept is 1, and the top is the first raise": AssertionError: expected +0 to be 1 // Object.is equality. Also failed: C-U7a, C-U7c. Reverted after observing.
   it("C-U7: after opened(R), CONDITIONS_MAX raises, each with its own key: the oldest CONDITIONS_MAX - 1 are kept, notKept is 1, and the top is the first raise", () => {
     const state = fold([opened(R), ...manyRaises(CONDITIONS_MAX)]);
     expect(all(state)).toHaveLength(CONDITIONS_MAX - 1);
@@ -191,6 +199,7 @@ describe("conditions: the cap (C-U7, C-U7a, C-U7b, C-U7c)", () => {
   });
 
   // RECORDED MUTATION for C-U7a: in `opened` leave `notKept` as it was. Expected failure: notKept is 1 after the next open.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U7a: opened resets notKept: CONDITIONS_MAX raises give notKept 1; opened(R2) then gives notKept 0 and no condition": AssertionError: expected 1 to be +0 // Object.is equality. Reverted after observing.
   it("C-U7a: opened resets notKept: CONDITIONS_MAX raises give notKept 1; opened(R2) then gives notKept 0 and no condition", () => {
     const full = fold([opened(R), ...manyRaises(CONDITIONS_MAX)]);
     expect(full.notKept).toBe(1);
@@ -200,6 +209,7 @@ describe("conditions: the cap (C-U7, C-U7a, C-U7b, C-U7c)", () => {
   });
 
   // RECORDED MUTATION for C-U7b: in `raise` apply the generation drop after the cap check. Expected failure: the stale raise is counted in notKept. Also fails C-U6a.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U7b: a stale raise takes no cap room: with CONDITIONS_MAX - 1 kept, one stream-terminal raise under R3 leaves notKept 0 and the kept unchanged": AssertionError: expected 1 to be +0 // Object.is equality. Reverted after observing.
   it("C-U7b: a stale raise takes no cap room: with CONDITIONS_MAX - 1 kept, one stream-terminal raise under R3 leaves notKept 0 and the kept unchanged", () => {
     const full = fold([opened(R), ...manyRaises(CONDITIONS_MAX - 1)]);
     expect(all(full)).toHaveLength(CONDITIONS_MAX - 1);
@@ -209,6 +219,7 @@ describe("conditions: the cap (C-U7, C-U7a, C-U7b, C-U7c)", () => {
   });
 
   // RECORDED MUTATION for C-U7c: in `raise` keep an urgency-1 raise only while fewer than CONDITIONS_MAX - 1 conditions are kept, as urgency 2 and 3 are. Expected failure: the session-ended raise at the cap is not kept.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U7c: urgency 1 is always kept in the held place: after CONDITIONS_MAX stream-terminal raises, a session-ended raise is kept, the kept count is CONDITIONS_MAX, notKept stays 1, and it is the top": AssertionError: expected [ { id: 'condition-1', …(9) }, …(62) ] to have a length of 64 but got 63. Reverted after observing.
   it("C-U7c: urgency 1 is always kept in the held place: after CONDITIONS_MAX stream-terminal raises, a session-ended raise is kept, the kept count is CONDITIONS_MAX, notKept stays 1, and it is the top", () => {
     const full = fold([opened(R), ...manyRaises(CONDITIONS_MAX)]);
     const state = conditionsReducer(full, sessionEnded());
@@ -229,6 +240,7 @@ describe("conditions: the cap (C-U7, C-U7a, C-U7b, C-U7c)", () => {
 
 describe("conditions: a notice batch is replaced whole (C-U8)", () => {
   // RECORDED MUTATION for C-U8: in `replaceBatch` end the route's conditions before each display, not once per batch. Expected failure: a two-display batch keeps one.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U8: replaceBatch(save-notice, [a, b]) gives two conditions with ordinals 0 and 1; replaceBatch([]) ends both and mints none; the viewport-refusal stands throughout": AssertionError: expected [ [ 1, { kind: 'text', text: 'b' } ] ] to deeply equal [ [ +0, …(1) ], …(1) ]. Reverted after observing.
   it("C-U8: replaceBatch(save-notice, [a, b]) gives two conditions with ordinals 0 and 1; replaceBatch([]) ends both and mints none; the viewport-refusal stands throughout", () => {
     const batch = (displays: readonly string[]): ConditionsEvent => ({
       type: "replaceBatch",

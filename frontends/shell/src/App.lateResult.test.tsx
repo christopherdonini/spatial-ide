@@ -764,11 +764,19 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // Expected failure: each of A's three late callbacks writes onto B in turn.
   // OBSERVED 2026-09-23: FAILED, `onFailureTerminal` -- vitest's printed bytes (first line):
   //   AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: NOT FAILED, `onFailureTerminal` -- the guard removed, the test passed (vitest exit 0; 1 passed). Probable reason, read in conditions.ts and not tested apart: the store drops a raise under a generation that is not the current one. Reverted after observing.
   // OBSERVED 2026-09-23: FAILED, `onCanvasRefusal` -- vitest's printed bytes (first line):
   //   AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: NOT FAILED, `onCanvasRefusal` -- the guard removed, the test passed (vitest exit 0; 1 passed). Probable reason, read in conditions.ts and not tested apart: the store drops a raise under a generation that is not the current one. Reverted after observing.
   // OBSERVED 2026-09-23: FAILED, `onResidentCeilingExceeded` -- vitest's printed bytes (first line):
   //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED, `onResidentCeilingExceeded` -- vitest's printed bytes (first line):
+  //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
+  // Reverted after observing.
   // Each reverted after observing.
+  // RECORDED MUTATION for the replaced N8 assertion of "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)" (ADV-2026-11-23-37 item 3 (e)): in App.tsx's `onCanvasRefusal` adapter (`setCanvasRefusal`) return before the dispatch, so B's canvas-ceiling condition is never raised.
+  // Expected failure: B's ceiling refusal is not a row of Problems, so the exactly-once check of the replaced assertion fails.
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)", async () => {
     const handleA = await openPathAndCaptureHandle();
     const canvasA = workingCanvasMockState.propsByDataset.get(handleA);
@@ -1001,6 +1009,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
   //   AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
+  // RECORDED MUTATION for the replaced N8 assertion of "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)" (ADV-2026-11-23-37 item 3 (e)): in App.tsx's baseline `onFailureTerminal` do not raise the stream-terminal condition (the guard `if (target !== null)` becomes `if (target === null)`).
+  // Expected failure: B's own stream failure is not a row of Problems, so the exactly-once check of the replaced assertion fails.
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)", async () => {
     const deliver = (handle: string) => settleFirstRequest(handle, { kind: "issued", streamHandle: "a-post-end-late" });
 
@@ -1068,6 +1079,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
   //   AssertionError: expected 'engine.source_changed' to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
+  // RECORDED MUTATION for the replaced N8 assertion of "the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)" (ADV-2026-11-23-37 item 3 (e)): in App.tsx's baseline `onFailureTerminal` raise B's stream-terminal condition under the generation "stale-generation", so the store drops it.
+  // Expected failure: B's own stream failure is not a row of Problems, so the exactly-once check of the replaced assertion fails.
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)", async () => {
     const deliver = (handle: string) =>
       rejectFirstRequest(handle, new SkpCallError({ code: "engine.source_changed", message: "the source file changed", fields: {} }));

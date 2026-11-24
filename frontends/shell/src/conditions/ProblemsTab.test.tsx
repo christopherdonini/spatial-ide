@@ -59,6 +59,7 @@ describe("ProblemsTab (C-R2)", () => {
   const rows = () => [...container.querySelectorAll(".problem-row")];
 
   // RECORDED MUTATION for C-R2: in `ProblemsTab.tsx` list only the top row. Expected failure: the rows after the top are absent.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-R2: every visible condition once, in order; the top row has no owner class and no alert role and shows S-10": AssertionError: expected [ <div …(1)></div> ] to have a length of 4 but got 1. Also FAILED -- "C-R2: Dismiss on a row dispatches dismiss(id): the row goes and the others stand": AssertionError: expected [ <div …(1)></div> ] to have a length of 3 but got 1. Reverted after observing.
   it("C-R2: every visible condition once, in order; the top row has no owner class and no alert role and shows S-10", () => {
     const state = stateOf([raise("reopen-notice", "n", "a notice"), raise("stream-terminal", "a", "refusal a"), raise("stream-terminal", "b", "refusal b"), raise("session-ended", "engine.source_changed", "ended")]);
     render(state);

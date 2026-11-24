@@ -108,6 +108,7 @@ describe("ConditionView: App's markup, moved whole (C-R1)", () => {
     act(() => root.render(<ConditionView condition={condition} place={place} onDismiss={onDismiss} />));
 
   // RECORDED MUTATION for C-R1: in `ConditionView.tsx` add a `<button>Reopen</button>` to the session-ended element. Expected failure: the markup of the session-ended route and its list of buttons.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-R1: session-ended renders App's moved markup exactly, and its buttons are exactly the owner's Dismiss": AssertionError: expected '<div class="canvas-session-ended"><di…' to be '<div class="canvas-session-ended"><di…' // Object.is equality. Reverted after observing.
   it.each(ROUTES)("C-R1: %s renders App's moved markup exactly, and its buttons are exactly the owner's Dismiss", (route) => {
     const condition = conditionOn(route);
     render(condition, "strip");

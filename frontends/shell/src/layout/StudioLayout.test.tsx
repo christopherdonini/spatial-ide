@@ -337,6 +337,7 @@ describe("StudioLayout: the attention strip's one slot, and the count of the oth
   const shown = (selector: string) => !q(selector).hasAttribute("hidden");
 
   // RECORDED MUTATION for C-R3: in `StudioLayout.tsx` the S-3 button selects Activity's Console tab in place of its Problems tab. Expected failure: the Problems panel is not shown.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-R3: S-3 shows when attentionOthers is above 0 and its button opens Activity on Problems": AssertionError: Activity, its Problems panel and its Console panel: expected [ true, false, true ] to deeply equal [ true, true, false ]. Reverted after observing.
   it("C-R3: S-3 shows when attentionOthers is above 0 and its button opens Activity on Problems", () => {
     mount(2, true);
     const strip = q(".attention-strip");

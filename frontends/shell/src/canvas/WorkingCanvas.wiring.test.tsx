@@ -614,6 +614,7 @@ describe("RK-C: the canvas's reset keeps the camera when asked (colour-by-refill
 
 describe("the producer passes the ceiling's kind (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md OPEN-2 (a), C-K2)", () => {
   // RECORDED MUTATION for C-K2: in `WorkingCanvas.tsx`'s catch pass the constant "vertex-ceiling" as the kind, not `ceilingKindOf(e)`. Expected failure: the pick class's kind.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-K2: a pick ceiling reaches onCanvasRefusal with pick-ceiling, and a vertex ceiling with vertex-ceiling": AssertionError: expected 'vertex-ceiling' to be 'pick-ceiling' // Object.is equality. Reverted after observing.
   it("C-K2: a pick ceiling reaches onCanvasRefusal with pick-ceiling, and a vertex ceiling with vertex-ceiling", () => {
     const onCanvasRefusal = vi.fn();
     const { push } = mount({ onCanvasRefusal });
