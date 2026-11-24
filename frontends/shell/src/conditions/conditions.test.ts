@@ -96,6 +96,7 @@ describe("conditions: a newer raise never ends an older blocker or refusal (C-U3
 describe("conditions: a view's condition is absent from another view of the same source (C-U4)", () => {
   // RECORDED MUTATION for C-U4: in `visibleFor` drop the target test, so a condition matches on its generation alone. Expected failure: view-2 lists the view-1 condition.
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U4: view-1's condition is absent from visibleFor({view-2, R}); the resource's is present in both; another generation's is absent": AssertionError: expected [ 'a', 'engine.source_changed' ] to deeply equal [ 'engine.source_changed' ]. Reverted after observing.
+  // OBSERVED 2026-11-24 at 7c816dd4, `visibleFor`'s generation clause alone removed (conditions.ts): FAILED -- this test, at its third expect, the R2 line: `expected [ { id: 'condition-1', …(9) }, …(1) ] to deeply equal []`; App.conditions.test.tsx (12 passed) and App.lateResult.test.tsx (22 passed) passed. That expect is the clause's pin (ADV-2026-11-24-09 item 2); the recorded mutation above is unchanged.
   it("C-U4: view-1's condition is absent from visibleFor({view-2, R}); the resource's is present in both; another generation's is absent", () => {
     const state = fold([opened(R), raise("stream-terminal", "a", { target: VIEW_1 }), sessionEnded()]);
     expect(codesOf(visibleFor(state, { view: "view-1", resource: R }))).toEqual(expect.arrayContaining(["a", "engine.source_changed"]));
