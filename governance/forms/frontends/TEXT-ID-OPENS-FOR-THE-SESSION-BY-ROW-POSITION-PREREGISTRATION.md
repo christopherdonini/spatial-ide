@@ -791,3 +791,33 @@ With item 1 below, the 84th path is `engine/tests/identity.rs`, and any place ou
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-24 — the architect's, under ADV-2026-11-24-12 item 2: (A), a retry after a question or a not-found reply does not carry the choice
+
+1. **Authority.** The advisor's rulings ADV-2026-11-24-12 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-12-text-id-a-the-retry-does-not-carry-the-choice-one-architect-amendment-before-code-decision-1-as-drafted-ceiling-2150.md`), items 1, 2 and 4, and ADV-2026-11-24-15 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-15-text-id-amendment-6-oq-1-a-declared-guard-meets-item-2-oq-2-the-architects-words-the-estimate-stated.md`), items 1 to 4, under the human's delegation of 2026-11-13. They are not the human's words.
+
+2. **Section 2 item 12: the choice's re-run, and a retry after a question or a not-found reply.**
+
+   Old:
+
+```text
+    - Choosing re-runs `runAdmitPath` (`:216-292`) with `{...options, identity: undefined, setAsideFileId: true}`. A reopen keeps its `answer` and `relink`.
+```
+
+   New:
+
+```text
+    - Choosing re-runs `runAdmitPath` (`:216-292`) with `{...options, identity: undefined, setAsideFileId: true}`. A reopen keeps its `answer` and `relink`. A retry after a question or a not-found reply does not carry the choice: it carries the answer and the re-link, as today, and if the retry is refused for the file's `id` column again, the choice is offered again (ADV-2026-11-24-12 item 1; ADV-2026-11-24-15 item 2).
+```
+
+3. **Section 4, the shell table: a new row S-T9, after the row S-T8 that Amendment 4 item 4 adds.**
+
+```text
+| S-T9 ((A)) | `AdmissionPanel.test.ts`: `a_retry_after_a_question_or_a_not_found_reply_does_not_carry_the_choice`. `reopenRetryOptions`, an exported pure function, builds a reopen's retry options from the run's options and the retry's answer or re-link. Its product callers are the question block's two answers and `handleRelink`, each through `reopenPath`, which runs `runAdmitPath` with the options it is given. The run's options are `{ reopen: { answer: "copy", relink: <a path> }, setAsideFileId: true }`. Over them, an answer gives exactly `{ reopen: { answer, relink: <that path> } }`, and a re-link gives exactly `{ reopen: { answer: "copy", relink } }`. Neither has `setAsideFileId`. | (guard): green at the skeleton, because at 7a07ca1c `reopenPath` builds a retry's options from the reopen alone, which is (A). Its proof is its mutation. Declared as such. | M-27: `reopenRetryOptions` spreads the run's options, so the retry carries the choice |
+```
+
+4. **The line ceiling** (ADV-2026-11-24-12 item 4; ADV-2026-11-24-15 item 3). The line ceiling is restated to 2,150, before code. The architect's estimate is about 2,110 to 2,131 lines. The file ceiling stays 84. Section 7's line is not edited; an overrun at the head is class 8.
+
+Read the last amendment first.
+
+Nothing above is edited.
