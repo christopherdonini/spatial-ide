@@ -886,13 +886,12 @@ export default function App() {
         const target = viewTargetNow();
         if (target !== null) {
           dispatchConditions({
-            type: "raise",
+            type: "replaceBatch",
             route: "record-notice",
             code: `step-record-${report.kind}`,
-            ordinal: null,
             target,
             generation: report.dataset,
-            display: { kind: "text", text },
+            displays: [{ kind: "text", text }],
           });
         }
       },
