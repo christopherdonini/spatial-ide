@@ -5,7 +5,7 @@
 // E2E (COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md section 4, OPEN-3 (a)): E-RK1, on real WebView2, run as `node e2e/colour-refill.mjs` from frontends/shell.
 // The fixture is `colour-refill-300k.parquet` (300,000 features, `AttributeMode::MultiType`), made by
 //   cargo test --locked -p spatial-kernel --test manual_walkthrough_fixtures generate_the_colour_refill_fixture -- --ignored --nocapture
-// into this checkout's target/fixtures/manual-walkthrough; `--fixture <path>` names another copy of the same file. The app's store is a scratch LOCALAPPDATA (as colour.mjs).
+// into this checkout's target/fixtures/manual-walkthrough; `--fixture <path>` names another copy of the same file. The app's store is a scratch LOCALAPPDATA (as colour.mjs). The session log is read from the app's own log folder (Tauri's `app_log_dir()`, under the profile's Local AppData), which does not follow that variable.
 //
 // Steps: open the fixture through `openPath` (the suites' own open); wait for the open's first look to plan (the first `candidate-first-look-view-planned` session-log line);
 // zoom out by the mouse wheel, one notch at a time, until `.attributes-not-held` stands; pan by pointer to a view away from the fit; Colour by `zone` through the Style tab.
@@ -20,7 +20,7 @@
 // What this does not prove: any docs/08 figure, macOS or Linux, a file other than this fixture, or a timing. Waits are harness bounds on readiness (ADR-018), not measurements.
 // Recorded: the zoom steps taken, the generator's feature count (restated, not read from the file), the fixture's sha256, the boxes and the client sizes.
 import { createHash } from "node:crypto";
-import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync } from "node:fs";
+import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -28,9 +28,12 @@ import { fileURLToPath } from "node:url";
 // `LOCALAPPDATA` must be in place before `lib.mjs` reads the environment for the spawn it makes.
 const TEMP_BASE = realpathSync.native(tmpdir());
 const SCRATCH = mkdtempSync(join(TEMP_BASE, "spatial-colour-refill-"));
+const PROFILE_LOCALAPPDATA = process.env.LOCALAPPDATA;
 process.env.LOCALAPPDATA = SCRATCH;
-const LOG_DIR = join(SCRATCH, "dev.spatialide.shell", "logs");
+const LOG_DIR = PROFILE_LOCALAPPDATA ? join(PROFILE_LOCALAPPDATA, "dev.spatialide.shell", "logs") : null;
+let LAUNCH_MS = 0;
 
+const { newestSessionLogSinceLaunch } = await import("./residencyTrace.mjs");
 const { attachOrLaunch, attachConsole, waitForSettle, canvasRect, doWheel, CDP_PORT } = await import("./lib.mjs");
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -75,11 +78,17 @@ const settle = async (consoleHandle, what, quietMs = 2000) => {
   if (!outcome.settled) throw new Void(`the render trace was not quiet for ${quietMs}ms within 120000ms (${what})`);
 };
 
-/** The newest session log of this run's own app instance (the scratch LOCALAPPDATA holds no other). */
+/** The path of the newest session log THIS launch created, in the app's own log folder under the profile's Local AppData (the scratch folder holds the store only); null when none. */
+function sessionLogPath() {
+  if (!LOG_DIR || !existsSync(LOG_DIR)) return null;
+  const listing = readdirSync(LOG_DIR).map((name) => ({ name, mtimeMs: statSync(join(LOG_DIR, name)).mtimeMs }));
+  const name = newestSessionLogSinceLaunch(listing, LAUNCH_MS);
+  return name === null ? null : join(LOG_DIR, name);
+}
+/** The lines of the session log THIS launch created (see `sessionLogPath`); `[]` when none. */
 function sessionLogLines() {
-  if (!existsSync(LOG_DIR)) return [];
-  const names = readdirSync(LOG_DIR).filter((n) => /^session-\d+\.log$/.test(n)).sort((a, b) => Number(a.slice(8, -4)) - Number(b.slice(8, -4)));
-  return names.length === 0 ? [] : readFileSync(join(LOG_DIR, names[names.length - 1]), "utf8").split("\n");
+  const p = sessionLogPath();
+  return p === null ? [] : readFileSync(p, "utf8").split("\n");
 }
 /** The `candidate-first-look-view-planned` lines, in file order: { box } (the line is `<ms> candidate-first-look-view-planned {xmin:..,ymin:..,xmax:..,ymax:..}`). */
 function plannedLines() {
@@ -193,7 +202,12 @@ async function main() {
     console.error(`colour-refill: fixture missing: ${FIXTURE}\nRegenerate with: cargo test --locked -p spatial-kernel --test manual_walkthrough_fixtures generate_the_colour_refill_fixture -- --ignored --nocapture`);
     process.exit(2);
   }
-  console.log(`colour-refill: fixture ${FIXTURE} sha256 ${sha256(FIXTURE)}; LOCALAPPDATA=${SCRATCH}`);
+  if (LOG_DIR === null) {
+    console.error("colour-refill: the app's log folder cannot be found: LOCALAPPDATA is not set in this environment.");
+    process.exit(2);
+  }
+  console.log(`colour-refill: fixture ${FIXTURE} sha256 ${sha256(FIXTURE)}; LOCALAPPDATA=${SCRATCH}; session logs read from ${LOG_DIR}`);
+  LAUNCH_MS = Date.now();
   const session = await attachOrLaunch();
   if (!session.launched) {
     console.error(`colour-refill: an app is already listening on CDP port ${CDP_PORT}, started with another LOCALAPPDATA; stop it and run again.`);
@@ -209,7 +223,7 @@ async function main() {
   } finally {
     consoleHandle.dispose();
     await session.stop().catch(() => {});
-    console.log(`the scratch store, with the session log, is kept: ${SCRATCH}`);
+    console.log(`the scratch store is kept: ${SCRATCH}; the session log read: ${sessionLogPath() ?? "none"}`);
   }
   if (voided) { console.log(`\nVOID  ${voided} -- not a PASS (checks recorded before it: ${results.length})`); process.exit(2); }
   const failed = results.filter((r) => !r.ok);
