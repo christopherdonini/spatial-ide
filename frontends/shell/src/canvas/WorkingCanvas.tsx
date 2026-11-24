@@ -39,13 +39,14 @@ import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import type { FitViewState } from "./extent";
 import {
+  ceilingKindOf,
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
-  PickCeilingExceeded,
   residentAttributeBytes,
   ResidentVertexCeilingExceeded,
   withinAttributeCeiling,
 } from "./limits";
+import type { CeilingKind } from "./limits";
 import { buildHighlightLayers, createDrawnEmitter } from "./highlightLayers";
 import type { Highlight } from "./highlightLayers";
 import { OffsetFrame, RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT, recenterThresholdForBudget } from "./offsetFrame";
@@ -565,7 +566,7 @@ export interface WorkingCanvasProps {
    * `streamHandle`. This is a report, not an action: `limits.ts`'s own contract says the offending
    * stream must be *cancelled*, and only the caller (which owns the `ViewportStreamManager`) can
    * reach the SKP `cancel` command -- see `App.tsx`'s handler. */
-  onCanvasRefusal: (streamHandle: string, message: string) => void;
+  onCanvasRefusal: (streamHandle: string, message: string, kind: CeilingKind) => void;
   /** Fires only for `ResidentVertexCeilingExceeded` (never `PickCeilingExceeded`), alongside
    * `onCanvasRefusal` above, not instead of it -- rider 1 (DECISIONS-PENDING.md entry 0, option
    * (a)): the human's persistent "N of M features rendered — declared ceiling reached" status
@@ -1540,9 +1541,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           residentRef.current.addBatch(batch);
         } catch (e) {
           end("buffer-build");
-          if (e instanceof ResidentVertexCeilingExceeded || e instanceof PickCeilingExceeded) {
+          const ceilingKind = ceilingKindOf(e);
+          if (ceilingKind !== null && e instanceof Error) {
             logSessionEvent("canvas-refusal", e.message);
-            onCanvasRefusalRef.current(streamHandle, e.message);
+            onCanvasRefusalRef.current(streamHandle, e.message, ceilingKind);
             if (e instanceof ResidentVertexCeilingExceeded) {
               // Read now, not after: `addBatch` above added nothing on refusal, so this is exactly
               // "resident features at the moment of refusal" -- rider 1's own definition.

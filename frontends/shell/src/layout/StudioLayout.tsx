@@ -7,6 +7,7 @@ import type { CSSProperties, ReactNode, RefObject } from "react";
 import CommandBar from "../command/CommandBar";
 import type { CommandBarHandle, RunOutcome } from "../command/CommandBar";
 import type { FieldSource } from "../command/fieldCompletion";
+import { moreInProblemsText } from "../conditions/conditionsConstants";
 import { recordNamed } from "../console/recorder";
 import type { ClauseResult } from "../workspace/filterClauses";
 import type { Tool } from "../workspace/workspaceState";
@@ -121,6 +122,8 @@ export interface StudioLayoutProps {
   overlays: ReactNode;
   /** The content of every slot. A missing slot is a `tsc` error. */
   slots: Slots;
+  /** How many conditions stand below the strip's top: above 0 the strip shows the button that opens Activity on the Problems tab (milestone 5 section 2.3, S-3). */
+  attentionOthers: number;
   /** The Layers row for the dataset on the map: `describe.source.path_display`, or `null` before one
    * is admitted (there is no row then). */
   layersRow: { readonly pathDisplay: string } | null;
@@ -152,6 +155,7 @@ export interface StudioLayoutProps {
 export default function StudioLayout({
   overlays,
   slots,
+  attentionOthers,
   layersRow,
   onZoomToLayer,
   onSelectTool,
@@ -303,6 +307,11 @@ export default function StudioLayout({
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [platform]);
 
+  /** The strip's S-3 button: opens Activity and selects Problems, the same two steps as `layer.revealTable` above. */
+  const revealProblems = () => {
+    if (!state.activity.open) apply({ kind: "toggle", region: "activity" });
+    if (state.activity.tab !== "problems") apply({ kind: "selectTab", region: "activity", tab: "problems" });
+  };
   const attentionHasItems = ATTENTION_SLOT_IDS.some((id) => hasContent(slots[id]));
   const emptyInspectorText = !INSPECTOR_SLOT_IDS.some((id) => hasContent(slots[id])) ? (
     <p className="inspector-empty">[P6 placeholder] Nothing to show until a dataset is on the map.</p>
@@ -376,10 +385,15 @@ export default function StudioLayout({
       </aside>
       {splitter("layers", "x", 1, sizes.layersWidth, "[P6 placeholder] Resize Layers")}
 
-      <section className="attention-strip" aria-label="[P6 placeholder] Attention" hidden={!attentionHasItems}>
+      <section className="attention-strip" aria-label="[P6 placeholder] Attention" hidden={!attentionHasItems && attentionOthers === 0}>
         {ATTENTION_ITEMS.map((item) => (
           <Fragment key={item.id}>{slots[`attention.${item.id}`]}</Fragment>
         ))}
+        {attentionOthers > 0 && (
+          <button type="button" className="attention-others" onClick={revealProblems}>
+            {moreInProblemsText(attentionOthers)}
+          </button>
+        )}
       </section>
 
       <main ref={mapRef} id="region-map" className="region-map" aria-label={regionLabel("map")} tabIndex={0}>

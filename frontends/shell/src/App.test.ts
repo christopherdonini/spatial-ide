@@ -1268,12 +1268,12 @@ describe("handleSessionEnded (boundary 4's owner-side consequence)", () => {
       join(dirname(fileURLToPath(import.meta.url)), "App.tsx"),
       "utf8"
     );
-    expect(appSource).toMatch(/setViewportRefusal\(formatRefusal\(e\.skpError\)\);/);
+    expect(appSource).toMatch(/display: \{ kind: "refusal", refusal: formatRefusal\(e\.skpError\) \},/);
     // §2d: `isSourceChangedRefusal` renamed `isSessionEndedRefusal` -- it now also matches a
     // coverage-lost pre-check refusal, never only a source-changed one.
     expect(appSource).toMatch(/if \(isSessionEndedRefusal\(e\)\) endSession\(refusalDetailOf\(e\), forDataset\);/);
     // P3a architect note 6: a resolved outcome no longer clears a standing refusal.
-    expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*setViewportRefusal\(null\);/);
+    expect(appSource).toMatch(/if \(sessionEndedRef\.current\) return;\s*\n\s*const target = viewTargetNow\(\);\s*\n\s*if \(target !== null\) dispatchConditions\(\{ type: "ownerClear", route: "viewport-refusal"/);
     // N8 correction round 1 (reviewer B1): a late arrival from a superseded generation must not
     // write viewportRefusal on EITHER arm -- the same drop-not-act-on guard `endSessionForDataset`
     // already applies to ending the session, atop both the resolved and the rejected arm.

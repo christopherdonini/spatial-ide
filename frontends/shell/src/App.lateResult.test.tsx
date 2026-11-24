@@ -809,7 +809,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
     act(() => onTerminalA("a-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: A's own stream" }));
     expect(container.querySelector(".canvas-refusal")).toBeNull();
-    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal"));
+    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal", "vertex-ceiling"));
     expect(container.querySelector(".canvas-refusal")).toBeNull();
     act(() => canvasA.onResidentCeilingExceeded("a-stream-ceiling-2", 999999));
     expect(container.querySelector(".residency-status")).toBeNull();
@@ -839,8 +839,15 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     // Item 5 (positive-control extension): B's own `onCanvasRefusal` -- not only `onTerminal`/
     // `onResidentCeilingExceeded` above -- still shows on B (the negative-control pair above only
     // proves A's OWN late `onCanvasRefusal` does not).
-    act(() => canvasB.onCanvasRefusal("b-stream-ceiling-2", "B's own ceiling refusal"));
-    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("B's own ceiling refusal");
+    act(() => canvasB.onCanvasRefusal("b-stream-ceiling-2", "B's own ceiling refusal", "vertex-ceiling"));
+    // Milestone 5 (ADV-2026-11-23-37 item 3, replacing the assertion that read the first `.canvas-refusal`): a newer refusal never ends an older one and the oldest is first within an
+    // urgency, so B's ceiling refusal is a row of Problems, found by its text among the `.canvas-refusal` elements once Problems is opened through the strip's own button; it is there
+    // exactly once, and B's earlier ProducerFailed refusal still stands and is still the first.
+    act(() => container.querySelector<HTMLButtonElement>(".attention-strip button.attention-others")!.click());
+    const ceilingRows = [...container.querySelectorAll(".canvas-refusal")].filter((e) => e.textContent?.includes("B's own ceiling refusal"));
+    expect(ceilingRows).toHaveLength(1);
+    expect(container.querySelector("#activity-panel-problems")!.contains(ceilingRows[0])).toBe(true);
+    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
   });
 
   // N8 residual correction: `handleApplyFilter` (App.tsx) is what `FilterPanel`'s own `onApply` prop
@@ -1042,7 +1049,13 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     const onTerminalB = viewportMockState.onTerminalByDataset.get(handleB);
     if (!onTerminalB) throw new Error(`no captured onTerminal for dataset ${handleB}`);
     act(() => onTerminalB("b-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: B's own stream" }));
-    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
+    // Milestone 5 (ADV-2026-11-23-37 item 3, replacing the assertion that read the first `.canvas-refusal`): B's standing no_covering_bbox refusal is older and stays the first; B's own
+    // stream failure is a row of Problems, found by its text among the `.canvas-refusal` elements once Problems is opened through the strip's own button, and it is there exactly once.
+    act(() => container.querySelector<HTMLButtonElement>(".attention-strip button.attention-others")!.click());
+    const failureRows = [...container.querySelectorAll(".canvas-refusal")].filter((e) => e.textContent?.includes("ProducerFailed"));
+    expect(failureRows).toHaveLength(1);
+    expect(container.querySelector("#activity-panel-problems")!.contains(failureRows[0])).toBe(true);
+    expect(container.querySelector(".canvas-refusal .admission-refusal-code")?.textContent).toBe("engine.no_covering_bbox");
 
     const canvasB = workingCanvasMockState.propsByDataset.get(handleB);
     if (!canvasB) throw new Error(`no captured WorkingCanvas props for dataset ${handleB}`);
@@ -1104,7 +1117,13 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     const onTerminalB = viewportMockState.onTerminalByDataset.get(handleB);
     if (!onTerminalB) throw new Error(`no captured onTerminal for dataset ${handleB}`);
     act(() => onTerminalB("b-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: B's own stream" }));
-    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
+    // Milestone 5 (ADV-2026-11-23-37 item 3, replacing the assertion that read the first `.canvas-refusal`): B's standing no_covering_bbox refusal is older and stays the first; B's own
+    // stream failure is a row of Problems, found by its text among the `.canvas-refusal` elements once Problems is opened through the strip's own button, and it is there exactly once.
+    act(() => container.querySelector<HTMLButtonElement>(".attention-strip button.attention-others")!.click());
+    const failureRows = [...container.querySelectorAll(".canvas-refusal")].filter((e) => e.textContent?.includes("ProducerFailed"));
+    expect(failureRows).toHaveLength(1);
+    expect(container.querySelector("#activity-panel-problems")!.contains(failureRows[0])).toBe(true);
+    expect(container.querySelector(".canvas-refusal .admission-refusal-code")?.textContent).toBe("engine.no_covering_bbox");
 
     const canvasB = workingCanvasMockState.propsByDataset.get(handleB);
     if (!canvasB) throw new Error(`no captured WorkingCanvas props for dataset ${handleB}`);

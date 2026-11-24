@@ -589,6 +589,32 @@ body,
   margin-left: 0.5rem;
 }
 
+/* Milestone 5 section 2.3: the strip's button for the conditions below its top, and the Problems tab's rows. A row's own element is the `.canvas-refusal` or the
+   session-ended block above, so a row adds only the spacing between rows; the first row is the strip's top, a line of text with no element of its own. */
+.attention-others {
+  align-self: flex-start;
+}
+
+.problems-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  overflow-y: auto;
+}
+
+.problem-row-top,
+.problems-empty,
+.problems-not-kept {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.condition-occurrences {
+  margin-top: 0.25rem;
+  font-style: italic;
+}
+
 /* Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the persistent, non-dismissible
    ceiling-refusal status -- distinct from `.canvas-refusal` (the loud, dismissible event) so
    dismissing the banner can never hide this. A status-bar item now (milestone 1). */
