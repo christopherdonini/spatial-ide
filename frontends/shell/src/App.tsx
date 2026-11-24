@@ -1629,9 +1629,10 @@ export default function App() {
     promise.then(
       () => {
         // N8 correction round 1: a late arrival from a generation `App` has moved past must not
-        // touch the LIVE generation's `viewportRefusal` either -- the same drop-not-act-on guard
-        // `endSessionForDataset` already applies to ending the session (its own doc comment has the
-        // full account), extended here to this arm's write (the rejected arm below carries the same guard).
+        // act for the LIVE generation -- the same drop-not-act-on guard `endSessionForDataset`
+        // already applies to ending the session (its own doc comment has the full account). Since
+        // milestone 5 this arm's only write is the condition store's `ownerClear`, which carries
+        // `forDataset` as its generation (the rejected arm below carries the same guard).
         if (forDataset !== admittedDatasetRef.current) return;
         // **P3b, P3a architect note 6: a resolved outcome does not clear a standing session-ended
         // refusal.** Before this guard, any later resolved outcome cleared `viewportRefusal`
@@ -1648,7 +1649,7 @@ export default function App() {
         if (e instanceof SkpCallError) {
           // N8 correction round 1: same drop-not-act-on guard as the resolved arm above -- a late
           // rejection from a superseded generation (e.g. after `manager.stop()` or a rejection
-          // following `closeDataset(old)`) must not write the LIVE generation's `viewportRefusal`.
+          // following `closeDataset(old)`) must not raise a condition for, or end, the LIVE session.
           if (forDataset !== admittedDatasetRef.current) return;
           // The pre-check route raises a viewport-refusal condition, except for a session-ended refusal: that one is only the session's own condition (milestone 5
           // section 2.2, C-A4), so the identical refusal is never in the list twice.
@@ -2461,11 +2462,12 @@ export default function App() {
                   onCanvasRefusal={(streamHandle, message, kind) => {
                     // N8 residual correction round 1: bound to the `admitted` this render built it for --
                     // a call arriving from a superseded instance must not run `handleCanvasCeilingRefusal`
-                    // below. Unguarded, it would set the LIVE generation's `canvasRefusal` banner to A's
-                    // own message and dispatch `{kind:"failed"}` onto the live scan-liveness state -- real
-                    // contamination. Its `cancelStream(streamHandle)` call, by contrast, targets B's own
-                    // manager with A's `streamHandle`, naming none of B's streams -- a no-op, not a
-                    // correctness guarantee this guard relies on.
+                    // below. Unguarded, it would dispatch `{kind:"failed"}` onto the live scan-liveness
+                    // state -- real contamination; its canvas-ceiling raise carries A's generation, which
+                    // the condition store drops (`raise` in conditions/conditions.ts). Its
+                    // `cancelStream(streamHandle)` call, by contrast, targets B's own manager with A's
+                    // `streamHandle`, naming none of B's streams -- a no-op, not a correctness guarantee
+                    // this guard relies on.
                     if (admitted.dataset !== admittedDatasetRef.current) return;
                     // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
                     // comment above has the full account -- a declared-ceiling refusal must dispatch a

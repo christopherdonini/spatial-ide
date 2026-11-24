@@ -42,6 +42,7 @@ describe("conditions: the routes table (C-U1)", () => {
   // RECORDED MUTATION for C-U1: in `conditions.ts`'s routes table give the `stream-terminal` route `replaced-by-owner` among its `ends`.
   // Expected failure: the table is not whole, and an urgency-2 route declares a replacement. Also fails C-U6 (a stream-terminal batch is then accepted, not refused whole).
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U1: the routes table is whole, as section 2.2; no urgency 1 or 2 route declares replaced-by-owner; Condition has no remedy member": AssertionError: expected [ [ 'session-ended', …(4) ], …(6) ] to deeply equal [ [ 'session-ended', …(4) ], …(6) ]. Also failed: C-U6. Reverted after observing.
+  // OBSERVED 2026-11-24 at 7c18e29f, the same mutation run again at the head that holds the fix of C-1 (ADV-2026-11-24-06 item 2): FAILED -- this test; also failed: C-U6; C-U3 did not fail. Reverted after observing.
   it("C-U1: the routes table is whole, as section 2.2; no urgency 1 or 2 route declares replaced-by-owner; Condition has no remedy member", () => {
     expect(CONDITION_ROUTES.map((entry) => [entry.route, entry.owner, entry.target, entry.urgency, [...entry.ends]])).toEqual([
       ["session-ended", "session", "resource", 1, ["next-open"]],
