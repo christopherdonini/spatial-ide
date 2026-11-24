@@ -779,8 +779,9 @@ pub enum ProjectRelativeLocator {
 /// `folder` is the project folder, an absolute UTF-8 path. `cancel_key` is client-minted, as
 /// `open_dataset`'s is, and names this call for `cancel`. `answer` is `null` at the first call and
 /// is the client's answer to a `question` reply at the second. `relink` is `null`, or the absolute
-/// UTF-8 path of the data file the client chose after a `not_found` reply. Both keys are always
-/// present, `null` for none.
+/// UTF-8 path of the data file the client chose after a `not_found` reply or after a refusal as
+/// `skp.project_target_unresolvable` with a `locator`; it is used in place of the project file's
+/// locators (SKP-V0.md §12.3). Both keys are always present, `null` for none.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OpenProjectRequest {

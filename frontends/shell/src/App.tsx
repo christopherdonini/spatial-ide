@@ -1051,9 +1051,11 @@ export default function App() {
    * `handleApplyFilter` (component-body level, below) can reach the SAME reporting wrapper the
    * effect's initial load and debounced pan/zoom already issue every query through, without itself
    * needing to be defined inside the effect (which reruns per `admitted`, while `handleApplyFilter`
-   * -- passed to `FilterPanel` as a prop -- has no reason to change identity that often). */
+   * -- passed to `FilterPanel` as a prop -- has no reason to change identity that often).
+   * `options` (colour-by-refill-keeps-the-view): `{ keepCamera: true }` asks that the camera stay where it stands across the clear this issue makes; the candidate binding passes it to
+   * `reissueUnrestricted`, the baseline binding ignores it (it resets no fit on this path). Only the Colour-by effect passes it; an Apply, a Clear and the open pass nothing. */
   const issueQueryRef = useRef<
-    ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>) | null
+    ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null, options?: { keepCamera: true }) => Promise<RequestOutcome>) | null
   >(null);
 
   /** Writes `activeFilterRef.current` (synchronously), dispatches `transition` on the view and records the filter -- the one
@@ -1798,7 +1800,7 @@ export default function App() {
       candidateManagerRef.current = session.manager;
       candidateSessionRef.current = session;
       viewportDebounceRef.current = makeCandidateViewportDispatcher(session);
-      issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
+      issueQueryRef.current = (bbox, _bboxCrs, filter, options) => session.reissueUnrestricted(bbox, filter, options);
 
       if (isInstrumentedBuild()) {
         registerE2eHook("queryWithFilter", (predicate: string) =>
@@ -2134,7 +2136,7 @@ export default function App() {
     for (const transition of transitions) stepQueue.enqueue(dataset, transition);
   }
 
-  // Milestone 4 PR B (OPEN-20 (a), the form's Amendment 16): when Colour by changes to a column other than the one the previous render coloured by (when no match is set, as after One colour or an open, that is none), while the status bar says attributes were not held, the first look is issued again under the active filter; `withinAttributeCeiling` then keeps that column. No step is recorded: the filter did not change.
+  // Milestone 4 PR B (OPEN-20 (a), the form's Amendment 16): when Colour by changes to a column other than the one the previous render coloured by (when no match is set, as after One colour or an open, that is none), while the status bar says attributes were not held, the first look is issued again under the active filter; `withinAttributeCeiling` then keeps that column. The camera is kept (`{ keepCamera: true }`): the map is cleared and filled again for the view shown, unless the canvas was still waiting to fit the first batch of an open or of a change of the filter (an Apply, a Clear, a card change or a refused Apply's re-issue), which it then does. This is the candidate arm's: the dev-only baseline arm's binding ignores the option (issueViewportQuery), and nothing here is claimed of its fill. No step is recorded: the filter did not change. Not covered: a Colour by issued inside the mint round trip of an Apply (timing inside one request, AUTONOMY section 31).
   const previousColourColumn = useRef<string | null>(null);
   const colourColumn = view?.style.fillMatch?.column ?? null;
   useEffect(() => {
@@ -2142,7 +2144,7 @@ export default function App() {
     previousColourColumn.current = colourColumn;
     const dataset = admittedDatasetRef.current;
     if (colourColumn === null || colourColumn === previous || dataset === null || attributesNotHeld !== dataset) return;
-    const attempt = () => (dataset === admittedDatasetRef.current && issueQueryRef.current !== null ? issueQueryRef.current(null, null, activeFilterRef.current) : Promise.resolve<RequestOutcome>({ kind: "stopped" }));
+    const attempt = () => (dataset === admittedDatasetRef.current && issueQueryRef.current !== null ? issueQueryRef.current(null, null, activeFilterRef.current, { keepCamera: true }) : Promise.resolve<RequestOutcome>({ kind: "stopped" }));
     reportViewportOutcome(requestViewportWithSingleRetry(attempt), dataset);
   }, [colourColumn]);
 
