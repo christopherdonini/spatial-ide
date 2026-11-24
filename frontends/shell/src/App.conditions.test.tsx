@@ -512,6 +512,8 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
     expect(h.qa(".condition-occurrences"), "and counts no occurrence").toHaveLength(0);
   });
 
+  // RECORDED MUTATION for "C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line": in `App.tsx`'s `createStepQueue` report handler dispatch `raise` for the record-notice route again, as at 12a9aa98, in place of `replaceBatch`. Expected failure: the second refused step merges into the first as an occurrence, so an S-5 line stands in the notice.
+  // OBSERVED 2026-11-24 at 7c18e29f: FAILED -- AssertionError: its owner replaced it: no occurrence count: expected [ <div …(1)></div> ] to have a length of +0 but got 1. Reverted after observing.
   it("C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line", async () => {
     const FIRST = "this session history takes no more steps: the first words";
     const SECOND = "this session history takes no more steps: the second words";

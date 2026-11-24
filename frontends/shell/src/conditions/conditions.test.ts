@@ -40,7 +40,7 @@ const codesOf = (list: readonly Condition[]): string[] => list.map((condition) =
 
 describe("conditions: the routes table (C-U1)", () => {
   // RECORDED MUTATION for C-U1: in `conditions.ts`'s routes table give the `stream-terminal` route `replaced-by-owner` among its `ends`.
-  // Expected failure: the table is not whole, and an urgency-2 route declares a replacement. Also fails C-U3 (a raise on that route is refused).
+  // Expected failure: the table is not whole, and an urgency-2 route declares a replacement. Also fails C-U6 (a stream-terminal batch is then accepted, not refused whole).
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U1: the routes table is whole, as section 2.2; no urgency 1 or 2 route declares replaced-by-owner; Condition has no remedy member": AssertionError: expected [ [ 'session-ended', …(4) ], …(6) ] to deeply equal [ [ 'session-ended', …(4) ], …(6) ]. Also failed: C-U6. Reverted after observing.
   it("C-U1: the routes table is whole, as section 2.2; no urgency 1 or 2 route declares replaced-by-owner; Condition has no remedy member", () => {
     expect(CONDITION_ROUTES.map((entry) => [entry.route, entry.owner, entry.target, entry.urgency, [...entry.ends]])).toEqual([
@@ -208,7 +208,7 @@ describe("conditions: the cap (C-U7, C-U7a, C-U7b, C-U7c)", () => {
     expect(all(next)).toEqual([]);
   });
 
-  // RECORDED MUTATION for C-U7b: in `raise` apply the generation drop after the cap check. Expected failure: the stale raise is counted in notKept. Also fails C-U6a.
+  // RECORDED MUTATION for C-U7b: in `raise` apply the generation drop after the cap check. Expected failure: the stale raise is counted in notKept.
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-U7b: a stale raise takes no cap room: with CONDITIONS_MAX - 1 kept, one stream-terminal raise under R3 leaves notKept 0 and the kept unchanged": AssertionError: expected 1 to be +0 // Object.is equality. Reverted after observing.
   it("C-U7b: a stale raise takes no cap room: with CONDITIONS_MAX - 1 kept, one stream-terminal raise under R3 leaves notKept 0 and the kept unchanged", () => {
     const full = fold([opened(R), ...manyRaises(CONDITIONS_MAX - 1)]);

@@ -472,6 +472,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // Expected failure: A's late `{kind:"issued"}` then falls through to `setViewportRefusal(null)` unconditionally, wiping B's refusal.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line; the -Expected/+Received block, "engine.no_covering_bbox"/undefined, summarized):
   //   AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard alone removed: NOT FAILED -- the whole file passed (vitest exit 0; 22 passed). Probable reason, read in conditions.ts and not tested apart: `ownerClear` removes only the conditions of the generation it names (A's), so A's late clear reaches none of B's.
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard and the `c.generation === event.generation` clause of `ownerClear`'s filter (conditions.ts) both removed: FAILED -- "a late old-generation SUCCESS after a reopen does not clear the new generation's standing viewport refusal": AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality. Also failed, with the same assertion: both full ended -> reopen -> old SUCCESS sequence tests (baseline and candidate arm) and the candidate arm's reissueUnrestricted SUCCESS test.
   // Reverted after observing.
   it("a late old-generation SUCCESS after a reopen does not clear the new generation's standing viewport refusal", async () => {
     const handleA = await openPathAndCaptureHandle();
@@ -505,6 +507,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // the refusal-code assertion (not only `.canvas-session-ended`) is what is load-bearing here.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line; the -Expected/+Received block, null/<div class="admission-refusal-code">engine.source_changed</div>, summarized):
   //   AssertionError: expected <div …(1)></div> to be null
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard alone removed: NOT FAILED -- the whole file passed (vitest exit 0; 22 passed). Probable reason, read in conditions.ts and not tested apart: the store drops a raise under a generation that is not the current one.
   // Reverted after observing.
   it("a late old-generation REJECTION carrying engine.source_changed after a reopen neither ends the new generation nor writes its refusal", async () => {
     const handleA = await openPathAndCaptureHandle();
@@ -656,7 +659,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".hover-readout-session-ended")).toBeNull();
   });
 
-  // N8 residual correction round 1, item 7 probe: the dev-gated baseline arm's own
+  // N8 residual correction, its first round's item 7 probe: the dev-gated baseline arm's own
   // `onStreamOpened`/`onDeliveryCompleted`/`onBatchRows` (App.tsx, the `ViewportStreamManager`
   // construction) write the SAME single App-level `scanState`/`residencyStatus` `onFailureTerminal`
   // already guards. This probe is a guard proof only, the same as this file's own full-sequence
