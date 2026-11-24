@@ -175,7 +175,7 @@ vi.mock("./canvas/WorkingCanvas", () => {
 
 import App from "./App";
 import { UNTILED_FIRST_LOOK_ROW_LIMIT } from "./canvas/tileGridConstants";
-import { moreInProblemsText, NO_PROBLEMS_TEXT, SHOWN_IN_STRIP_TEXT } from "./conditions/conditionsConstants";
+import { moreInProblemsText, NO_PROBLEMS_TEXT, raisedTimesText, SHOWN_IN_STRIP_TEXT } from "./conditions/conditionsConstants";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
 import { shownText } from "./project/shownText";
 import { MARK_WITHHELD_NOTICE, SAVED_NOTICE } from "./project/saveProject";
@@ -510,6 +510,32 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
     await flush();
     expect(h.texts(".save-notice"), "a second save replaces the batch whole").toEqual([SAVED_NOTICE, MARK_WITHHELD_NOTICE]);
     expect(h.qa(".condition-occurrences"), "and counts no occurrence").toHaveLength(0);
+  });
+
+  it("C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line", async () => {
+    const FIRST = "this session history takes no more steps: the first words";
+    const SECOND = "this session history takes no more steps: the second words";
+    await h.open("C:/data/a.parquet");
+    mocks.refuseRecordWith = FIRST;
+    await h.styleDrag();
+    expect(h.qa(".record-notice"), "the first refused step raises the notice").toHaveLength(1);
+    // The second step: one more drag of the same range, to another value, which the client refuses with other words.
+    mocks.refuseRecordWith = SECOND;
+    const range = h.q<HTMLInputElement>(".style-fill-opacity")!;
+    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value")!.set!;
+    act(() => {
+      setter.call(range, "0.55");
+      range.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    act(() => {
+      range.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+    await flush();
+    expect(mocks.recorded, "both steps were sent").toHaveLength(2);
+    expect(h.qa(".record-notice"), "one notice stands").toHaveLength(1);
+    expect(h.qa(".record-notice .condition-occurrences"), "its owner replaced it: no occurrence count").toHaveLength(0);
+    expect(h.q(".record-notice")!.textContent, "no S-5 line").not.toContain(raisedTimesText(2));
+    expect(h.q(".record-notice")!.textContent, "the latest step's text alone").toBe(`Style change applied. The session history did not confirm keeping it: ${SECOND}`);
   });
 });
 
