@@ -65,12 +65,13 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
  * - `engine.internal_inconsistency` (the retyped provenance arm): a defect in this program, not in
  *   the operator's file, and the guidance says so rather than sending them to look at their data.
  *
- * **All four of the strings added here were the human's at P6** (`ADMISSION-PREREGISTRATION.md`
- * §12d's "the four new user-visible states whose strings are sighted at P6"). The guidance for
- * `engine.identity_ordinal_partitioned_unsupported` is now the advisor's wording, under
- * ADV-2026-11-23-27 item 7 and the human's delegation of 2026-11-13. The others it names as
- * placeholders stay placeholders, written so the states exist and can be read end to end;
- * **their wording is not settled** and no test asserts them verbatim.
+ * **All four of the strings added here were set for the human's sight at P6**
+ * (`ADMISSION-PREREGISTRATION.md` §12d's "the four new user-visible states whose strings are
+ * sighted at P6"). The guidance for `engine.identity_ordinal_partitioned_unsupported` is now the
+ * advisor's wording, under ADV-2026-11-23-27 item 7 and the human's delegation of 2026-11-13; the
+ * other three are unchanged. Two of them, `publish.geographic_crs_not_publishable` and
+ * `engine.internal_inconsistency`, are placeholders written so the states exist and can be read end
+ * to end; **their wording is not settled** and no test asserts them verbatim.
  *
  * **`engine.source_changed` is the exception, and is asserted verbatim by its test.** The human
  * ruled its exact sentence on 2026-09-16 (round 5, item 1) because the placeholder described

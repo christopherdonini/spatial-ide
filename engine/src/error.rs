@@ -179,7 +179,7 @@ pub enum EngineError {
     /// is not a check that passed.
     SourceChanged { detail: String },
 
-    /// A **partitioned** source reached the session-ordinal path — R-I4 (§2d; boundary 7).
+    /// A path read as a **partitioned** source, a folder or a pattern — R-I4 (§2d; boundary 7).
     ///
     /// The session tier's identity is (dataset-session generation, physical file-row ordinal), and
     /// a file-row ordinal is a position **within one file**. Across a partition set there is no
