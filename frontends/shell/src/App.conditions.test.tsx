@@ -380,6 +380,9 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
     expect(h.qa(".condition-occurrences"), "neither merged: no S-5 line").toHaveLength(0);
   });
 
+  // RECORDED MUTATION for "C-A2: the same kind raised again is one condition with S-5, and a later text is shown after the first": in `raise` (conditions.ts) a repeat of an identity keeps its first display as the latest (`latest: same.latest`).
+  // Expected failure: the later text is not shown after the first.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-A2: the same kind raised again is one condition with S-5, and a later text is shown after the first": AssertionError: expected [ 'first words', …(3) ] to deeply equal [ 'first words', …(3) ]. Reverted after observing.
   it("C-A2: the same kind raised again is one condition with S-5, and a later text is shown after the first", async () => {
     await h.open("C:/data/a.parquet");
     const props = mocks.canvas.props!;
@@ -395,6 +398,9 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   // RECORDED MUTATION for C-A3: in `App.tsx`'s `confirmOpen`, which every open attempt calls before its admission, dispatch the store's `opened` with a fresh resource first (a clear on the attempt, which a refused admission makes too). Expected failure: the refused reopen ends session ended.
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A3: a refused reopen keeps session ended standing": AssertionError: session ended still stands: expected [] to have a length of 1 but got +0. Reverted after observing.
   describe("C-A3: how the conditions end, through the real App", () => {
+    // RECORDED MUTATION for "C-A3: Dismiss ends the one condition and is recorded as today": in `dismissCondition` (App.tsx) drop the `recordNamed` call.
+    // Expected failure: the dismissal is not recorded.
+    // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-A3: Dismiss ends the one condition and is recorded as today": AssertionError: the row is recorded as today: expected +0 to be 1 // Object.is equality. Reverted after observing.
     it("C-A3: Dismiss ends the one condition and is recorded as today", async () => {
       mocks.refuseUntiled.push(refusedWith(EXHAUSTED));
       await h.open("C:/data/a.parquet");
@@ -406,6 +412,9 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
       expect(consoleRecorder.entries().filter(isGuiActionEntry).filter((e) => e.action === "canvas.dismissViewportRefusal").length - before, "the row is recorded as today").toBe(1);
     });
 
+    // RECORDED MUTATION for "C-A3: a resolved viewport outcome clears its condition: a Colour-by refill after the first look was refused": in `reportViewportOutcome`'s resolved arm (App.tsx) drop the `ownerClear` of the viewport-refusal.
+    // Expected failure: the refusal still stands after the refill.
+    // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-A3: a resolved viewport outcome clears its condition: a Colour-by refill after the first look was refused": AssertionError: the refill's resolved outcome ended it: expected [ <div …(2)>…(2)</div> ] to have a length of +0 but got 1. Reverted after observing.
     it("C-A3: a resolved viewport outcome clears its condition: a Colour-by refill after the first look was refused", async () => {
       mocks.refuseUntiled.push(refusedWith(EXHAUSTED));
       await h.open("C:/data/a.parquet");
@@ -428,6 +437,9 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
       expect(h.strip()!.hasAttribute("hidden")).toBe(false);
     });
 
+    // RECORDED MUTATION for "C-A3: a successful open clears everything, and Problems says so": in `setAdmitted` (App.tsx) do not dispatch `opened`.
+    // Expected failure: the store has no current generation, so no condition takes a place.
+    // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-A3: a successful open clears everything, and Problems says so": AssertionError: expected [] to have a length of 3 but got +0. Reverted after observing.
     it("C-A3: a successful open clears everything, and Problems says so", async () => {
       mocks.refuseUntiled.push(refusedWith(EXHAUSTED));
       await h.open("C:/data/a.parquet");
@@ -442,6 +454,9 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
       expect(h.problemsText()).toContain(NO_PROBLEMS_TEXT);
     });
 
+    // RECORDED MUTATION for "C-A3: a reopen whose file carries a notice leaves its .reopen-notice standing after its own open, and session ended of the open before is gone": in `handleReopened` (App.tsx) raise the reopen-notice under the generation "stale-generation".
+    // Expected failure: the store drops it, so no .reopen-notice stands.
+    // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-A3: a reopen whose file carries a notice leaves its .reopen-notice standing after its own open, and session ended of the open before is gone": AssertionError: expected [] to deeply equal [ Array(1) ]. Reverted after observing.
     it("C-A3: a reopen whose file carries a notice leaves its .reopen-notice standing after its own open, and session ended of the open before is gone", async () => {
       await h.open("C:/data/a.parquet");
       await h.endSession();

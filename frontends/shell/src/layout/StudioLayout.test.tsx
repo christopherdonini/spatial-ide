@@ -351,6 +351,9 @@ describe("StudioLayout: the attention strip's one slot, and the count of the oth
     expect(container.querySelector("#activity-panel-problems")!.textContent).toBe("the problems");
   });
 
+  // RECORDED MUTATION for "C-R3: with attentionOthers 0 there is no button, and with no top the strip is hidden": in `StudioLayout.tsx` render the S-3 button from `attentionOthers >= 0`.
+  // Expected failure: a button shows with attentionOthers 0.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R3: with attentionOthers 0 there is no button, and with no top the strip is hidden": AssertionError: expected <button type="button" …(1)></button> to be null. Reverted after observing.
   it("C-R3: with attentionOthers 0 there is no button, and with no top the strip is hidden", () => {
     mount(0, true);
     expect(container.querySelector("button.attention-others")).toBeNull();
@@ -359,6 +362,9 @@ describe("StudioLayout: the attention strip's one slot, and the count of the oth
     expect(shown(".attention-strip")).toBe(false);
   });
 
+  // RECORDED MUTATION for "C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)": in `ACTIVITY_TABS` (contributions.ts) put Problems before Table.
+  // Expected failure: the tab order is not Console, Notices, Table, Problems.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)": AssertionError: expected [ 'Console', 'Notices', …(2) ] to deeply equal [ 'Console', 'Notices', …(2) ]. Reverted after observing.
   it("C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)", () => {
     mount(0, false);
     const tabs = [...container.querySelectorAll('#region-activity [role="tab"]')].map((tab) => tab.textContent);

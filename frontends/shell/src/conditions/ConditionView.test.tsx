@@ -134,12 +134,18 @@ describe("ConditionView: App's markup, moved whole (C-R1)", () => {
     expect(container.querySelector('[role="alert"]')).toBeNull();
   });
 
+  // RECORDED MUTATION for "C-R1: the session-ended element in the strip carries role alert through the owner's block": in `ConditionView.tsx` render the session-ended refusal as a bare `<div>` of its message in place of the owner's `RefusalBlock`.
+  // Expected failure: the owner's block, which carries role alert, is absent.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R1: the session-ended element in the strip carries role alert through the owner's block": AssertionError: expected null not to be null. Reverted after observing.
   it("C-R1: the session-ended element in the strip carries role alert through the owner's block", () => {
     render(conditionOn("session-ended"), "strip");
     expect(container.querySelector(".canvas-session-ended")).not.toBeNull();
     expect(container.querySelector('.canvas-session-ended [role="alert"]')).not.toBeNull();
   });
 
+  // RECORDED MUTATION for "C-R1: S-5 is the only added text: with occurrences above 1 one line is added between the first display and the latest": in `Body` (ConditionView.tsx) show S-5 with `occurrences - 1`.
+  // Expected failure: the S-5 line's number is 2, not 3.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R1: S-5 is the only added text: with occurrences above 1 one line is added between the first display and the latest": AssertionError: expected 'Raised 2 times in all. The latest:' to be 'Raised 3 times in all. The latest:' // Object.is equality. Reverted after observing.
   it("C-R1: S-5 is the only added text: with occurrences above 1 one line is added between the first display and the latest", () => {
     const condition = conditionOn("stream-terminal", 3);
     expect(condition.occurrences).toBe(3);
@@ -152,11 +158,17 @@ describe("ConditionView: App's markup, moved whole (C-R1)", () => {
     expect(container.querySelectorAll(".canvas-refusal"), "the owner element is in the DOM once").toHaveLength(1);
   });
 
+  // RECORDED MUTATION for "C-R1: with occurrences 1 the line is absent": in `Body` (ConditionView.tsx) show the S-5 line from `occurrences > 0`.
+  // Expected failure: the line is present with occurrences 1.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R1: with occurrences 1 the line is absent": AssertionError: expected <div class="condition-occurrences"></div> to be null. Reverted after observing.
   it("C-R1: with occurrences 1 the line is absent", () => {
     render(conditionOn("stream-terminal"), "strip");
     expect(container.querySelector(".condition-occurrences")).toBeNull();
   });
 
+  // RECORDED MUTATION for "C-R1: a condition's owner element is in the DOM once, with its outer owner class": in `ConditionView.tsx` leave the owner's outer class out (`NOTICE_CLASS` is not applied).
+  // Expected failure: no .record-notice, .save-notice or .reopen-notice element is found.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R1: a condition's owner element is in the DOM once, with its outer owner class": AssertionError: record-notice: expected  to have a length of 1 but got +0. Reverted after observing.
   it("C-R1: a condition's owner element is in the DOM once, with its outer owner class", () => {
     for (const [route, selector] of [["canvas-ceiling", ".canvas-refusal"], ["session-ended", ".canvas-session-ended"], ["record-notice", ".record-notice"], ["save-notice", ".save-notice"], ["reopen-notice", ".reopen-notice"]] as const) {
       render(conditionOn(route), "strip");

@@ -632,6 +632,9 @@ describe("the producer passes the ceiling's kind (SHELL-MIGRATION-MILESTONE-5-PR
     expect(onCanvasRefusal.mock.calls[1][1]).toContain("MAX_RESIDENT_VERTICES");
   });
 
+  // RECORDED MUTATION for "C-K2: an unarmed push calls through to the original ceiling check and refuses nothing": in `pushBatch` (WorkingCanvas.tsx) call `onCanvasRefusalRef.current` after every batch that was added.
+  // Expected failure: an unarmed push refuses a batch it admitted.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-K2: an unarmed push calls through to the original ceiling check and refuses nothing": AssertionError: expected "vi.fn()" to not be called at all, but actually been called 1 times. Reverted after observing.
   it("C-K2: an unarmed push calls through to the original ceiling check and refuses nothing", () => {
     const onCanvasRefusal = vi.fn();
     const { push } = mount({ onCanvasRefusal });

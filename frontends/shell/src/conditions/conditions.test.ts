@@ -264,6 +264,9 @@ describe("conditions: a notice batch is replaced whole (C-U8)", () => {
     expect(codesOf(all(empty))).toEqual(["v"]);
   });
 
+  // RECORDED MUTATION for "C-U8: a record-notice batch replaces the last, whatever its code, and carries no ordinal": in `replaceBatch` (conditions.ts) give every route the position as its ordinal, not only the save-notice route.
+  // Expected failure: the record-notice conditions carry an ordinal.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-U8: a record-notice batch replaces the last, whatever its code, and carries no ordinal": AssertionError: expected [ [ 'step-record-style', +0, …(1) ] ] to deeply equal [ [ 'step-record-style', null, …(1) ] ]. Reverted after observing.
   it("C-U8: a record-notice batch replaces the last, whatever its code, and carries no ordinal", () => {
     const batch = (code: string, display: string): ConditionsEvent => ({ type: "replaceBatch", route: "record-notice", code, target: VIEW_1, generation: R, displays: [text(display)] });
     const state = fold([opened(R), batch("step-record-filter", "one"), batch("step-record-style", "two")]);

@@ -94,6 +94,9 @@ describe("ProblemsTab (C-R2)", () => {
     expect(rows()[0].querySelector("button"), "the top row has no Dismiss of its own: the strip's element has it").toBeNull();
   });
 
+  // RECORDED MUTATION for "C-R2: S-4 shows when nothing is listed, and not otherwise": in `ProblemsTab.tsx` show S-4 when exactly one condition is listed (`list.length === 1`) in place of none.
+  // Expected failure: S-4 is absent for an empty list and present for one row.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R2: S-4 shows when nothing is listed, and not otherwise": AssertionError: expected '' to contain 'No problems for the dataset on the ma…'. Reverted after observing.
   it("C-R2: S-4 shows when nothing is listed, and not otherwise", () => {
     render(stateOf([]));
     expect(rows()).toHaveLength(0);
@@ -102,6 +105,9 @@ describe("ProblemsTab (C-R2)", () => {
     expect(container.textContent).not.toContain(NO_PROBLEMS_TEXT);
   });
 
+  // RECORDED MUTATION for "C-R2: S-6 shows the count of raises not kept, and only when it is above 0": in `ProblemsTab.tsx` show S-6 from `notKept >= 0`.
+  // Expected failure: S-6 shows with a count of 0.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R2: S-6 shows the count of raises not kept, and only when it is above 0": AssertionError: expected 'Problems raised and not kept: 0. The …' not to contain 'Problems raised and not kept: 0. The …'. Reverted after observing.
   it("C-R2: S-6 shows the count of raises not kept, and only when it is above 0", () => {
     const events: ConditionsEvent[] = Array.from({ length: CONDITIONS_MAX + 1 }, (_, index) => raise("stream-terminal", `code-${index}`, `refusal ${index}`));
     const full = stateOf(events);
@@ -113,6 +119,9 @@ describe("ProblemsTab (C-R2)", () => {
     expect(container.querySelector(".problems-not-kept")).toBeNull();
   });
 
+  // RECORDED MUTATION for "C-R2: S-6 shows with S-4 when nothing is listed for the view but raises were not kept": in `ProblemsTab.tsx` show S-6 only when something is listed (`notKept > 0 && list.length > 0`).
+  // Expected failure: S-6 is absent when nothing is listed.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R2: S-6 shows with S-4 when nothing is listed for the view but raises were not kept": AssertionError: expected 'No problems for the dataset on the ma…' to contain 'Problems raised and not kept: 3. The …'. Reverted after observing.
   it("C-R2: S-6 shows with S-4 when nothing is listed for the view but raises were not kept", () => {
     render({ ...initialConditionsState, current: R, notKept: 3 });
     expect(container.textContent).toContain(NO_PROBLEMS_TEXT);
