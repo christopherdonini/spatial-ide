@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `885838e72f466da49dd7bf28c11e6db81c8d5d2d3a72291c7fb25ee63b65a306`) at `2026-11-24T10:37:03.827Z`.
+Generated from `PLAN.yaml` (sha256 `d1d8f28f18b849d67806502e813b0b8e8c564b742e9f60ab382f6a4d3e3d500c`) at `2026-11-24T10:54:47.386Z`.
 
 ## 1. Next
 
@@ -115,6 +115,7 @@ Generated from `PLAN.yaml` (sha256 `885838e72f466da49dd7bf28c11e6db81c8d5d2d3a72
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **filter-identity-alias-ambiguous-guidance-line-and-note** — A guidance line in the app for skp.filter_identity_alias_ambiguous, in the human's wording at P6, and a KNOWN-LIMITATIONS note: a declared identity beside the file's own id column refuses the first filter on id, and the message does not say what to do (phase `prototype`) — never queued until placed
 - **text-id-opens-for-the-session-by-row-position** — A file whose own id column is text is refused, and can open only if it holds a unique 64-bit integer column; the identity form offers, by the user choice, to open it for this session only, identified by row position (the human, 2026-11-23) (phase `prototype`) — never queued until placed
+- **identity-scan-refuses-a-null-by-name** — A null in the identity column is refused as a null, for every type admission takes, in the same scan, in place of a detail that says two features share an identity (R6 of the text-id consult) (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
 - **dataset-stream-doc-producer-runs-ahead** — engine/src/stream.rs: Dataset::stream's doc says it returns once the statement is prepared and produces the first batch on the first next_into; the producer thread prepares and runs ahead to the queue bound (phase `prototype`) — never queued until placed
