@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-24T10:54:47.386Z",
-  "plan_hash": "d1d8f28f18b849d67806502e813b0b8e8c564b742e9f60ab382f6a4d3e3d500c",
+  "generated_at": "2026-11-24T11:11:50.711Z",
+  "plan_hash": "4accfbe5b1699c4f60ea76ea869c76d28bdef7c55571b4fa6a9c305c2a47050a",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -1860,7 +1860,7 @@
         "opened": "2026-11-24",
         "done": null
       },
-      "summary": "PLACED 2026-11-24 by ADV-2026-11-24-23 item 5 as a proposed fault piece; lead-data drafts its form now, read only; built on the text-id head after that build has a pushed green head; it does not hold the recovery offer; the refusal words are the advisor after its gate."
+      "summary": "DRAFT FILED, 2026-11-24: lead-data draft of the full form at state/consults/2026-11-24-identity-scan-refuses-a-null-by-name-form-lead-data-draft.md, about 578 lines over 7 files, its words for the refusal held for the advisor; its two form gates next, read only. PLACED 2026-11-24 by ADV-2026-11-24-23 item 5 as a proposed fault piece; lead-data drafts its form now, read only; built on the text-id head after that build has a pushed green head; it does not hold the recovery offer; the refusal words are the advisor after its gate."
     },
     {
       "id": "docs-14-corpus-attribution-vs-docs-08",

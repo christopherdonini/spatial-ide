@@ -5067,7 +5067,7 @@ nodes:
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "PLACED 2026-11-24 by ADV-2026-11-24-23 item 5 as a proposed fault piece; lead-data drafts its form now, read only; built on the text-id head after that build has a pushed green head; it does not hold the recovery offer; the refusal words are the advisor after its gate."
+    summary: "DRAFT FILED, 2026-11-24: lead-data draft of the full form at state/consults/2026-11-24-identity-scan-refuses-a-null-by-name-form-lead-data-draft.md, about 578 lines over 7 files, its words for the refusal held for the advisor; its two form gates next, read only. PLACED 2026-11-24 by ADV-2026-11-24-23 item 5 as a proposed fault piece; lead-data drafts its form now, read only; built on the text-id head after that build has a pushed green head; it does not hold the recovery offer; the refusal words are the advisor after its gate."
     dates: {opened: 2026-11-24, done: null}
   - id: e2e-stale-expectations-reaim
     title: "Re-aim the shell e2e steps whose expectations predate ruled product changes: regression C2'/C3', admission MAP' and BOTHNEEDED', console HEXLIM', GROUP' and REFUSAL', source-changed default-route S4"
