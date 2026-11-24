@@ -121,12 +121,15 @@ export function refusalGuidance(code: string): string | null {
         "cleared, and features here can no longer be identified; reopen the dataset to continue."
       );
     case "engine.identity_ordinal_partitioned_unsupported":
-      // The gap the operator can see: in the shell this refusal is reached only through the
-      // dev-only `openPath` hook, or from another client (section 0, Reach, of
-      // governance/forms/frontends/PARTITIONED-ORDINAL-REFUSAL-OPENS-THE-IDENTITY-FORM-PREREGISTRATION.md).
+      // The gap the operator can see: in the shell on Windows this refusal is reached only through
+      // the dev-only `openPath` hook, from another client (section 0, Reach, of
+      // governance/forms/frontends/PARTITIONED-ORDINAL-REFUSAL-OPENS-THE-IDENTITY-FORM-PREREGISTRATION.md),
+      // or when a file whose name holds `[`, `]`, `{` or `}` is removed after it was picked or checked
+      // and before its open runs (timing inside one open; step 3 of `partitioned_source_detail` in
+      // engine/src/dataset.rs), where this text's "folder or a pattern" does not fit what was picked.
       // `AdmissionPanel` opens no form for this code (`formFamilyForCode`): the declaration form
       // sends the same path and is refused again. A single file whose name holds `*` or `?` is
-      // also refused, and this text does not name that case.
+      // also refused, and this text does not name that case; Windows allows no such name.
       return (
         "This app cannot open a folder or a pattern of files, and " +
         "declaring an identity column does not change that. Open a single file instead."
