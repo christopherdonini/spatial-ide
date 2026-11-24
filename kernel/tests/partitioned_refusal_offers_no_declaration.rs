@@ -32,9 +32,9 @@ const OLD_OFFER: &str = "or declare an identity column";
 ///
 /// RECORDED MUTATION M-K1b (observed at `8d1fe83acfaede6873b6366e6594b99ddf9943ad`):
 /// the partitioned gate in `engine/src/dataset.rs` guarded with `declared_identity.is_none()`, so
-/// a declared open gets past it. Observed outcome: this test fails by name at (a), line 75, the
-/// code assertion on the declared open, which saw `engine.source`. Applied, run, reverted; the
-/// file's sha256 matched.
+/// a declared open gets past it. Observed outcome: this test fails by name at (a), the code
+/// assertion on the declared open (`declared.code`), which saw `engine.source`. Applied, run,
+/// reverted; the file's sha256 matched.
 #[test]
 fn a_folder_opened_with_or_without_a_declared_identity_is_refused_by_name_and_offered_no_declaration(
 ) {
