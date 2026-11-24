@@ -78,14 +78,14 @@ const settle = async (consoleHandle, what, quietMs = 2000) => {
   if (!outcome.settled) throw new Void(`the render trace was not quiet for ${quietMs}ms within 120000ms (${what})`);
 };
 
-/** The path of the newest session log THIS launch created, in the app's own log folder under the profile's Local AppData (the scratch folder holds the store only); null when none. */
+/** The path of the session log in the app's own log folder under the profile's Local AppData (the scratch folder holds the store only) with the newest name stamp no earlier than 5 s before this launch (`newestSessionLogSinceLaunch`, residencyTrace.mjs), chosen again at each call; null when none. The folder is shared by every instance of the app, so an instance started during the run, or up to 5 s before it, can be read in place of this launch's. */
 function sessionLogPath() {
   if (!LOG_DIR || !existsSync(LOG_DIR)) return null;
   const listing = readdirSync(LOG_DIR).map((name) => ({ name, mtimeMs: statSync(join(LOG_DIR, name)).mtimeMs }));
   const name = newestSessionLogSinceLaunch(listing, LAUNCH_MS);
   return name === null ? null : join(LOG_DIR, name);
 }
-/** The lines of the session log THIS launch created (see `sessionLogPath`); `[]` when none. */
+/** The lines of the session log `sessionLogPath` chooses at this call; `[]` when none. */
 function sessionLogLines() {
   const p = sessionLogPath();
   return p === null ? [] : readFileSync(p, "utf8").split("\n");
