@@ -1011,3 +1011,16 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 8 — 2026-11-24 — the custodian's, under ADV-2026-11-24-01 item 5, before E-RK1's second series: references and hashes only
+
+*Written by the custodian before any run of the second series, as the ruling's item 5 asks. It holds the ruling by reference and words nothing of its own.*
+
+1. **Authority.** The advisor's ruling ADV-2026-11-24-01 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-01-colour-by-refills-e2e-before-the-change-the-fix-commits-suite-over-p0-the-three-void-runs-recorded-a-log-folder-finding.md`, sha256 236427cdb0913e83a7d094e3a9888784c6b35f24cfd8a50f2957a3ca2ef2966d at main 4a5dfdb7), under the human's delegation of 2026-11-13; it is not the human's words.
+2. **Its item 1, the run before the change.** E-RK1's counted run before the change runs over P0's tree, 8329a53c250cf9beea3634554b4babf9ecc176a7, with `frontends/shell/e2e/colour-refill.mjs` taken from the fix commit c60660bd196d73086c603aac7605d493784167b8 and no other file: blob 1a5178c83b447e06a3f4f00920c51e990761673e, 15866 bytes, sha256 0e94e0478db0428c4ac20e297f4efdab78440756c4d2a39a2b38623a449ff35d. Its item 2 says how the tester writes, shows, runs and restores that one file, and which ends are a stop. The head's runs and M-A1's run are at the fix commit.
+3. **The fix commit.** c60660bd196d73086c603aac7605d493784167b8 on `cut/colour-by-refill-keeps-the-view`; its parent is 480445f9a49841a4317015b3821ae28d4597e05b, the reviewer's words D-1 to D-6; it changes `frontends/shell/e2e/colour-refill.mjs` alone, 23 lines added and 9 removed. By §7's counting command, with B the build base e4e6493d (the re-link's head), `git diff --numstat e4e6493d...c60660bd` gives 941 lines over 12 paths, §7's eleven and the one Amendment 7 adds, under the ceiling of 980.
+4. **The rest, by reference.** The three VOID runs are in `state/consults/2026-11-24-colour-by-refill-keeps-the-view-e2e-tester-reports-two-p0-warm-ups-void.md` and `state/consults/2026-11-24-colour-by-refill-keeps-the-view-e2e-diagnosis-tester-report.md`; the series report gives each with its commit and its end (item 3). The reviewer's narrow read of the fix commit follows the series (item 4). The finding on the session log's folder is `state/consults/2026-11-24-finding-the-shells-session-log-does-not-follow-a-changed-localappdata.md` (item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.
