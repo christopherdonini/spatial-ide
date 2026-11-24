@@ -162,7 +162,7 @@ export interface WorkingCanvasHandle {
    * is the reopen's workspace apply (Amendment 54 item 5 (h)). Optional in the type only, as `currentView?` is; the component always provides it. */
   applyView?(view: { centre: readonly [number, number]; zoom: number }): void;
   /**
-   * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
+   * Clears the fit anchor (`fitAnchorRef`) and, unless `{ keepCamera: true }` is passed (below), the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
    * residency arm, also at the start of a reissue begun while the session is live
    * (`candidateArmSession.ts`'s `reissueUnrestricted`; an Apply after the session has ended runs none,
@@ -190,9 +190,9 @@ export interface WorkingCanvasHandle {
    * (dataset, filter generation), not (dataset) alone. It also clears the area last reported, so a
    * size change asks nothing until the next report (the auto-fit that follows does not report).
    *
-   * **`{ keepCamera: true }` (colour-by-refill-keeps-the-view).** With it the one-shot auto-fit flag (`hasAutoFitRef`) is left as it stands, so a refill after the first look has fitted does
-   * not fit again and the camera stays where the operator put it; the fit anchor and the area last reported are still cleared. A canvas still waiting to fit (the flag false: an open, an Apply
-   * or a Clear whose first batch has not arrived) stays waiting, and fits as it would have. Without the option the method does what it did before. Its one product caller is the Colour-by
+   * **`{ keepCamera: true }` (colour-by-refill-keeps-the-view).** With it the one-shot auto-fit flag (`hasAutoFitRef`) is left as it stands, so a refill after the camera was fitted or set from a saved view does
+   * not fit again and the camera stays where it stands; the fit anchor and the area last reported are still cleared. A canvas still waiting to fit (the flag false: after an open, an Apply, a Clear, a card change or a refused Apply's re-issue,
+   * until a batch with an extent has arrived) stays waiting, and fits as it would have. Without the option the method does what it did before. Its one product caller is the Colour-by
    * effect (`App.tsx`), through `issueQueryRef` and `reissueUnrestricted`.
    */
   resetFitForNewGeneration(options?: { keepCamera: true }): void;

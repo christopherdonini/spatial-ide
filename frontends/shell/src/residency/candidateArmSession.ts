@@ -251,7 +251,7 @@ export interface CandidateArmSession {
    * `session-ended` as before (the latches are read before the generation): a cancel is requested
    * for that ticket through `cancel`, and no stream is started for it.
    *
-   * `options` (colour-by-refill-keeps-the-view): `{ keepCamera: true }` is passed to the canvas's `resetFitForNewGeneration`, so the camera is not refitted by the first batch of this look; the
+   * `options` (colour-by-refill-keeps-the-view): `{ keepCamera: true }` is passed to the canvas's `resetFitForNewGeneration`, so the first batch of this look refits the camera only when the canvas was still waiting to fit (after an open or a change of the filter whose first batch with an extent has not arrived); the
    * clear, the fit anchor, the frame bookkeeping, the plan flag and the `query-issued` line are as without it. Its one product caller is the Colour-by effect (`App.tsx`). Not covered: a Colour-by
    * issued inside the mint round trip of an Apply (timing inside one request, AUTONOMY section 31).
    */

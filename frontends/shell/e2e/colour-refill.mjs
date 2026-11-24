@@ -18,7 +18,7 @@
 //   (c) `.attributes-not-held` still stands.
 // Page members called: `window.__SPATIAL_E2E__.openPath` and `residentCounts` (a counts-only read); the rest is DOM reads and input through the Playwright page. No DEV-only hook that acts is used beyond the open.
 // What this does not prove: any docs/08 figure, macOS or Linux, a file other than this fixture, or a timing. Waits are harness bounds on readiness (ADR-018), not measurements.
-// Recorded: the zoom steps taken, the fixture's feature count, both boxes and both client sizes.
+// Recorded: the zoom steps taken, the generator's feature count (restated, not read from the file), the fixture's sha256, the boxes and the client sizes.
 import { createHash } from "node:crypto";
 import { existsSync, mkdtempSync, readdirSync, readFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -132,7 +132,7 @@ async function run(page, consoleHandle) {
     await settle(consoleHandle, `after zoom-out notch ${steps}`, 1500);
   }
   const standing = await notHeld(page);
-  console.log(`zoom-out notches taken: ${steps}; the fixture's feature count: ${FEATURES}; the not-held status stands: ${standing}`);
+  console.log(`zoom-out notches taken: ${steps}; the generator's feature count (restated, not read from the file): ${FEATURES}; the not-held status stands: ${standing}`);
   if (!standing) throw new Void(`the not-held status does not stand after ${steps} zoom-out notches: the fixture cannot reach the fact (stop I5)`);
 
   // Pan by pointer to a view away from the fit.
