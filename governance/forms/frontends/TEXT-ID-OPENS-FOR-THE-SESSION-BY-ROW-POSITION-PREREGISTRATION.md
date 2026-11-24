@@ -526,3 +526,63 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — 2026-11-24 — the custodian's, under ADV-2026-11-24-05: the form gate's words by reference; the file ceiling 84 and the line ceiling 2,100, restated before code; the detail's second sentence and S-8 by reference, with two paths added to the Scope (class 9)
+
+*Written by the custodian before any code. References only: the advisor's and the gate's words are not copied here, and the build takes them from their files. The search named in item 5 was made by script at 4630fa09bec7d7c66a15393de0bd13d64537a9a1.*
+
+1. **Authority.** The advisor's ruling ADV-2026-11-24-05 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-05-text-id-after-the-form-gate-fail-q1-the-file-ceiling-84-before-code-q2-the-advisors-words-q3-nothing-more-to-the-human-q4-yes.md`), under the human's delegation of 2026-11-13. It is not the human's words. It answers the custodian's four questions after the architect's form gate, attempt 1 (FAIL, gate-log row 889, `state/consults/gates/2026-11-23-text-id-opens-for-the-session-by-row-position-form-gate-architect.md`).
+2. **The gate's words, by reference** (ADV-2026-11-24-05 item 6). The replacement words of row 889's report hold in place of the form's text they name, byte for byte:
+   - E1: §4's row N-9, and the new row N-S in its own new file;
+   - E2: rows N-3, N-5 and N-7, and the two lines on `identity_verification_scans` in §2 item 1 and §6;
+   - E3: the red reasons of W-1, T-1 and K-7;
+   - C1: §7's shell Scope;
+   - C2: §2 item 12, `refusedDeclarationOptions`;
+   - C3: §2 item 10, the optional `set_aside_column`;
+   - C4: §2 item 1 (d), with `id` removed from the candidates, and M-3b in N-3's row (E2's words);
+   - D1: the Status paragraph;
+   - D2: §2's line on the D-1 cites.
+
+   The build takes them from that file.
+3. **The file ceiling: 84** (ADV-2026-11-24-05 item 1), declared before code. The reason, by count:
+   - 76 paths in §7, by the gate's count (its Notes, the ceilings);
+   - 2 added by Amendment 2, item 3: the wire fixture and `frontends/shell/e2e/regression.mjs` (the walkthrough is in §7 already);
+   - 2 added by C1: `frontends/shell/e2e/console.mjs` and `frontends/shell/src/console/renderTruth.test.ts`;
+   - 1 added by E1 and E2: `engine/tests/text_id_set_aside_scan_counts.rs` (new);
+   - 2 added by item 6 below: `frontends/shell/src/project/reopenNotices.ts` and `frontends/shell/src/project/reopenNotices.test.ts`.
+
+   That is 83 paths. The 84th is the place for a wire fixture that holds the detail, if item 5's search at the base finds one outside the Scope. §7's counting command and its overrun rule are unchanged.
+4. **The line estimate again, and the line ceiling: 2,100** (ADV-2026-11-24-05 item 1), declared before code. §7's estimate of ~1,875, with these additions, as the custodian estimates them:
+
+| addition | lines |
+|---|---|
+| Amendment 2 item 3 and item 5 below: the Display's last sentence and the detail's second sentence, in the paths that pin them (one changed line where both sit in one string) | ~16 |
+| C1: the two open_dataset key sets | ~5 |
+| E1: N-9 in `dataset.rs`'s own test module, with its recorded mutation | ~25 |
+| E1 and E2: N-S in its own file, less the deltas moved out of N-3, N-5 and N-7 | ~60 |
+| C2 and item 8: `refusedDeclarationOptions`, its submit line, S-T6b and M-23b | ~28 |
+| C4: `id` removed from the candidates, and M-3b | ~9 |
+| item 6: S-8, the shell telling the two reopen attempts apart, its test and its mutation | ~34 |
+| the counter's doc naming N-S, and a wire fixture if one is found | ~8 |
+| **total, with §7's ~1,875** | **~2,060** |
+
+   The estimate passes 1,950, so the line ceiling is restated to 2,100, the bound ADV-2026-11-24-05 item 1 sets for a restatement that needs no further ruling. §7's size line is not edited; this item stands in its place.
+5. **The type refusal's detail** (ADV-2026-11-24-05 item 2 (a)). Its second sentence becomes the words of that item, byte for byte; its first sentence stays.
+   - At 4630fa09, outside `state/` and `governance/`, the sentence that item names is held by `engine/src/identity.rs` (line 341), `frontends/shell/MANUAL-WALKTHROUGH.md` (line 598, row I4 of Part I), `frontends/shell/e2e/admission-remediation.mjs` (line 82) and `frontends/shell/e2e/regression.mjs` (line 115), and by `engine/ADMISSION-RESULTS.md`, which is not edited. No path under `protocol/` holds it there.
+   - All four are in the Scope (§7 and Amendment 2, item 3). In row I4 only the quoted message changes; no past run record is touched.
+   - The worker runs the same search at the base before code, and every place that pins the sentence there changes in this piece, a wire fixture included (that item; item 2 of ADV-2026-11-23-36).
+6. **The line beside an engine refusal at a reopen** (ADV-2026-11-24-05 item 2 (b)).
+   - `ENGINE_REFUSAL_NOTICE` (`frontends/shell/src/project/reopenNotices.ts`, line 100 at 4630fa09) stays for a reopen attempt that carries no choice.
+   - S-8, in that item's words, stands beside an engine refusal of a reopen attempt that carried the choice. It is held as S-1 to S-6c are (Amendment 2, item 4).
+   - `reopenNotices.ts` and its test join the Scope, class 9, before code (item 3 above).
+   - Where the shell tells the two attempts apart, and S-8's test and mutation, are the architect's to word in the form gate, attempt 2, as that item says.
+7. **Nothing more goes to the human now** (ADV-2026-11-24-05 item 3).
+   - K-2's correction to "the app then offers a second choice" is settled by the advisor under item 6 of ADV-2026-11-23-34 once the human has approved it.
+   - Attempt 2 reads every clause of the draft of ADR-016's Amendment 3, as Amendment 1 item 1 names it, against the form as this amendment leaves it. It gives replacement words for each clause that no longer holds, the Consequences sentence on the candidate list among them (C4). Those words go to the advisor.
+8. **Q4** (ADV-2026-11-24-05 item 4): `refusedDeclarationOptions` with S-T6b and M-23b (C2), and the optional `set_aside_column` (C3), are inside this amendment, under item 3's count.
+9. **D5 and S-5** (ADV-2026-11-24-05 item 5): D5 holds only with C4's fix, which item 2 carries. S-5 stays as worded.
+10. **Next:** the form gate, attempt 2, a read, which may run during the sitting. No code is written before the human approves ADV-2026-11-23-34 and the gate passes. Nothing of this piece builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -1841,3 +1841,29 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 11 — 2026-11-24 — post-result amendment: the section 0.3 re-sweep for PR A, made by reading at the base 6bc40126 after PR A's code (ADV-2026-11-24-04 item 3)
+
+*Written by the custodian. References only.*
+
+1. **The code existed when this re-sweep was made.** PR A's build was dispatched without the section 0.3 re-sweep. That was the custodian's miss, and it is the reviewer's E-1 (gate-log row 892). So the re-sweep is filed after the result, as ADV-2026-11-24-04 item 3 orders, and it is not a declaration before code.
+2. **How it was made.**
+   - The architect made it (node:shell-migration-milestone-5@pr-a-re-sweep-architect-1), an agent that did not build PR A.
+   - It worked by reading alone. It read the code at 6bc40126 from that tree, and the form at f0718827 (its body and Amendments 1 to 8).
+   - Its brief held no PR A diff. Its transcript shows no read of the branch, of the build worktree, of PR A's reports or of this form's later amendments.
+   - Report: `state/consults/2026-11-24-shell-migration-milestone-5-pr-a-re-sweep-at-the-base-architect.md`.
+3. **What it records**, by reference to that report's parts 1 to 5:
+   - the section 0.2 interfaces: no code interface changed, and the moved cites are listed; two records facts also differ (the walkthrough's last Part is AE, not AD, and item 75 is at line 556);
+   - the declared selector list: the eleven suites of section 2.6, and `App.layout.test.tsx`; `App.streamFailure.test.tsx` holds no strip read;
+   - by its reading, Part AF and items 77 to 79 for PR A, with its open questions;
+   - by its reading, the row-filter paragraph bears on PR B's Jobs row only;
+   - the e2e runs at the base: not run here, and the suites they will be. ADV-2026-11-24-04 item 3 places them after the sitting, before any e2e run at the head.
+4. **Beyond its brief**, its part 2 names strip reads in five unit-test files outside section 2.6's lists. They are carried to the comparison.
+5. **Next: the comparison** (ADV-2026-11-24-04 item 3).
+   - Each interface or selector that PR A changed and the form did not name goes to the advisor with the architect's reading.
+   - The three test files of ADV-2026-11-23-37 are named as found late.
+   - PR B's re-sweep is made before PR B's code.
+
+Read the last amendment first.
+
+Nothing above is edited.
