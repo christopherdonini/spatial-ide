@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-24T11:11:50.921Z",
-  "plan_hash": "4accfbe5b1699c4f60ea76ea869c76d28bdef7c55571b4fa6a9c305c2a47050a",
+  "generated_at": "2026-11-26T18:45:58.654Z",
+  "plan_hash": "a77c3a4d7120345023e401c3a7bd81f48e655077098680e8491cdd766d465522",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8209,13 +8209,13 @@
         "kind": "none",
         "minutes": 0
       },
-      "gate": "none",
+      "gate": "governance/forms/engine/IDENTITY-SCAN-REFUSES-A-NULL-BY-NAME-PREREGISTRATION.md",
       "evidence": null,
       "budget_minutes": 60,
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "DRAFT FILED, 2026-11-24: lead-data draft of the full form at state/consults/2026-11-24-identity-scan-refuses-a-null-by-name-form-lead-data-draft.md, about 578 lines over 7 files, its words for the refusal held for the advisor; its two form gates next, read only. PLACED 2026-11-24 by ADV-2026-11-24-23 item 5 as a proposed fault piece; lead-data drafts its form now, read only; built on the text-id head after that build has a pushed green head; it does not hold the recovery offer; the refusal words are the advisor after its gate.",
+      "summary": "FORM COMMITTED 2026-11-26 with Amendment 1: both form gates at attempt 2 PASS WITH NOTES (rows 908, 909), settled by the author in 19 pairs; ADV-2026-11-26-05 ruled every OPEN item and W-1 and W-2 are carried in; full form, ceiling 650 lines over 7 files; no code until text-id's build has a pushed green head (its section 8). DRAFT FILED, 2026-11-24: lead-data draft of the full form at state/consults/2026-11-24-identity-scan-refuses-a-null-by-name-form-lead-data-draft.md, about 578 lines over 7 files, its words for the refusal held for the advisor; its two form gates next, read only. PLACED 2026-11-24 by ADV-2026-11-24-23 item 5 as a proposed fault piece; lead-data drafts its form now, read only; built on the text-id head after that build has a pushed green head; it does not hold the recovery offer; the refusal words are the advisor after its gate.",
       "dates": {
         "opened": "2026-11-24",
         "done": null
