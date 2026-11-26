@@ -141,7 +141,8 @@ describe("SKP v0 shared fixtures", () => {
     );
     assertExactKeys(
       res.identity,
-      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement"],
+      // skp/0.15, ADR-016 Amendment 2: `candidate_columns`, always present (null off the session tier)
+      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement", "candidate_columns"],
       "describe response .identity"
     );
     for (const [i, field] of res.schema.entries()) {

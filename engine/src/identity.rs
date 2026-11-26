@@ -241,16 +241,14 @@ impl DatasetIdentity {
 
     /// Columns an operator could declare a mapping to, on the session tier. Empty elsewhere.
     ///
-    /// **An instrument: its only caller is the test suite**, and not `cfg(test)`-gated, for the
-    /// reason [`crate::descriptor::SourceDescriptor::footer_bytes_read`] is not — R-I3 requires the
-    /// ADR-016 candidate list to still be *recorded* on a session-tier open, and that has to be
-    /// true of the shipped build rather than of a test build. **No surface carries it to an
-    /// operator in P3a**: the refusal that used to carry it no longer fires on this path, and
-    /// `describe` may not gain a field for it (boundary 9's list is closed). Where it is owed is
-    /// recorded in `engine/ADMISSION-PREREGISTRATION.md`'s Amendment 4.
+    /// R-I3 requires the ADR-016 candidate list to be *recorded* on a session-tier open, and that
+    /// has to be true of the shipped build rather than of a test build, so it is not
+    /// `cfg(test)`-gated. Since `skp/0.15` it has a product caller: the kernel's
+    /// `describe_dataset` carries it as `describe.identity.candidate_columns` on the session tier
+    /// (ADR-016, Amendment 2), from this accessor and no other function, in the order recorded
+    /// here. The refusal carries the same list on the native and mapped paths.
     ///
-    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
-    /// 2026-09-16, round 5 item 4):
+    /// **Its other callers**, named so the caller-grep can verify them:
     /// `engine/tests/session_identity.rs::a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis`,
     /// `engine/tests/identity.rs::a_file_whose_key_is_not_called_id_admits_on_the_session_tier_until_a_mapping_is_declared`,
     /// and `engine/tests/b1_projection_hostile_names.rs::a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate`.
