@@ -172,4 +172,38 @@ describe("admitDataset", () => {
       },
     });
   });
+
+  /** `open_dataset` opens `dataset` and `describe` fails with `failure`; `close_dataset` and the log binding answer. */
+  function describeFailsWith(dataset: string, failure: unknown) {
+    invokeMock.mockImplementation(async (cmd: string) => {
+      if (cmd === "open_dataset") return { dataset, session: `session_${dataset}` };
+      if (cmd === "describe") throw failure;
+      if (cmd === "close_dataset") return { cancelled_streams: 0 };
+      if (cmd === "binding_log_session_event") return undefined;
+      throw new Error(`unexpected command ${cmd}`);
+    });
+  }
+  /** The SKP commands sent, in order: `logSessionEvent`'s binding-local command is not one. */
+  const skpCommands = () => invokeMock.mock.calls.map(([cmd]) => cmd).filter((cmd) => cmd !== "binding_log_session_event");
+
+  it("a describe refused after open_dataset sends close_dataset for the opened handle and returns the refusal", async () => {
+    describeFailsWith("ds_a1", {
+      code: "skp.unknown_dataset",
+      message: "no open dataset with handle `ds_a1` (closed, or never opened this session)",
+      fields: { handle: "ds_a1" },
+    });
+    const outcome = await admitDataset("C:/data/parcels.parquet", "open-a1");
+    expect(outcome.kind).toBe("refused");
+    if (outcome.kind === "refused") expect(outcome.refusal.code).toBe("skp.unknown_dataset");
+    expect(skpCommands()).toEqual(["open_dataset", "describe", "close_dataset"]);
+    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.14", dataset: "ds_a1" } });
+  });
+
+  it("a describe that fails untyped after open_dataset sends close_dataset and rethrows the same error", async () => {
+    const err = new TypeError("the transport failed");
+    describeFailsWith("ds_a2", err);
+    await expect(admitDataset("C:/data/parcels.parquet", "open-a2")).rejects.toBe(err);
+    expect(skpCommands()).toEqual(["open_dataset", "describe", "close_dataset"]);
+    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.14", dataset: "ds_a2" } });
+  });
 });
