@@ -946,4 +946,4 @@ npm run e2e:admission
 
 It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
 
-**What it proves not.** The words of the control (they are placeholders until the words commit), any timing, macOS or Linux, a project saved and reopened after the declaration (the operator Part's rows do that), or a file whose key is narrower than 64 bits (the kernel test K-2 does that, and no walkthrough fixture holds one).
+**What it proves not.** The words of the control (they are the advisor's words as the words commit set them), any timing, macOS or Linux, a project saved and reopened after the declaration (the operator Part's rows do that), or a file whose key is narrower than 64 bits (the kernel test K-2 does that, and no walkthrough fixture holds one).
