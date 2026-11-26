@@ -1370,3 +1370,34 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-26 — the custodian's, before code: the recorded base, the literal's files at it, I5 to I7 read there, the base suites
+
+*Written by the custodian before any code. References and figures only. The figures are a worker's (Sonnet), from its reads and runs at the base, and the custodian checked the base's commits and the out-of-Scope literal lines by git. Nothing above is edited.*
+
+1. **The recorded base** (§8, the base paragraph) is e9bd248359fc9276f7fb94a3108b319ada561120, the head of `cut/identity-declaration-route-for-session-tier` on origin. It is the re-link's head e4e6493d (first parent), followed by four merge commits, each `git merge --no-ff --signoff` with no conflict:
+   - 74fdddbc takes in PR 360's head 8d1f2f4e;
+   - e2a7ea43 takes in PR 366's head e4116cad, the node `partitioned-ordinal-refusal-opens-the-identity-form`;
+   - 8ff82cc6 takes in PR 365's head 639a96cc;
+   - e9bd2483 takes in milestone 5 PR A's head 806ad308.
+   - The recovery offer holds no `protocol/` place in it, so the order is A (Amendment 2 item 1).
+2. **The literal** (Amendment 2 item 1, order A; Amendment 4's rule). At the base, `SKP_VERSION` is `skp/0.14` (`protocol/skp/src/v0/mod.rs` and `types.ts`), so this piece takes `skp/0.15`.
+   - `git grep -l 'skp/0\.14'` at the base lists 59 files.
+   - 27 are in §7's Scope.
+   - Five more are source files outside Scope: `frontends/shell/src-tauri/src/commands.rs`, `frontends/shell/src/console/surfaceRegistry.ts`, `frontends/shell/src/skp/client.ts`, `protocol/skp/src/v0/error.rs` and `protocol/skp/tests/conformance/AMBIGUITIES.md`. The custodian read each line at the base. In the first four, the literal stands in a doc comment that names the version a member came in. In AMBIGUITIES.md it stands in prose about a fixture renumbered in the past. In none is it the version that a request, a fixture, a test or a constant carries, so Amendment 4's rule leaves all five as they are. That rule's examples name two of them, `commands.rs` and `client.ts`.
+   - The rest, 4 form files and 22 state files, are records that cite the literal.
+   - So no file is added to the Scope for the literal (class 9).
+   - The conformance tree holds 69 occurrences: 65 in its fixtures, 3 in its README and 1 in AMBIGUITIES.md.
+3. **I5 to I7, read at the base.**
+   - **I5 does not fire.** App's dataset on the map, and `<AdmissionPanel>`'s element, stand in one scope. Their lines have moved from the cites at 6cf6140c: `App.tsx` 860 and 2287.
+   - **I6 does not fire.** No test outside §7's Scope and Amendment 5 asserts an exact candidate list over a file that holds an integer column narrower than 64 bits. The same searches found the known in-Scope asserts, as a positive control.
+   - **I7 holds.** The admitting arm admits exactly the eight integer widths, and the candidate filter still names only `Int64` and `UInt64`, as expected before the change.
+   - **Seams.** Every seam of §10 and Amendment 5 has the signature the form writes, at the base. Lines that moved from the form's cites: `runAdmitPath` (`AdmissionPanel.tsx` 231) and `admitDataset` (`admitDataset.ts` 50). The code is written against the base, and the form's cites stay historical pins.
+4. **The base suites**, run at e9bd2483 inside shared holds, with no app and no dev server started. Every run exited 0:
+   - shell `npm run typecheck`, and `npm test`: 132 files, 1676 tests passed, none failed;
+   - `cargo test --locked -p spatial-kernel --no-fail-fast`: 523 passed, none failed, 48 ignored;
+   - its `skp_admission_remediation` test alone: 7 passed;
+   - `cargo test --locked -p spatial-skp --no-fail-fast`: 63 passed, and its conformance test: 1 passed;
+   - `cargo fmt --all -- --check`, and the same check in `src-tauri`.
+   - Clippy is run by no workflow. It was run for information: 0 errors and 19 warnings.
+5. **Next:** the code, on this base, in this piece's turn (ADV-2026-11-26-24 item 4). Its e2e runs wait under ADV-2026-11-26-19.

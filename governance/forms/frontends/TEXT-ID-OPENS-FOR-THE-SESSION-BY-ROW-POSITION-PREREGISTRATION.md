@@ -821,3 +821,35 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-26 — the custodian's, under ADV-2026-11-26-20: the five corrections of wording carried by reference; the block appended to ADR-016; the merge check; the build's base and place
+
+*Pre-code amendment, written by the custodian. References only. The words it carries are the architect's, from its form gate, and were settled by the advisor under the human's delegation of 2026-11-13. None are the human's. Nothing above is edited.*
+
+1. **Authority.**
+   - The human approved ADV-2026-11-23-34 on 2026-11-26, as filed at `state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`.
+   - ADV-2026-11-23-34 is filed at `state/consults/2026-11-23-advisor-draft-adv-2026-11-23-34-for-the-humans-approval-adr-016-amendment-3-every-case-and-c2-not-the-humans-words.md`.
+   - The advisor's ruling ADV-2026-11-26-20 is filed at `state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-20-text-id-five-corrections-of-wording-the-form-records-them-by-an-amendment-the-build-ahead-of-b.md`.
+   - By ADV-2026-11-26-20 item 1, items 2 to 4 of ADV-2026-11-23-34 stand as drafted. By its item 2, Decision 1 stays as drafted (ADV-2026-11-24-12 item 3).
+2. **The five corrections, carried by reference** (ADV-2026-11-26-20 items 2 and 5).
+   - Their text is ADV-2026-11-26-20 item 2's five four-backtick text blocks, (1) to (5). It is not retyped here.
+   - Each holds in place of the text that item 2 names for it:
+     - (1) KNOWN-LIMITATIONS item 3, the second sentence of ADV-2026-11-23-34 item 5;
+     - (2) Amendment 3 of ADR-016, Decision 3, whole;
+     - (3) that amendment's Decision 4, its second sentence, with the first sentence standing;
+     - (4) that amendment's Consequences, the bullet on the engine;
+     - (5) that amendment's Consequences, the bullet on the candidate list.
+   - Two items of Amendment 3 above are settled. Its item 7's K-2 correction is (1). Its item 7's replacement words for the draft's clauses are (2) to (5), the Consequences sentence on the candidate list (C4) among them.
+3. **The block appended to ADR-016** (ADV-2026-11-26-20 item 3).
+   - It is the draft's block in `state/consults/2026-11-23-text-id-opens-for-the-session-by-row-position-adr-016-amendment-architect-draft.md`, from its heading to the words that item 3 names as its end, with corrections (2) to (5) in place.
+   - The draft file was checked by script at this amendment's commit: 23103 bytes, sha256 3d1e6181d7f5918a581ec0ae92a529938aece3f53d312eec1a3ea92f184eb668. These are the figures item 3 names.
+   - The heading is item 3's first bullet, byte for byte.
+   - The line in italics under the heading, and the acceptance line at the block's end, are the worker's words. They say what item 3's second and third bullets list. The build's gates read them for truth, and so does the advisor at the merge check.
+4. **ADR-016's Note 2026-11-26** (ADV-2026-11-26-20 item 4). It widens the candidate list, but Decision 3 and correction (5) name that list by its function, so neither needs another word.
+5. **The merge check** (ADV-2026-11-26-20 item 6). The advisor compares the five texts with item 2 byte for byte, the heading with item 3, and the rest of the appended block with the draft file.
+6. **The build** (ADV-2026-11-26-20 item 7).
+   - ADV-2026-11-23-34 item 7 is met.
+   - The piece is built on the identity route's head with PRs 364, 361 and 360 (ADV-2026-11-23-36), so it starts once that head exists.
+   - In the order of builds it stands ahead of `reload-ends-the-old-pages-opens` (B).
+   - Its e2e runs wait under ADV-2026-11-26-19.
+7. **Nothing else changes.** No ceiling is restated: the file ceiling stays 84, and the line ceiling stays 2,150 (Amendment 6 item 4). By ADV-2026-11-26-20 item 8, nothing in that ruling is reserved.
