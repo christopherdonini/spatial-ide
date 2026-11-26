@@ -155,8 +155,9 @@ pub enum EngineError {
     /// consumer's side — the id it is handed does not identify one feature — so they share a
     /// variant and are distinguished by `detail`.
     ///
-    /// `candidate_columns` (NEXT-CUT.md P0): the file's 64-bit integer columns (`Int64` and
-    /// `UInt64`), in schema order, unranked and unpreselected — no scoring, no "looks like an id"
+    /// `candidate_columns` (NEXT-CUT.md P0): the file's integer columns of every width admission
+    /// takes (`Int8` to `Int64` and `UInt8` to `UInt64`, ADR-016's Note 2026-11-26), in schema
+    /// order, unranked and unpreselected — no scoring, no "looks like an id"
     /// guess (that is Alpha data-doctor territory, `docs/05`). A remediation UI lists them; it does
     /// not recommend one. Carried only in this structured field — `Display` below does not mention
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.

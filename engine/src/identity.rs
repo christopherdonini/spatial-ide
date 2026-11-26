@@ -198,9 +198,10 @@ pub struct DatasetIdentity {
     /// consumer see, from the envelope, whether narrowing would have been lossy — instead of
     /// finding out per value.
     max_value: Option<u64>,
-    /// The file's 64-bit integer columns, reported on the **session tier** so an operator can still
-    /// declare a mapping (R-I3's own sentence). Empty on the native and mapped paths, where the
-    /// list is carried by the refusal instead. Unranked and unpreselected, as it is there.
+    /// The file's integer columns of every width [`admit_column_type`] takes, reported on the
+    /// **session tier** so an operator can still declare a mapping (R-I3's own sentence). Empty on
+    /// the native and mapped paths, where the list is carried by the refusal instead. Unranked and
+    /// unpreselected, as it is there.
     candidate_columns: Vec<String>,
 }
 
@@ -276,9 +277,11 @@ impl DatasetIdentity {
     }
 }
 
-/// The file's 64-bit integer columns — `Int64` and `UInt64` only, narrower than the widths
-/// [`admit_column_type`] below still accepts — in schema order (NEXT-CUT.md P0, the
-/// admission-remediation cut's declare-identity flow).
+/// The file's integer columns of every width [`admit_column_type`] below admits — `Int8`, `Int16`,
+/// `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32` and `UInt64`, all read from one predicate,
+/// [`is_admitted_integer_type`] — in schema order (NEXT-CUT.md P0, the admission-remediation cut's
+/// declare-identity flow; ADR-016, Note 2026-11-26, widened it from the two 64-bit types from
+/// `skp/0.15`).
 ///
 /// Unranked and unpreselected: ADR-016 §3's "declared, never inferred" extends to this list
 /// itself. It names candidates a remediation UI may offer a caller to choose among; it is never a
@@ -295,11 +298,10 @@ impl DatasetIdentity {
 /// from this list) — see `admit_column_type` and `dataset::admit_identity`, neither of which
 /// consults this function to decide whether a *declared* column is usable.
 pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -> Vec<String> {
-    use arrow::datatypes::DataType as D;
     schema
         .fields()
         .iter()
-        .filter(|f| matches!(f.data_type(), D::Int64 | D::UInt64))
+        .filter(|f| is_admitted_integer_type(f.data_type()))
         // **§10 Amendment 12, 12.1(d); test N-9.** A column that is not addressable — checked
         // through `addressability::not_addressable_for_field`, the one classifying function
         // (12.4 item 25), never a second U+0000 test of its own — is omitted for the same reason a
@@ -310,6 +312,22 @@ pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -
         .map(|f| f.name().clone())
         .filter(|name| !name.contains(','))
         .collect()
+}
+
+/// Whether `ty` is an integer width that identity admission takes: `UInt64`, `UInt32`, `UInt16`,
+/// `UInt8`, `Int64`, `Int32`, `Int16` or `Int8`. Widening any of them into `u64` is exact; a signed
+/// column's *values* are checked when they are read.
+///
+/// **The one list of admitted types.** Its two callers are [`candidate_identity_columns`], which
+/// offers a column, and the admitting arm of [`admit_column_type`], which accepts one, so that
+/// what is offered and what is accepted cannot drift apart again (ADR-016, Note 2026-11-26). It is
+/// private to this module on purpose: nothing outside it asks what types are admitted.
+fn is_admitted_integer_type(ty: &arrow::datatypes::DataType) -> bool {
+    use arrow::datatypes::DataType as D;
+    matches!(
+        ty,
+        D::UInt64 | D::UInt32 | D::UInt16 | D::UInt8 | D::Int64 | D::Int32 | D::Int16 | D::Int8
+    )
 }
 
 /// The SQL type of a candidate identity column, classified by whether reading it into `u64`
@@ -324,13 +342,11 @@ pub(crate) fn admit_column_type(
     ty: &arrow::datatypes::DataType,
     schema: &arrow::datatypes::SchemaRef,
 ) -> Result<()> {
-    use arrow::datatypes::DataType as D;
     match ty {
         // Widening into u64 is exact. A signed type is admitted here and its *values* are checked
-        // when they are read — a negative id is refused there, not assumed absent here.
-        D::UInt64 | D::UInt32 | D::UInt16 | D::UInt8 | D::Int64 | D::Int32 | D::Int16 | D::Int8 => {
-            Ok(())
-        }
+        // when they are read — a negative id is refused there, not assumed absent here. The set is
+        // `is_admitted_integer_type`'s, the list `candidate_identity_columns` offers from.
+        ty if is_admitted_integer_type(ty) => Ok(()),
         other => Err(EngineError::IdentityUnusable {
             column: column.to_string(),
             detail: format!(
