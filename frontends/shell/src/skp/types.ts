@@ -143,6 +143,11 @@ export interface IdentityInfo {
    * generation value accompanies it, here or anywhere else on the wire: the generation is kernel
    * and client state, and this client mirrors it by live-ticket set rather than by value. */
   session_statement: string | null;
+  /** `skp/0.15` (ADR-016, Amendment 2 and the Note 2026-11-26): the engine's candidate list for a declaration, non-null exactly when `class === "session-ordinal"` --
+   * every column whose type `open_dataset` admits as an identity column, in schema order, unranked, with nothing preselected; it may be empty. On a native or a mapped
+   * identity the wire carries the key as `null`. Declared optional here so that a describe from before `skp/0.15` still types; the wire always carries the key, and
+   * `__tests__/fixtures.test.ts` pins it on the real fixture. Never a declaration and never a recommendation. */
+  candidate_columns?: string[] | null;
 }
 
 /** `skp/0.3` (Brief A boundary 9): what the range check was decided from at this open.

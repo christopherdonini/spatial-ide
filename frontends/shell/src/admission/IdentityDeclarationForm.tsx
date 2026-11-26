@@ -11,9 +11,9 @@ import {
 } from "./identityDeclarationState";
 
 interface Props {
-  /** Schema order, as `engine.identity_unusable`'s `candidate_columns` field carried it -- never
-   * re-sorted or ranked here (ADR-016 §3-§7). May be empty (the file carries no 64-bit integer
-   * column at all); the free-text route stays available either way. */
+  /** Schema order, as the engine gave it -- never re-sorted or ranked here (ADR-016 §3-§7). It has two sources: `engine.identity_unusable`'s `candidate_columns`
+   * field, for a refused file, and `describe.identity.candidate_columns`, for a file opened on the session tier (`skp/0.15`; ADR-016 Amendment 2). May be empty (the
+   * file carries no integer column the engine lists at all); the free-text route stays available either way. */
   candidateColumns: string[];
   disabled: boolean;
   onSubmit: (identity: IdentityDeclaration) => void;
@@ -44,20 +44,25 @@ export default function IdentityDeclarationForm({ candidateColumns, disabled, on
         if (declaration !== null) onSubmit(declaration);
       }}
     >
+      {/* D3 (identity-declaration-route-for-session-tier), the advisor's words under the human's delegation of 2026-11-13 (ADV-2026-11-23-26 item 2), not the human's; built under the
+          placeholder mark until the words commit, and shown on both routes. It replaces the cost notice an agent wrote, which said that nothing is saved and that a reopen asks again.
+          What the notice does not say, for this comment and not for ordinary use: an integer column whose name holds U+0000 is refused before any scan, as is a column that is not
+          there, one nothing can address and one that is not an integer (`engine/src/dataset.rs`, the identity block of `open_inner`); a column that is empty in some row is refused
+          only after the scan, by the repeat check; and a Cancel during the scan ends as a cancelled open, not as a refusal. */}
       <p className="identity-declaration-cost-notice">
-        Declaring a column here triggers a whole-dataset uniqueness check when this file is opened.
-        A wrong declaration is refused only after that full scan of the dataset runs -- retrying a
-        failed declaration is not free. Nothing is saved: reopening this file will ask you to
-        declare again.
+        [P6 placeholder] Declaring an integer column checks it across the whole file for uniqueness when the file is opened. A column whose values repeat, or that holds a negative value, is refused only after that scan, so a retry is not free. The declaration lasts while the file is open; a project saved afterwards records it, and opening that project checks the column again.
       </p>
 
       {candidateColumns.length > 0 && (
         <fieldset className="identity-declaration-candidate-list">
-          {/* Legend fix (reviewer NOTE, admission-remediation cut): this names the actual
-              criterion the engine's candidate projection applies (64-bit integer columns only) --
-              it used to read as an exhaustive list of what is admissible, which the free-text
-              route below (narrower integer widths, admissible by name) contradicts. */}
-          <legend>64-bit integer columns, schema order, unranked</legend>
+          {/* The legend and the hint below are the advisor's words under the human's delegation of 2026-11-13 (ADV-2026-11-26-04 item 4), not the human's; each is built under the
+              placeholder mark until the words commit. The legend names the criterion of the list: the integer widths `admit_column_type` takes, which `candidate_identity_columns` and
+              `admit_column_type` both read from one predicate in `engine/src/identity.rs`, in schema order and unranked. Two cases are for this comment and not for ordinary use: a column
+              whose name nothing can address is left off the list and is refused if it is declared (`engine/src/dataset.rs`, the addressability check of `open_inner`), and the free text
+              below is trimmed at either end (`identityDeclarationState.ts`, `buildIdentityDeclaration`), so an unlisted name typed with spaces at either end is sent trimmed, while a listed
+              name is picked as it is. The hint names the free-text route, which accepts any name, and the checks at open, which are the engine's (`engine/src/dataset.rs`, the identity block of
+              `open_inner`): a missing column, a name nothing can address, a type that is not an integer, a repeat and a negative value. */}
+          <legend>[P6 placeholder] Integer columns, schema order, unranked</legend>
           {candidateColumns.map((column) => (
             <label className="identity-declaration-candidate" key={column}>
               <input
@@ -75,8 +80,7 @@ export default function IdentityDeclarationForm({ candidateColumns, disabled, on
       <fieldset>
         <legend>Or type a column name</legend>
         <p className="identity-declaration-free-text-hint">
-          Other integer-width columns, not listed above, may also be admissible by name -- the
-          candidate list above names only 64-bit integer columns.
+          [P6 placeholder] A column not listed above can still be typed by name; it is checked when the file is opened.
         </p>
         <label>
           <input

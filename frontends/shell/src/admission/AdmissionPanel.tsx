@@ -70,6 +70,9 @@ export type State =
        * `.identity` off of it to decide which liveness line applies (I11: the whole-file
        * uniqueness check is a materially different wait than a plain open). */
       options: AdmitOptions;
+      /** The `admitted` state this run started from, held only when it is a session-tier admission that `identityDeclarationOffer` offered the declaration for
+       * (a declaration started from that offer). A cancel of this run returns to it, so the offer is back. */
+      resume?: Extract<State, { kind: "admitted" }>;
     }
   | {
       kind: "refused";
@@ -170,14 +173,29 @@ export interface IdentityDeclarationOffer {
   candidateColumns: string[];
 }
 
-/** The identity declaration a state offers (identity-declaration-route-for-session-tier, section 2 item 4 (b)). At this commit the rule always answers `null`. */
-export function identityDeclarationOffer(_state: State, _datasetOnMap: string | null): IdentityDeclarationOffer | null {
-  return null;
+/** The identity declaration a state offers (identity-declaration-route-for-session-tier, section 2 item 4 (b)), or `null`. It is offered when every one of these holds:
+ * - the state is `admitted`, which is a dataset the panel itself has admitted and no run in flight;
+ * - the run was a direct open, not a reopen (`options.reopen` is unset): a project's reopen is not offered the declaration;
+ * - the dataset's identity is on the session tier (`describe.identity.class` is `"session-ordinal"`);
+ * - the engine's list came with it (`candidate_columns` is neither `null` nor absent), and the list may be empty;
+ * - the dataset the panel admitted is the dataset on the map (`datasetOnMap`, the handle of App's own `admitted`): a later admission by another route (a reopen, a drop) has
+ *   replaced the map's dataset, and a declaration against the earlier file would replace what the operator is looking at.
+ * It carries the run's own path and `AdmitOptions`, so that the declaration is sent for the same file under the same CRS assertion. The one decision site: the panel's render and
+ * `runAdmitPath`'s hold of the admission both read this function. */
+export function identityDeclarationOffer(state: State, datasetOnMap: string | null): IdentityDeclarationOffer | null {
+  if (state.kind !== "admitted") return null;
+  if (state.options.reopen !== undefined) return null;
+  const identity = state.admitted.describe.identity;
+  if (identity.class !== "session-ordinal") return null;
+  if (identity.candidate_columns === null || identity.candidate_columns === undefined) return null;
+  if (datasetOnMap === null || state.admitted.dataset !== datasetOnMap) return null;
+  return { path: state.path, options: state.options, candidateColumns: identity.candidate_columns };
 }
 
-/** The options a declaration submits (section 2 item 4 (c)). At this commit it carries the declaration alone. */
-export function declarationOptions(_offer: IdentityDeclarationOffer, identity: IdentityDeclaration): AdmitOptions {
-  return { identity };
+/** The options a declaration submits (section 2 item 4 (c)): the offer's own, with the declaration over them. A CRS assertion the session open was admitted under is carried, as a
+ * remediation submit carries it (`IdentityDeclarationForm`'s refused-state submit merges the same way); nothing else of the run is. */
+export function declarationOptions(offer: IdentityDeclarationOffer, identity: IdentityDeclaration): AdmitOptions {
+  return { ...offer.options, identity };
 }
 
 /** The `AdmitOptions` the in-flight open (if any) is actually running with -- see the `State`
@@ -267,11 +285,12 @@ export async function runAdmitPath(
   // `inFlight`), never resets to the bare `{kind: "opening"}` a plain first-open (or a fresh path)
   // uses -- see the `State["refused"]["inFlight"]` doc comment above for what that reset used to
   // break.
-  deps.setState((prev) =>
-    prev.kind === "refused" && prev.path === path
-      ? { ...prev, inFlight: true, cancelKey, pendingOptions: options }
-      : { kind: "opening", cancelKey, options }
-  );
+  deps.setState((prev) => {
+    if (prev.kind === "refused" && prev.path === path) return { ...prev, inFlight: true, cancelKey, pendingOptions: options };
+    // A declaration started from the session-tier offer holds the admission it started from, so that Cancel returns to it with its offer. The offer's own rule is the test.
+    if (prev.kind === "admitted" && prev.path === path && identityDeclarationOffer(prev, prev.admitted.dataset) !== null) return { kind: "opening", cancelKey, options, resume: prev };
+    return { kind: "opening", cancelKey, options };
+  });
 
   const outcome = await deps.admit(path, cancelKey, options);
 
@@ -294,6 +313,8 @@ export async function runAdmitPath(
           // whatever the operator had typed into it survive because `kind` never left `"refused"`.
           return { ...prev, inFlight: false, cancelKey: null, pendingOptions: null };
         }
+        // A declaration from the session-tier offer was cancelled: back to the admission it started from, with its offer. The file was never closed.
+        if (prev.kind === "opening" && prev.cancelKey === cancelKey && prev.resume !== undefined) return prev.resume;
         // A plain open was cancelled (or this is a stale cancellation racing a fresher attempt for
         // the same path/refusal -- the guard above already excluded it): the pre-open state, i.e.
         // idle, with the one-line note ADR-018 §1 permits (no duration, no "acknowledged").
@@ -344,6 +365,13 @@ const newCancelKey = (): string => (typeof crypto.randomUUID === "function" ? cr
 const OPEN_PROJECT_IDLE = "Open project…";
 const OPEN_PROJECT_OPENING = "Opening project…";
 
+/** D1 and D2 (identity-declaration-route-for-session-tier): the offer's label and its first line. The advisor's words under the human's delegation of 2026-11-13 (ADV-2026-11-23-26 item 2), not
+ * the human's; each is built under the placeholder mark until the words commit. D2 is true of the code as follows: "opens this file again" is `runAdmitPath` called with the same path; "checks that column
+ * across the whole file" is the engine's full-file check of a declared column; "the filter and the selection are cleared and Colour by ends; the rest of the style is kept" is what an admission of
+ * another dataset does to the workspace (`workspaceState.ts`); "stays open as it is now" is that a refusal leaves App's `admitted` as it was. */
+const DECLARE_IDENTITY_LABEL = "[P6 placeholder] Declare an identity column…";
+const DECLARE_IDENTITY_FIRST_LINE = "[P6 placeholder] Declaring opens this file again with the column you choose and checks that column across the whole file. The filter and the selection are cleared and Colour by ends; the rest of the style is kept. If the column is refused, the file stays open as it is now.";
+
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
   /** Resolves `true` at once when no export runs; otherwise `App` asks, and `false` (Keep exporting) drops the open. */
@@ -352,6 +380,8 @@ interface Props {
   onReopened: (admitted: Admitted, reopened: Reopened) => void;
   /** The project identity this window holds, or `null`; read when a reopen is refused, for S9's own-window place (Amendment 54 item 5 (f)). */
   heldProject: () => string | null;
+  /** The handle of the dataset on the map, or `null` (App's own `admitted`): the identity declaration is offered only while the dataset this panel admitted is that one (`identityDeclarationOffer`). */
+  datasetOnMap: string | null;
 }
 
 /** What the command bar's `/open` calls (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7): it does what a click of Open does at that moment.
@@ -371,7 +401,7 @@ export interface AdmissionPanelHandle {
  * path. B2 piece 1c adds the Open project control (O-19a): a folder picked runs `reopenPath`, which is `runAdmitPath` with the reopen's own
  * `admit`, and S8's choices and S11's re-link re-enter it.
  */
-const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen, onReopened, heldProject }, ref) {
+const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen, onReopened, heldProject, datasetOnMap }, ref) {
   const [state, setState] = useState<State>({ kind: "idle", note: null });
   /** The keys Cancel was pressed for (Amendment 54 item 5 (e)), read by `runAdmitPath` when a reopen's `question` or `not_found` arrives. */
   const cancelledKeys = useRef(new Set<string>());
@@ -518,6 +548,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
 
   const openLivenessMessage = showOpenLiveness ? openLivenessText(state) : null;
   const offer = state.kind === "refused" ? relinkOffer(state) : null;
+  const declareOffer = identityDeclarationOffer(state, datasetOnMap);
 
   return (
     <div className="admission-panel">
@@ -554,6 +585,20 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       )}
 
       {state.kind === "idle" && state.note && <p className="admission-open-cancelled-note">{state.note}</p>}
+
+      {/* Identity-declaration-route-for-session-tier: a file that opened on the session tier is offered the declaration beside the Open buttons. The offer renders only in the `admitted` state, where
+          `isOpenInFlight` is false, so the form is never disabled here; its submit is `admitPath` with `declarationOptions`, the same function a remediation submit uses. */}
+      {declareOffer !== null && (
+        <details className="admission-declare-identity">
+          <summary>{DECLARE_IDENTITY_LABEL}</summary>
+          <p className="admission-declare-identity-first-line">{DECLARE_IDENTITY_FIRST_LINE}</p>
+          <IdentityDeclarationForm
+            candidateColumns={declareOffer.candidateColumns}
+            disabled={false}
+            onSubmit={(identity) => void admitPath(declareOffer.path, declarationOptions(declareOffer, identity))}
+          />
+        </details>
+      )}
 
       {/* S8 (B2 piece 1c): the reopen's question. A choice re-enters the run with its answer and a fresh key; the third ends the run. */}
       {state.kind === "question" && (
