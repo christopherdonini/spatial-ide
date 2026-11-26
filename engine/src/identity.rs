@@ -392,7 +392,7 @@ mod tests {
     }
 
     #[test]
-    fn candidate_columns_are_the_64_bit_integer_columns_in_schema_order_unranked() {
+    fn the_candidate_list_is_every_admitted_integer_column_in_schema_order_unranked() {
         use arrow::datatypes::Field;
         let schema = std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
             Field::new("name", D::Utf8, true),
@@ -403,8 +403,72 @@ mod tests {
         ]));
         assert_eq!(
             candidate_identity_columns(&schema),
-            vec!["big_signed".to_string(), "big_unsigned".to_string()],
-            "schema order, Int64 and UInt64 only — no Int32, no ranking"
+            vec![
+                "big_signed".to_string(),
+                "small_signed".to_string(),
+                "big_unsigned".to_string()
+            ],
+            "schema order across all widths — no grouping by width, no alphabetical order, no ranking"
+        );
+    }
+
+    /// The candidate list and the type check admit exactly the same types, and the list keeps
+    /// schema order across all eight widths. (i) One-field schemas: the list names `k` exactly when
+    /// `admit_column_type` accepts its type, and that holds for exactly eight types. (ii) One schema
+    /// in a deliberately scrambled order.
+    #[test]
+    fn the_candidate_list_and_the_type_check_admit_exactly_the_same_types() {
+        use arrow::datatypes::Field;
+        let integers = [
+            D::UInt64,
+            D::UInt32,
+            D::UInt16,
+            D::UInt8,
+            D::Int64,
+            D::Int32,
+            D::Int16,
+            D::Int8,
+        ];
+        let others = [
+            D::Utf8,
+            D::Float64,
+            D::Binary,
+            D::Boolean,
+            D::Date32,
+            D::Decimal128(38, 0),
+        ];
+        let mut admitted = 0;
+        for ty in integers.iter().chain(others.iter()) {
+            let schema = schema_with("k", ty.clone());
+            let listed = candidate_identity_columns(&schema) == vec!["k".to_string()];
+            let checked = admit_column_type("k", ty, &schema).is_ok();
+            assert_eq!(
+                listed, checked,
+                "{ty}: the list and the type check must agree (listed {listed}, admitted {checked})"
+            );
+            if checked {
+                admitted += 1;
+            }
+        }
+        assert_eq!(admitted, 8, "exactly the eight integer widths are admitted");
+
+        let schema = std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
+            Field::new("u8", D::UInt8, false),
+            Field::new("i64", D::Int64, false),
+            Field::new("i16", D::Int16, false),
+            Field::new("u32", D::UInt32, false),
+            Field::new("name", D::Utf8, true),
+            Field::new("i8", D::Int8, false),
+            Field::new("u64", D::UInt64, false),
+            Field::new("i32", D::Int32, false),
+            Field::new("u16", D::UInt16, false),
+        ]));
+        assert_eq!(
+            candidate_identity_columns(&schema),
+            ["u8", "i64", "i16", "u32", "i8", "u64", "i32", "u16"]
+                .map(String::from)
+                .to_vec(),
+            "every admitted width, in schema order"
         );
     }
 

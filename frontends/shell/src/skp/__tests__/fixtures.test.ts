@@ -24,6 +24,7 @@ import type {
 import { DATASET_SESSION_ENDED_EVENT, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
 import { crsProvenanceLine, displayConventionLine, sessionStatementLine } from "../../admission/describeSummaryText";
+import { identityDeclarationOffer, type State } from "../../admission/AdmissionPanel";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -312,6 +313,24 @@ describe("SKP v0 shared fixtures", () => {
       text.match(/by-construction-within-generation/g)?.length ?? 0
     );
     expect(text.toLowerCase()).not.toContain("snapshot");
+  });
+
+  // T-1 (identity-declaration-route-for-session-tier, skp/0.15), the shell half of the real-shape seam whose Rust half is K-1: the
+  // session-ordinal fixture carries `candidate_columns` with its Int64 column, the native and the mapped fixtures carry it null, and the offer
+  // over an admitted state built from the session fixture, with that state's own handle as the dataset on the map, gives that list.
+  // RECORDED MUTATION: the session-ordinal fixture's `candidate_columns` set to `null`. Expected failure: this test fails by name.
+  it("the session-ordinal describe fixture carries the candidate list and the offer over it gives that list (skp/0.15)", () => {
+    const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    expect(Object.keys(res.identity)).toContain("candidate_columns");
+    expect(res.identity.candidate_columns).toEqual(["parcel_id"]);
+    for (const name of ["v0-describe-response", "v0-describe-response-caller-asserted"]) {
+      const other = loadFixture<DescribeResponse>(name);
+      expect(Object.keys(other.identity), `${name} .identity`).toContain("candidate_columns");
+      expect(other.identity.candidate_columns, `${name} .identity.candidate_columns`).toBeNull();
+    }
+    const dataset = "ds_00112233445566778899aabbccddeeff";
+    const state: State = { kind: "admitted", admitted: { dataset, describe: res, session: "sr_" + "a".repeat(32) }, path: "C:/data/parcels-nokey.parquet", options: {} };
+    expect(identityDeclarationOffer(state, dataset)?.candidateColumns).toEqual(["parcel_id"]);
   });
 
   // Mutation: drop the `detail` field from the source_changed fixture. Expected failure:

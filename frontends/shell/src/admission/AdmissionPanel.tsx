@@ -10,7 +10,7 @@ import { fileNotFoundNotice, QUESTION_CANCEL, QUESTION_COPY, QUESTION_SAME, QUES
 import { cancel as cancelClient } from "../skp/client";
 import { crsCatalog } from "../skp/crsCatalog";
 import { pickFile, pickProjectFolder } from "../skp/dialog";
-import type { ReopenAnswer } from "../skp/types";
+import type { IdentityDeclaration, ReopenAnswer } from "../skp/types";
 import { admitDataset, AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import { splitCandidateColumns } from "./candidateColumns";
 import CrsAssertionForm from "./CrsAssertionForm";
@@ -104,7 +104,13 @@ export type State =
       /** A reopen refusal's owner place (B2 piece 1c, `project/openProject.ts`'s `reopenRefusalPlace`), shown inside the block. Absent for a dataset open. */
       owner?: string | null;
     }
-  | { kind: "admitted"; admitted: Admitted }
+  | {
+      kind: "admitted";
+      admitted: Admitted;
+      /** The path this admission opened and the `AdmitOptions` it ran with (`runAdmitPath` sets both), so that `identityDeclarationOffer` can offer a declaration against the same file under the same CRS assertion. */
+      path: string;
+      options: AdmitOptions;
+    }
   /** B2 piece 1c (O-14): a reopen's run ended at a `question` (S8) or a `not_found` (S11). `options` are the run's, so that a choice re-enters
    * the run with the answer it gave; nothing else is held between the calls (SKP-V0.md section 12.3). */
   | { kind: "question"; folder: string; options: AdmitOptions }
@@ -155,6 +161,23 @@ export function relinkOffer(state: State): { folder: string; options: AdmitOptio
     return { folder: state.path, options: state.options };
   }
   return null;
+}
+
+/** The declaration the panel offers beside the Open buttons, or `null`. */
+export interface IdentityDeclarationOffer {
+  path: string;
+  options: AdmitOptions;
+  candidateColumns: string[];
+}
+
+/** The identity declaration a state offers (identity-declaration-route-for-session-tier, section 2 item 4 (b)). At this commit the rule always answers `null`. */
+export function identityDeclarationOffer(_state: State, _datasetOnMap: string | null): IdentityDeclarationOffer | null {
+  return null;
+}
+
+/** The options a declaration submits (section 2 item 4 (c)). At this commit it carries the declaration alone. */
+export function declarationOptions(_offer: IdentityDeclarationOffer, identity: IdentityDeclaration): AdmitOptions {
+  return { identity };
 }
 
 /** The `AdmitOptions` the in-flight open (if any) is actually running with -- see the `State`
@@ -300,7 +323,7 @@ export async function runAdmitPath(
     return outcome;
   }
 
-  deps.setState(() => ({ kind: "admitted", admitted: outcome.admitted }));
+  deps.setState(() => ({ kind: "admitted", admitted: outcome.admitted, path, options }));
   if (outcome.reopened !== undefined && deps.onReopened !== undefined) deps.onReopened(outcome.admitted, outcome.reopened);
   else deps.onAdmitted(outcome.admitted);
   return outcome;
