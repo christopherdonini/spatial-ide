@@ -1401,3 +1401,17 @@ Nothing above is edited.
    - `cargo fmt --all -- --check`, and the same check in `src-tauri`.
    - Clippy is run by no workflow. It was run for information: 0 errors and 19 warnings.
 5. **Next:** the code, on this base, in this piece's turn (ADV-2026-11-26-24 item 4). Its e2e runs wait under ADV-2026-11-26-19.
+
+## Amendment 8 — 2026-11-26 — the custodian's, at the code: the build's head, the count (class 8), Amendment 7 item 2's literal figures corrected (class 3), one finding for the advisor
+
+1. **The build's head** is 767033a25b0d2f231e91966378d874c58f56787f, on origin. It is five commits on the recorded base e9bd2483: f716d819 (P0), 721ee81c, 8db7a6ed, ca29d32c and 767033a2. The worker's report is filed at `state/consults/2026-11-26-identity-declaration-route-for-session-tier-build-worker-report.md`.
+2. **The count** is §7's counting command at e9bd2483...767033a2: 1042 changed lines (863 added, 179 deleted) over 44 files. The custodian re-ran it. Against §7's 650 lines over 38 files this is class 8: 392 lines and 6 files over. Amendment 5 item 12 predicted about 908 over 44. §7's line is not edited.
+3. **Amendment 7 item 2, corrected (class 3).** Its figures came from the phase 1 report and were not recomputed.
+   - At e9bd2483, `git grep -l 'skp/0\.14'` lists 55 files, not 59.
+   - 24 of them are in §7's Scope, not 27. The build touches every one of the 24.
+   - The five source files outside Scope stand as item 2 names them. The build leaves them as they are.
+   - The 26 records stand: 4 form files and 22 state files.
+   - The conformance tree's 69 occurrences stand.
+   - No file is added to the Scope for the literal (class 9).
+4. **A finding, for the advisor.** Row I8 of `frontends/shell/MANUAL-WALKTHROUGH.md` quotes the old cost notice verbatim, and D3 replaces that notice. This form names only row I4 (Amendment 5), so the build leaves row I8 as it is. What the words commit does with it is the advisor's to say. It was put to the advisor on 2026-11-26.
+5. **Next.** The build gates wait on §10's suites: the branch's CI, and E-1 as a tester's series, which waits under ADV-2026-11-26-19. The words commit waits on the advisor's words for D1 to D3 (Amendment 2 item 6).
