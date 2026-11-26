@@ -8,6 +8,7 @@ import { attributeBatchIpc } from "../testUtils/attributeBatchIpc";
 import { decodeBatch } from "./decodeBatch";
 import type { BatchAttributes } from "./decodeBatch";
 import {
+  ceilingKindOf,
   checkPickCeiling,
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
@@ -40,6 +41,24 @@ describe("declared ceilings (ADR-010 rule 6)", () => {
     const e = new ResidentVertexCeilingExceeded(MAX_RESIDENT_VERTICES + 1);
     expect(e.message).toContain("MAX_RESIDENT_VERTICES");
     expect(e.message).toContain(String(MAX_RESIDENT_VERTICES));
+  });
+});
+
+describe("the ceiling's kind comes from its class (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md OPEN-2 (a), C-K1)", () => {
+  // RECORDED MUTATION for C-K1: in `ceilingKindOf` return "vertex-ceiling" for both classes. Expected failure: the pick error's kind.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-K1: ceilingKindOf gives vertex-ceiling for the vertex ceiling's error and pick-ceiling for the pick ceiling's, and nothing for other errors": AssertionError: expected 'vertex-ceiling' to be 'pick-ceiling' // Object.is equality. Reverted after observing.
+  it("C-K1: ceilingKindOf gives vertex-ceiling for the vertex ceiling's error and pick-ceiling for the pick ceiling's, and nothing for other errors", () => {
+    expect(ceilingKindOf(new ResidentVertexCeilingExceeded(MAX_RESIDENT_VERTICES + 1))).toBe("vertex-ceiling");
+    let thrown: unknown = null;
+    try {
+      checkPickCeiling(DECKGL_PICK_INDEX_CEILING + 1);
+    } catch (e) {
+      thrown = e;
+    }
+    expect(thrown).toBeInstanceOf(PickCeilingExceeded);
+    expect(ceilingKindOf(thrown)).toBe("pick-ceiling");
+    expect(ceilingKindOf(new Error("another error"))).toBeNull();
+    expect(ceilingKindOf("a string")).toBeNull();
   });
 });
 

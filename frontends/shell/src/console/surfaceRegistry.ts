@@ -239,7 +239,7 @@ const CLASS_C_ROWS = [
     action: "canvas.dismissCanvasRefusal",
     statement:
       "no API equivalent exists -- the Dismiss button on the .canvas-refusal banner only clears local " +
-      "App state (setCanvasRefusal(null)); it never reaches the kernel and never touches the status " +
+      "App state (the condition store's dismiss(id)); it never reaches the kernel and never touches the status " +
       "indicator beside it (rider 1).",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
@@ -248,7 +248,7 @@ const CLASS_C_ROWS = [
     action: "canvas.dismissViewportRefusal",
     statement:
       "no API equivalent exists -- the Dismiss button on the viewport-refusal banner only clears local " +
-      "App state (setViewportRefusal(null)); it never reaches the kernel.",
+      "App state (the condition store's dismiss(id)); it never reaches the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
@@ -326,7 +326,7 @@ const CLASS_C_ROWS = [
     class: "C",
     action: "layout.selectActivityTab",
     statement:
-      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices and Table tabs is pure view state for this session, never sent to the kernel.",
+      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices, Table and Problems tabs is pure view state for this session, never sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
