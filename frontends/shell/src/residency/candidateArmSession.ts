@@ -250,8 +250,12 @@ export interface CandidateArmSession {
    * returned, unless `stop()` ran or the session ended first, which resolve `stopped` or
    * `session-ended` as before (the latches are read before the generation): a cancel is requested
    * for that ticket through `cancel`, and no stream is started for it.
+   *
+   * `options` (colour-by-refill-keeps-the-view): `{ keepCamera: true }` is passed to the canvas's `resetFitForNewGeneration`, so the camera is not refitted by the first batch of this look; the
+   * clear, the fit anchor, the frame bookkeeping, the plan flag and the `query-issued` line are as without it. Its one product caller is the Colour-by effect (`App.tsx`). Not covered: a Colour-by
+   * issued inside the mint round trip of an Apply (timing inside one request, AUTONOMY section 31).
    */
-  reissueUnrestricted: (bbox: Bbox | null, filter: Filter | null) => Promise<RequestOutcome>;
+  reissueUnrestricted: (bbox: Bbox | null, filter: Filter | null, options?: { keepCamera: true }) => Promise<RequestOutcome>;
   /** Cancels the current stream a session's own initial/reissued untiled query may still be minting
    * or running -- teardown-only since the entry-32a repoint: its sole caller is `App.tsx`'s
    * dataset-close/unmount effect cleanup, never the operator's Cancel button. */
@@ -1735,7 +1739,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
      * `queryWithFilter` hook both already call) needs somewhere to reach THIS debounce directly --
      * see `App.tsx`'s own `makeCandidateViewportDispatcher`. */
     cancelPendingViewportChange: () => cancelViewportDebounce(),
-    reissueUnrestricted: async (bbox, filter) => {
+    reissueUnrestricted: async (bbox, filter, options) => {
       // **P3b §2a(iii): nothing is re-issued after the source was observed to have changed.** This
       // is the candidate arm's analogue of `ViewportStreamManager.requestViewport`'s own latch
       // check, and it is this session's rather than the manager's because `reissueUnrestricted`
@@ -1763,7 +1767,7 @@ export function startCandidateArmSession(deps: CandidateArmSessionDeps): Candida
         suppressNestedSupersededEmit = false;
       }
       canvas?.clearAllTiles();
-      canvas?.resetFitForNewGeneration();
+      canvas?.resetFitForNewGeneration(options);
       frameEstablished = false;
       lastCoveringTileKeys = new Set();
       lastCoveringTruncated = false; // re-review S4: a fresh generation starts with no truncation history
