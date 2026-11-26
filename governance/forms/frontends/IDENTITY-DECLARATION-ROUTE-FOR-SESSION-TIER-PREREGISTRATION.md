@@ -1415,3 +1415,26 @@ Nothing above is edited.
    - No file is added to the Scope for the literal (class 9).
 4. **A finding, for the advisor.** Row I8 of `frontends/shell/MANUAL-WALKTHROUGH.md` quotes the old cost notice verbatim, and D3 replaces that notice. This form names only row I4 (Amendment 5), so the build leaves row I8 as it is. What the words commit does with it is the advisor's to say. It was put to the advisor on 2026-11-26.
 5. **Next.** The build gates wait on §10's suites: the branch's CI, and E-1 as a tester's series, which waits under ADV-2026-11-26-19. The words commit waits on the advisor's words for D1 to D3 (Amendment 2 item 6).
+
+## Amendment 9 — 2026-11-26 — the custodian's, under ADV-2026-11-26-28, before the words commit: the five strings' words, row I8 (class 9), Part AG's spans, the merge check, the class 8 record
+
+1. **Authority.** The advisor's ruling ADV-2026-11-26-28 is filed at `state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-28-the-identity-routes-words-commit-d1-to-d3-as-ruled-row-i8-quotes-d3-part-ag-four-spans-and-the-mark.md`, under the human's delegation of 2026-11-13. It is not the human's words. The advisor read it at the branch's head 767033a2.
+2. **The words** (its items 1 and 2).
+   - D1, D2 and D3 are ADV-2026-11-23-26 item 2's texts, unchanged.
+   - The legend and the hint are ADV-2026-11-26-04 item 4's, unchanged.
+   - The words commit removes the placeholder mark and its space from those five strings and changes nothing else of them. Each stays whole on one source line.
+   - The three source comments and the sentence of `frontends/shell/e2e/README.md` that call the strings placeholders until the words commit are corrected in the worker's words. The build gates read them.
+3. **Row I8, class 9, declared before the words commit** (its item 3).
+   - Row I8 of `frontends/shell/MANUAL-WALKTHROUGH.md` joins this piece's region of that file, which is already in Scope. Its quote becomes D3 by the Old and New of that item, byte for byte: one span inside the row's quotation marks, and nothing else of the row. No past result log is edited.
+   - It adds about 2 lines to §7's count, and no file.
+   - §9 item 18 (Amendment 5 item 14) then reads for both rows: row I4 or row I8 changed beyond its quote, or a past result log edited.
+4. **Part AG** (its items 4 and 5).
+   - The four spans of item 4 change, each Old text found once in its row or line: AG2's step, AG2's expected outcome, AG6, and the result log's AG2 line.
+   - Item 5 removes the mark and its space from rows AG1 and AG2, in three places, before D1, D2 and D3. It also replaces the opening paragraph's span by its Old and New.
+5. **The merge check** (its item 7). The advisor compares these byte for byte:
+   - D1 to D4 with ADV-2026-11-23-26 item 2;
+   - the legend and the hint with ADV-2026-11-26-04 item 4;
+   - row I8's quote with its item 3;
+   - Part AG with its items 4 and 5.
+   - The build gates read each clause of the five strings, row I8 and Part AG against the head with the words commit in. A clause found untrue goes to the advisor unreworded.
+6. **The class 8 record** (its item 6). The closing amendment names, file by file, where the lines above Amendment 5 item 12's prediction sit, against §7's count at the head with the words commit in.
