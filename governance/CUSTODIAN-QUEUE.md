@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `a77c3a4d7120345023e401c3a7bd81f48e655077098680e8491cdd766d465522`) at `2026-11-26T18:45:52.985Z`.
+Generated from `PLAN.yaml` (sha256 `41fd4deaba5df1da94487229d87aeb499b903f068b4971bbfcb2e86f368301d4`) at `2026-11-26T21:53:42.613Z`.
 
 ## 1. Next
 
@@ -16,7 +16,6 @@ Generated from `PLAN.yaml` (sha256 `a77c3a4d7120345023e401c3a7bd81f48e6550770986
 - **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (lane `shell`, order null, budget 0 min)
-- **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused (lane `shell`, order null, budget 120 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
 - **shell-e2e-publish-audit-log-follows-app-dirs** — The shell end-to-end publish script resolves the audit log by the application-directory boundary table, every row, the Windows row included, a value counting only when non-empty and absolute (the reviewer O1 at port-2; filler entry 18) (lane `shell`, order null, budget 30 min)
 - **shell-migration-milestone-5** — Shell migration, milestone 5 -- conditions, Problems and Jobs: one home for failures and running work (lane `shell`, order null, budget 0 min)
@@ -59,6 +58,7 @@ Generated from `PLAN.yaml` (sha256 `a77c3a4d7120345023e401c3a7bd81f48e6550770986
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) — evidence: branch `cut/opened-of-panic-frees-the-lock`
+- **identity-declaration-route-for-session-tier** — The app offers no way to declare an identity column for a file that opened on the session tier (no id column): the declaration form appears only when identity is refused — evidence: branch `cut/identity-declaration-route-for-session-tier`
 - **untiled-reissue-holds-earlier-look-handle-until-mint** — An earlier look's Completed terminal that arrives after a reissue, before the new look's ticket is minted, is read as current: the new fit view can stay unfilled until the camera moves, while the status line reads complete — evidence: branch `cut/untiled-reissue-mint-window`
 - **shell-tests-temp-folder-of-the-runs-own** — The shell crate session-log and publish tests make their folders under one fixed folder in the system temporary folder, so two test runs at once on one TMP could collide (the architect N4 on PR 343) — evidence: branch `cut/shell-tests-temp-folder`
 - **console-stream-lane-limitation-67** — The Console keeps data requests, cancels and session-log lines in a ring of 128 of their own and every other entry in a ring of 128, its label showing both drop counts (known limitation 67; ADV-2026-11-22-17, ADV-2026-11-22-22) — evidence: branch `cut/console-stream-lane`
@@ -144,6 +144,9 @@ Generated from `PLAN.yaml` (sha256 `a77c3a4d7120345023e401c3a7bd81f48e6550770986
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
 - **partitioned-ordinal-refusal-opens-the-identity-form** — A partitioned source is refused by name before any identity is read, and the engine message and the shell guidance stop offering a declaration that cannot work (re-aimed by ADV-2026-11-23-27 item 1) (phase `prototype`) — never queued until placed
+- **reload-ends-the-old-pages-opens** — A reload of the main window ends the old page opens, so the project the old page saved or reopened opens again with no lock refusal (finding B of Part AD; ADR-037) (phase `prototype`) — never queued until placed
+- **a-second-save-is-announced** — A second save of the project is announced: its notice is a new element and carries the save time, and something true on the screen differs from the last save (finding A of Part AD) (phase `prototype`) — never queued until placed
+- **app-log-folder-shared-with-test-runs** — The app session-log folder does not follow a suite LOCALAPPDATA, so the test runs logs and the human sitting logs share one folder, told apart by their stamps alone (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
