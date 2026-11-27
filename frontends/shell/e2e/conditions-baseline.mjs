@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// E2E (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 4, C-E1 as Amendments 2, 3 and 4 leave it): the baseline-only routes (canvas-ceiling, stream-terminal) in the real app, in
+// E2E (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 4, C-E1 as Amendments 2, 3, 4 and 12 leave it): the baseline-only routes (canvas-ceiling, stream-terminal) in the real app, in
 // their own baseline-pinned process, run as `node e2e/conditions-baseline.mjs` from frontends/shell. WRITTEN, NOT RUN, by the build that added it: the run is the tester's.
 // The fixture is a scratch copy of `over-ceiling-refused.parquet` (a valid file whose first look is refused render-side, MANUAL-WALKTHROUGH.md Part D), made by the manual-walkthrough
 // fixture generator into this checkout's target/fixtures/manual-walkthrough; `--fixture <path>` names another copy. The copy is hashed before and after (the write is an mtime touch only).
@@ -13,8 +13,9 @@
 //   2. pan: the same refusal is raised again under the same view and open (H3), and Problems shows 1 row (the top), the strip's element carrying S-5 with the count of raises;
 //   3. write to the copy (mtime touch, sha256 unchanged) and pan: the top is session ended with S-3 at 1 and both conditions standing, or S-3 at 2 only when the session log holds a
 //      `stream-terminal-failure` line whose detail opens with `engine.source_changed` (the extra row being that stream-terminal condition); any other count fails;
-//   4. S-3 opens Problems; Dismiss the canvas refusal; reopen the copy, and both the strip and Problems are empty (S-4 shows).
-// Exit 0 all PASS; 1 a check failed; 2 VOID (the arm pin, the fixture, a wait that timed out).
+//   4. S-3 opens Problems; Dismiss the canvas refusal; reopen the copy. Once the reopen is admitted, wait within WAIT_TIMEOUT_MS for the old session's block to go; if it still
+//      stands at that bound the step FAILS. Then PASS on S-4, or on the new open's refusal as the strip's top with no S-5 line and Problems listing only the top's row; any other reading FAILS.
+// Exit 0 all PASS; 1 a check failed (step 4's wait for the old session's block included); 2 VOID (the arm pin, the fixture, any other wait that timed out).
 // What this does not prove: any docs/08 figure, macOS or Linux, the shipped candidate arm (that is `conditions.mjs`), or a timing. Waits are harness bounds on readiness (ADR-018).
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdtempSync, readFileSync, readdirSync, realpathSync, utimesSync } from "node:fs";
@@ -161,8 +162,36 @@ async function run(page, consoleHandle, copy) {
   record("Dismiss ends the refusal and nothing else", dismissed.sessionEnded === 1, `refusals ${dismissed.refusals}, session ended ${dismissed.sessionEnded}`);
   const reopened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), copy);
   if (reopened?.kind !== "admitted") throw new Void(`the reopen's openPath did not admit the copy: ${JSON.stringify(reopened)}`);
-  const empty = await waitFor("S-4 in Problems", () => read(page), (r) => r.panelText.includes(NO_PROBLEMS));
-  record("a reopen empties both: the strip is hidden and Problems shows S-4", !empty.stripShown && empty.rows.length === 0 && empty.refusals === 0 && empty.sessionEnded === 0, `the strip shown ${empty.stripShown}, rows ${empty.rows.length}`);
+  // The wait throws no Void: the old session's block still standing at the bound is a FAIL (Amendment 12, item 2).
+  const waitStart = Date.now();
+  let reading;
+  let gone = false;
+  while (Date.now() - waitStart < WAIT_TIMEOUT_MS) {
+    try {
+      reading = await read(page);
+      if (reading.sessionEnded === 0) {
+        gone = true;
+        break;
+      }
+    } catch (e) {
+      reading = { readFailed: e.message };
+    }
+    await sleep(200);
+  }
+  if (!gone) {
+    record("the reopen ends the old session's block within the bound", false, `.canvas-session-ended still stood after ${WAIT_TIMEOUT_MS}ms; the last reading was ${JSON.stringify(reading)}`);
+  } else {
+    const s4 = reading.panelText.includes(NO_PROBLEMS) && !reading.stripShown && reading.rows.length === 0 && reading.refusals === 0 && reading.sessionEnded === 0;
+    const newRefusal =
+      reading.topClasses?.split(" ").includes("canvas-refusal") === true &&
+      reading.refusals === 1 &&
+      reading.occurrencesLine === null &&
+      reading.rows.length === 1 &&
+      reading.rows[0].top &&
+      !reading.rows[0].owner &&
+      reading.rows[0].text === SHOWN_ABOVE;
+    record("a reopen ends the old session: S-4 shows, or the new open's refusal is the strip's top alone (no S-5 line, Problems lists only its row)", s4 || newRefusal, `${s4 ? "S-4" : newRefusal ? "the new open's refusal" : "neither"}: the strip shown ${reading.stripShown}, top ${JSON.stringify(reading.topClasses)}, refusals ${reading.refusals}, session ended ${reading.sessionEnded}, line ${JSON.stringify(reading.occurrencesLine)}, rows ${JSON.stringify(reading.rows)}`);
+  }
 
   const hashAfter = sha256(copy);
   if (hashAfter !== hashBefore) throw new Void(`the copy's sha256 changed during the run: ${hashBefore} -> ${hashAfter}`);

@@ -180,7 +180,7 @@ export interface IdentityDeclarationOffer {
  * - the run was a direct open, not a reopen (`options.reopen` is unset): a project's reopen is not offered the declaration;
  * - the dataset's identity is on the session tier (`describe.identity.class` is `"session-ordinal"`);
  * - the engine's list came with it (`candidate_columns` is neither `null` nor absent), and the list may be empty;
- * - the dataset the panel admitted is the dataset on the map (`datasetOnMap`, the handle of App's own `admitted`): a later admission by another route (a reopen, a drop) has
+ * - the dataset the panel admitted is the dataset on the map (`datasetOnMap`, the handle of App's own `admitted`): a later admission by another route (a reopen) has
  *   replaced the map's dataset, and a declaration against the earlier file would replace what the operator is looking at.
  * It carries the run's own path and `AdmitOptions`, so that the declaration is sent for the same file under the same CRS assertion. The one decision site: the panel's render and
  * `runAdmitPath`'s hold of the admission both read this function. */
@@ -339,7 +339,7 @@ export async function runAdmitPath(
   // break.
   deps.setState((prev) => {
     if (prev.kind === "refused" && prev.path === path) return { ...prev, inFlight: true, cancelKey, pendingOptions: options };
-    // A declaration started from the session-tier offer holds the admission it started from, so that Cancel returns to it with its offer. The offer's own rule is the test.
+    // An open of the same path while the session-tier offer stands (a declaration from the offer, or the same file opened again) holds the admission it started from, so that Cancel returns to it with its offer. The offer's own rule is the test.
     if (prev.kind === "admitted" && prev.path === path && identityDeclarationOffer(prev, prev.admitted.dataset) !== null) return { kind: "opening", cancelKey, options, resume: prev };
     return { kind: "opening", cancelKey, options };
   });
@@ -418,11 +418,10 @@ const OPEN_PROJECT_IDLE = "Open project…";
 const OPEN_PROJECT_OPENING = "Opening project…";
 
 /** D1 and D2 (identity-declaration-route-for-session-tier): the offer's label and its first line. The advisor's words under the human's delegation of 2026-11-13 (ADV-2026-11-23-26 item 2), not
- * the human's; each is shown as the words commit set it. D2 is true of the code as follows: "opens this file again" is `runAdmitPath` called with the same path; "checks that column
- * across the whole file" is the engine's full-file check of a declared column; "the filter and the selection are cleared and Colour by ends; the rest of the style is kept" is what an admission of
+ * the human's; each is shown as the words commit set it. D2's present words are the advisor's ADV-2026-11-27-15 item 1, which replaces the D2 of ADV-2026-11-23-26 item 2. D2 is true of the code as follows: "opens this file again" is `runAdmitPath` called with the same path; "the filter and the selection are cleared and Colour by ends; the rest of the style is kept" is what an admission of
  * another dataset does to the workspace (`workspaceState.ts`); "stays open as it is now" is that a refusal leaves App's `admitted` as it was. */
 const DECLARE_IDENTITY_LABEL = "Declare an identity column…";
-const DECLARE_IDENTITY_FIRST_LINE = "Declaring opens this file again with the column you choose and checks that column across the whole file. The filter and the selection are cleared and Colour by ends; the rest of the style is kept. If the column is refused, the file stays open as it is now.";
+const DECLARE_IDENTITY_FIRST_LINE = "Declaring opens this file again with the column you choose. The filter and the selection are cleared and Colour by ends; the rest of the style is kept. If the column is refused, the file stays open as it is now.";
 
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
