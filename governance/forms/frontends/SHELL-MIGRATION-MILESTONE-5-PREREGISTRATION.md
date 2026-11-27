@@ -1780,3 +1780,264 @@ and in the real app by C-E2. The save-notice route's batch is proven from the re
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 8 — 2026-11-23 — the custodian's: S-5 and its {n}, as ADV-2026-11-23-30 rules them
+
+*Written by the custodian before PR A's code, as the advisor's ruling ADV-2026-11-23-30 item 4 asks (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-30-milestone-5-strings-s-1-to-s-13-and-kl-a-to-kl-e-worded-s-5-counts-occurrences-recorded-before-pr-a.md`). It is a string and its number, so no further attempt of the form's gate is asked (that item). It words nothing of its own: the New text is the Old text with that ruling's S-5 and its definition of `{n}`.*
+
+1. **S-5.** The Old text occurs once in the form above this amendment, and the New text nowhere.
+
+Old:
+
+````text
+| S-5 | `[P6 placeholder] Raised again {n} times. The latest:` | ConditionView, when `occurrences > 1`; `{n}` is `occurrences − 1` (ADV-2026-11-23-17 item 9) |
+````
+
+New:
+
+````text
+| S-5 | `[P6 placeholder] Raised {n} times in all. The latest:` | ConditionView, when `occurrences > 1`; `{n}` is `occurrences` (ADV-2026-11-23-30 item 1, which replaces the definition of ADV-2026-11-23-17 item 9) |
+````
+
+2. The line is shown when `occurrences > 1`, so `{n}` is 2 or more (that ruling's item 1). The placeholder mark stays as the form has it. The other strings and KL-A to KL-E are built in that ruling's words; the build's gates check each clause by clause against the code, and the advisor compares each byte for byte at the merge check (its item 4).
+
+3. Next: PR A, built on colour-by-refill's head by a merge commit once that branch's commit 5 is pushed and green (ADV-2026-11-23-25 item 1, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-25-pr-a-on-colour-by-refills-head-item-11-refined-records-commits-in-the-sitting-with-the-read-only-checks.md`). Nothing of it builds, tests or starts the app from 05:00Z on 2026-11-24 until the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 9 — 2026-11-23 — the custodian's, under ADV-2026-11-23-37: three existing tests join PR A's Scope (class 9), the three N8 assertions re-aimed, KL-B and KL-C with PR B
+
+*Written by the custodian before more of PR A's code, as the advisor's ruling ADV-2026-11-23-37 item 2 asks. It holds that ruling by reference and words none of its conditions. No further attempt of the form's gate is asked (its item 6).*
+
+1. **Authority.** The advisor's ruling ADV-2026-11-23-37 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-37-milestone-5-pr-a-three-n8-assertions-re-aimed-under-six-conditions-2-2-unchanged-three-tests-in-scope-kl-b-and-c-with-pr-b.md`), under the human's delegation of 2026-11-13; it is not the human's words. The evidence it rules on is the build worker's report to its stop (`state/consults/2026-11-23-shell-migration-milestone-5-pr-a-build-worker-report-stop-1.md`): at head `021d125a0874e9f24fd8b8d7fa778e325eb2a9b1` on `cut/shell-migration-milestone-5-pr-a`, base `6bc401267d2ea4532215397b79264869b4c83570`, three existing tests outside §2.6's list fail with PR A's change, and one of them also fails `tsc`.
+2. **Scope, class 9, declared before their code.** PR A's Tests (§2.6) gain three existing files:
+   - `frontends/shell/src/App.table.test.tsx`: the expected list of Activity's tabs gains Problems, which is §2.3's own change (that ruling's item 2).
+   - `frontends/shell/src/App.test.ts`: the source-text pin on the line the design replaces moves to the line that replaces it, and still pins a line of product code (that ruling's item 2). No other line of the file changes.
+   - `frontends/shell/src/App.lateResult.test.tsx`: the two calls of `onCanvasRefusal` that the form now makes take a kind pass it (that ruling's item 4); the three N8 assertions that read the first `.canvas-refusal` are replaced under that ruling's item 3, conditions (a) to (f), as written there.
+3. **H5 (§5).** H5 holds that `App.test.ts` stays green and unedited. Under item 2 above it is edited at the one pin, so the word unedited no longer holds for that line; the rest of H5 stands, and the helpers it names keep their signatures. The closing amendment pins this as superseded for that line.
+4. **§7.** The three files' lines are counted in PR A's count under A-T, which names no ceiling for them; §7 is never edited. The build reports each file's lines, and an overrun of PR A's 3,094 is class 8, recorded in the closing amendment.
+5. **Mutations.** Item 3 (e) of that ruling (one mutation for each replaced assertion) and item 3 (f) (the three guard mutations named in those tests' comments, observed again at PR A's head, as dated lines beside the lines of 2026-09-23) are recorded by name with their commit in the build report and in the closing amendment.
+6. **KNOWN-LIMITATIONS.** KL-A, KL-D and KL-E land with PR A; KL-B and KL-C, which describe Jobs, land with PR B (that ruling's item 5). No word of ADV-2026-11-23-30 changes.
+7. **Next.** The build of PR A goes on from `021d125a0874e9f24fd8b8d7fa778e325eb2a9b1` with the worker's saved change, before 04:30Z on 2026-11-24; nothing of it builds, tests or starts the app from 05:00Z until the sitting is over. If a condition of that ruling's item 3 cannot be met as written, the build stops again and the advisor is told (its item 6). PR A's build gates read the three files and item 3's conditions with the rest of the diff.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 10 — 2026-11-24 — the custodian's, under ADV-2026-11-24-03, ADV-2026-11-24-04 and ADV-2026-11-24-06: references only
+
+*Written by the custodian before any code of ADV-2026-11-24-03 item 2 and ADV-2026-11-24-04 item 2. It holds the rulings by reference and words nothing of its own.*
+
+1. **Authority.** The advisor's rulings ADV-2026-11-24-03 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-03-milestone-5-pr-a-replacing-the-unfiled-02-the-gates-start-q1-b-both-stops-removed-per-guard-q2-the-659-comment-q3-both-pins.md`), which replaces ADV-2026-11-24-02 (not filed; the same ruling), ADV-2026-11-24-04 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-04-milestone-5-pr-a-the-reviewers-fail-c-1-red-then-green-e-1-a-post-result-re-sweep-at-the-base-s-5-unmarked-attempt-2-narrow.md`) and ADV-2026-11-24-06 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-06-milestone-5-pr-a-the-reviewers-d-2-applied-to-the-comments-c-u1-checked-by-one-run-after-the-fix.md`), under the human's delegation of 2026-11-13; they are not the human's words. ADV-2026-11-24-03 answers the custodian's three questions on PR A's build at 12a9aa9853b25f88deb79c6cc8af1843537f1d37, whose report is `state/consults/2026-11-24-shell-migration-milestone-5-pr-a-build-worker-report-2.md`. ADV-2026-11-24-04 rules on the reviewer's build gate, attempt 1, at 12a9aa98 (FAIL, gate-log row 892, `state/consults/gates/2026-11-24-shell-migration-milestone-5-pr-a-build-gate-reviewer.md`), and ADV-2026-11-24-06 reads its item 5 for the gate's D-2.
+2. **ADV-2026-11-24-03 item 2.** X-1 and X-2 get dated comment lines beside their lines of 2026-09-23 in `frontends/shell/src/App.lateResult.test.tsx`, a file this form's Scope already holds (Amendment 9); this is the one Scope line its item 2 names, comments only. For each of G-1, G-2, X-1 and X-2, one observation with both stops removed is recorded as its item 2 says, and a removal of both that does not fail is a stop to the advisor.
+3. **The store's line.** For the same item, the piece's own test and mutation that pin `conditions.ts:140` at 12a9aa98 (the generation drop in `raise`) are C-U6a and its RECORDED MUTATION in `frontends/shell/src/conditions/conditions.test.ts`, whose OBSERVED line records a failure at a17db128. The closing amendment names them.
+4. **ADV-2026-11-24-03 items 3 to 5.** The one-line class-3 correction of the comment at `App.lateResult.test.tsx:659` at 12a9aa98 (item 3); item 2 of ADV-2026-11-23-37 covers both moved pins in `App.test.ts` (item 4); the three files over their own section 7 figures are class 8 in the closing amendment, and section 7 is not edited (item 5).
+5. **ADV-2026-11-24-04 item 2, the fix of C-1.** Class 9, inside the Scope of `frontends/shell/src/App.conditions.test.tsx`, built together with item 2 of ADV-2026-11-24-03, as that item says: the new App-level test, its red run at 12a9aa98 and its green run after the fix, both recorded, its one mutation, and C-U8 kept as the store's own test.
+6. **ADV-2026-11-24-06, the gate's D-2.** The two replacements of the reviewer's D-2 are applied to the comments in `conditions.test.ts`, class 3 inside the Scope; C-U1's is checked by the one run that ruling's item 2 names, at the head that holds the fix, and a run that does not show the reviewer's words is a stop to the advisor.
+7. **ADV-2026-11-24-04 items 3 to 7.** The re-sweep of section 0.3 is made by reading at the base 6bc40126, filed as a post-result amendment, and compared with what was built (item 3); S-5 carries no placeholder mark (item 4); D-1, D-3, D-5 and D-6 go into the closing amendment with the reviewer's words (item 5); attempt 2 of the reviewer's gate is narrow (item 6); the fix and its runs end by 04:30Z or wait until after the sitting, and PR A stays a draft until attempt 2 has passed (item 7).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 11 — 2026-11-24 — post-result amendment: the section 0.3 re-sweep for PR A, made by reading at the base 6bc40126 after PR A's code (ADV-2026-11-24-04 item 3)
+
+*Written by the custodian. References only.*
+
+1. **The code existed when this re-sweep was made.** PR A's build was dispatched without the section 0.3 re-sweep. That was the custodian's miss, and it is the reviewer's E-1 (gate-log row 892). So the re-sweep is filed after the result, as ADV-2026-11-24-04 item 3 orders, and it is not a declaration before code.
+2. **How it was made.**
+   - The architect made it (node:shell-migration-milestone-5@pr-a-re-sweep-architect-1), an agent that did not build PR A.
+   - It worked by reading alone. It read the code at 6bc40126 from that tree, and the form at f0718827 (its body and Amendments 1 to 8).
+   - Its brief held no PR A diff. Its transcript shows no read of the branch, of the build worktree, of PR A's reports or of this form's later amendments.
+   - Report: `state/consults/2026-11-24-shell-migration-milestone-5-pr-a-re-sweep-at-the-base-architect.md`.
+3. **What it records**, by reference to that report's parts 1 to 5:
+   - the section 0.2 interfaces: no code interface changed, and the moved cites are listed; two records facts also differ (the walkthrough's last Part is AE, not AD, and item 75 is at line 556);
+   - the declared selector list: the eleven suites of section 2.6, and `App.layout.test.tsx`; `App.streamFailure.test.tsx` holds no strip read;
+   - by its reading, Part AF and items 77 to 79 for PR A, with its open questions;
+   - by its reading, the row-filter paragraph bears on PR B's Jobs row only;
+   - the e2e runs at the base: not run here, and the suites they will be. ADV-2026-11-24-04 item 3 places them after the sitting, before any e2e run at the head.
+4. **Beyond its brief**, its part 2 names strip reads in five unit-test files outside section 2.6's lists. They are carried to the comparison.
+5. **Next: the comparison** (ADV-2026-11-24-04 item 3).
+   - Each interface or selector that PR A changed and the form did not name goes to the advisor with the architect's reading.
+   - The three test files of ADV-2026-11-23-37 are named as found late.
+   - PR B's re-sweep is made before PR B's code.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 12 — 2026-11-24 — the architect's, class 9 before code: C-E1 and C-E2 step 4 fail at the bound (ADV-2026-11-24-14 item 4), the store's re-raise guard (item 6), the N8 test (ADV-2026-11-24-09 item 4)
+
+*Written by the architect before any code of the changes it declares and before any run of C-E1 or C-E2. Every "`path`, line N at 806ad308" below is read at 806ad30843269f8012ec1d89f0224703a8078ad7 on `cut/shell-migration-milestone-5-pr-a`, a branch commit; no span is pinned by hash.*
+
+1. **Authority.** The advisor's rulings ADV-2026-11-24-14 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-14-milestone-5-pr-a-part-af-approved-af0a-read-back-q1-a-for-both-suites-a-narrow-read-a-store-guard.md`), items 4, 6 and 9, and ADV-2026-11-24-09 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-09-milestone-5-pr-a-after-adv-2026-11-24-07-no-stop-c-u4-the-pin-x-2-found-g-1-and-g-2-a-new-n8-test-after-the-sitting.md`), item 4, and ADV-2026-11-24-16 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-16-milestone-5-pr-a-amendment-12-as-drafted-q1-both-mutations-q2-all-words-q3-s-4-q4-the-real-apply.md`), items 1 to 5 and 7, which answers the draft's four questions, under the human's delegation of 2026-11-13; they are not the human's words. The evidence is the architect's build gate, gate-log row 898 (`state/consults/gates/2026-11-24-shell-migration-milestone-5-pr-a-build-gate-architect.md`): check 3 case 3, ER-1 with Q1, and D-4. All three changes are class 9 and inside the Scope (§2.6 as Amendments 2 and 9 widen it). Neither suite has run, so items 2 and 3 are changes before any result. Every run waits until the human says the sitting is over (ADV-2026-11-24-14 item 9); the N8 test is added after the sitting (ADV-2026-11-24-09 item 4).
+
+2. **C-E1 step 4 as it becomes** (`frontends/shell/e2e/conditions-baseline.mjs`, lines 155-165 at 806ad308). Steps 1 to 3 and the start of step 4 are unchanged: S-3 opens Problems, Dismiss, the reopen, and a reopen that is not admitted ending the run VOID (line 163).
+   - **The wait.** After the reopen is admitted, the step reads the strip and Problems (`read`, lines 86-102) every 200 ms, within `WAIT_TIMEOUT_MS` (90,000 ms, line 38; a harness bound on readiness, not a timing), until no `.canvas-session-ended` stands. This wait throws no `Void`, so `waitFor` (lines 56-69) is not used for it.
+   - **FAIL at the bound.** If the old session's block still stands at the bound, the step records a FAIL with the last reading and ends. It does not end VOID. The hash check (lines 167-169) still runs, and the run exits 1.
+   - **The passing readings,** judged on the first reading in which the block is gone:
+     - (i) S-4: Problems' text holds S-4, the strip is hidden, Problems has no row, and no `.canvas-refusal` that is not a notice and no `.canvas-session-ended` stands (line 165's checks);
+     - (ii) the new open's refusal: the strip's top element carries `canvas-refusal`, it is the one such refusal in the DOM, the strip carries no S-5 line (`.condition-occurrences`), and Problems' rows are exactly one, the top's row (`problem-row-top`, no owner class, S-10's text).
+   - **Any other reading FAILS.**
+   - **The no-`Raised`-line clause is kept.** By reading, the new open cannot raise the refusal twice without a pan:
+     - Each open mounts a fresh canvas (`frontends/shell/src/App.tsx`, line 2433 at 806ad308).
+     - The baseline open issues one query of its own, the first look (`App.tsx`, line 2087 at 806ad308). Any other query comes through the debounce from the canvas's `onViewportChanged` (`App.tsx`, lines 2064-2076 and 2507 at 806ad308).
+     - The canvas calls `onViewportChanged` only through `reportViewport` (`frontends/shell/src/canvas/WorkingCanvas.tsx`, lines 1116-1119 at 806ad308). A resize asks for an area only once one has been asked for (lines 2123-2126), and a fresh canvas has asked for none (line 1113). A view shown by the auto-fit issues no query (`App.tsx`, lines 2452-2454 at 806ad308).
+     - Within the first look's one stream, `pushBatch` is synchronous (`WorkingCanvas.tsx`, lines 1496-1541 at 806ad308): the refused batch calls `onCanvasRefusal` and returns (lines 1544-1554). App's handler calls `cancelStream` in the same turn (`App.tsx`, lines 2475 and 2493, through line 673, at 806ad308). `cancelStream` drops the stream as current before its first await (`frontends/shell/src/streaming/viewportStreamManager.ts`, lines 461-467 at 806ad308), so a later batch of that stream is dropped before the canvas (lines 280-288).
+     - So a second raise needs a second stream, and a second stream needs a pan. A reading whose refusal carries an S-5 line is "any other reading": a FAIL.
+   - This item supersedes, for step 4, the end of §4's C-E1 row ("reopen, and both are empty"). The row is not edited.
+
+3. **C-E2 step 4 takes the same rule for the old conditions** (`frontends/shell/e2e/conditions.mjs`, lines 155-159 at 806ad308). Steps 1 to 3 and a reopen that is not admitted ending the run VOID (line 157) are unchanged.
+   - **The wait.** After the admitted reopen, the step reads every 200 ms, within `WAIT_TIMEOUT_MS` (60,000 ms, line 39; a harness bound), until no `.canvas-session-ended` and no `.save-notice` stands.
+   - **FAIL at the bound.** If session ended or the save notice is still shown at the bound, the step records a FAIL and ends, not VOID. The hash check (lines 161-163) still runs.
+   - **The passing reading** is S-4: Problems' text holds S-4 and line 159's checks hold. Reading (ii) of item 2 is not taken here, because canvas-ceiling is a baseline-only route (Amendment 2, E-1.0).
+   - **Any other reading FAILS.**
+   - This item supersedes, for step 4, the end of §4's C-E2 row ("reopen the copy, and S-4 shows"). The row is not edited.
+
+4. **D-4's words, following the suites as amended.** Each Old text is byte for byte from the file at 806ad308.
+
+   (a) `frontends/shell/e2e/conditions-baseline.mjs`, line 16 at 806ad308.
+
+Old:
+````text
+//   4. S-3 opens Problems; Dismiss the canvas refusal; reopen the copy, and both the strip and Problems are empty (S-4 shows).
+````
+New:
+````text
+//   4. S-3 opens Problems; Dismiss the canvas refusal; reopen the copy. Once the reopen is admitted, wait within WAIT_TIMEOUT_MS for the old session's block to go; if it still
+//      stands at that bound the step FAILS. Then PASS on S-4, or on the new open's refusal as the strip's top with no S-5 line and Problems listing only the top's row; any other reading FAILS.
+````
+
+   (b) The same file, line 17 at 806ad308.
+
+Old:
+````text
+// Exit 0 all PASS; 1 a check failed; 2 VOID (the arm pin, the fixture, a wait that timed out).
+````
+New:
+````text
+// Exit 0 all PASS; 1 a check failed (step 4's wait for the old session's block included); 2 VOID (the arm pin, the fixture, any other wait that timed out).
+````
+
+   (c) The same file, a span of line 5 at 806ad308.
+
+Old:
+````text
+C-E1 as Amendments 2, 3 and 4 leave it
+````
+New:
+````text
+C-E1 as Amendments 2, 3, 4 and 12 leave it
+````
+
+   (d) `frontends/shell/e2e/conditions.mjs`: its header needs the same. Line 17 at 806ad308:
+
+Old:
+````text
+//   4. reopen the copy, and S-4 shows.
+````
+New:
+````text
+//   4. reopen the copy. Once the reopen is admitted, wait within WAIT_TIMEOUT_MS for session ended and the save notice to go; if either still stands at that bound the step FAILS.
+//      Then PASS on S-4; any other reading FAILS.
+````
+   Line 18 at 806ad308:
+
+Old:
+````text
+// Exit 0 all PASS; 1 a check failed; 2 VOID (a precondition failed: the arm, the fixture, a wait that timed out).
+````
+New:
+````text
+// Exit 0 all PASS; 1 a check failed (step 4's wait for the old conditions included); 2 VOID (a precondition failed: the arm, the fixture, any other wait that timed out).
+````
+   A span of line 5 at 806ad308:
+
+Old:
+````text
+C-E2 as Amendments 2 and 4 leave it
+````
+New:
+````text
+C-E2 as Amendments 2, 4 and 12 leave it
+````
+
+   (e) `frontends/shell/e2e/README.md`, the C-E1 sentence, the last sentence of line 931 at 806ad308.
+
+Old:
+````text
+It clicks S-3, dismisses the canvas refusal, reopens the copy, and checks that the strip and Problems are empty.
+````
+New:
+````text
+It clicks S-3, dismisses the canvas refusal and reopens the copy. Once the reopen is admitted it waits, within the suite's bound, for the old session's block to go, and fails if the block still stands at that bound; it then passes when Problems shows S-4, or when the new open's canvas refusal is the strip's top with no S-5 line and Problems lists only the top's row, and fails on any other reading.
+````
+
+   (f) The same file, the C-E2 sentence, the last sentence of line 929 at 806ad308.
+
+Old:
+````text
+It reopens the copy and checks that Problems then shows S-4.
+````
+New:
+````text
+It reopens the copy; once the reopen is admitted it waits, within the suite's bound, for session ended and the save notice to go, fails if either still stands at that bound, and then checks that Problems shows S-4, failing on any other reading.
+````
+
+   (g) The same file, a span of line 933 at 806ad308.
+
+Old:
+````text
+Each exits 0 when all checks pass, 1 when one fails, and 2 when the run is VOID (the arm, the fixture, or a wait that timed out).
+````
+New:
+````text
+Each exits 0 when all checks pass, 1 when one fails (step 4's wait for the old conditions to go included), and 2 when the run is VOID (the arm, the fixture, or any other wait that timed out).
+````
+
+   None of these is the human's wording. The gate's narrow read checks them (ADV-2026-11-24-14 item 4).
+
+5. **The store's re-raise guard, C-U6b (ADV-2026-11-24-14 item 6).**
+   - **File and name:** `frontends/shell/src/conditions/conditions.test.ts`, in a new `describe` after C-U6a's (which ends at line 187 at 806ad308): `it("C-U6b: a condition raised twice, dismissed, then raised again: a new id, one occurrence, and no count carried over", …)`.
+   - **Steps:**
+     - `opened(R)`, then two raises of one key on the canvas-ceiling route (code `canvas.vertex_ceiling`, the view target, generation R) with two displays. This gives one condition with `occurrences` 2.
+     - `dismiss` of its id: no condition stands.
+     - A third raise of the same key with a third display gives exactly one condition. Its id is not the dismissed one's, its `occurrences` is 1, and its `first` and `latest` are both the third display. No `Raised` count is carried over; ConditionView shows S-5 only when `occurrences > 1` (`frontends/shell/src/conditions/ConditionView.tsx`, line 37 at 806ad308).
+   - **It is a guard, green at the head.** No red run is asked.
+   - **Mutation M12-1:** in `conditions.ts`'s `dismiss` case (line 179 at 806ad308), return `{ ...without(state, (c) => c.id === event.id), nextId: state.nextId - 1 }`, so that the next mint reuses the dismissed condition's id. §2.2 declares a condition's id "minted by the store, never reused in a session".
+     - Expected failure: C-U6b, at its new-id assertion.
+     - It is observed and recorded as one dated line beside the test (§4, "How a mutation is observed").
+   - **Mutation M12-4** (ADV-2026-11-24-16 item 2): in the same `dismiss` case, `dismiss` ends nothing when the condition was raised more than once.
+     - Expected failure: C-U6b, at its dismissal assertion. That is the half of the gate's check 3 case 3 that no test reached.
+     - It is observed and recorded as its own dated line beside the test. A mutation that does not fail where it is predicted goes to the advisor; nothing is changed to make it fail.
+   - **Declared unchanged:** every existing case of the file.
+
+6. **The N8 test, N8-G (ADV-2026-11-24-09 item 4),** in `frontends/shell/src/App.lateResult.test.tsx`, in the baseline-arm `describe` (line 436 at 806ad308; the arm is pinned at line 452). It is a new `it` after the test that ends at line 870 at 806ad308.
+   - **Name:** `it("A's late failure terminal and canvas refusal, after a reopen while B's own Apply is in flight with Cancel shown, leave B's Cancel shown (baseline arm)", …)`.
+   - **Shape:** A admitted, then B admitted by a reopen, with both admissions flushed, as the item-7 probe does (lines 694-701 at 806ad308). A's `onTerminal` and A's `WorkingCanvas` props are captured as at lines 792-796.
+   - **B's Apply in flight, with Cancel shown** (ADV-2026-11-24-16 item 5): B's Apply through the Filter panel's Apply button, by the pattern the file already has (`typeAndApply`, then B's second request resolved `{kind: "issued", …}`, lines 925-933 at 806ad308), not through the dev hook. The test asserts that `.filter-cancel` stands.
+   - **A's late failure terminal:** `onTerminalA("a-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: A's own stream" })`, the call of line 829. Then it asserts that `.filter-cancel` still stands (assertion T).
+   - **A's late canvas refusal:** `canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal", "vertex-ceiling")`, the call of line 831. Then it asserts that `.filter-cancel` still stands (assertion C).
+   - **Mutations, each a dated line:**
+     - M12-2: G-1's guard alone removed (`App.tsx`, line 1932 at 806ad308). It fails at assertion T.
+     - M12-3: G-2's guard alone removed (`App.tsx`, line 2471 at 806ad308). It fails at assertion C.
+     - With both guards in place, the test passes.
+   - If either removal does not fail, that is recorded as found and goes to the advisor; nothing is changed to make it fail (ADV-2026-11-24-09 item 4, paraphrase).
+   - The existing test (lines 791-870 at 806ad308) is not changed, and no assertion of the file is removed or loosened.
+
+7. **§7.** No file outside the Scope, so no Scope addition. §7 is not edited, and any overrun is class 8 at the count, in PR A's closing amendment.
+   - `conditions.test.ts` (A-T, 450): adds about 20 lines.
+   - `App.lateResult.test.tsx` (in the Scope by Amendment 9; no §7 ceiling, so class 8 against 0, with its 56 of row 898): adds about 55 lines, the ten of the real Apply included (ADV-2026-11-24-16 item 5).
+   - `conditions-baseline.mjs` (in the Scope by Amendment 2; no §7 ceiling, so class 8 against 0, with its 204): about 25 lines changed.
+   - `conditions.mjs` (A-E, 480): about 15 lines changed.
+   - Groups, against row 898's figures:
+     - A-T: about 1,425 against 1,480;
+     - A-E: about 440 against 620;
+     - PR A: about 2,500 against 3,094.
+   - `e2e/README.md` is a record, outside the count: 3 lines replaced, about 23 against its 40.
+
+Read the last amendment first.
+
+Nothing above is edited.

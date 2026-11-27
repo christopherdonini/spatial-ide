@@ -526,3 +526,35 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — 2026-11-24 — the custodian's closing amendment: references and hashes only
+
+*Written by the custodian after the build gates, before the merge request. It records what the gates ask the closing amendment to record, by reference, and words nothing of its own.*
+
+1. **The build.** PR 366 (draft), branch `cut/partitioned-ordinal-refusal-opens-the-identity-form`, head e4116cadbedcd6916dd38bab2681592909a85e4a, built on colour-by-refill's head 2095a7ac471d2441fd8e054a448d334c7bcde455, as Amendment 2, item 15, says: P0 43a71373; the fix 2b90ed51; 38f7a515 and 1834e199; the merge 4c028ef6; then the words 26cb8745, 8d1fe83a, 78a36aaa and e4116cad. The worker's reports are `state/consults/2026-11-23-partitioned-ordinal-refusal-opens-the-identity-form-worker-report.md`, `state/consults/2026-11-23-partitioned-ordinal-refusal-opens-the-identity-form-words-worker-report.md`, `state/consults/2026-11-24-partitioned-ordinal-refusal-opens-the-identity-form-words-2-worker-report.md` and `state/consults/2026-11-24-partitioned-ordinal-refusal-opens-the-identity-form-m-k1b-and-d-words-worker-reports.md`.
+2. **The gates.**
+   - The reviewer's build gate, attempt 1: PASS WITH NOTES at 26cb8745, gate-log row 888, `state/consults/gates/2026-11-23-partitioned-ordinal-refusal-opens-the-identity-form-build-gate-reviewer.md`.
+   - The architect's build gate, attempt 1: FAIL at 8d1fe83a on E1, row 890, `state/consults/gates/2026-11-24-partitioned-ordinal-refusal-opens-the-identity-form-build-gate-architect.md`.
+   - Its narrow re-gate, attempt 2: PASS WITH NOTES at 78a36aaa, E1 closed, row 891, `state/consults/gates/2026-11-24-partitioned-ordinal-refusal-opens-the-identity-form-build-gate-architect-attempt-2.md`. Its D-2 words were applied at e4116cad with no re-gate, as that report says.
+3. **The mutations, by name** (§4).
+   - M-S1, M-S2 and M-K1 were observed by the worker (its first report) and again by the reviewer at 26cb8745 (row 888's report, its section 4). They were applied at the same time, each in its own file, as row 890's report discloses.
+   - M-K1b was observed at 8d1fe83a: K1 fails by name at (a) on the declared open, with left `engine.source`, by its run log (the M-K1b section of the last worker report above). The applied replace and the sha256 are the worker's claims (row 891's report). Its paragraph is in K1's doc, by commit id.
+   - `verify-mutation` checks that a mutation is recorded by name; it is not an observation of one.
+4. **The S1 comment.** Its recorded outcome text, with the placeholder mark, is true at 2b90ed51, the commit it names. At the head the observed text has no mark (row 888's report). Recorded here; the comment is not changed.
+5. **The words applied, all listed in the PR body:**
+   - the advisor's D1 to D3 (ADV-2026-11-23-27) at 26cb8745;
+   - the reviewer's D-1 to D-3 at 8d1fe83a;
+   - the architect's D-1 at 78a36aaa;
+   - the architect's D-2 at e4116cad.
+6. **§7.** `git diff --numstat 2095a7ac...e4116cad` gives 192 lines over five files, under the ceiling of 200. No class 8.
+7. **Carried to the identity route.**
+   - Under OPEN-2 (a), the wire fixture `protocol/skp/tests/data/v0-error-identity_ordinal_partitioned_unsupported.json`, line 3, and `protocol/skp/SKP-V0.md`, lines 734 to 735, still hold the old text on main. The identity route takes them as a class 9 addition, built on this head (ADV-2026-11-23-27 item 2; ADV-2026-11-23-32 item 3).
+   - ADR-016's Note 2026-11-23 is owed in the identity route's PR (ADV-2026-11-23-27 item 4).
+8. **The merge.**
+   - By a merge commit, not a squash, so that 2b90ed51 and 8d1fe83a, which the RECORDED MUTATION lines name, stay reachable on main (rows 890 and 891's reports).
+   - Order: after the tag, and after PR 353, PR 358, PR 359 and the re-link (§9a), and after colour-by-refill, PR 365 (Amendment 2, item 15).
+9. **The PR's checks at e4116cad:** 20 of 20 pass, read at 2026-11-24T02:22:13Z by `gh pr checks 366`.
+
+Read the last amendment first.
+
+Nothing above is edited.
