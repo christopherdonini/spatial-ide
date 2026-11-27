@@ -1004,3 +1004,31 @@ Nothing above is edited.
    - The numbers are not written here.
 4. **Nothing is changed yet.** The reviewer's read part comes first. Then both go to the advisor together, with any places where the two gates' words differ (ADV-2026-11-27-10 item 2).
 5. **Next:** the reviewer's read part; the advisor's ruling; the corrections; then the series in this piece's port turn.
+
+## Amendment 14 — 2026-11-27 — the custodian's: the reviewer's read part at fc6d4b00, and where the two read parts differ
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The reviewer's read part** at fc6d4b0098a08bc554f7f3ce15a1aa89564925cb is filed at `state/consults/gates/2026-11-27-text-id-opens-for-the-session-by-row-position-build-gate-reviewer-read-part.md`, with no gate-log row. It is also the merge read of Amendment 11 item 5.
+2. **What it observed:**
+   - the merge brings the route's corrections and nothing else, and the resolution meets ADV-2026-11-27-19 items 1 and 2;
+   - nothing lies outside §2 (Amendment 9 item 5);
+   - the 29 mutations of the code worker's driver are each red at an assertion, with no compile error;
+   - the suites that start no app, and CI at the head, are green.
+3. **Its findings, by its own labels:**
+   - **C-1:** R-ENG's second sentence is untrue, unreworded.
+   - **C-2:** S-8's same clause, for `engine.query`, unreworded.
+   - **E-a:** the skeleton's red was never observed.
+   - **E-b:** M-14's place, with a pair for K-5's doc.
+   - **E-c:** K-6 runs R1 only, in one scope.
+   - **D-a:** the N- and M- ids of the engine tests and of N-9, with pairs.
+   - **D-b:** the second M-24 label, with a pair.
+   - It also reports three departures of its own.
+4. **Where the two read parts' words differ** (ADV-2026-11-27-10 item 2), each for the advisor:
+   - **§9 item 8.** The architect reads it as not shown either way, since no skeleton was built. The reviewer reads it as true, since no mutation's red was a compile error.
+   - **S-8.** The architect names the refusals S-8's clause meets with the choice, and gives words. The reviewer names `engine.query` only, and gives none.
+   - **R-ENG's second sentence.** Both find it untrue. The architect gives words under ADV-2026-11-27-12 item 3 (d); the reviewer gives none.
+   - **§7's range.** The architect counts from the recorded base, three-dot; the reviewer counts from the merge-base 912b3a2c. Both give 2534 lines over 84 files.
+   - **C1** (the architect's: the reopen with a recorded declaration of `id`) has no counterpart in the reviewer's read part. The reviewer's E-b, E-c, D-a and D-b have none in the architect's.
+5. **Nothing is changed until the advisor rules.** Both read parts go to the advisor in one message.
+6. **Next:** the advisor's ruling; the corrections it names, with their count; then the series in this piece's port turn.
