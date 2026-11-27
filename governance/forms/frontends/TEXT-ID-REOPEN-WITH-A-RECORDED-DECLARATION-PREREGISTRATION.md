@@ -538,3 +538,15 @@ New:
    - Before the bump's commit, the custodian checks again that no branch holds `skp/0.17` in code.
 7. **The port** (its item 9): E-R1 takes a turn of its own after text-id's series. When its code and its read parts' corrections are in, it goes ahead of any series that has not started.
 8. **The node's gate.** In the same commit, the PLAN node `text-id-reopen-with-a-recorded-declaration` names this form as its gate. Full form, both gates; its build gates run in two parts (its item 8).
+
+## Amendment 2 — 2026-11-27 — the custodian's: the architect's form gate, PASS WITH NOTES; E1 and D1 to D6 read in place
+
+*References only. Nothing above is edited. Written before any code.*
+
+1. **The gate** is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-form-gate-architect.md`: the form at main 90d7286f191b2f082fc8e4a5f8e1a3a69a919c51, the code at 2df8b4aeeba1d3820ec0ba9e9f2bcd4ee7338a3e. Its verdict is PASS WITH NOTES.
+2. **Its seven pairs are read in place**, each New for its Old: E1 (Evidence) and D1 to D6 (Documentation), in the report's section headed "Findings".
+   - Each Old was found exactly once in this form, by script at this commit, from the report's own lines.
+   - D4's New is its Old followed by one new line, as the report gives it.
+   - The gate's report says they need no re-gate (its section on the wording-blocks rule).
+3. **A1** falls on the null-by-name form, `governance/forms/engine/IDENTITY-SCAN-REFUSES-A-NULL-BY-NAME-PREREGISTRATION.md`, and is carried there by that form's Amendment 3 in this same commit, before its code.
+4. **Next:** the reviewer's form gate, on this form as amended.

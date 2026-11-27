@@ -455,3 +455,18 @@ Nothing above is edited.
 2. **If this piece's code starts earlier,** that piece's head comes in by a merge commit before this piece's gates.
 3. **The form gates of `text-id-reopen-with-a-recorded-declaration`** read this form's §2 against item 2 of that form's §2. Both edit `admit_identity`'s scan arms.
 4. **The PLAN node** gains `text-id-reopen-with-a-recorded-declaration` in its `depends_on`.
+
+## Amendment 3 — 2026-11-27 — the custodian's: the C1 piece's field on this form's sixth site (class 9), from that piece's architect form gate
+
+*References only. Nothing above is edited. Written before any code. This piece's code is built on the head of `text-id-reopen-with-a-recorded-declaration` (Amendment 2).*
+
+1. **The source** is finding A1 of that piece's architect form gate, filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-form-gate-architect.md`, in its section 4.
+   - On that piece's head the variant carries `identity_source`.
+   - This form's new null refusal builds the variant a sixth time. The compiler forces the field, but nothing forces its value.
+2. **Class 9**, the custodian's choice as the report recommends: this amendment adds a §2 value and §4 assertions.
+3. **The report's four pairs for this form are read in place**, each New for its Old. Each Old was found exactly once here, by script at this commit. The third pair's New is its Old followed by one new line, as the report gives it.
+4. **Added to §4**, in the report's terms:
+   - T1 also asserts `identity_source` is `file:id`;
+   - T3 at F-3d also asserts `mapped:parcel_key`;
+   - one more recorded mutation values the null site's field as for a file's own `id` whatever the declaration. It is observed failing T3 at F-3d, and it takes the next unused name in this form's series.
+5. **The build gates** read §2 and §4 as amended here.
