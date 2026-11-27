@@ -205,3 +205,84 @@ tools/mods/spatial-guardian/.claude-plugin/types => absent: ENOENT
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — P0b: one Monitor hook line and nothing else changed; the human's approval of ADV-2026-11-22-12
+
+1. **The approval.** The human approved ADV-2026-11-22-12 by typed message (`state/directives/2026-11-22-the-humans-approval-adv-2026-11-22-12-the-guardian-and-monitor-piece-goes-on-without-the-types-its-live-checks-named.md`); the draft it makes theirs is `state/consults/2026-11-22-advisor-draft-adv-2026-11-22-12-the-guardian-and-monitor-piece-after-its-p0-stop-not-the-humans-words.md`. By its item 2 the piece goes on without the types: P0b as section 0 has it, the fixtures as its item 2 (b) says, in its words on what is assumed and not read, and no other `claude` command (its item 2 (c)). By its items 3 and 4 the live checks are the two of ADV-2026-11-22-02 item 6 and the conditional call of its item 3 (b), named by the approval. Its items 5 and 6 stand. Where sections 0, 3 and 5 differ from it, the draft governs.
+
+2. **The P0b record.** In C:/dev/wt/guardian-monitor at 08783d073376686eba767d5a65bb89675bd40b38 the worker wrote the one line of section 2 item 1 and committed it as 1c0d3db6e97e1013849b9dae89f11f04fb069679, pushed; its numstat is `1 0 tools/mods/spatial-guardian/hooks/register.js`. `claude plugin validate tools/mods/spatial-guardian` exited 0; its output, 3337 bytes, sha256 c8ecbacc46abb5d379b15e724b3a899a5b5e8b8e3d634616afb2464aacb71cd9, differs from Amendment 1 item 2's in two lines only, by the custodian's diff of the two, byte for byte:
+
+```
+9c9
+<   ❯ ./register.js hooks: tool.call, tool.call{tool=Bash}, tool.call{tool=PowerShell}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}
+---
+>   ❯ ./register.js hooks: tool.call, tool.call{tool=Bash}, tool.call{tool=Monitor}, tool.call{tool=PowerShell}, tool.call{tool=Write}, tool.call{tool=Edit}, tool.call{tool=NotebookEdit}
+11a12
+>   ❯ ./register.js gating hook with .catch: tool.call{tool=Monitor}
+```
+
+   No warning or error names Monitor or the filter; the two warnings are Amendment 1's. No types folder appeared. The worker's report is `state/consults/2026-11-22-guardian-monitor-p0b-worker-report.md`.
+
+3. **No stop.** Section 0 item 5's stops do not hold. Tests may be written once this amendment is committed.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 3 — 2026-11-22 — the build: PR 357; the words of ADV-2026-11-22-12 item 2 (b)
+
+1. **The words.** By ADV-2026-11-22-12 item 2 (b) the form says, byte for byte from line 15 of `state/consults/2026-11-22-advisor-draft-adv-2026-11-22-12-the-guardian-and-monitor-piece-after-its-p0-stop-not-the-humans-words.md`: "That a Monitor event has those fields is assumed, not read." The fields, in the custodian's words: the Monitor call's four input fields `description`, `timeout_ms`, `command` and `ws`, and the event fields the Guardian's handlers already read for a Bash call, the tool's name, the command and the agent's id.
+
+2. **The build.** On `cut/guardian-monitor`: 16c0079a5138bcc17672f6ac25beabe48c9c61d3 (main at 466318621a13f00ae7b1114a4690582be42bdc94 merged in), 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 and b6d8835810e36249097744cff509b59ae8e9771c, pushed; PR 357, a draft. The worker's report: `state/consults/2026-11-22-guardian-monitor-build-worker-report.md`, the filed file 8305 bytes, sha256 d6621a626f2e9f72e0b553319a42a952e26c63b99f3b017537e89f7952ea8a55.
+
+3. **Next:** section 7's reviewer, then the architect after the build. Section 5 after the merge.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 4 — 2026-11-22 — the gates after the build; the correction; section 2 item 4
+
+1. **The gates.** Section 7's reviewer after the build: `state/consults/gates/2026-11-22-guardian-monitor-after-build-gate-reviewer.md`, PASS WITH NOTES, gate-log row 834, the filed file 13151 bytes, sha256 e5380ffec5bd103efac143fd12291b764cad307a8e16d8c51095397f6df184c7. The architect after the build: `state/consults/gates/2026-11-22-guardian-monitor-after-build-gate-architect.md`, PASS WITH NOTES, gate-log row 835, the filed file 12973 bytes, sha256 e34af65481117701700fedd905b98b72d22ab804e522260b7990c5e131080b0c. Both at b6d8835810e36249097744cff509b59ae8e9771c.
+
+2. **Section 2 item 4** (D2, the reviewer's, which the architect agrees with): Section 2 item 4's "and that Monitor's event shape was read at it" is superseded by ADV-2026-11-22-12 item 2 (b).
+
+3. **The correction.** 269b0532bc1228fa0fac9be75afe062be02815de on `cut/guardian-monitor`, parent b6d8835810e36249097744cff509b59ae8e9771c: D1, D3 and A1 in `tools/mods/spatial-guardian/README.md`, 3 lines, words only. The worker's report: `state/consults/2026-11-22-guardian-monitor-correction-1-worker-report.md`, the filed file 2006 bytes, sha256 e2d8c5a59d3de30c497e9e91d65f74a8d22b0389cbb41aa09f501d4fdfc69f9b.
+
+4. **Next:** out of draft and the merge check, on the human's approval `state/directives/2026-11-22-the-humans-approval-adv-2026-11-22-12-the-guardian-and-monitor-piece-goes-on-without-the-types-its-live-checks-named.md`. Section 5 after the merge.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 5 — 2026-11-22 — class 1: no types file at 2.1.330 (ADV-2026-11-22-25 item 1)
+
+1. **The read.** By ADV-2026-11-22-25 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-25-pr-357s-gate-notes-the-types-file-may-be-read-r11-and-monitor-the-humans-m-e1-lists-the-utc-day-folder.md`) item 1, the custodian listed, by one read-only Bash call at 2026-11-22T16:48:29.974Z (by its transcript), with no `claude` command, no agent and no write, the folder Amendment 1 names, `tools/mods/spatial-guardian/.claude-plugin/`, in the main checkout at the merge commit 6c0f1eee238e8a10859d71862f421afd95afda33 and in the worktree `C:/dev/wt/guardian-monitor`. Each holds only `plugin.json`, 261 bytes, and no `types/` folder. So no file of the kind the v0 form read at 2.1.288 exists at 2.1.330 where Amendment 1 says it was, and nothing is read of a Monitor event. The live checks M-E1 and M-E2 settle the call's shape (ADV-2026-11-22-25 item 1, its last point).
+
+2. **The merge.** PR 357 was merged by the advisor at the merge commit 6c0f1eee238e8a10859d71862f421afd95afda33, its verdict filed at `state/consults/merge-checks/PR-357-269b0532bc12.md`. The main checkout was fast-forwarded to it; M-E1 and M-E2 follow the human's restart of the custodian's session, M-E1 with the UTC day folder listed before and after and not within two minutes of midnight UTC (ADV-2026-11-22-25 item 3). Until both are recorded, nothing is pushed, merged or deleted through Monitor (ADV-2026-11-22-12 item 5).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 6 — 2026-11-23 — class 1: M-E1, refused by Guardian G1 as predicted (section 5 item 2)
+
+1. **The restart.** The human asked for a clean stop (`state/directives/2026-11-23-the-humans-message-a-clear-stop-asked-again-before-the-restart-for-the-guardian.md`); the session started again by resume at 2026-11-23T05:29:22.818Z, with the same session id, and the human ran /reload-plugins at 2026-11-23T05:29:51.002Z and typed that it should be good now (`state/directives/2026-11-23-the-humans-message-should-be-good-now-after-the-restart-and-the-plugin-reload.md`). The installed copy, the main checkout's `tools/mods/spatial-guardian` at 9bd7bc05c3b84f37cf3d96db16b08f95d511eef2, is the same as at the merge commit 6c0f1eee238e8a10859d71862f421afd95afda33 (a git diff of that folder between them is empty). `claude --version` read at this filing: 2.1.330 (Claude Code). The custodian did not reload anything.
+2. **The command,** copied by script from the draft's item 6 (a) (`state/consults/2026-11-22-advisor-draft-adv-2026-11-22-02-the-guardian-checks-a-monitor-command-as-it-checks-a-bash-command-not-the-humans-words.md`, its line 43, the text between its two backticks), 72 bytes. One Monitor call in the custodian's session, by its transcript at 2026-11-23T05:31:44.657Z, its input's `command` equal to it.
+3. **The result.** Refused, with the tool result at 2026-11-23T05:31:44.672Z an error whose text is G1's reason byte for byte inside the engine's error tags: G1_REASON at `tools/mods/spatial-guardian/hooks/register.js` line 41. No Git output and no other layer's refusal: the prediction held.
+4. **The log.** The refusal log's day folder for 2026-11-23 (the README's `<name of the main checkout>-local/guardian/<YYYY-MM-DD>/`) was listed by script before the call, at 2026-11-23T05:31:37.644Z by the transcript, and after its result, at 2026-11-23T05:31:49.870Z. Exactly one new file appeared, `053144662-73d6745b2c7fbba4.json`, 295 bytes, one JSON line and an LF. Its fields: schema spatial-guardian/v1, time 2026-11-23T05:31:44.662Z, rule G1, tool Monitor, agent main, target_sha256 ac982899086acd720960bd01c9a9f1bbac1da0f0c5e7d5e6b0eb87759398bb67, and reason equal to G1's reason byte for byte. That sha256 was recomputed by script from the UTF-8 bytes of the `command` string in the call's input in the transcript, with no newline added, and is equal. No other field.
+5. **The one file before it.** The folder did not exist at the first listing, at 2026-11-23T05:31:16.184Z. Between that listing and the second, one Bash call of the custodian's own, at 2026-11-23T05:31:23.036Z, was refused by G1, and the folder was created with its log file, `053123041-a29bee51ae6d949e.json` (rule G1, tool Bash, agent main, its target_sha256 recomputed from that command and equal). The call held the draft's command as quoted text in a test of a stray file's content before removing it; nothing in it pushes. It is a false refusal of the kind the README's Over-refusals list gives first (text that is never run, holding a force-push spelling; the custodian's words, not the README's), classified against the transcript. It is not routed around: the stray file is left for the human. The second listing was taken after it, so the count of new files is M-E1's alone.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 7 — 2026-11-23 — class 1: M-E2, run as predicted; the hold of section 5 item 4 ends
+
+1. **The command,** copied by script from the draft's item 6 (b) (its line 46, the text between its two backticks), 27 bytes. One Monitor call in the custodian's session, by its transcript at 2026-11-23T05:31:54.942Z, its input's `command` equal to it.
+2. **The result.** It ran: the tool result at 2026-11-23T05:31:55.389Z is not an error and starts the watch, and its one line, `guardian-monitor-probe`, the echo's output, arrived as an event in the completed watch's notification, queued at 2026-11-23T05:31:55.512Z by the transcript. No log file was written: the day folder, listed by script after it at 2026-11-23T05:31:59.270Z, holds the same two files as after M-E1. The prediction held.
+3. **The hold.** M-E1 is recorded as refused by Guardian G1 (Amendment 6) and M-E2 as run (this amendment). By section 5 item 4 and ADV-2026-11-22-25, the hold on a push, a merge or a delete through Monitor ends when both are recorded on main, at this commit. Nothing here shows G7, G8 or G9 live through Monitor: the draft names exactly two live checks, and those rules rest on the inert tests of section 4.
+
+Read the last amendment first.
+
+Nothing above is edited.

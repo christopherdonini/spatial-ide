@@ -5,23 +5,25 @@
 # 1. Before you start
 
 **What to have ready.**
-- The fixtures, made once from the repository root with: `cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture`. The Parts name a few more generators where a row needs them (the Have ready lines of section 3).
+- The fixtures, already made in the main checkout. They stay in `C:\dev\spatial-ide\target\fixtures`, and each Part names its file there by its full path. They were made once from `C:\dev\spatial-ide` with: `cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture`. The Parts name a few more generators where a row needs them (the Have ready lines of section 3).
 - For Part AD: OneDrive signed in on this laptop, with Files On-Demand on, and three empty folders inside your OneDrive folder (one for the project, one for AD2 and AD3, one for AD5). File Explorer open for AD2 to AD4. AD5 starts the app a second time while the first is running, on this same laptop.
 - For the publish rows (Parts G and AC): the bundle viewer built once with `npm --prefix renderer/bundle-viewer run build`, and a destination folder under `C:\dev\spatial-ide\target\`.
 - For AC11 and AC12: a real parcel file with many columns, and a file whose attribute data is over 268,435,456 bytes. These are yours to bring; they are not in the repository.
 - For Parts W and AB: a window of 1366 by 768, set with DevTools' device toolbar; Z4 needs 1024 by 640. Narrator for Z3, Task Manager for AA3.
 - For R1 alone: its own Before list (Part R), which uses a debug build and Part H's 5 GB fixture.
 
-**Starting the app.** Sit at this laptop's main checkout, the folder `C:\dev\spatial-ide`. From that folder, run these two commands, in this order:
+**Starting the app.** If the app from an earlier part is still open, close its window first: a second start beside it fails. Sit at the sitting's own folder on this laptop, `D:\wt\sit-v02`, and not at the main checkout `C:\dev\spatial-ide`. From that folder, run these two commands, in this order:
 
 ```
 npm --prefix renderer/bundle-viewer run build
 npm --prefix frontends/shell run tauri dev
 ```
 
-Run the first once, before the first start: it builds the map viewer that the app carries inside it, and it took 5.3 seconds when the tester ran it on 2026-11-21. Near its end it prints a line ending `all reviewed; record written`, and its last line ends `not found`. Both are expected: that last line names a row that was reviewed once and now matches nothing, and the build does not fail on it. The second starts the app; use it again for every later start. The first start also compiles the app: on 2026-11-21 its window appeared 5 minutes 44 seconds after the command, the compile included. The app was compiled in this checkout then, so your start at the sitting is a later start: run the second command alone. Later starts that day showed the window after 11.1 and 8.4 seconds, with no rebuild. If the app compiles again, because its code has changed since, wait up to about 6 minutes for the window. When the app has started, a window titled Spatial IDE is open, with an Open GeoParquet… button in the Layers region and no dataset on the map (Part A, row A1). Close the window to stop the app. If either folder's packages have never been installed on this laptop, run `npm --prefix frontends/shell ci` and `npm --prefix renderer/bundle-viewer ci` once first.
+Run the first once, before the first start: it builds the map viewer that the app carries inside it. Near its end it prints a line ending `all reviewed; record written`, and its last line ends `not found`. Both are expected: that last line names a row that was reviewed once and now matches nothing, and the build does not fail on it. In this folder the custodian ran it on 2026-11-26 and built the app once, so run the second command alone. The second starts the app; use it again for every later start. A tester starts the app once in this folder before you sit, and the note below gives that start's time once it is filed. In the main checkout on 2026-11-21, a first start's window appeared 5 minutes 44 seconds after the command, the compile included, and later starts showed the window after 11.1 and 8.4 seconds, with no rebuild. If the app compiles again, wait up to about 6 minutes for the window. When the app has started, a window titled Spatial IDE is open, with an Open GeoParquet… button in the Layers region and no dataset on the map (Part A, row A1). Close the window to stop the app.
 
 *The custodian's note, 2026-11-21: this paragraph has been replaced twice. The first replacement added the viewer's build: the start check of ADV-2026-11-21-16 item 7 stopped before the start, because the shell's build needs the bundle viewer's record `viewer-asset-hashes.json`, which only the viewer's own build writes (the tester's report, `state/consults/2026-11-21-operator-sitting-queue-start-check-tester-report.md`; the advisor's ruling ADV-2026-11-21-24, `state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-24-the-script-start-gets-the-viewer-build.md`). The second gave the measured times of the starts and what the viewer's build prints (the advisor's rulings ADV-2026-11-21-25 item 6, `state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-25-one-more-start-the-drive-scripts-two-defects-fixed.md`, and ADV-2026-11-21-26 item 6, `state/directives/2026-11-21-advisor-ruling-adv-2026-11-21-26-a-third-and-last-start-the-open-first.md`). The viewer's time and its printed lines are the tester's one run, `state/consults/2026-11-21-operator-sitting-queue-viewer-build-timing-tester-report.md`; the starts' times are the three starts' reports, `state/consults/2026-11-21-operator-sitting-queue-start-check-2-tester-report.md`, `state/consults/2026-11-21-operator-sitting-queue-start-check-3-tester-report.md` and `state/consults/2026-11-21-operator-sitting-queue-start-check-4-tester-report.md`. No command changed, and nothing else in the script changed.*
+
+*The custodian's note, 2026-11-26: this paragraph was replaced a third time, and the fixtures' line once, for the sitting's own folder (the advisor's rulings ADV-2026-11-26-15 item 4, `state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-15-the-order-of-the-reads-what-assumes-main-first-no-held-piece-merges-until-the-sittings-checkout-stands-the-lab-facts-to-the-lasting-identity-consult.md`; ADV-2026-11-26-19 item 6, `state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-19-c-over-the-floor-noted-the-humans-running-app-stays-untouched-nothing-starts-the-app-or-a-dev-server-until-they-close-it.md`, whose sentence after the bold words is the advisor's, byte for byte; and ADV-2026-11-26-22 item 4, `state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-22-what-goes-to-the-human-is-one-draft-draft-d-taken-as-standing-rules-the-sittings-checkout-a-worktree-on-d.md`). The folder is a worktree on D:, detached at the tip of release/v0.2, 7402b64564ca9476664f7871716588335261aaa5. Its one build ran there on 2026-11-26: npm ci in both folders, the viewer's build, the shell's build and the shell crate's cargo build, each exiting 0, the last ending at 2026-11-26T20:45:03Z (date -u, in the custodian's logs). The viewer's two printed lines were seen again in that build. Section 1's other lines were read again for the new folder: the fixtures stay where they are, named by their full path, and the publish destination stays under `C:\dev\spatial-ide\target\`. Nothing else changed.*
 
 **Where you type an answer.** In the custodian's session, as a message, each answer led by its row or item id (for example: AD3: cancelled before the file came back). Answers on wording (N1 to N8, the Extent row, the 37 strings, OPEN-3, OPEN-5, entry 79, R1 and the split) are yours to type in your own words or as yes, or as accepted as it stands. The custodian files your messages as you typed them and writes the walkthrough's result logs from them.
 
@@ -34,10 +36,14 @@ Run the first once, before the first start: it builds the map viewer that the ap
 | (iii) | The hero path and milestone 4: Parts A, L, G, Y and AC, entry 79, W1 and W2 | 33 rows or answers | 80 |
 | (iv) | The felt verdicts: P1, P2, T1, T2, T4 and entry 95 | 6 | 15 |
 | (v) | The proposed split of the marked strings into set A and set B (section 4) | 1 answer: accept, or move strings by number | 15 |
+| Step 358 | The largest file opened, a filter applied at once, then a wide view: the step you asked for on 2026-11-23, for your decision on PR 358 (section 6) | 8 rows a try, up to five tries | 20 |
+| Step 68 | Optional: item 68 of the known limitations as it stands today (section 6) | 6 rows a try | 15 |
 | (vi) | Every other Part and sight: Parts P, T, W, V, Z, AA, AB and R, item 40 and the Reset line | 52 | 110 |
-| | Total | | 280 |
+| | Total | | 300, or 315 with the optional Step 68 |
 
 The minutes are the custodian's estimate. The blocks run in this order (the ruling's item 3). Each block's content (what to copy, what to have ready, the strings with their clause checks, and the questions) is in section 3 under the same number, and its Parts are in section 5.
+
+The custodian's note (2026-11-23): the minutes of Step 358 and Step 68 are the architect's estimates, not the custodian's. Both steps, and section 6 where they stand, were added on the advisor's ruling ADV-2026-11-23-05 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-05-the-sitting-steps-358-and-68-approved-with-five-changes-section-6-the-architects-finding-right.md`), under the delegation of 2026-11-13. Section 6's Step 358 was changed after a tester's run of the case on 2026-11-23, on the advisor's ruling ADV-2026-11-23-09 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-09-the-grid-run-step-358-changed-no-further-run-grid358-freed-the-slip-and-one-finding.md`), under the same delegation. The tester's report is filed whole at `state/consults/2026-11-23-operator-sitting-queue-grid358-tester-report.md`. The run's evidence folder, which holds the two pictures of the met try, `met-zoom-to-layer.png` and `met-zoom-in.png`, is C:\dev\spatial-ide-local\evidence\2026-11-23-grid358 on the laptop: paste that into File Explorer's address bar.
 
 **The custodian's notes on section 3.**
 - Its task 5 item 1: L1, L2 and L5 have no blank field in the walkthrough; type them in the session like the rest, and the custodian adds them to Part L's log.
@@ -222,6 +228,7 @@ The hero slice is open, filter in SQL, style, publish (`docs/07_Roadmap.md:9 @ a
 - `renderer/bundle-viewer/dist` built (`:286-289`) for AC5's serve.
 - DevTools in the dev build for Part L's re-arm.
 - For AC11, a real parcel file with many columns. For AC12, a file whose attribute data passes 268,435,456 bytes, which the human brings (`:1982`).
+- AC12's expected outcome (`:1998`) is out of date in one sentence. By an architect's reading of the code, not run: since the first look was fixed (PR 335), the map does not stay at the first 10,000 rows; once its first data load completes, it fills the view it shows. The view still moves to fit, as the row says. Of the felt question, answer the first half only.
 
 **(d) Strings.**
 
@@ -1187,3 +1194,67 @@ This Part is the operator gate of `frontends/shell/PUBLISH-ATTEMPT-LIFECYCLE-SRC
 ---
 
 
+
+---
+
+# 6. Step 358 and the optional Step 68: PR 358's two cases (added 2026-11-23)
+
+You asked for Step 358 on 2026-11-23, for your decision on PR 358. It comes after block (v) and before block (vi). A tester's script tried the case on 2026-11-23 and met it once. What a hand at the keyboard meets is still not known.
+
+**What the tester's run showed.** The script ran in a separate checkout of main without PR 358, in a debug build. It opened the file through a test hook, not the file picker, and it sent the Enter key itself. It made 20 tries.
+- One try met the case. There, Zoom to layer left only a thin line of parcels at the top edge, and the status line read as row 358.7's first sentence says. The view took 5 minutes 16 seconds to hold still. Three wheel notches on the empty band then filled it across the view in about a minute.
+- With Enter sent about 30 times a second from the open on, which is what this step asks of your hand, none of 10 tries met it. In 4 of those the command bar never emptied.
+- With the first Enter sent at a set time after the file was admitted, and one to five presses in all, 1 of 10 tries met it (at 400 ms, with one press).
+- In 6 other tries the number of row 358.5 was between its two values. By arithmetic a wide view is then still filled. No one has looked.
+- Two pictures of the met try, `met-zoom-to-layer.png` and `met-zoom-in.png`, are in the run's evidence folder, which the custodian's note names.
+
+So the case is real in this build, and five tries by hand may well all miss. The tester's result is there for your decision whether you make the tries or not.
+
+## Step 358 — the largest file opened, a filter applied at once, then a wide view (PR 358's grid case; PR 358's fix is not in this build)
+
+This step tries whether a filter applied while the file's first data load is still running can set the map's tile grid from only part of the filtered data. If it does, a wide view is then left partly unfilled. The step can only meet the case by timing; the session log tells you after each try whether it was met. A try that misses shows nothing.
+
+**Have ready.** `slow-filter-scan.parquet` (4,000,000 parcels, the largest file in `target\fixtures\manual-walkthrough\`), made by section 1's fixture command. The app freshly started with section 1's start command, with **no file open**. File Explorer and Notepad, for the session log in `%LOCALAPPDATA%\dev.spatialide.shell\logs\`.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| 358.1 | Press Ctrl+K and type `/filter id < 1000 OR id >= 3900000`. Do not press Enter yet. | The text stays in the command bar. |
+| 358.2 | Click **Open GeoParquet…** and pick `slow-filter-scan.parquet`. As soon as the file picker closes, press Ctrl+K (or click the command bar) and **hold Enter** until the command bar empties, or until the map has shown parcels for about five seconds. Then let go. | While the app checks the file, each Enter only shows a note under the bar; that is expected and harmless. In the tester's run the check took under a second; it can take longer the first time a file is read. When the file is admitted, the filter is sent and the bar empties. In 4 of the tester's 10 tries with Enter held, the bar kept its text and the line under it read "[P6 placeholder] Not applied: the card id < 1000 OR id >= 3900000 can only be used on its own. Turn it off first." By an architect's reading of the code, not run, this is a fault of the command bar: the filter is on all the same, and the line under the bar can also read "[P6 placeholder] A filter change is still being applied." with nothing still being applied. If you see either line with the text kept, note it and go on to 358.3: the log tells in any case. |
+| 358.3 | Hands off: no pan, zoom or resize. Wait until the map and the status line hold still. | The map shows a short strip of parcels at the bottom-left of the data. It may fill slowly. |
+| 358.4 | In File Explorer, open the newest `session-….log` in the folder above with Notepad. Press Ctrl+End, then search upwards (Find, direction Up) for `candidate-grid-frame-established`. Read that line's `baseSpan=` value. | One number. |
+| 358.5 | Read the number. **About 160000:** not met. This try shows nothing; note it and start the next try at 358.1. **Under 50000** (33168.2 in the tester's met try): met; go on to 358.6. **Anything between** (103331.8 five times and 82371.5 once in the tester's run): note the value; by arithmetic the try shows nothing visible; start the next try. | — |
+| 358.6 | The wide view: click **Zoom to layer**. Hands off until the status line holds still; this can take several minutes (5 minutes 16 seconds in the tester's run). | The map shows the whole data: a strip along the bottom-left and parcels along the top edge. |
+| 358.7 | Look at the top edge of the data and at the status line. | **If the case shows:** only a thin line of parcels at the top edge, with the band above it empty, and the status line reads "Filling has finished for this view — some areas were not loaded; pan or zoom to load them." **If it does not show:** a band about ten times as thick is filled across the top, and the status line reads "Showing all … features in view". Note that too: after a number under 50000 the reading expects the case to show. |
+| 358.8 | Optional: zoom in on the empty band, or pan it towards the middle of the map, and wait until the status line holds still. | In the tester's run three wheel notches on the band filled it across the view in about a minute, and the status line then read "Showing all … features in view". By reading, not run: what stays until the file is opened again is the small tile grid, so any view this wide leaves its far part unfilled at first. |
+
+358.1 to 358.5 (or to 358.8) is one try. For the next try, do not press Clear and do not touch the filter's card: the card from the last try keeps the held Enter from changing the old file. If the bar still holds the text from the last try, do not type it again. Start again at 358.1 and reopen the log in Notepad each time. The step is done after the first try that reaches 358.7, or after five tries that miss.
+
+**Questions.**
+- For each try: whether the bar emptied, the `baseSpan` value from 358.4, and, if you went on, what 358.7 showed, and 358.8 if you did it.
+- Overall: met, or not met, in how many tries. Neither answer says how often a user meets this case.
+- Your decision on PR 358, in your own words, if you want to give it now. Until you say otherwise it merges after the tag and limitation 68 gets the approved sentences, as your message of 2026-11-23 says.
+
+Step 68, which follows, is an optional second part: it tries item 68 of the known limitations as it stands today, a different case in the same build, and takes about 15 minutes (an estimate).
+
+## Step 68 — a filter change made while the previous data load is finishing (KNOWN-LIMITATIONS item 68; PR 358's fix is not in this build)
+
+This build is main's, without PR 358, so the step tries item 68's fault as main has it. The fault needs the filter's data load to end after you press Clear but before the app has set up the Clear's own load, which takes one request to the engine and back. No hand can aim at a moment that short: a try meets it only by chance, and most tries show nothing. A try that shows nothing says nothing about whether the fault is there, and no result of this step says how often a user meets it. **From 68b to 68e, do not touch the map, the panels or the window size:** a pan, a zoom or a resize asks for the view again and ends the case. Press Clear once per try.
+
+**Have ready.** `slow-filter-scan.parquet` (4,000,000 parcels, the largest file in `target\fixtures\manual-walkthrough\`), made by section 1's fixture command. The app started as section 1 says. File Explorer and Notepad, for the session log in `%LOCALAPPDATA%\dev.spatialide.shell\logs\`.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| 68a | Click **Open GeoParquet…** and open `slow-filter-scan.parquet`. Wait until the map stops changing. | The map shows parcels. The open can take a while: the app checks every id in the file first. |
+| 68b | In the Filter section, type `id > 3999900` and press **Apply**. Watch the map. Do not press Cancel. | The map empties. While it stays empty, this filter's first data load has not ended. After a moment the map moves to one short row of parcels at the top right of the data (99 parcels). On the first try, let them appear and note roughly how long they took. Then press Clear and go on to 68c; that try is practice and shows nothing. |
+| 68c | On each later try: after 68b's Apply, press **Clear** just before the moment you expect the 99 parcels to appear. Then wait, hands off, until the map holds still. | Note whether the map was still empty when you pressed Clear. The map then moves to the bottom edge of the data, where the file's first parcels are. |
+| 68d | Look at the map and the status line, still with no pan or zoom. | **If the fault was met:** parcels lie only in a thin band along the bottom edge of the data (the file's first 10,000 parcels, five rows of the grid; at this zoom the band can be as thin as a line). The map above the band stays empty, although the file has parcels there. The status line can read `Showing all`, a number, and `features in view`. **If it was not met:** parcels appear above the band too, at least near the middle of the view. |
+| 68e | In File Explorer, open the newest `session-….log` in that folder with Notepad. Press Ctrl+End. Use Find, direction Up, for `candidate-untiled-terminal`, twice: those two lines are the ends of 68b's and 68c's loads. Then search down from the lower of the two for `candidate-first-look-view-planned`. | **(1)** Either line contains `superseded`: the Clear went in before the filter's load ended, but that load ended after the Clear's own was set up. Not met; the try shows nothing. **(2)** Neither contains it, and a `candidate-first-look-view-planned` line comes after the lower one: the filter's load had ended before you pressed Clear. Not met; the try shows nothing. **(3)** Neither contains it, and no `candidate-first-look-view-planned` line comes after the lower one: the fault was met. |
+| 68f | The wide view: scroll out by one wheel notch at the map's centre, and wait. | This zoom asks for the view's tiles, so the case ends here either way. If the fault was met, the empty area above the band now fills; if not, it was filled already. Do not scroll far out: near the whole file, the render budget leaves areas empty in its own words, which are not item 68's. |
+
+68b to 68f is one try. Make as many tries as the step's minutes allow; after 68f, the next try starts again at 68b.
+
+**Questions.**
+1. For each try: 68e's outcome (1, 2 or 3); whether the map was empty when you pressed Clear; and whether 68d showed the band alone with the map empty above it.
+2. Overall: met in a try / not met in N tries. Not met does not show the fault absent, and neither answer says how often a user meets it.
+
+After Step 358, and after Step 68 if you do it, close the window and start the app again with section 1's second command before block (vi).
