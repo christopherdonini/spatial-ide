@@ -1210,3 +1210,16 @@ A code or test comment that names one gives this form's name with the id (`SHELL
 5. **The order** (its item 5): one words commit, holding the ruling's items 1 to 3 and nothing else, after the U4 correction commit of Amendment 13 and before the gates' read parts.
 6. **For the reviewer's read part:** that `filter-zoned.parquet` is a dataset in metres, from the fixture's generator (its item 3). If it is not, AI1 opens `100k-happy-path.parquet` in its place, and the advisor is told.
 7. **At the merge check** the advisor compares the words with the ruling byte for byte (its item 6).
+
+## Amendment 15 — 2026-11-27 — the custodian's: the architect's read part at cbea7d4e
+
+*References only. Nothing above is edited.*
+
+1. **The read part** is filed at `state/consults/gates/2026-11-27-shell-scale-display-build-gate-architect-read-part.md`: the form at main f39536be767cedc2f6637e3d0d48d286e2bc2688, the code at cbea7d4e06622e5b1debc058ba2a23ea696df761. It gives no verdict; the run part reads E-SCALE (ADV-2026-11-27-25 item 4).
+2. **F1** (Architecture; §8 item 9 holds until it is fixed): its pair in `frontends/shell/src/layout/scaleBar.ts` is read in place. It changes one doc line and no behaviour, and by the report it changes none of §7's constants and no claim (ADV-2026-11-27-25 item 6). The words are not the human's.
+   - A worker applies it with no re-gate, after the reviewer's read part has left the worktree, in one correction commit with whatever the advisor rules under item 3.
+   - The PR body lists it, and the reviewer gives the changed line a narrow read.
+3. **To the advisor**, in one message once the reviewer's read part is filed: F2 (a comment in a file outside §7's list, so class 9 and §8 item 1), F3, F4 and F5 (clauses in the advisor's words, unreworded) and F6 (a note on §2 item 2's design).
+4. **F7** is the reviewer's read part's to answer: the mutations observed again at this head, and the second cases of M1, M3 and M4. Its brief asks it.
+5. **F8** is a note. Nothing changes for it.
+6. **Next:** the reviewer's read part, which is running, then one correction commit.

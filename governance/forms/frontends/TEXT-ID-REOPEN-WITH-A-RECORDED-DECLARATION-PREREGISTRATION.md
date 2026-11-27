@@ -550,3 +550,15 @@ New:
    - The gate's report says they need no re-gate (its section on the wording-blocks rule).
 3. **A1** falls on the null-by-name form, `governance/forms/engine/IDENTITY-SCAN-REFUSES-A-NULL-BY-NAME-PREREGISTRATION.md`, and is carried there by that form's Amendment 3 in this same commit, before its code.
 4. **Next:** the reviewer's form gate, on this form as amended.
+
+## Amendment 3 — 2026-11-27 — the custodian's: the reviewer's form gate, PASS WITH NOTES; V1 to V3 and W1 to W4 read in place
+
+*References only. Nothing above is edited. Written before any code.*
+
+1. **The gate** is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-form-gate-reviewer.md`: the form at main f39536be767cedc2f6637e3d0d48d286e2bc2688, the code at 2df8b4aeeba1d3820ec0ba9e9f2bcd4ee7338a3e. Its verdict is PASS WITH NOTES. With Amendment 2's, both form gates have passed.
+2. **Its nine pairs are read in place**, each New for its Old: V1 (two pairs), V2 (two pairs) and V3 (Evidence), and W1 to W4 (Documentation), in the report's section headed "Findings, as exact pairs".
+   - Each Old was found exactly once in this form, by script at this commit, from the report's own lines. None of them lies inside an Old of Amendment 2.
+   - W1's and W2's Olds stand in Amendment 1's text. They are read in place as Amendment 2 read D5 and D6.
+   - The report says they need no re-gate (its preamble to the findings).
+3. **A departure, disclosed.** The brief said to write no file. The report says it wrote its check scripts and one scope list in the session's scratch folder, and nothing elsewhere. No file of the repository changed.
+4. **Next:** the build, on text-id's head 2df8b4aeeba1d3820ec0ba9e9f2bcd4ee7338a3e, under Amendment 1 items 5 to 7.
