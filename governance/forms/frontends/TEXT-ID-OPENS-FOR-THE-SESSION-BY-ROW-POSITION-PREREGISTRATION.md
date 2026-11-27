@@ -1122,3 +1122,25 @@ Nothing above is edited.
 *References only. Nothing above is edited.*
 
 1. **Class 2** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-32-the-two-hooks-caller-lines-b-alone-brings-both-current-after-it-takes-main-in.md`, item 5): `e2e/admission-remediation.mjs` calls both hooks `e2eSaveProjectToFolder` and `e2eOpenProjectFolder`, and neither declaration at this piece's head names it. The piece B (`reload-ends-the-old-pages-opens`) names the file under that ruling, and this piece does not edit the lines.
+
+## Amendment 20 — 2026-11-27 — the custodian's: the correction of `TEXTID'` (d) at b7a3dae6
+
+*References only. Nothing above is edited.*
+
+1. **The correction commit** is b7a3dae6b9f5c29262bc7472b1b4f1bd8ca024d2, on 2df8b4ae, as Amendment 18 recorded before it. The worker's report is filed at `state/consults/gates/2026-11-27-text-id-opens-for-the-session-by-row-position-correction-31-worker-report.md`. It changes two files: `frontends/shell/e2e/admission-remediation.mjs` and `frontends/shell/e2e/README.md`. That is 71 insertions and 4 deletions, which count in this piece's closing count.
+2. **The wait,** by the report: one function, `openAnotherAndWaitForClose`, in the suite's file, with a Console reader beside it.
+   - Its signal is a new `close_dataset` row at `ok` in the Console, whose request is not among those read before the open. Its bound is 30 s, and it fails the step by name.
+   - The reopen is not retried, and no assertion of the step was removed or loosened.
+   - The function also collapses the Console again if it expanded it. That is the worker's own choice; `reopen.mjs` leaves the Console open.
+3. **The departures,** by the report:
+   - the step's pass note for (d) also gains the act. It is a note, not an assertion;
+   - the function's doc comment names the C1 piece's step as a caller to come;
+   - one light check started outside a hold.
+4. **The checks at the head,** by the report:
+   - `node --check` of the file: green;
+   - the shell's typecheck and tests: green, 1697 tests;
+   - the verify scripts and the scripts' `node --test`: green.
+   - No Rust file changes. The branch's CI is read at the head.
+5. **Next:**
+   - Each gate reads the correction in its run part, with the run. At the merge check, the advisor checks that (d)'s wait is the ruling's item 2's and that no assertion went.
+   - The port order does not change.

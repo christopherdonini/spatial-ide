@@ -690,3 +690,28 @@ New:
    - the advisor's ruling;
    - one correction commit, as ruled;
    - the run part, at the port.
+
+## Amendment 9 — 2026-11-27 — the custodian's: ADV-2026-11-27-31, after the merge and before the correction
+
+*References only. Nothing above is edited. Written before the correction's code.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-31-both-e2e-steps-corrected-before-the-port-textid-d-and-e-r1-no-gate-runs-again-the-readme-section-replaced-whole.md`. It rules E-R1 corrected by a worker, with no gate run again.
+2. **The merge** (the ruling's item 3, step 1) is b018f9145cdc313cc827f4c122386edfa552717b. Its parents are 97019e91 and text-id's corrected head b7a3dae6b9f5c29262bc7472b1b4f1bd8ca024d2, and it merged with no conflict (`state/consults/gates/2026-11-27-text-id-opens-for-the-session-by-row-position-correction-31-worker-report.md`).
+   - Its own lines are text-id's correction: 71 insertions and 4 deletions in two files.
+   - By §7's counting line, they are counted out by ranges.
+3. **Class 9, on the ruling's items 3 and 4.** E-R1 gains two acts, and its steps keep their numbers:
+   - Step (3) begins by opening `no-id-column.parquet` and waiting for the close of step (1)'s open. Then comes the control, as written.
+   - Step (4), after its open, waits for the close of the control's open. Then it removes the first folder.
+   - The wait is text-id's function. Step (5) and M-RD8 do not change, and no assertion of the step is removed or loosened.
+   - The step's doc comment follows the acts, in the worker's words.
+4. **The correction commit** holds four things and nothing else:
+   - the step, with its doc comment;
+   - the e2e README section, replaced whole by the ruling's item 6. If the corrected step does not meet a clause, the clause goes to the advisor before the commit;
+   - S-R2's comment: the ruling's item 5 span and new line;
+   - the architect's F4 pair (Amendment 7 item 3).
+5. **The reading under the ruling's item 5.** In this form, "real fixture file" means a file under `protocol/skp/tests/data/`, not a refusal made by hand. The fixture file does not change in this piece.
+6. **Class 8 again** (the ruling's item 3, step 4): the count is taken at the correction's head by §7's own command, with the merge's lines counted out by ranges. §7 is not edited.
+7. **Unchanged** (the ruling's items 7 and 8): row AH8 and its result-log line, and KNOWN-LIMITATIONS item 3.
+8. **Next:**
+   - the correction commit, with the suites that start no app and `node --check` of the file green at its head;
+   - each gate reads the merge and the correction in its run part.
