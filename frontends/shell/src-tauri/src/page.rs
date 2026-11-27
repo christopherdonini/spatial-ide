@@ -115,7 +115,10 @@ pub enum Settled {
     Current,
     /// The open's page had ended. A returned name is closed by a late close on a thread of its own;
     /// its handle is `None` when there was no name, or when the thread did not start. Only the
-    /// tests read the handle.
+    /// tests read the handle: `an_open_settled_after_its_page_ended_is_closed`,
+    /// `the_gate_waits_for_ends_earlier_opens_and_late_closes` and
+    /// `a_reopen_behind_an_earlier_pages_reopen_waits_then_opens` join it, so that they assert after
+    /// the late close has run; the commands discard it.
     Ended(Option<JoinHandle<()>>),
 }
 
@@ -291,7 +294,10 @@ impl Pages {
     /// - **Ended page, a name:** in the same critical section the entry is removed and
     ///   `late_closes_running` is raised, so the gate never sees the entry gone with the late close
     ///   not yet counted. The mutex is then released and a late close starts on a thread of its own:
-    ///   the host's close, then `Projects::release_ended`, then the decrement, held by a drop guard.
+    ///   the host's close, then `Projects::release_ended` when there is a `Projects`, then the
+    ///   decrement, held by a drop guard. With no `Projects` (`setup` managed `None`), no project
+    ///   lock can be held, since only `Projects` takes one and `save_project` and `open_project`
+    ///   refuse without it, so the late close is the host's close and the decrement.
     ///   If the thread does not start, the error goes to standard error by `writeln!`, the guard
     ///   opens the gate, and that open stays held, as it was before this module.
     pub fn settle(

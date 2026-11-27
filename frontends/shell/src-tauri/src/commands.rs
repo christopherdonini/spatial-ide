@@ -16,7 +16,8 @@
 //! **This file contains no logic** beyond decode → call one `SkpHost`/state method → serialize
 //! (`close_dataset` also starts [`Projects::release_ended`], after the host's close; `open_dataset`
 //! and `open_project` also pass the page gate and note the open on its page, and `cancel` and
-//! `close_dataset` note a gate-waiting open and a closed name, all in `page.rs`: ADR-037) — docs/02's
+//! `close_dataset` respectively end an open that waits at the gate and drop a closed name from the
+//! page's opens, all in `page.rs`: ADR-037) — docs/02's
 //! "frontends: clients only, no logic" applied to the Rust half of a client. `lib.rs` lists every
 //! command below in its `tauri::generate_handler!` call; adding one here without adding it there is
 //! a command JS can never reach, which is the reason there is exactly one list.

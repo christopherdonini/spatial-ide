@@ -193,7 +193,11 @@ enum OriginSelfCheckOutcome {
 /// `expect`, indexing, `eprintln!` or unchecked arithmetic. The two closures are called on the end's
 /// thread, with a clone of the `AppHandle`: the pool stop (under its `cfg`; a no-op otherwise) and
 /// the session log's `SessionLog::append`. The handle `page_started` returns is read only by the
-/// tests of `page.rs`.
+/// tests of `page.rs`. When one of the four managed values it reads is missing, it returns without
+/// starting an end, and the old page's opens stay held with nothing logged. No path reaches that
+/// return: `setup()` manages all four with no condition, `Projects` and `SkpHost` before
+/// `PinnedOrigin` and `RunningPublishes` and `Pages` after it, with no call between them that can
+/// run this hook, and the arm calls this function only once `PinnedOrigin` is managed.
 fn start_page_end(webview: &tauri::Webview) {
     let (Some(pages), Some(host), Some(projects), Some(publishes)) = (
         webview.try_state::<Arc<page::Pages>>(),
