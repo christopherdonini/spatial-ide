@@ -2131,3 +2131,36 @@ Fill in after running the rows above (the identity-declaration-route-for-session
 - **AG4 (what Cancel returned to, or that Cancel was not reached):**
 - **AG5 (the Identity line after the reopen; whether a disclosure showed):**
 - **AG6 (for each string: the wording you want in its place, or "keep"):**
+
+## Part AH — open a file whose own id column cannot serve by row position, for this session only: the choice, the session tier it opens on, a filter naming id, a saved project and its reopen (text-id-opens-for-the-session-by-row-position)
+
+This Part is the Operator part of `governance/forms/frontends/TEXT-ID-OPENS-FOR-THE-SESSION-BY-ROW-POSITION-PREREGISTRATION.md` §10, run only on a build with that piece merged, with a blank result log. Its rows follow the e2e step `TEXTID'` (a) to (d), one row to a line, read by eye on the packaged build. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). Every sentence in it is a draft for the human's sight (P6) and none is the human's wording. The strings named below are the advisor's words (ADV-2026-11-23-36 item 3), as the words commit set them. This Part is run on Windows.
+
+**Before AH1 to AH6:** a build with the piece merged and no dataset open; fixtures `text-id-no-integer-refused.parquet` (a text `id` and no other integer column), `dupkey-refused.parquet` (Part I) and `no-id-column.parquet` (Part C), regenerated with `cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture`; an empty folder, made outside the fixtures folder, for the project in AH5.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AH0 | Read the form's §11, the last amendment first. | Record the number of the last amendment you read. |
+| AH1 | Click **Open GeoParquet…** and select `text-id-no-integer-refused.parquet`. Read the refusal and everything under it, and click nothing. | A red-bordered refusal panel shows code `engine.identity_unusable`. No candidate list stands in it: the file has no other integer column. Under the refusal a button reads **"Open for this session by row position"** (S-1), with the paragraph above it reading **"This file's own id column cannot serve as its identity. You can open it as a file with no id column opens: features are identified by their position in the file, for this session only. The file's own id values are then not shown, and a filter cannot use id. Nothing of this choice is saved or published, and opening the file again asks again. If the column was refused for its values, it is checked across the whole file again first."** (S-2). Nothing is chosen. **Felt:** does the paragraph say what the choice gives up and what it does not keep, and does the button read as your act and not a default? **Strings for sight (P6):** S-1, S-2. |
+| AH2 | Click the button of AH1. Read the summary and the map. | The file is admitted. The Identity line reads `session-ordinal:file_row_number — by-construction-within-generation`, its **Session identity** row reads **"this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does."**, and a second line stands beside it reading **"You chose to open this file by row position: its own id column is not its identity."** (S-3). Features draw on the map. No refusal panel remains. **Felt:** is it clear that row position stands in for an identity and that you chose it? **Strings for sight (P6):** S-3. |
+| AH3 | With the file of AH2 open, type the filter `id = 'key-1'` and apply it. Record what shows. | The filter is refused with code `skp.filter_identity_alias_ambiguous`. Record the message, and whether it reads as an answer to what you typed. |
+| AH4 | Open `dupkey-refused.parquet` with **Open GeoParquet…**. Read the refusal, then click the button. | The refusal shows code `engine.identity_unusable` with the message for a repeated `id`, and the button of AH1 stands under it. After the click the file is admitted on the session tier with the S-3 line, as in AH2. Record whether anything shows between the click and the admission. |
+| AH5 | Open `no-id-column.parquet` with **Open GeoParquet…**. Then open `text-id-no-integer-refused.parquet` again, click the button of AH1, click Save project in the Layers region and choose the empty project folder. Open `project.spatial` in that folder in a text editor. | `no-id-column.parquet` is admitted on the session tier with its **Session identity** row, and neither the button nor the S-3 line shows for it. `project.spatial` holds `"identity": null` for the dataset and no `set_aside` anywhere in it. |
+| AH6 | Close the app, start it again, and open the project from that folder (Part AD's steps). Read the panel, then click the button. | The reopen is refused with code `engine.identity_unusable`. Only the button of AH1 is offered: no declaration form shows, and the project file's other claims are not shown as changed. After the click the file is admitted on the session tier with the S-3 line. Record whether the reopened view, filter and style are applied, or that none was saved to apply. |
+| AH7 | P6 sight of the strings. Seen in AH1 and AH2: S-1, the button's label; S-2, the paragraph above it; S-3, the line in the summary. (S-5, the line a remediation attempt shows when it carries the choice, and S-8, the reopen's refusal after the choice, are not reached by these rows.) | For each string, the log records either the wording you want in its place, or "keep". None of them is the human's wording. |
+
+## Result log
+
+Fill in after running the rows above (the text-id-opens-for-the-session-by-row-position Part AH).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AH1 (the refusal's code; whether a candidate list showed; the button and the paragraph; felt):**
+- **AH2 (the Identity line; the Session identity row; the S-3 line; whether features drew; felt):**
+- **AH3 (the code and the message):**
+- **AH4 (the refusal's message; what showed between the click and the admission):**
+- **AH5 (what `no-id-column.parquet` showed; what `project.spatial` held for the identity and for set_aside):**
+- **AH6 (the reopen's refusal; what was offered; the summary after the click; what the reopen applied):**
+- **AH7 (for each string: the wording you want in its place, or "keep"):**
