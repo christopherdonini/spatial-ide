@@ -175,4 +175,38 @@ describe("ConditionView: App's markup, moved whole (C-R1)", () => {
       expect(container.querySelectorAll(selector), route).toHaveLength(1);
     }
   });
+
+  it("CV-K1: in the strip, a condition with a new id and the same display is a new element; the same id raised again keeps its element", () => {
+    // The kept-element half runs first: a guard, green before the other half fails. The same id raised again is the same element, and S-5 shows.
+    render(conditionOn("stream-terminal", 1), "strip");
+    const kept = container.firstElementChild!;
+    render(conditionOn("stream-terminal", 2), "strip");
+    expect(container.firstElementChild, "the same id raised again keeps its element").toBe(kept);
+    expect(container.querySelector(".condition-occurrences")?.textContent, "and S-5 shows").toBe(raisedTimesText(2));
+
+    // The new-element half: two `replaceBatch` events on the save-notice route with equal displays, through the real reducer, give two ids.
+    // (`conditionOn` mints `condition-1` from a fresh state every time, so it cannot give a second id.)
+    const batch: ConditionsEvent = {
+      type: "replaceBatch",
+      route: "save-notice",
+      code: "project.save_notice",
+      target: { kind: "resource" },
+      generation: R,
+      displays: [{ kind: "text", text: "save a" }],
+    };
+    const afterFirst = ([{ type: "opened", resource: R }, batch] as ConditionsEvent[]).reduce(conditionsReducer, initialConditionsState);
+    const afterSecond = conditionsReducer(afterFirst, batch);
+    const first = Object.values(afterFirst.byId)[0];
+    const second = Object.values(afterSecond.byId)[0];
+    expect(second.id, "the second batch's condition has a new id").not.toBe(first.id);
+    expect(second.first, "with the same display").toEqual(first.first);
+
+    render(first, "strip");
+    const held = container.firstElementChild!;
+    render(second, "strip");
+    expect(held.isConnected, "the held element is gone from the document").toBe(false);
+    const fresh = container.firstElementChild!;
+    expect(fresh, "the strip holds another element").not.toBe(held);
+    expect(fresh.getAttribute("role"), "which carries the alert role").toBe("alert");
+  });
 });

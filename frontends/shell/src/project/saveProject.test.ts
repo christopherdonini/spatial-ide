@@ -149,4 +149,36 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     });
     expect(await newSaver().save(input()), "the saved notice, then O-9's place, and nothing after").toStrictEqual([SAVED_NOTICE, THROUGH_LINK_NOTICE]);
   });
+
+  it("SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      const saver = newSaver();
+      vi.setSystemTime(new Date(2026, 10, 26, 23, 4, 5));
+      const first = await saver.save(input());
+      vi.setSystemTime(new Date(2026, 10, 26, 23, 4, 7));
+      const second = await saver.save(input());
+      expect(first?.[0], "the two saved lines differ").not.toBe(second?.[0]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("SP-T2: two refused saves with the same kernel message, at two set seconds, answered first lines that differ", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "binding_pick_project_folder") return FOLDER;
+        throw { code: "skp.project_save_failed", message: "the folder could not be written", fields: {} };
+      });
+      const saver = newSaver();
+      vi.setSystemTime(new Date(2026, 10, 26, 9, 4, 5));
+      const first = await saver.save(input());
+      vi.setSystemTime(new Date(2026, 10, 26, 9, 4, 7));
+      const second = await saver.save(input());
+      expect(first?.[0], "the two not-saved lines differ").not.toBe(second?.[0]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
 });

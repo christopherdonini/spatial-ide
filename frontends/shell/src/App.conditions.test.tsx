@@ -512,6 +512,38 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
     expect(h.qa(".condition-occurrences"), "and counts no occurrence").toHaveLength(0);
   });
 
+  it("A-A1: a second save's saved line is a new element in the strip with the alert role, its text differs from the first save's, and no S-5 line stands", async () => {
+    // The fake `Date` is installed before the open and only moved forward, so that the viewport throttle's `Date.now()` never reads a time before its last query.
+    vi.useFakeTimers({ toFake: ["Date"] });
+    try {
+      vi.setSystemTime(new Date(2026, 10, 26, 23, 4, 5));
+      await h.open("C:/data/a.parquet");
+      const save = window.__SPATIAL_E2E__?.e2eSaveProjectToFolder;
+      if (!save) throw new Error("e2eSaveProjectToFolder E2E hook is not registered");
+      await act(async () => {
+        expect(await save("C:/projects/out")).toBe("asked");
+      });
+      await flush();
+      const held = h.q(".attention-strip .save-notice");
+      expect(held, "the first save's line is in the strip").not.toBeNull();
+      const firstText = held!.textContent;
+
+      vi.setSystemTime(new Date(2026, 10, 26, 23, 4, 7));
+      await act(async () => {
+        expect(await save("C:/projects/out")).toBe("not-asked");
+      });
+      await flush();
+      expect(held!.isConnected, "the held element is gone from the document").toBe(false);
+      const now = h.q(".attention-strip .save-notice");
+      expect(now, "the strip's save line is another element").not.toBe(held);
+      expect(now?.getAttribute("role"), "with the alert role").toBe("alert");
+      expect(now?.textContent, "its text is not the first save's").not.toBe(firstText);
+      expect(h.qa(".condition-occurrences"), "and no S-5 line stands").toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   // RECORDED MUTATION for "C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line": in `App.tsx`'s `createStepQueue` report handler dispatch `raise` for the record-notice route again, as at 12a9aa98, in place of `replaceBatch`. Expected failure: the second refused step merges into the first as an occurrence, so an S-5 line stands in the notice.
   // OBSERVED 2026-11-24 at 7c18e29f: FAILED -- AssertionError: its owner replaced it: no occurrence count: expected [ <div …(1)></div> ] to have a length of +0 but got 1. Reverted after observing.
   it("C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line", async () => {

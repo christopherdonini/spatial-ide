@@ -135,6 +135,37 @@ async function run(page, consoleHandle, copy) {
   record("the save notices hold SAVED_NOTICE once, and only it (N-4: exactly one notice)", afterSave.saveNotices.length === 1 && afterSave.saveNotices[0] === saved, JSON.stringify(afterSave.saveNotices));
   record("S-3 is absent", afterSave.othersText === null, `the strip's button reads ${JSON.stringify(afterSave.othersText)}`);
 
+  // 1b. E-A1, a second save is announced: save again, and what the strip shows is a new element whose text differs from the first save's line.
+  // The first wait is a harness bound on readiness, not a timing: the page's clock must read a whole second past its own first reading, which follows step 1's.
+  const firstSaveLine = afterSave.saveNotices[0];
+  const pageClock = () => page.evaluate(() => Date.now());
+  const clockAtFirstReading = await pageClock();
+  const nextWholeSecond = (Math.floor(clockAtFirstReading / 1000) + 1) * 1000;
+  await waitFor("the page's clock to read a whole second past the first reading", pageClock, (now) => now >= nextWholeSecond);
+  const held = await page.$(".attention-strip .save-notice");
+  if (held === null) throw new Void("no .attention-strip .save-notice stands to hold before the second save");
+  const askedAgain = await page.evaluate((f) => window.__SPATIAL_E2E__.e2eSaveProjectToFolder(f), folder);
+  if (askedAgain !== "not-asked") throw new Void(`the second e2eSaveProjectToFolder answered ${JSON.stringify(askedAgain)}, expected "not-asked"`);
+  // The wait throws no Void: the held element still connected at the bound is a FAIL, recorded below with the last reading, and the checks that follow read after the wait.
+  const heldWaitStart = Date.now();
+  let heldConnected;
+  while (Date.now() - heldWaitStart < WAIT_TIMEOUT_MS) {
+    try {
+      heldConnected = await held.evaluate((el) => el.isConnected);
+      if (heldConnected === false) break;
+    } catch (e) {
+      heldConnected = { readFailed: e.message };
+    }
+    await sleep(200);
+  }
+  const afterSecondSave = await page.evaluate(() => {
+    const top = document.querySelector(".attention-strip .save-notice");
+    return { text: top?.textContent ?? null, role: top?.getAttribute("role") ?? null, occurrences: document.querySelectorAll(".condition-occurrences").length };
+  });
+  record("E-A1: the held save line is no longer connected, and the strip's top .save-notice carries the alert role", heldConnected === false && afterSecondSave.role === "alert", `the held element connected: ${JSON.stringify(heldConnected)}; the top's role ${JSON.stringify(afterSecondSave.role)}`);
+  record("E-A1: the second save's line differs from the first save's", afterSecondSave.text !== null && afterSecondSave.text !== firstSaveLine, `first ${JSON.stringify(firstSaveLine)}; second ${JSON.stringify(afterSecondSave.text)}`);
+  record("E-A1: no .condition-occurrences stands", afterSecondSave.occurrences === 0, `${afterSecondSave.occurrences} stand`);
+
   // 2. The write and the pan (H7).
   const later = new Date(Date.now() + 120_000);
   utimesSync(copy, later, later);
