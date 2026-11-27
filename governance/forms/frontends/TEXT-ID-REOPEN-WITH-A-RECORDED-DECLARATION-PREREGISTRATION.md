@@ -665,3 +665,28 @@ New:
    - the reviewer's read part, which is running;
    - one advisor message;
    - one correction commit, as ruled.
+
+## Amendment 8 — 2026-11-27 — the custodian's: the reviewer's read part at 97019e91
+
+*References only. Nothing above is edited.*
+
+1. **The read part** is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-build-gate-reviewer-read-part.md`. It read the form at main 5e9b2184b7fb235fb488afe538ad451f331fdf30 and ran the code at 97019e9198a9a2d110d0d686ce8166574547d4ce. It gives no verdict.
+2. **What it observed at the head**, by its report:
+   - scope: no changed file outside §7, and nothing to the advisor under ADV-2026-11-27-30 item 1;
+   - §7's count: 919 lines over 39 files, each row equal to Amendment 6's table;
+   - M-RD1 to M-RD7: each red at its own test's assertion, each reverted with a clean tree after it. M-RD8 is E-R1's, at the port;
+   - the suites that start no app, and the branch's CI at the head: green.
+3. **Both read parts find the same two defects, on their own:**
+   - E-R1's step (3) is refused as `skp.project_open_elsewhere`, so the step never reaches (5). This is the architect's F1 and the reviewer's C-1. The reviewer names the kernel test that asserts that refusal as its control.
+   - Text-id's own `TEXTID'` (d) does the same, on the base. This is the architect's F3, and C-1's note outside this piece.
+4. **The two read parts differ in two places:**
+   - **Step (4)'s unawaited close.** The architect's F2 makes it a correction (add a wait). The reviewer names it for a source comment, not blocking.
+   - **S-R2's `file:id` fixture.** The architect's F5 says no correction is owed. The reviewer's E-1 says the correction would change test data only, and leaves it to the advisor or the custodian.
+   - Both go to the advisor, unresolved here.
+5. **The README section's clause (3)** is untrue at the code by both read parts (the architect's section 8, the reviewer's C-2). It is ruled text, so it goes to the advisor unreworded.
+6. **The architect's F4** stands as Amendment 7 item 3. The reviewer reports no documentation finding.
+7. **To the advisor, in one message:** items 3, 4 and 5 here, with Amendment 7 item 4.
+8. **Next:**
+   - the advisor's ruling;
+   - one correction commit, as ruled;
+   - the run part, at the port.
