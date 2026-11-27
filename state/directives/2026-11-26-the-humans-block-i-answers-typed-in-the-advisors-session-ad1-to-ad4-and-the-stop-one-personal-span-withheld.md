@@ -1,0 +1,11 @@
+# The human's message to the advisor of 2026-11-26, typed in the advisor's session, not in the custodian's: the answers on block (i), Part AD (AD1 to AD4), and the stop; one span withheld
+
+*The human's own words, typed in the advisor's session; they did not come through the custodian's session. Filed as ADV-2026-11-26-06 item 2 asks, with the one change ADV-2026-11-26-07 item 1 orders (`state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-07-the-block-i-message-filed-with-one-personal-span-withheld-every-message-read-for-a-personal-matter-first.md`): **one span is withheld.** The span runs from the words "but you know" to the words "on the schedule" inclusive. It names a personal matter, the repository is public, and a push cannot be taken back, so `[withheld at filing: a personal matter]` stands in its place. Everything else is byte for byte. The human's word puts the span back. The full file is PASTES/CHRIS-2026-11-26-block-i-answers.md in the advisory folder, 857 bytes, sha256 1b2b6cef78d7302ec922b81816de903ac944f33a765d95801fd802a0b37f1bdc, last modified at 2026-11-26T17:51:49Z by the file system; it is kept only there and in the custodian's local evidence folder. The filed text below is 829 bytes, sha256 8c76ea35744e3b0c0c76ce7e090dfdddd36e450070e3f1e84aac78d3f6fdcac9. Its first line is the advisor's; the fenced text is the human's. Nothing else is changed.*
+
+Chris's message typed to the advisor on 2026-11-26, kept as typed: his answers on block (i) of the sitting script, Part AD, and that he has to stop. Read by the advisor at about 17:51Z (`date -u`), which is not a receive time.
+
+---
+
+```text
+AD1, it saved, the message appeared after the first save only, the file is there, everything is clear beside the 2 saves and the fact that after the 2nd save nothing happens.AD2, the loading was fast so I didn't see much while "waiting". I saw a line about changed data when i didn't restart the app but i just CTRL+R. Also i saw the line, the project is already opened or something similar. Can't do AD3 cause it's too fast. AD4 is asking if it's a copy. Then I cannot continue anymore, continuing i hope soon,  [withheld at filing: a personal matter] so i've got no time at all now
+```

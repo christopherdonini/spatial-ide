@@ -257,3 +257,303 @@ Assertions only:
 After the merge, lead-data writes the owner's-index pointer (`kernel/README.md`, Project save row).
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9)
+
+### Amendment 1 — 2026-11-22 — after the architect's form gate (attempt 1, PASS WITH NOTES): its nine Documentation findings, and the advisor's rulings on OPEN-1 to OPEN-4
+
+Written after the gate's outcome was seen. The words of D-1 to D-9 are the architect's, from its report (`state/consults/gates/2026-11-22-opened-of-panic-sites-free-the-lock-form-gate-architect.md`), copied by the custodian's script, each old text checked to occur once above. The rulings of item 2 are the advisor's, ADV-2026-11-22-40 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-40-node-d-open-1-to-open-4-the-unwind-guard-the-seam-accepted-s-panic-unchanged-for-the-advisors-reason-d-5s-words.md`), under the human's delegation of 2026-11-13, not the human's words. There is no re-read (ADV-2026-11-22-40 item 5).
+
+#### 1. The gate's Documentation findings
+
+Each new text replaces its old text above, read in place.
+
+**D-1** (the architect's place: §0, Callers, third bullet).
+
+Old:
+
+````text
+- The 18 direct `open_project` callers (`kernel/tests/project_reopen.rs`, `kernel/tests/project_lock_crash.rs`, and the one in mod.rs) never call `opened_of`.
+````
+
+New:
+
+````text
+- Of the 18 direct `open_project` calls, the 17 in `kernel/tests/project_reopen.rs` and `kernel/tests/project_lock_crash.rs` never reach `opened_of`; the 18th is `open_project_command`'s own (:905), the one path that does.
+````
+
+**D-2** (the architect's place: §1, After the week).
+
+Old:
+
+````text
+§21c's bound also requires "no new user-visible behaviour" (:351), and a reopen that is now not refused after such a panic is new behaviour.
+````
+
+New:
+
+````text
+§21c's size bound is also crossed: §7's estimate, about 200 changed lines, passes its 150 (:350). Its behaviour bound (:351) is not relied on, since no accepted file reaches the change.
+````
+
+**D-3** (the architect's place: §1, Unchanged).
+
+Old:
+
+````text
+`protocol/skp/src/v0/commands.rs:699-869`
+````
+
+New:
+
+````text
+`protocol/skp/src/v0/commands.rs:699-920`
+````
+
+**D-4** (the architect's place: §1 May not claim; §8 item 6).
+
+Old:
+
+````text
+- anything about a panic elsewhere in `open_project`;
+````
+
+New:
+
+````text
+- anything about a panic elsewhere in `open_project`;
+- that the process survives a panic inside the guard's own close: a second panic during the unwind aborts it, and the operating system then frees the lock (`kernel/src/project/store.rs:221-223`);
+````
+
+Old:
+
+````text
+6. The guard releasing on a path that is not an unwind; a lock held when the guard runs.
+````
+
+New:
+
+````text
+6. The guard releasing on a path that is not an unwind; a lock held when the guard runs; an `unwrap`, `expect` or `panic!` added on the guard's path.
+````
+
+**D-5** (the architect's place: §2 item 4, the doc words and their clause check).
+
+Old:
+
+````text
+   "The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the view's state; the check's names; and the two lineage facts, with no text of a lineage file's lines and no rule text: a refusal carries a line number where it has one. It panics if the style does not write again as canonical JSON, or if the check names a word the wire has none for. No file the reader accepts reaches either, and [`Projects::reply_of`] closes the dataset and frees the lock if one fires."
+````
+
+New:
+
+````text
+   "The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the view's state; the check's names; and the two lineage facts, with no text of a lineage file's lines, no rule text and no error text: a refusal carries a line number where it has one. It panics if the style does not write again as canonical JSON, if that JSON does not read back, or if the check names a word the wire has none for. No file the reader accepts reaches any of these, and [`Projects::reply_of`] closes the dataset and frees the lock if one fires."
+````
+
+Old:
+
+````text
+   - "no rule text": `Damaged { line, .. }` drops it (:1055). This matches SKP-V0 §12.2 (`protocol/skp/SKP-V0.md:1424`).
+````
+
+New:
+
+````text
+   - "no rule text and no error text": `Damaged { line, .. }` drops the rule (:1055) and `Unreadable { .. }` the operating system's error (:1056). This matches SKP-V0 §12.2 (`protocol/skp/SKP-V0.md:1424`).
+````
+
+Old:
+
+````text
+   - "No file the reader accepts reaches either": §0, Reachability.
+````
+
+New:
+
+````text
+   - "No file the reader accepts reaches any of these": §0, Reachability.
+````
+
+**D-6** (the architect's place: §2 item 3).
+
+Old:
+
+````text
+3. **`open_project_command`'s doc** (:889-893) gains one sentence: a panic while the `opened` reply is built closes the reopened dataset and frees its lock before the panic leaves the call.
+````
+
+New:
+
+````text
+3. **`open_project_command`'s doc** (:889-893) gains one sentence: a panic while the `opened` reply is built closes the reopened dataset and frees its lock before the panic leaves the call. `release_ended`'s doc (:247-258), which names its callers, gains `reply_of`'s guard among them.
+````
+
+**D-7** (the architect's place: §4, K-D1).
+
+Old:
+
+````text
+each case reopens, which itself proves the previous case freed the lock
+````
+
+New:
+
+````text
+each case reopens; since `open_project` runs `release_ended` before it takes the lock (:780), that reopen shows only that the previous case closed the dataset, and (iv) is what shows the lock free
+````
+
+**D-8** (the architect's place: §4, the wiring into `open_project_command`).
+
+Old:
+
+````text
+Mutation **M2:** drop the `thread::panicking()` condition. K-D2 fails at the catalog assertion.
+````
+
+New:
+
+````text
+Mutation **M2:** drop the `thread::panicking()` condition. K-D2 fails at the catalog assertion.
+
+Mutation **M5:** the `Reopen::Opened` arm calls `opened_of(*o)` in place of `self.reply_of(*o)`. No test fails, since K-D1 and K-D2 call `reply_of` directly. It is observed as `cargo build --locked -p spatial-kernel --lib` warning that `reply_of` is never used, which the unmutated build does not warn, and recorded with the warning's text and the commit in a `RECORDED MUTATION:` doc line.
+````
+
+**D-9** (the architect's place: §8 item 1).
+
+Old:
+
+````text
+1. Any diff outside `kernel/src/project/mod.rs`, this form, PLAN and records.
+````
+
+New:
+
+````text
+1. Any diff outside `kernel/src/project/mod.rs`, this form, `governance/PLAN.yaml`, `governance/CUSTODIAN-QUEUE.*`, `site/**` and `state/**`, the set §7 excludes from the count.
+````
+
+#### 2. OPEN-1 to OPEN-4 (ADV-2026-11-22-40 items 1 to 4)
+
+- OPEN-1: (A), the unwind guard, as §2 has it (item 1).
+- OPEN-2: accepted, its product caller proved as D-8 above has it (item 2).
+- OPEN-3: S-PANIC's words do not change in this piece (item 3). The reason the draft's note gave is replaced by the advisor's: "the piece proves the release for a panic while the reply is built and claims nothing for any other, so it does not change what the notice withholds".
+- OPEN-4: accepted; the doc words are D-5's above (item 4).
+
+#### 3. The class and the order
+
+The class is full, with both gates (ADV-2026-11-22-40 item 6). The build starts when this amendment is on main and a place is free. Before the build, the custodian tells the advisor of D-4, D-7 and D-8 (ADV-2026-11-22-40 item 5): D-4 adds a line to what may not be claimed and a clause to §8 item 6, D-7 changes the reason K-D1 gives, and D-8 adds the mutation M5. The merge request comes after the tag.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 2 — 2026-11-23 — the closing: section 1's sentence and the build gates' records (ADV-2026-11-23-08 items 1 and 2)
+
+Read by the custodian at main 5624f60fb3116b131e525baea1998841964ddf9a. The words outside the fences are the custodian's and are references only. Each fence is copied by script from the filed gate report its pin names; the pin gives the lines, the commit and the sha256 of those lines with their line ends. The ruling is `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-08-node-d-the-architects-sentence-into-section-1-the-reviewers-reading-in-the-closing-the-deny-attribute-in-idle-time.md`.
+
+#### 1. Section 1 gains this sentence (ADV-2026-11-22-41 item 2; ADV-2026-11-23-08 item 1)
+
+The architect's build gate, its note 1 for the closing amendment, byte for byte, `state/consults/gates/2026-11-23-opened-of-panic-sites-free-the-lock-build-gate-architect.md:127-127` @ 5624f60fb3116b131e525baea1998841964ddf9a sha256:a44438c029c4c4ce12156f4cc49845662f840fbf20f966ce838a9761c0c7a27e:
+
+````text
+No test shows that the product caller calls `reply_of`: K-D1 and K-D2 call it directly. That `open_project_command`'s `Reopen::Opened` arm calls it is shown by reading the arm and by M5, observed at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: with the arm calling `opened_of(*o)`, `cargo build --locked -p spatial-kernel --lib` warns "method `reply_of` is never used", which the unmutated build does not, and every test of `cargo test --locked -p spatial-kernel` passes.
+````
+
+#### 2. The reviewer's records, in the reviewer's words (ADV-2026-11-23-08 item 2)
+
+- Its D3 sentence, the reviewer's reproduction at 2d7ae14b08a92d6fc406ce827e15a36c3bfb92b7, `state/consults/gates/2026-11-22-opened-of-panic-sites-free-the-lock-build-gate-reviewer.md:62-62` @ 5624f60fb3116b131e525baea1998841964ddf9a sha256:e06d8f98c8bbb6959931780736447a9fb1bec49f663049aabfce70ab74bd5f7e:
+
+````text
+No test fails when the `Reopen::Opened` arm stops calling `reply_of` (M5): that the product caller calls it is shown by reading (`kernel/src/project/mod.rs:917` at 2d7ae14b08a92d6fc406ce827e15a36c3bfb92b7) and by M5's warning under `cargo build --locked -p spatial-kernel --lib`, "method `reply_of` is never used".
+````
+
+- Its M5 check: the commit, the command, both warnings of the mutated build, the unmutated build, and the tests under the mutation, `state/consults/gates/2026-11-22-opened-of-panic-sites-free-the-lock-build-gate-reviewer.md:104-110` @ 5624f60fb3116b131e525baea1998841964ddf9a sha256:532c54e3ce4ac9902a87f79b7b0448565909ebd030881684da831fd9cf18c0e2:
+
+````text
+**4. M5, made at commit 2d7ae14b08a92d6fc406ce827e15a36c3bfb92b7.** Line 917 now calls `opened_of(*o)` (`<S>/dr-m5-diff.txt`).
+- `cargo build --locked -p spatial-kernel --lib` exits 0 (`<S>/dr-m5-build.txt`). It gives two warnings:
+  - "warning: method `reply_of` is never used" at kernel\src\project\mod.rs:926:8, with "= note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default";
+  - "warning: struct `ReplyGuard` is never constructed" at mod.rs:937:8;
+  - then "warning: `spatial-kernel` (lib) generated 2 warnings".
+- Unmutated, the same build exits 0 with no warning (`<S>/dr-m5-base-build.txt`).
+- `cargo test --locked -p spatial-kernel --no-fail-fast` exits 0: 62 result lines, 522 passed, 0 failed, 47 ignored. Every test passed (`<S>/dr-m5-tests.txt`).
+````
+
+- Its CI answer, with the files it read, `state/consults/gates/2026-11-22-opened-of-panic-sites-free-the-lock-build-gate-reviewer.md:111-119` @ 5624f60fb3116b131e525baea1998841964ddf9a sha256:57db7ade0023840b839ca04d0a3119c3344039c2ee90f0eed8c1b21082858cf1:
+
+````text
+- **CI:** no job would fail on the warning. I read these files at the head:
+  - `product-ci-rust.yml`, whole: `cargo build --workspace --tests --locked`, `cargo test --workspace --locked`, `-- --list --ignored`. No env, no RUSTFLAGS, no `-D`.
+  - `product-ci-shell.yml`, its job: cargo test and two `cargo check` runs on src-tauri, which lint only that crate.
+  - `tauri-build.yml`, whole, and `release-artifacts.yml`'s jobs: `npm run tauri build`.
+  - `rust-fmt.yml`'s job: fmt only.
+  - The two adr-003 spike workflows: spike crate only.
+  - `governance-ci.yml`'s env lines: tokens only.
+  - The config they load: `.cargo/config.toml` sets only the C++ env. There is no `[lints]` or rustflags in the root, kernel or src-tauri Cargo.toml, and no `#![deny(` or `#[deny(` anywhere in kernel/src.
+  - Nothing runs clippy in CI.
+````
+
+- D1, the two tests outside M2's set that fail under M2, with their assertions and the commit, `state/consults/gates/2026-11-22-opened-of-panic-sites-free-the-lock-build-gate-reviewer.md:24-32` @ 5624f60fb3116b131e525baea1998841964ddf9a sha256:2fd17f57b539a3f939f63205874192f31addfc7a0723ec91e8f34189c72c4857:
+
+````text
+**D1 — record. M2 fails two tests outside its set.** The closing amendment must record them.
+- Under M2 (lines 944 and 949 deleted), `cargo test --locked -p spatial-kernel --no-fail-fast` exits 101: 519 passed, 3 failed, 47 ignored.
+- K-D2 fails at its catalog assertion, "the catalog does not hold the dataset" (mod.rs:1663), as §4 says.
+- Also failing, in `kernel/tests/project_reopen_skp.rs` (declared unchanged in §5; its text is unedited):
+  - `a_saved_project_reopens_through_the_command_from_its_wire_request`, at :120 "recorded" (skp.unknown_dataset);
+  - `each_reopen_refusal_reaches_the_wire_as_its_code_with_no_path_it_was_not_given`, at :361 (skp.project_open_elsewhere answered `opened`).
+- Through the command, M2 closes the dataset after a reply that succeeded. The run is `<S>/dr-m2-suite-nff.txt`.
+- The worker ran only K-D2. K-D2's `RECORDED MUTATION M2` line is true, but it is not the whole outcome.
+- The closing amendment records the two extra tests, their assertions and the commit 2d7ae14b08a92d6fc406ce827e15a36c3bfb92b7.
+````
+
+The two sentences name different commits: 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c, in section 1's sentence, is the worker's observation of M5; 2d7ae14b08a92d6fc406ce827e15a36c3bfb92b7, in D3, is the reviewer's reproduction (ADV-2026-11-23-08 item 2).
+
+#### 3. The architect's notes 2 to 6, by reference
+
+- They stand as the gate wrote them, `state/consults/gates/2026-11-23-opened-of-panic-sites-free-the-lock-build-gate-architect.md:129-133` @ 5624f60fb3116b131e525baea1998841964ddf9a sha256:95f796e25395a833051e174c694c5b4f72d699ad8d41eca4066f3cc90a246d8f.
+- Note 5's question is answered by the reviewer's CI answer in item 2.
+- Note 2's count is recounted by the reviewer in its narrow read of the deny attribute's commit (ADV-2026-11-23-08 item 3).
+- The gates are gate-log rows 855 (the reviewer, PASS WITH NOTES) and 856 (the architect, PASS WITH NOTES).
+
+#### 4. Still to come
+
+- The deny attribute's commit on PR 361, its narrow read and its amendment, in idle time (ADV-2026-11-23-08 items 3 and 4). If they are not done when the merge is due after the tag, the custodian tells the advisor.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 3 — 2026-11-23 — the deny attribute's narrow read: section 1 gains the reviewer's sentence (ADV-2026-11-23-08 item 3)
+
+Read by the custodian at main 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9. The words outside the fence are the custodian's and are references only. The fence is copied by script from the filed gate report its pin names; each pin gives the lines, the commit and the sha256 of those lines with their line ends. The rulings are `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-08-node-d-the-architects-sentence-into-section-1-the-reviewers-reading-in-the-closing-the-deny-attribute-in-idle-time.md` (item 3) and `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-14-commit-4a5f886d-as-ruled-section-31-c-grades-no-finding-pr-361s-new-comment-line-the-moves-accepted.md` (item 3, the comment line).
+
+#### 1. Section 1 gains this sentence, after the architect's of Amendment 2 item 1 (ADV-2026-11-23-08 item 3)
+
+The reviewer's sentence from the run part of its narrow read, its line with its label, byte for byte, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:118-118` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:f55ec846f10a8f190a22cf3427981ea5835d85301f5ad88efcdbebdc6f734e2e:
+
+````text
+M5 sentence: At 0922c90a38ad91bf7922cf9a6baf0f8ed1344397 with M5 applied, `cargo build --locked -p spatial-kernel --lib` and `cargo build --locked -p spatial-kernel --all-targets` each exit 101 on the `#[deny(dead_code)]` error "method `reply_of` is never used", while `cargo test --locked -p spatial-kernel --lib --no-run`, the unit-test build in which K-D1 and K-D2 still call `reply_of`, exits 0.
+````
+
+#### 2. The deny attribute's commits and the narrow read
+
+- On PR 361: 12946382bbe766e686ec245f2ddfd625fdabab6c, the attribute and its comment line; 0922c90a38ad91bf7922cf9a6baf0f8ed1344397, the comment line written again by the worker with nothing built, after the read part's F1.
+- The read part, at 12946382bbe766e686ec245f2ddfd625fdabab6c with nothing run: `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-1-reviewer.md`, no gate-log row.
+- The run part, at 0922c90a38ad91bf7922cf9a6baf0f8ed1344397: `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md`; its verdict and the head it read, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:5-6` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:1c4c745e00b21ffe3d9ef3331e4a668f93d43049c1c4d8f522af234b2143ea11; gate-log row 860 (the reviewer, PASS WITH NOTES).
+
+#### 3. The architect's verdict, carried forward (ADV-2026-11-23-08 item 3)
+
+- The architect's build gate, gate-log row 856 (PASS WITH NOTES), stands for the head 0922c90a38ad91bf7922cf9a6baf0f8ed1344397. The run part finds nothing of correctness or evidence, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:122-122` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:42755d863cc6da9fb84841c1ef1d1af36507c0f68ba9856a240dc4233029be59.
+
+#### 4. What stays a record of its own commit
+
+- Amendment 1 item 1's M5 entry, which observes M5 as a warning, and the test doc line `RECORDED MUTATION M5` in `kernel/src/project/mod.rs` are records of 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c, the commit they name. Neither is edited. Item 1's sentence is what the build does at 0922c90a38ad91bf7922cf9a6baf0f8ed1344397. The run part's D1, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:124-124` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:9657e704bc0089b72718f93f827857d1eaf8bf6d827c180ec0467237297b3a4a, and N1, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:125-125` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:d8e90d5cd6eeb1f24104f0721227e933197b70962b8cece8e7c7f41eafcf803a.
+- Its N2, `state/consults/gates/2026-11-23-opened-of-panic-deny-attribute-narrow-read-part-2-reviewer.md:126-126` @ 22edbb7c1a7c3ffcd1c4604041824091e6ec02e9 sha256:84a3ea437e98b1d9380c0693e36da90f7c15497d497934e32f4d26ebaf955479, is a note on its own run.
+
+#### 5. Amendment 2 item 4
+
+- What it names, the deny attribute's commit, its narrow read and its amendment, is done by items 1 to 3. PR 361 merges after the tag (ADV-2026-11-23-08 item 4).
+
+Read the last amendment first.
+
+Nothing above is edited.
