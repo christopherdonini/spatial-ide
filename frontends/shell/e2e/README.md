@@ -947,3 +947,17 @@ npm run e2e:admission
 It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
 
 **What it proves not.** The words of the control (they are the advisor's words as the words commit set them), any timing, macOS or Linux, a project saved and reopened after the declaration (the operator Part's rows do that), or a file whose key is narrower than 64 bits (the kernel test K-2 does that, and no walkthrough fixture holds one).
+
+## Row-position spec (text-id-opens-for-the-session-by-row-position)
+
+```
+npm run e2e:admission
+```
+
+<!-- Drafted by the build worker of text-id-opens-for-the-session-by-row-position, not the advisor's or the human's words. The step was not run by the build that added it: the run is the tester's. -->
+
+`e2e/admission-remediation.mjs` gains the step `TEXTID'` (E-1), after `DECLARE-SESSION'`. It drives the real DOM: every choice is a click on the page's own button, never `openPath` with an option. (a) `text-id-no-integer-refused.parquet` (a text `id` and no other integer column; regenerate it with `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_text_id_no_integer_refusing_fixture -- --ignored --nocapture`) refuses as `engine.identity_unusable` with no candidate listed; the choice's button is offered with its label; a click opens the file, the summary shows the choice's line and the engine's session statement, features draw, and the filter `id = 'key-1'` is refused as `skp.filter_identity_alias_ambiguous`. (d) The project is saved to a scratch folder through `e2eSaveProjectToFolder`; the step reads `project.spatial` from disk and requires `"identity": null` and no `set_aside`; `e2eOpenProjectFolder` reopens it, the reopen is refused for the same `id` with only the choice offered and no declaration form, and a click opens it with the choice's line. (b) `dupkey-refused.parquet` is offered the choice and, chosen, opens. (c) `no-id-column.parquet` opens on the session tier with no choice offered and no choice line. The suite sets `LOCALAPPDATA` to a scratch folder before it launches the app, as `project.mjs` does, and removes the folder at the end; a run that attaches to a running app leaves that app's store as it is.
+
+It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
+
+**What it proves not.** The words of the choice and its lines (they are the advisor's words as the words commit set them; the step compares the two it needs with copies of them), any timing, macOS or Linux, the native folder picker (the operator's Part), or that no step defaults the choice (the unit tests S-T1 and S-T2 and the code do that). The unrun step is not an observation: M-25, the choice not rendered, is the step's own mutation and was not observed by the build.
