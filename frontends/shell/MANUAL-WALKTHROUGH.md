@@ -2134,18 +2134,18 @@ Fill in after running the rows above (the identity-declaration-route-for-session
 
 ## Part AI — the scale in the status bar: the length the bar spans in the dataset's own metres at each zoom, no bar for a dataset in degrees, and the bar against a sheet of paper at your own display scaling (shell-scale-display)
 
-This Part is the Operator gate of `governance/forms/frontends/SHELL-SCALE-DISPLAY-PREREGISTRATION.md` §9, run only on a build with that piece merged, with a blank result log. Its rows are the form's sketch (§9, "Operator", and Amendment 4 item 3), one row to a line of it. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). Every sentence in it is a draft for the human's sight (P6) and none is the human's wording; the advisor words them from the form's text. This Part is run on Windows.
+This Part is the Operator gate of `governance/forms/frontends/SHELL-SCALE-DISPLAY-PREREGISTRATION.md` §9, run only on a build with that piece merged, with a blank result log. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). The rows and the four strings they show are the advisor's wording under the human's delegation of 2026-11-13 (ADV-2026-11-27-28), not the human's; row AI4 is the human's sight of the strings. This Part is run on Windows.
 
-**Before AI1 to AI5:** a dev build started with `npm run tauri dev` (the Prerequisites), with no dataset open; the fixtures `filter-zoned.parquet` and `100k-happy-path.parquet` (Part A) and compat-corpus file #8 (Part P's table).
+**Before AI1 to AI5:** a dev build started with `npm run tauri dev` (the Prerequisites), with no dataset open; the fixtures `filter-zoned.parquet` and `100k-happy-path.parquet`, each with its row in a fixtures table above; and compat-corpus file #8, whose path and sha256 are in the fixtures table of Part P (crs-unit-fact-and-bounds).
 
 | # | Step | Expected outcome |
 |---|---|---|
 | AI0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
-| AI1 | Open `filter-zoned.parquet` and zoom with the wheel. | The length steps 1, 2, 5, and the bar stays about 60 to 150 px. **Felt:** is it clear that this is the CRS's metres, not the ground? |
-| AI2 | Open compat-corpus file #8 (`C:\dev\spatial-ide\target\fixtures\compat-corpus\gdal\ogr2ogr-epsg4326-default.parquet`). | S-3 shows, and no bar. |
-| AI3 | At 1366 × 768, with every status item showing. | The scale stays visible. |
-| AI4 | The P6 sight of S-1 to S-4. | For each string, the log records either the wording you want in its place, or "keep". None of them is the human's wording. |
-| AI5 | At your own display scaling (record the percentage Windows shows for Scale), open `100k-happy-path.parquet` (`frontends/shell/MANUAL-WALKTHROUGH.md:146`) and zoom with the wheel until the label reads 200 m. Mark the bar's two ends on the edge of a sheet of paper held to the screen, lay the marks across the map, and count the parcels between them. The parcels are 40 m apart (`frontends/shell/e2e/pan-anchor.mjs:47-50`; `engine/src/fixture.rs:93`), so the marks are five parcels apart, within half a parcel. | Record the percentage and the count. Red: fewer than four and a half or more than five and a half (I7). |
+| AI1 | Open `filter-zoned.parquet`. When its features have appeared, zoom in and out with the wheel, several notches each way, and rest the pointer on the bar in the status bar. | The status bar shows a bar and a label of the form `200 m (CRS)`. As you zoom, the length steps through 1, 2 and 5 times a power of ten, and the bar stays between about 60 and 150 pixels long. Resting the pointer on it shows its title. **Felt:** is it clear that this is a length in the CRS's metres and not a distance on the ground? |
+| AI2 | Open compat-corpus file #8 (`C:\dev\spatial-ide\target\fixtures\compat-corpus\gdal\ogr2ogr-epsg4326-default.parquet`). | When its features have appeared, the status bar reads "No scale bar: this dataset's coordinates are not known to be in metres." and shows no bar. |
+| AI3 | Open `100k-happy-path.parquet` and set the app's window to 1366 × 768. | The scale is whole and readable in the status bar, beside the other items the status bar shows then. Record which items those were. |
+| AI4 | The P6 sight of the four strings. The label and the title are in AI1, and the line for a dataset not in metres is in AI2. The fourth takes the bar's place far outside ordinary zooms, and reads: "No scale bar at this zoom." | For each string, the log records the wording you want in its place, or "keep". None of them is the human's wording. |
+| AI5 | At your own display scaling (record the percentage Windows shows for Scale), open `100k-happy-path.parquet` and zoom with the wheel until the label reads `200 m (CRS)`. If one more notch inwards still reads `200 m (CRS)`, stay on that notch, where the bar is longer. Mark the bar's two ends on the edge of a sheet of paper held to the screen, lay the marks across the map along a row of parcels, and count the parcels between them. The parcels are 40 m apart (`frontends/shell/e2e/pan-anchor.mjs:47-50`; `engine/src/fixture.rs:93`), so the marks are five parcels apart, within half a parcel. | Record the percentage and the count. Red: fewer than four and a half or more than five and a half. A red result stops here and goes to the advisor (the form's I7). |
 
 ## Result log
 
@@ -2155,8 +2155,8 @@ Fill in after running the rows above (the shell-scale-display Part AI).
 - **Run by:**
 - **Build/commit:**
 - **Last amendment read (its number):**
-- **AI1 (the lengths the steps showed; felt):**
-- **AI2 (what showed, and whether a bar did):**
-- **AI3 (whether the scale stayed visible):**
+- **AI1 (the lengths the steps showed; whether the title showed; felt):**
+- **AI2 (what the status bar read, and whether a bar showed):**
+- **AI3 (whether the scale was whole and readable; the other items showing):**
 - **AI4 (for each string: the wording you want in its place, or "keep"):**
 - **AI5 (the display scaling percentage; the count of parcels between the marks):**

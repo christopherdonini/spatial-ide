@@ -161,16 +161,16 @@ describe("App: the status bar's scale (SHELL-SCALE-DISPLAY R-SC1), through the r
 
     // (ii) One report at zoom 0, in one act, asserted at once: L 100, 100 CSS px, SHELL-SCALE-DISPLAY S-1.
     act(() => mocks.canvas!.onViewShown!(BOX));
-    expect(item()?.textContent, "(ii) the label for zoom 0").toBe("[P6 placeholder] 100 m (CRS)");
+    expect(item()?.textContent, "(ii) the label for zoom 0").toBe("100 m (CRS)");
     expect(barWidth(), "(ii) the bar's width in CSS px").toBe("100px");
-    expect(item()?.getAttribute("title"), "(ii) the title carries the length").toContain("A length of 100 metres");
+    expect(item()?.getAttribute("title"), "(ii) the title carries the length").toContain("The bar spans 100 m on the map");
     expect(item()?.getAttribute("aria-label"), "(ii) the accessible name is the title").toBe(item()?.getAttribute("title"));
     expect(item()?.getAttribute("role"), "no live region").toBeNull();
 
     // (iii) The canvas holds zoom -3 and reports a box: L 500, 62.5 CSS px.
     mocks.view = { centre: [2_600_050, 1_200_050], zoom: -3 };
     act(() => mocks.canvas!.onViewportChanged(BOX));
-    expect(item()?.textContent, "(iii) the label for zoom -3").toBe("[P6 placeholder] 500 m (CRS)");
+    expect(item()?.textContent, "(iii) the label for zoom -3").toBe("500 m (CRS)");
     expect(barWidth(), "(iii) the bar's width in CSS px").toBe("62.5px");
 
     // (iv) A second open whose describe names degrees: nothing until its own canvas reports, then SHELL-SCALE-DISPLAY S-3 and no bar.
@@ -178,7 +178,7 @@ describe("App: the status bar's scale (SHELL-SCALE-DISPLAY R-SC1), through the r
     await open("C:/data/degrees.parquet");
     expect(item(), "(iv) nothing until the new canvas reports, though the old box was a bar").toBeNull();
     act(() => mocks.canvas!.onViewShown!(BOX));
-    expect(item()?.textContent, "(iv) the not-metre line").toBe("[P6 placeholder] No scale bar: this dataset's coordinates are not known to be in metres.");
+    expect(item()?.textContent, "(iv) the not-metre line").toBe("No scale bar: this dataset's coordinates are not known to be in metres.");
     expect(barWidth(), "(iv) no bar").toBeNull();
   });
 });

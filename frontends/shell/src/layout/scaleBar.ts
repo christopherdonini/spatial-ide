@@ -26,19 +26,19 @@ export type ScaleReading =
   | { kind: "bar"; mantissa: ScaleMantissa; exponent: number; widthPx: number };
 
 /**
- * The strings the item shows (§2 item 7). All four are drafts under the P6 placeholder mark: none is the human's wording and none is
- * the advisor's yet. SHELL-SCALE-DISPLAY S-1 and SHELL-SCALE-DISPLAY S-2 take the length's decimal from `scaleLabel`.
+ * The strings the item shows (§2 item 7). All four are the advisor's wording under the human's delegation of 2026-11-13
+ * (ADV-2026-11-27-28), not the human's; the human sees them in row AI4 of the walkthrough's Part AI.
+ * SHELL-SCALE-DISPLAY S-1 and SHELL-SCALE-DISPLAY S-2 take the length's decimal from `scaleLabel`.
  */
-const MARK = "[P6 placeholder] ";
 /** SHELL-SCALE-DISPLAY S-1: the label beside the bar. */
-export const scaleBarLabel = (decimal: string): string => `${MARK}${decimal} m (CRS)`;
+export const scaleBarLabel = (decimal: string): string => `${decimal} m (CRS)`;
 /** SHELL-SCALE-DISPLAY S-2: the title and accessible name of the bar's item. */
 export const scaleBarTitle = (decimal: string): string =>
-  `${MARK}A length of ${decimal} metres as the dataset's CRS counts them, at the map's current zoom. It is not a distance on the ground.`;
+  `The bar spans ${decimal} m on the map at the current zoom, as the dataset's CRS counts metres. It is not a distance on the ground.`;
 /** SHELL-SCALE-DISPLAY S-3: shown for a dataset whose unit is not the metre. */
-export const SCALE_NOT_METRE_TEXT = `${MARK}No scale bar: this dataset's coordinates are not known to be in metres.`;
+export const SCALE_NOT_METRE_TEXT = `No scale bar: this dataset's coordinates are not known to be in metres.`;
 /** SHELL-SCALE-DISPLAY S-4: shown when `scaleReading` returns `out-of-range`. */
-export const SCALE_OUT_OF_RANGE_TEXT = `${MARK}No scale bar at this zoom.`;
+export const SCALE_OUT_OF_RANGE_TEXT = `No scale bar at this zoom.`;
 
 /** The length m x 10^k as its exact decimal in groups of three joined by ",", never the locale's (KNOWN-LIMITATIONS item 51), built from digits. */
 export function scaleLabel(mantissa: ScaleMantissa, exponent: number): string {
