@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-27T05:56:24.257Z",
-  "plan_hash": "daa0e4d3f3c4e29c37c6b2a5e1d0e3046447db43b3f4f38d283c7c5635eb3ab6",
+  "generated_at": "2026-11-27T06:15:50.975Z",
+  "plan_hash": "56a70d8306e3d6c9aeb8a3ebd8787ff5fe69364ad6d600ff885cb250e4706093",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12866,7 +12866,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "NO NARROW READ OWED 2026-11-27 (ADV-2026-11-27-09, Amendment 3): the suites that start no app green at f64fac32 and recorded before the first code commit; the build gates read A's diff from f64fac32. Before: BASE 2026-11-27 at f64fac32 (ADV-2026-11-27-08 item 4, Amendment 2): PR A's head d6c2daf6 with PR 365's head 639a96cc merged in, no conflict, patch-ids checked; the merge's narrow read before the build gates; the code in the places' order, commit T first. Before: FORM GATES CLOSED 2026-11-26: architect BLOCK then PASS WITH NOTES (gate-log 913, 914), reviewer BLOCK then PASS WITH NOTES on its stated condition (918, 919); round 6 sha256 4e313bc4 is the form as it will be filed; ceiling restated to 280 lines over 7 files under ADV-2026-11-26-25 item 10, the advisor told and not overturning; the form and its Amendment 1 come in the next records commit. Built on milestone 5 PR A with PR 365 (ADV-2026-11-26-08 item 3; ADV-2026-11-26-25); not in release/v0.2 (ADV-2026-11-26-15 item 7). NEXT: the form commit; the code in its turn under ADV-2026-11-26-24 item 5.",
+      "summary": "BASE SUITES GREEN 2026-11-27 at f64fac32 (Amendment 4); NEXT: the code, commit T first, in its turn. Before: NO NARROW READ OWED 2026-11-27 (ADV-2026-11-27-09, Amendment 3): the suites that start no app green at f64fac32 and recorded before the first code commit; the build gates read A's diff from f64fac32. Before: BASE 2026-11-27 at f64fac32 (ADV-2026-11-27-08 item 4, Amendment 2): PR A's head d6c2daf6 with PR 365's head 639a96cc merged in, no conflict, patch-ids checked; the merge's narrow read before the build gates; the code in the places' order, commit T first. Before: FORM GATES CLOSED 2026-11-26: architect BLOCK then PASS WITH NOTES (gate-log 913, 914), reviewer BLOCK then PASS WITH NOTES on its stated condition (918, 919); round 6 sha256 4e313bc4 is the form as it will be filed; ceiling restated to 280 lines over 7 files under ADV-2026-11-26-25 item 10, the advisor told and not overturning; the form and its Amendment 1 come in the next records commit. Built on milestone 5 PR A with PR 365 (ADV-2026-11-26-08 item 3; ADV-2026-11-26-25); not in release/v0.2 (ADV-2026-11-26-15 item 7). NEXT: the form commit; the code in its turn under ADV-2026-11-26-24 item 5.",
       "dates": {
         "opened": "2026-11-26",
         "done": null

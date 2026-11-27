@@ -485,3 +485,16 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
    - A's build gates read A's own diff from f64fac32f3c75da5b4ea57e5b38eee89b92ec22a. The reviewer's gate also says whether any of A's lines meets one of the eight files that PR 365's commits since 2095a7ac471d2441fd8e054a448d334c7bcde455 change: `KNOWN-LIMITATIONS.md`, `frontends/shell/MANUAL-WALKTHROUGH.md`, `frontends/shell/e2e/README.md`, `frontends/shell/e2e/colour-refill.mjs`, `frontends/shell/src/App.tsx`, `frontends/shell/src/canvas/WorkingCanvas.test.ts`, `frontends/shell/src/canvas/WorkingCanvas.tsx`, `frontends/shell/src/residency/candidateArmSession.ts`.
 4. **PR 365's head into PR A** is PR A's own merge, on PR A's branch, once PR 365's series has settled that head (ADV-2026-11-27-08 item 2). PR A's reviewer reads it. A then takes PR A's head in by a merge commit.
 5. **A's code is not held.** It starts in its turn, commit T first (ADV-2026-11-26-25; ADV-2026-11-26-24).
+
+## Amendment 4 — 2026-11-27 — the custodian's: the suites at the base, green, before any code
+
+*References and hashes only. Nothing above is edited.*
+
+1. **What Amendment 3 item 3 asks for.** Its first bullet: the suites that start no app run green at f64fac32f3c75da5b4ea57e5b38eee89b92ec22a, and an amendment records them before A's first code commit. This is that amendment.
+2. **The run.** The worker's report is filed at `state/consults/2026-11-27-a-second-save-is-announced-base-suites-worker-report.md`. Every run exited 0 at f64fac32f3c75da5b4ea57e5b38eee89b92ec22a:
+   - the shell's typecheck and tests (132 files, 1669 tests, none failed);
+   - `cargo test --locked` for spatial-engine (491 passed, 20 ignored), spatial-kernel (521 passed, 48 ignored) and spatial-skp (63 passed);
+   - `cargo fmt --check` in the workspace and in the shell's src-tauri;
+   - `cargo clippy --workspace --locked --all-targets`, which exited 0 with warnings and no `-D`.
+   No app, dev server or e2e suite was started.
+3. **Next.** A's code, commit T first, in its turn (Amendment 2 item 5, Amendment 3 item 5). Only record commits stand between the base and commit T (§9a).
