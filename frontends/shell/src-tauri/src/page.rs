@@ -89,6 +89,12 @@ impl Default for Pages {
     }
 }
 
+/// A boxed closure from `lib.rs`, called on the end's thread: stops a dataset's pool poll.
+pub type StopFn = Box<dyn Fn(&str) + Send>;
+
+/// A boxed closure from `lib.rs`, called on the end's thread: writes one session-log line.
+pub type LogFn = Box<dyn Fn(&str, &str) + Send>;
+
 /// What [`Pages::page_started`] hands the end: the kernel and binding parts it acts on, and the two
 /// closures `lib.rs` builds from a clone of the `AppHandle`. The closures are called on the end's
 /// thread only.
@@ -97,9 +103,9 @@ pub struct EndParts {
     pub projects: Option<Arc<Projects>>,
     pub publishes: Arc<RunningPublishes>,
     /// Stops a closed dataset's dev pool poll (a no-op in a plain release build).
-    pub stop_poll: Box<dyn Fn(&str) + Send>,
+    pub stop_poll: StopFn,
     /// Writes one session-log line: the level and the message.
-    pub log: Box<dyn Fn(&str, &str) + Send>,
+    pub log: LogFn,
 }
 
 /// How [`Pages::settle`] ended an open's bookkeeping.
@@ -722,11 +728,7 @@ mod tests {
     }
 
     impl Rig {
-        fn parts_with(
-            &self,
-            stop_poll: Box<dyn Fn(&str) + Send>,
-            log: Box<dyn Fn(&str, &str) + Send>,
-        ) -> EndParts {
+        fn parts_with(&self, stop_poll: StopFn, log: LogFn) -> EndParts {
             EndParts {
                 host: self.host.clone(),
                 projects: Some(self.projects.clone()),
@@ -736,7 +738,7 @@ mod tests {
             }
         }
 
-        fn recording_stop(&self) -> Box<dyn Fn(&str) + Send> {
+        fn recording_stop(&self) -> StopFn {
             let seen = self.seen.clone();
             Box::new(move |name| {
                 seen.stopped
@@ -746,7 +748,7 @@ mod tests {
             })
         }
 
-        fn recording_log(&self) -> Box<dyn Fn(&str, &str) + Send> {
+        fn recording_log(&self) -> LogFn {
             let seen = self.seen.clone();
             Box::new(move |level, message| {
                 seen.lines
@@ -962,7 +964,7 @@ mod tests {
 
         // An end held in its `log` part.
         let (entered, release) = (Latch::new(), Latch::new());
-        let held_log: Box<dyn Fn(&str, &str) + Send> = {
+        let held_log: LogFn = {
             let (entered, release) = (entered.clone(), release.clone());
             Box::new(move |_, _| {
                 entered.set();
@@ -1194,7 +1196,7 @@ mod tests {
         let rig = rig("u9");
         rig.page();
         let (_, _name) = rig.open(rig.admit_now("u9"), "u9");
-        let panicking: Box<dyn Fn(&str) + Send> = Box::new(|_| panic!("stop_poll panics"));
+        let panicking: StopFn = Box::new(|_| panic!("stop_poll panics"));
         let end = rig
             .pages
             .page_started(rig.parts_with(panicking, rig.recording_log()))
