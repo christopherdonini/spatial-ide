@@ -248,8 +248,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.16` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.16`.
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.17` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.17`.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eight
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset` and for `open_project` (§2, C3; §12.3).
@@ -1210,6 +1210,19 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 §1's `open_dataset` and `describe` blocks, §12.2 and §12.3 are brought current in place. `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.15"` → `"skp/0.16"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it; the request fixtures, the three `describe` fixtures and the conformance documents of the two commands gain the member; two fixtures are new (`v0-open_dataset-request-set-aside.json`, `v0-describe-response-session-ordinal-set-aside.json`); and the version-refusal fixture that named `skp/0.16` as an unsupported future version is renumbered to name `skp/0.17`.
 
+### skp/0.17 — the source the engine checked, on `engine.identity_unusable` (text-id-reopen-with-a-recorded-declaration, ADR-016 Amendment 3, Decision 1)
+
+**The version's FULL field set, as §8's own discipline requires:** one field on one code, and nothing else. No command, request member, reply member, code or message is added, removed or changed; every other member and field is as at `skp/0.16`.
+
+- **`engine.identity_unusable` gains the field `identity_source`.** It is the source the engine checked when it refused: `file:id` when it checked the file's own `id` column with no declaration, and `mapped:<column>` when it checked the column a declaration named. These are the values of `describe.identity.source` (§1). The engine builds the value at the site that refuses (`IdSource::as_envelope_value`), the kernel passes it through as it passes `column`, and it composes, renames and derives nothing. The message is the engine's own and does not change: the field rides only in `fields`, as `candidate_columns` does.
+- **At a reopen** (`open_project`, §12.3) the only declaration the engine can have been sent is the one the project file records, so `mapped:id` there means the project file's recorded declaration of `id` was refused. A client that offers the choice to open by row position (`set_aside_file_id`, §1) offers it only beside a refusal whose `identity_source` is `file:id`: a refusal with another value, or with no such field, is not offered it.
+
+| Code | Fields |
+|---|---|
+| `engine.identity_unusable` | `column`, `detail`, `candidate_columns`, `identity_source` |
+
+`protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.16"` → `"skp/0.17"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it; `v0-error-identity_unusable-with-candidates.json` gains the field (`file:id`); one fixture is new (`v0-error-identity_unusable-declared.json`, `mapped:id`); and the version-refusal fixture that named `skp/0.17` as an unsupported future version is renumbered to name `skp/0.18`.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1324,7 +1337,7 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 
 ### 10.1 Version
 
-`skp` is now compared against `"skp/0.16"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13`, `skp/0.14`, `skp/0.15` and `skp/0.16` entries).
+`skp` is now compared against `"skp/0.17"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16` and `skp/0.17` entries).
 
 ### 10.2 The wire shape
 
@@ -1379,7 +1392,7 @@ Five new codes, all minted by the host:
 
 ### 11.1 Version
 
-`skp` is compared against `"skp/0.16"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13`, `skp/0.14`, `skp/0.15` and `skp/0.16` entries).
+`skp` is compared against `"skp/0.17"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16` and `skp/0.17` entries).
 
 ### 11.2 The wire shape
 
@@ -1437,7 +1450,7 @@ From `skp/0.14`, one code more, which a later save can give: `skp.project_file_n
 
 ### 12.1 Version
 
-`skp` is compared against `"skp/0.16"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14`, `skp/0.15` and `skp/0.16` entries).
+`skp` is compared against `"skp/0.17"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14`, `skp/0.15`, `skp/0.16` and `skp/0.17` entries).
 
 ### 12.2 The wire shape
 

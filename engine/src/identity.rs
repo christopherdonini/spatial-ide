@@ -373,6 +373,7 @@ pub(crate) fn admit_column_type(
     column: &str,
     ty: &arrow::datatypes::DataType,
     schema: &arrow::datatypes::SchemaRef,
+    source: &IdSource,
 ) -> Result<()> {
     match ty {
         // Widening into u64 is exact. A signed type is admitted here and its *values* are checked
@@ -387,6 +388,7 @@ pub(crate) fn admit_column_type(
                  gives no stable identity"
             ),
             candidate_columns: candidate_identity_columns(schema),
+            identity_source: source.as_envelope_value(),
         }),
     }
 }
@@ -422,7 +424,7 @@ mod tests {
         ] {
             let schema = schema_with("k", ty.clone());
             assert!(
-                admit_column_type("k", &ty, &schema).is_ok(),
+                admit_column_type("k", &ty, &schema, &IdSource::File).is_ok(),
                 "{ty} should widen exactly"
             );
         }
@@ -431,7 +433,7 @@ mod tests {
         for ty in [D::Utf8, D::Float64, D::Binary, D::Boolean] {
             let schema = schema_with("k", ty.clone());
             assert!(
-                admit_column_type("k", &ty, &schema).is_err(),
+                admit_column_type("k", &ty, &schema, &IdSource::File).is_err(),
                 "{ty} must be refused"
             );
         }
@@ -489,7 +491,7 @@ mod tests {
         for ty in integers.iter().chain(others.iter()) {
             let schema = schema_with("k", ty.clone());
             let listed = candidate_identity_columns(&schema) == vec!["k".to_string()];
-            let checked = admit_column_type("k", ty, &schema).is_ok();
+            let checked = admit_column_type("k", ty, &schema, &IdSource::File).is_ok();
             assert_eq!(
                 listed, checked,
                 "{ty}: the list and the type check must agree (listed {listed}, admitted {checked})"
@@ -540,7 +542,7 @@ mod tests {
         // picked off the candidate list above) reaches ordinary type admission unaffected by the
         // candidate-list omission -- the omission narrows what is *offered*, not what is usable.
         assert!(
-            admit_column_type("a,b", &D::Int64, &schema).is_ok(),
+            admit_column_type("a,b", &D::Int64, &schema, &IdSource::File).is_ok(),
             "a comma-bearing column must still be declarable and type-admitted by its exact name"
         );
     }

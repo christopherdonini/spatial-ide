@@ -95,3 +95,9 @@ instead. The version adds the required request member `set_aside_file_id` to `op
 `open_project`, so every document of those two wire types carries it, and three rows are added: an
 accepted `open_dataset` request that makes the choice, and the two requests that lack the member,
 each refused at deserialize. The existing rows' `spec` citations are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.17` literal of PLAN node
+`text-id-reopen-with-a-recorded-declaration` (its form's Amendment 1 item 6); the version-refusal
+fixture that named `skp/0.17` as an unsupported future version was renumbered to name `skp/0.18`
+instead. The version adds one field to one error code, so no row is added: this directory holds no
+document of that code. The existing rows' `spec` citations are not rewritten.

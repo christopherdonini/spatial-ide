@@ -29,7 +29,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.16",
+        skp: "skp/0.17",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
@@ -70,7 +70,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.16",
+        skp: "skp/0.17",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
@@ -97,12 +97,12 @@ describe("recordStep request shape", () => {
     await recordStep("ds_x", { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } });
 
     expect(invokeMock.mock.calls).toEqual([
-      ["record_step", { request: { skp: "skp/0.16", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
+      ["record_step", { request: { skp: "skp/0.17", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
       [
         "record_step",
         {
           request: {
-            skp: "skp/0.16",
+            skp: "skp/0.17",
             dataset: "ds_x",
             intent: { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } },
           },
@@ -201,7 +201,7 @@ describe("openProject (Amendment 54 T-1)", () => {
 
     expect(reply).toEqual({ question: { kind: "copy-or-same" } });
     expect(invokeMock).toHaveBeenCalledWith("open_project", {
-      request: { skp: "skp/0.16", folder: "C:/projects/parcels", cancel_key: "k_1", answer: null, relink: null, set_aside_file_id: false },
+      request: { skp: "skp/0.17", folder: "C:/projects/parcels", cancel_key: "k_1", answer: null, relink: null, set_aside_file_id: false },
     });
     const entry = consoleRecorder.entries()[before]!;
     if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");

@@ -82,7 +82,7 @@ describe("admitDataset", () => {
     // The real product-truth check: the same request shape open_dataset's own fixture declares.
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.16",
+        skp: "skp/0.17",
         path: "C:/data/parcels.parquet",
         cancel_key: "open-1",
         crs_assertion: null,
@@ -91,7 +91,7 @@ describe("admitDataset", () => {
       },
     });
     expect(invokeMock).toHaveBeenNthCalledWith(2, "describe", {
-      request: { skp: "skp/0.16", dataset: "ds_00000000000000000000000000000000" },
+      request: { skp: "skp/0.17", dataset: "ds_00000000000000000000000000000000" },
     });
   });
 
@@ -143,7 +143,7 @@ describe("admitDataset", () => {
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.16",
+        skp: "skp/0.17",
         path: "C:/data/no-crs.parquet",
         cancel_key: "open-crs",
         crs_assertion: { identifier: "EPSG:2056", definition_json: "{\"type\":\"ProjectedCRS\"}" },
@@ -166,7 +166,7 @@ describe("admitDataset", () => {
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.16",
+        skp: "skp/0.17",
         path: "C:/data/missing-identity.parquet",
         cancel_key: "open-identity",
         crs_assertion: null,
@@ -215,7 +215,7 @@ describe("admitDataset", () => {
     expect(outcome.kind).toBe("refused");
     if (outcome.kind === "refused") expect(outcome.refusal.code).toBe("skp.unknown_dataset");
     expect(skpCommands()).toEqual(["open_dataset", "describe", "close_dataset"]);
-    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.16", dataset: "ds_a1" } });
+    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.17", dataset: "ds_a1" } });
   });
 
   it("a describe that fails untyped after open_dataset sends close_dataset and rethrows the same error", async () => {
@@ -223,6 +223,6 @@ describe("admitDataset", () => {
     describeFailsWith("ds_a2", err);
     await expect(admitDataset("C:/data/parcels.parquet", "open-a2")).rejects.toBe(err);
     expect(skpCommands()).toEqual(["open_dataset", "describe", "close_dataset"]);
-    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.16", dataset: "ds_a2" } });
+    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.17", dataset: "ds_a2" } });
   });
 });

@@ -149,4 +149,9 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// (`SKP-V0.md` §1, §5 and §8's `skp/0.16` entry). `protocol/data-plane/` has an empty diff. Same
 /// discipline again: `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in
 /// the same commit as the literal bump.
-pub const SKP_VERSION: &str = "skp/0.16";
+/// `skp/0.17` (text-id-reopen-with-a-recorded-declaration, ADR-016 Amendment 3, Decision 1): `engine.identity_unusable`
+/// gains the field `identity_source`, the source the engine checked, `file:id` or `mapped:<column>`. One field on one
+/// code: no command, request member, reply member, code or message is added, removed or changed
+/// (`SKP-V0.md` §8's `skp/0.17` entry). `protocol/data-plane/` has an empty diff. Same discipline again:
+/// `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in the same commit as the literal bump.
+pub const SKP_VERSION: &str = "skp/0.17";

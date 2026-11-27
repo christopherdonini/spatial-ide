@@ -24,7 +24,8 @@ import type {
 import { DATASET_SESSION_ENDED_EVENT, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
 import { crsProvenanceLine, displayConventionLine, sessionStatementLine, setAsideChoiceLine } from "../../admission/describeSummaryText";
-import { identityDeclarationOffer, type State } from "../../admission/AdmissionPanel";
+import { identityDeclarationOffer, rowPositionOffer, type State } from "../../admission/AdmissionPanel";
+import { formatRefusal } from "../../admission/formatRefusal";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -522,6 +523,19 @@ describe("SKP v0 shared fixtures", () => {
     // `SkpError.fields` is `Record<string, string>` -- no list shape on the wire
     // (`kernel/src/skp.rs::error_of`), so the candidate list is comma-joined.
     expect(err.fields.candidate_columns).toBe("parcel_key,tax_lot_number");
+  });
+
+  // S-R2 (text-id-reopen-with-a-recorded-declaration): the two real `engine.identity_unusable` fixture files, the one a file gives and the one a declaration gives, each through
+  // `formatRefusal` and `rowPositionOffer`. Both name the column `id`, so only `identity_source` tells them apart.
+  // Mutation M-RD7: `rowPositionOffer` reads the key `source` in place of `identity_source`. Expected failure: the `file:id` fixture below is not offered.
+  it("the_real_identity_unusable_fixtures_drive_the_offer", () => {
+    const offerFor = (name: string) => {
+      const refusal = formatRefusal(loadFixture<SkpError>(name));
+      const state: State = { kind: "refused", path: "C:/data/parcels.parquet", refusal, formFamily: null, options: {}, inFlight: false, cancelKey: null, pendingOptions: null };
+      return rowPositionOffer(state);
+    };
+    expect(offerFor("v0-error-identity_unusable-with-candidates"), "file:id").not.toBeNull();
+    expect(offerFor("v0-error-identity_unusable-declared"), "mapped:id").toBeNull();
   });
 
   // S-1's shell half (§10 Amendment 12, wave-2 A2-1): the eighth projection code's own fixture,

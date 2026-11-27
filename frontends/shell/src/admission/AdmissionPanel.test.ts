@@ -799,7 +799,7 @@ function refusedOpen(code: string, fields: Array<[string, string]>, options: Adm
   };
 }
 
-const ID_REFUSAL: Array<[string, string]> = [["column", "id"], ["candidate_columns", ""]];
+const ID_REFUSAL: Array<[string, string]> = [["column", "id"], ["candidate_columns", ""], ["identity_source", "file:id"]];
 
 // RECORDED MUTATION for S-T1 (M-18): `rowPositionOffer` ignores `options.identity` (the test for it removed). Expected failure: the declared-identity case below is offered.
 it("an_identity_refusal_naming_id_with_no_declaration_offers_row_position", () => {
@@ -864,6 +864,20 @@ it("a_reopen_refused_for_its_own_id_offers_only_row_position", async () => {
   expect(harness.state.kind).toBe("refused");
   if (harness.state.kind === "refused") expect(harness.state.formFamily).toBeNull();
   expect(rowPositionOffer(harness.state)).toEqual({ path: RELINK_FOLDER, options: { reopen } });
+});
+
+// RECORDED MUTATION for S-R1 (M-RD5): `rowPositionOffer` no longer checks `identity_source`. Expected failure: the `mapped:id` case below is offered.
+it("a_reopen_refused_for_a_recorded_declaration_of_id_is_not_offered_row_position", () => {
+  const reopen = { answer: "same" as const, relink: null };
+  const reopened = (source: Array<[string, string]>) =>
+    refusedOpen("engine.identity_unusable", [["column", "id"], ["candidate_columns", ""], ...source], { reopen }, { path: RELINK_FOLDER, formFamily: null });
+
+  // The control: the file's own `id`, checked with no declaration, is offered the choice.
+  expect(rowPositionOffer(reopened([["identity_source", "file:id"]])), "control").toEqual({ path: RELINK_FOLDER, options: { reopen } });
+  // A declaration of `id` the project file records: refused, and no choice offered beside it.
+  expect(rowPositionOffer(reopened([["identity_source", "mapped:id"]])), "mapped:id").toBeNull();
+  // The field absent: the check fails closed.
+  expect(rowPositionOffer(reopened([])), "absent").toBeNull();
 });
 
 // RECORDED MUTATION for S-T5 (M-22): `carriedChoiceLine` returns null. Expected failure: the first assertion below.

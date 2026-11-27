@@ -161,10 +161,18 @@ pub enum EngineError {
     /// guess (that is Alpha data-doctor territory, `docs/05`). A remediation UI lists them; it does
     /// not recommend one. Carried only in this structured field — `Display` below does not mention
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
+    ///
+    /// `identity_source` (ADR-016 Amendment 3, Decision 1) is `IdSource::as_envelope_value` of the
+    /// source the engine checked when it refused: `file:id` for the file's own `id` column, checked
+    /// with no declaration, and `mapped:<column>` for a column a declaration named. It carries the
+    /// engine's own fact, under the wire's name, and the kernel passes it through. Like
+    /// `candidate_columns` it rides only in this structured field: `Display` below does not mention
+    /// it.
     IdentityUnusable {
         column: String,
         detail: String,
         candidate_columns: Vec<String>,
+        identity_source: String,
     },
 
     /// The caller's choice to set aside the file's own `id` column (ADR-016 Amendment 3) cannot be
@@ -174,13 +182,13 @@ pub enum EngineError {
     /// **Refused by name, and nothing opens.** The choice answers a refusal of the file's own `id`
     /// column; the engine never makes it, infers it or falls back to it. Each case states a fact
     /// about this engine's own check and no consequence (the human's ruling of 2026-09-16, round 7:
-    /// "Engine messages state engine facts; owners state consequences."). Through the shell, the
-    /// first case is reached at the reopen of a project whose file records a declaration of the
-    /// column `id`, when the engine refuses that column: the shell offers the choice beside an
-    /// `engine.identity_unusable` refusal that names `id` in a run whose own options hold no
-    /// declaration, and the kernel sends the recorded declaration with the choice. The other two
-    /// are reached through the shell only if the file changes between attempts. All three can be
-    /// reached through another client.
+    /// "Engine messages state engine facts; owners state consequences."). Through the shell, none
+    /// of the three is reached unless something changes on disk between the refused attempt and
+    /// the choice. The shell offers the choice only beside an `engine.identity_unusable` refusal
+    /// whose `identity_source` is `file:id`, which a declared column never gives. So the first is
+    /// reached only at a reopen whose project file gained a declaration in between, and the other
+    /// two only when the file the choice opens is no longer the file that was refused. All three
+    /// can be reached through another client.
     IdentitySetAsideRefused { detail: String },
 
     /// The source is not the file this dataset opened against — the **structural descriptor**
@@ -377,7 +385,7 @@ impl fmt::Display for EngineError {
             Self::LodRefused { refusal, detail } => {
                 write!(f, "refused ({refusal}): {detail}")
             }
-            Self::IdentityUnusable { column, detail, candidate_columns: _ } => write!(
+            Self::IdentityUnusable { column, detail, candidate_columns: _, identity_source: _ } => write!(
                 f,
                 "refused: `{}` cannot serve as stable feature identity — {detail}",
                 crate::addressability::render_visible_escape(column)

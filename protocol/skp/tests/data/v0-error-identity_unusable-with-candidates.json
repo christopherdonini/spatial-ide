@@ -4,6 +4,7 @@
   "fields": {
     "column": "id",
     "detail": "the file has no such column, and no identity mapping was declared. Stable per-feature identity is required (docs/11); declare a mapping to a column that carries it",
-    "candidate_columns": "parcel_key,tax_lot_number"
+    "candidate_columns": "parcel_key,tax_lot_number",
+    "identity_source": "file:id"
   }
 }

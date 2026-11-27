@@ -2078,6 +2078,7 @@ fn admit_identity(
                 column: column.clone(),
                 detail: "the file has no such column".to_string(),
                 candidate_columns: identity::candidate_identity_columns(schema),
+                identity_source: source.as_envelope_value(),
             });
         }
         // The ADR-016 candidate list is still *reported* — on the envelope's record rather than in
@@ -2099,11 +2100,12 @@ fn admit_identity(
             column: column.clone(),
             detail: fact.render(),
             candidate_columns: identity::candidate_identity_columns(schema),
+            identity_source: source.as_envelope_value(),
         });
     }
 
     // §4's value-preserving test. A type needing a transform to reach u64 is refused outright.
-    identity::admit_column_type(&column, field.data_type(), schema)?;
+    identity::admit_column_type(&column, field.data_type(), schema, &source)?;
 
     if skip {
         // Recorded, not hidden. A caller may take responsibility for uniqueness; it may not make
@@ -2160,6 +2162,7 @@ fn admit_identity(
                      source value cannot widen into it without changing the value"
                 ),
                 candidate_columns: identity::candidate_identity_columns(schema),
+                identity_source: source.as_envelope_value(),
             });
         }
     }
@@ -2172,6 +2175,7 @@ fn admit_identity(
                  returns a wrong-but-plausible feature with nothing raised"
             ),
             candidate_columns: identity::candidate_identity_columns(schema),
+            identity_source: source.as_envelope_value(),
         });
     }
 

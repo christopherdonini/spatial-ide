@@ -2249,6 +2249,7 @@ pub fn error_of(e: &EngineError) -> SkpError {
             column,
             detail,
             candidate_columns,
+            identity_source,
         } => (
             "identity_unusable",
             vec![
@@ -2258,6 +2259,9 @@ pub fn error_of(e: &EngineError) -> SkpError {
                 // on the wire, so the schema-ordered, unranked candidate list is comma-joined into
                 // one string field. Empty when the file has no column the engine lists.
                 ("candidate_columns", candidate_columns.join(",")),
+                // `skp/0.17`: the source the engine checked, `file:id` or `mapped:<column>`, as the
+                // engine built it. Passed through as `column` is; the kernel composes nothing.
+                ("identity_source", identity_source.clone()),
             ],
         ),
         EngineError::FeatureTooLarge { id, limit, saw } => (

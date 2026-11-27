@@ -120,6 +120,7 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
             column,
             detail,
             candidate_columns,
+            ..
         }) => {
             assert_eq!(column, "id");
             assert!(

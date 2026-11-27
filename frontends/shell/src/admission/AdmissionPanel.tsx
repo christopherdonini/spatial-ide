@@ -217,14 +217,16 @@ export interface RowPositionOffer {
 
 /** The choice to open the file by row position (`RowPositionChoice`), or `null`. It is offered for a refused state only when every one of these holds:
  * - the refusal is `engine.identity_unusable` and names the column `id` (`fieldValue(refusal, "column")`): the file's own `id` is what cannot serve;
+ * - the refusal's `identity_source` is `file:id` (`skp/0.17`): the engine checked the file's own `id`, with no declaration;
  * - the run declared no identity (`options.identity` is unset): a declaration that was refused is not the file's own `id`, and the two are never sent together;
  * - the run carries no choice already (`options.setAsideFileId` is unset).
- * It is offered for a reopen's refusal as for a direct open's (ADR-016 Amendment 3, C2): the project file records nothing of the choice, so a reopen asks again. At a reopen the recorded claims are the kernel's to send and this function does not see them: a reopen refused for a recorded declaration of the column `id` is offered the choice too, and the engine then refuses the choice beside the declaration the kernel sends with it (`IdentitySetAsideRefused` in `engine/src/error.rs`). The one decision site for the
+ * It is offered for a reopen's refusal as for a direct open's (ADR-016 Amendment 3, C2): the project file records nothing of the choice, so a reopen asks again. At a reopen the recorded claims are the kernel's to send and this function does not see them; the refusal's `identity_source` says whether the engine checked `id` as the file's own column, with no declaration (`file:id`), or as the column a declaration named (`mapped:id`), which at a reopen is the project file's. Only the first is offered the choice (ADR-016 Amendment 3, Decision 1). The one decision site for the
  * panel's render; it makes no choice and sets nothing. */
 export function rowPositionOffer(state: State): RowPositionOffer | null {
   if (state.kind !== "refused") return null;
   if (state.refusal.code !== "engine.identity_unusable") return null;
   if (fieldValue(state.refusal, "column") !== "id") return null;
+  if (fieldValue(state.refusal, "identity_source") !== "file:id") return null;
   if (state.options.identity) return null;
   if (state.options.setAsideFileId !== undefined) return null;
   return { path: state.path, options: state.options };
