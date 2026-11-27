@@ -970,3 +970,17 @@ Nothing above is edited.
    - If the route's head moves again at its run part, another merge commit takes it in, with its narrow read then.
 6. **At the merge check** (item 5): the advisor compares the comment's three New texts with item 2. The route's comment stays as ADV-2026-11-27-15 item 3 has it.
 7. **Next:** the merge worker; then both read parts at the merge commit, when the Opus places allow.
+
+## Amendment 12 — 2026-11-27 — the custodian's: the merge commit, at fc6d4b00
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The merge commit** is fc6d4b0098a08bc554f7f3ce15a1aa89564925cb. Its parents are ebf961d31fe959fc4dc42cef6827f78152aca0db and 7fa66a68a811cc20e09bf3251d0cb34d422fc81e.
+   - Against ebf961d3 it changes 13 files, 151 lines added and 32 deleted.
+   - The worker's report is filed at `state/consults/2026-11-27-text-id-opens-for-the-session-by-row-position-merge-in-worker-report.md`.
+2. **The resolution** (Amendment 11 item 4): the only conflict was in `KNOWN-LIMITATIONS.md`. The comment line at the head is the line composed by script, sha256 ae4194485b13a1609d12c817c9536cb4a9f680701e68db674434ae4ae1a3252c, by the custodian's git. The paragraph line is unchanged.
+3. **The worker's checks at the head:**
+   - The three places of ADV-2026-11-27-15 item 7 hold items 1 and 2.
+   - cargo fmt, verify-cites, verify-quotes, the shell's typecheck and tests (1697 passed), and cargo check of the workspace all exited 0.
+   - The worker's departures on the holds are in its report. The reviewer's read part reads them.
+4. **Next:** both read parts at fc6d4b00 (Amendment 10 item 2; Amendment 11 item 5), when the Opus places allow.

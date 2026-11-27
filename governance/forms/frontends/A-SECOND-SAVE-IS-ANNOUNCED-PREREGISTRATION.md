@@ -536,3 +536,30 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
    - **Differing words:** where the gates give different words for one place, both go to the advisor before the words commit.
    - §9's suites line for `node e2e/conditions.mjs` changes in time only, as the run part's, as ADV-2026-11-27-08 item 3 has it for the other two forms. Every other suite stays green before the read part, as Amendment 5 item 5 records.
 4. **Next:** the two read parts, then E-A1 at T and at P in A's port turn, then the run parts.
+
+## Amendment 7 — 2026-11-27 — the custodian's: both read parts and ADV-2026-11-27-20, before the correction commit
+
+*References and hashes only, except the architect's sentence in item 3, which the ruling places here. Nothing above is edited.*
+
+1. **The read parts and the ruling.** Both read parts at dab4e9d3b45f487d9e0af2531030104a6dd5b761 are filed with no gate-log row:
+   - the architect's at `state/consults/gates/2026-11-27-a-second-save-is-announced-build-gate-architect-read-part.md`;
+   - the reviewer's at `state/consults/gates/2026-11-27-a-second-save-is-announced-build-gate-reviewer-read-part.md`.
+   The ruling is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-20-as-four-questions-f1-a-finding-the-architects-pair-sp-t1s-name-recorded-now-the-reviewers-words-for-the-wait-the-m-a3-pair.md`.
+2. **F1** (its item 1), **class 9: a scope addition on this ruling.** Step 3's check "each .save-notice is once in the DOM" in `frontends/shell/e2e/conditions.mjs` also requires the row to be a saved line, by item 1's pair.
+   - §4's sentence is not edited.
+   - E-A1's block is not touched.
+   - No new mutation is owed, since the predicate is step 1's.
+3. **SP-T1's name** (its item 2), **class 2: a deviation from the preregistered name.** The test is not renamed, and §4's line is not edited.
+   - The architect's sentence, byte-copied from its filed read part: SP-T1's `it` name at T and at the head reads `answered` where §4's preregistered name reads `answer`; the test is SP-T1, and no assertion differs.
+   - The whole name, as the test carries it at the head (`frontends/shell/src/project/saveProject.test.ts`, line 175): `SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact`.
+   - The reviewer's note on `verify-test-claims`'s recognizer is a finding for after the tag.
+4. **The wait** (its item 3). Item 3's two pairs apply, in the reviewer's words: the C-E2 entry of `frontends/shell/e2e/README.md`, and header line 14 of `frontends/shell/e2e/conditions.mjs`.
+   - Lines 142 and 147 lie inside E-A1's block and are not edited. They keep the words "a whole second past", which mean the wait as the two New texts describe it.
+   - The same reading holds for §4's own sentence on the wait.
+5. **The two M-A3 OBSERVED lines** (its item 4). Item 4's pair applies once in `frontends/shell/src/project/saveProject.test.ts` and once in `frontends/shell/src/App.conditions.test.tsx`.
+6. **The correction commit** (its item 5) holds items 2, 4 and 5 above and nothing else.
+   - The count at the corrected head, by §7's command, goes into the next amendment. The ceiling is 280.
+   - The run part reads those items at the corrected head, and step 3's record line in the run at P.
+   - The run at T is made at T as it stands.
+7. **The reviewer's three departures** (its item 6) are accepted, and the closing amendment records them as the reviewer disclosed them.
+8. **Next:** the correction worker; then E-A1 at T and at P in A's port turn; then the run parts.
