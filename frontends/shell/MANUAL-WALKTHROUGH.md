@@ -2046,3 +2046,26 @@ Fill in after running the rows above (the b2-piece-1c-save-and-reopen Part AD, s
 - **AD3 (which outcome; whether Cancel waited for the file; felt):**
 - **AD4 (the question and its choices; what each choice did; the copy's `project` value against the first folder's; whether the second open asked; felt):**
 - **AD5 (whether the second window started; the refusal and its line; the tries it took after the first window opened the other file; felt):**
+
+## Part AE — a project whose data file was renamed in its folder: the refusal offers to choose the file, and a save records its new place (relink-after-refusal-at-the-recorded-place)
+
+This Part is the Operator gate of `governance/forms/frontends/RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md` §9, run with a blank result log. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). Every sentence in it is a draft for the human's sight (P6) and none is the human's wording.
+
+**Before AE1:** fixture `filter-zoned.parquet` (Part E's table; regenerate with `cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_filter_fixture -- --ignored --nocapture`); an empty folder that you make; File Explorer; the app started with no dataset open.
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AE0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| AE1 | Copy `filter-zoned.parquet` into the empty folder. In the app click **Open GeoParquet…** and select that copy, click Save project and choose the same folder, then close the app. In File Explorer rename the copy to `moved.parquet`. Start the app, click **Open project…** and choose the folder. | The open is refused: a refusal block with the code `skp.project_target_unresolvable`, a line beside it that reads `The project was not opened in this window. If its data file was moved or renamed, put it back where the project recorded it and open the project again, or choose the file where it is now. The project records the new place when you save it.`, and a button labelled `Choose the data file…`. Click the button and choose `moved.parquet`: the project opens and the map shows the data. **Felt:** is it clear what happened and what to do; did the choice seem to be offered where you looked for it? **Strings for sight (P6):** the line beside the refusal and the button's label. |
+| AE2 | With AE1's project open and not saved again, close the app, start it, click **Open project…** and choose the folder. Choose `moved.parquet` again at the button. Then click Save project, close the app, start it and open the folder again. | The first open is refused again, with the same line and the button. Choosing `moved.parquet` opens the project. Save project opens no picker and the strip shows `The project was saved.` The last open asks nothing and shows no refusal. In a text editor, the `at` of the `project-relative` locator in `project.spatial` reads `moved.parquet`. **Felt:** is it clear why the first open was refused again; is it clear what the save changed? **Strings for sight (P6):** the same two strings, and the saved line. |
+
+## Result log
+
+Fill in after running the rows above (the relink-after-refusal-at-the-recorded-place Part AE).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AE1 (the refusal block and its code; the line beside it; the button and its label; what choosing `moved.parquet` did; felt):**
+- **AE2 (whether the first open was refused again; the choice; the saved line; whether the last open asked anything; the locator's `at`; felt):**
