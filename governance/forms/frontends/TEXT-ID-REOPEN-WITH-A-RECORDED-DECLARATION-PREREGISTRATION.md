@@ -600,3 +600,47 @@ New:
    2. the suites that start no app, green at the new head;
    3. the amendment with the final count;
    4. the build gates' read parts, which are not yet dispatched, at the words commit's head.
+
+## Amendment 6 — 2026-11-27 — the custodian's: the words commit at 97019e91, and §7's final count
+
+*References only. Nothing above is edited.*
+
+1. **The words commit** is 97019e91 (ADV-2026-11-27-30 items 2 and 3; Amendment 5 item 6). Its report is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-words-30-worker-report.md`.
+   - It changes two files and deletes nothing: `frontends/shell/MANUAL-WALKTHROUGH.md` (2 lines) and `frontends/shell/e2e/README.md` (14 lines).
+   - The custodian checked it by script, 2026-11-27, against the ruling's three fences as filed on main:
+     - each fence's text occurs once in its file;
+     - row AH8 stands directly after row AH7, and its result-log line directly after AH7's;
+     - the README ends with the section, after one blank line;
+     - neither file holds a carriage return.
+2. **The suites that start no app,** by the report, are green at 97019e91:
+   - cargo's three crates, 1122 passed, and `cargo fmt --check` clean;
+   - the shell's typecheck and its 1699 tests;
+   - verify-cites, verify-quotes, verify-test-claims, verify-mutation (8 new tests) and verify-plan;
+   - CI's `node --test`, 623 of 623.
+3. **Class 8: budget overrun, §7 not edited.** By §7's counting command at 97019e91, the piece has 791 insertions and 128 deletions: 919 changed lines against 900, over 39 files against 50. The custodian's own run of the command gives the same figure. Amendment 4 item 3's 903 was at 1a4b5bbe; the words add 16.
+   - §7's estimate table, with the count at 97019e91 beside each row. Which files each row counts is the custodian's mapping, for the gates to check. By script, every changed line of the four shell test files and `types.ts` in the literal's row is the literal `skp/0.16` made `skp/0.17`.
+
+| part | lines | at 97019e91 | the files counted |
+|---|---|---|---|
+| engine product | ~35 | 40 | `engine/src/dataset.rs`, `error.rs`, `identity.rs` |
+| kernel product | ~8 | 4 | `kernel/src/skp.rs` |
+| SKP-V0 entry and `mod.rs` | ~30 | 30 | `protocol/skp/SKP-V0.md`, `protocol/skp/src/v0/mod.rs` |
+| the literal and its fixtures, both sides | ~190 | 211 | the 14 files under `protocol/skp/tests/data/`; the three fixture files and the README under `protocol/skp/tests/conformance/`; `frontends/shell/src/skp/types.ts`; `RefusalBlock.test.tsx`, `admitDataset.test.ts`, `saveProject.test.ts` and `client.test.ts` under `frontends/shell/src/` |
+| shell product and docs | ~10 | 4 | `frontends/shell/src/admission/AdmissionPanel.tsx` |
+| tests: engine (with the destructure fixes) | ~110 | 143 | `engine/tests/identity_refusal_names_its_source.rs`, `engine/tests/identity.rs` |
+| tests: kernel | ~170 | 249 | `kernel/tests/text_id_reopen_recorded_declaration.rs` |
+| tests: protocol | ~30 | 85 | `protocol/skp/tests/fixtures.rs` |
+| tests: shell | ~60 | 32 | `AdmissionPanel.test.ts`, `skp/__tests__/fixtures.test.ts` |
+| e2e step | ~90 | 105 | `frontends/shell/e2e/admission-remediation.mjs` |
+| words (walkthrough row, e2e README) | ~15 | 16 | `MANUAL-WALKTHROUGH.md`, `e2e/README.md` |
+| **total** | **~750** | **919** | 39 files |
+
+   - **The reason:** the three Rust test rows count 477 against their ~310, while the four product rows count 78 against their ~83.
+4. **For the gates' read parts** (ADV-2026-11-27-30 item 1): each says in so many words whether every changed file is inside §7's scope, as its "each" lines resolve at the base, and whether every change is inside §2 and §4 as gated. A file or an item outside them goes to the advisor before anything else.
+5. **The worker's departures, by the report.** None touches a result:
+   - the shell run's hold was taken in a call of its own, before the run and not in the one-call form; the release was issued;
+   - the light checks ran outside a hold, `node --test` for about 116 s.
+6. **Next:**
+   - the pull request's body to 97019e91;
+   - the build gates' read parts at 97019e91, the architect's and the reviewer's;
+   - E-R1 at the port.
