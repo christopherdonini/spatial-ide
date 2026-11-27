@@ -2549,7 +2549,7 @@ mod tests {
     /// else. `Cancelled` and `Query` say nothing about the column, so a cancelled re-scan ends
     /// `Cancelled` and an engine failure stays a failure; neither opens a dataset. It is green
     /// before the arm's guard exists as much as after, and its proof is its mutation: an arm (d)
-    /// that admits on any `Err` turns it red.
+    /// that admits on any `Err` turns it red. This is N-9 of the form's §4; its recorded mutation is M-9.
     #[test]
     fn a_set_aside_passes_cancelled_and_query_through_unchanged() {
         let schema: SchemaRef =

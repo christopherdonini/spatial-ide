@@ -174,9 +174,13 @@ pub enum EngineError {
     /// **Refused by name, and nothing opens.** The choice answers a refusal of the file's own `id`
     /// column; the engine never makes it, infers it or falls back to it. Each case states a fact
     /// about this engine's own check and no consequence (the human's ruling of 2026-09-16, round 7:
-    /// "Engine messages state engine facts; owners state consequences."). Two of the three are
-    /// reachable only if the file changes between attempts, or through a client other than the
-    /// shell, which offers the choice only beside the refusal.
+    /// "Engine messages state engine facts; owners state consequences."). Through the shell, the
+    /// first case is reached at the reopen of a project whose file records a declaration of the
+    /// column `id`, when the engine refuses that column: the shell offers the choice beside an
+    /// `engine.identity_unusable` refusal that names `id` in a run whose own options hold no
+    /// declaration, and the kernel sends the recorded declaration with the choice. The other two
+    /// are reached through the shell only if the file changes between attempts. All three can be
+    /// reached through another client.
     IdentitySetAsideRefused { detail: String },
 
     /// The source is not the file this dataset opened against — the **structural descriptor**

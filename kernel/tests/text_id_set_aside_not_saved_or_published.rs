@@ -205,7 +205,7 @@ fn a_project_file_after_a_set_aside_open_records_identity_null_and_no_choice() {
 /// choice's words in any line.
 ///
 /// Mutation M-14: the admission object that `DatasetRef::to_json` writes gains the member
-/// `set_aside_file_id`. Expected failure: this test fails at the scan of the history's lines.
+/// `set_aside_file_id`. Expected failure: the step's record is refused as `skp.session_history_unwritable` (the history's reader rule refuses an unknown member), so this test fails at `record_step`, before the scan of the history's lines.
 #[test]
 fn a_session_history_after_a_set_aside_open_records_no_choice() {
     let rig = rig("k5");

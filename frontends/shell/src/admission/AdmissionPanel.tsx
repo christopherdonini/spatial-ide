@@ -219,7 +219,7 @@ export interface RowPositionOffer {
  * - the refusal is `engine.identity_unusable` and names the column `id` (`fieldValue(refusal, "column")`): the file's own `id` is what cannot serve;
  * - the run declared no identity (`options.identity` is unset): a declaration that was refused is not the file's own `id`, and the two are never sent together;
  * - the run carries no choice already (`options.setAsideFileId` is unset).
- * It is offered for a reopen's refusal as for a direct open's (ADR-016 Amendment 3, C2): the project file records nothing of the choice, so a reopen asks again. The one decision site for the
+ * It is offered for a reopen's refusal as for a direct open's (ADR-016 Amendment 3, C2): the project file records nothing of the choice, so a reopen asks again. At a reopen the recorded claims are the kernel's to send and this function does not see them: a reopen refused for a recorded declaration of the column `id` is offered the choice too, and the engine then refuses the choice beside the declaration the kernel sends with it (`IdentitySetAsideRefused` in `engine/src/error.rs`). The one decision site for the
  * panel's render; it makes no choice and sets nothing. */
 export function rowPositionOffer(state: State): RowPositionOffer | null {
   if (state.kind !== "refused") return null;

@@ -43,6 +43,7 @@ fn open_setting_aside(
     )
 }
 
+/// N-S of the form's §4 as amended (E2); mutations M-3 and M-7 fail here.
 #[test]
 fn the_set_aside_scan_counts_are_exact() {
     // N-3's input: a repeating integer `id`. It must open on the session tier first, so that a

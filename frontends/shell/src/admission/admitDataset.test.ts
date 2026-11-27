@@ -176,7 +176,7 @@ describe("admitDataset", () => {
     });
   });
 
-  // RECORDED MUTATION for T-1 (M-24): `admitDataset` passes `true` to `openDataset` whatever the option. Expected failure: the plain open below sends `set_aside_file_id: true`.
+  // RECORDED MUTATION beside T-1 (M-24b, not a row of the form's §4): `admitDataset` passes `true` to `openDataset` whatever the option. Expected failure: the plain open below sends `set_aside_file_id: true`.
   it("the setAsideFileId option is forwarded as set_aside_file_id, and its absence is false", async () => {
     invokeMock.mockImplementation(async (cmd: string) => {
       if (cmd === "open_dataset") return { dataset: "ds_1" };

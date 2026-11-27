@@ -62,6 +62,7 @@ fn assert_set_aside_session_tier(dataset: &Dataset) {
     );
 }
 
+/// N-1 of the form's §4; its recorded mutation is M-1.
 #[test]
 fn file_a_text_id_with_no_integer_column_opens_on_the_session_tier_when_set_aside() {
     let path = write("file-a", IdentityMode::StringIds);
@@ -84,6 +85,7 @@ fn file_a_text_id_with_no_integer_column_opens_on_the_session_tier_when_set_asid
     );
 }
 
+/// N-2 of the form's §4; its recorded mutation is M-2.
 #[test]
 fn file_b_set_aside_opens_by_row_position_and_lists_parcel_key() {
     let path = write("file-b", IdentityMode::StringIdsBesideParcelKey);
@@ -114,6 +116,7 @@ fn file_b_set_aside_opens_by_row_position_and_lists_parcel_key() {
     );
 }
 
+/// N-3 of the form's §4; its recorded mutation is M-3b (M-3 fails `the_set_aside_scan_counts_are_exact`).
 #[test]
 fn a_repeating_integer_id_is_scanned_again_then_set_aside() {
     let path = write("repeating", IdentityMode::DuplicateIds);
@@ -140,6 +143,7 @@ fn a_repeating_integer_id_is_scanned_again_then_set_aside() {
     );
 }
 
+/// N-4 of the form's §4; its recorded mutation is M-4.
 #[test]
 fn a_negative_integer_id_is_set_aside_after_its_scan() {
     let path = write("negative", IdentityMode::NegativeIds);
@@ -161,6 +165,7 @@ fn a_negative_integer_id_is_set_aside_after_its_scan() {
     );
 }
 
+/// N-5 of the form's §4; its recorded mutation is M-5.
 #[test]
 fn the_set_aside_is_refused_by_name_for_a_file_with_no_id_column() {
     let path = write("no-id", IdentityMode::ForeignKeyColumn);
@@ -179,6 +184,7 @@ fn the_set_aside_is_refused_by_name_for_a_file_with_no_id_column() {
     }
 }
 
+/// N-6 of the form's §4; its recorded mutation is M-6.
 #[test]
 fn the_set_aside_is_refused_by_name_when_the_id_serves() {
     let path = write("serves", IdentityMode::NativeUnique);
@@ -196,6 +202,7 @@ fn the_set_aside_is_refused_by_name_when_the_id_serves() {
     }
 }
 
+/// N-7 of the form's §4; its mutation M-7 fails `the_set_aside_scan_counts_are_exact`, not this test.
 #[test]
 fn a_set_aside_with_a_declared_column_is_refused_before_any_scan() {
     let path = write("declared", IdentityMode::StringIdsBesideParcelKey);
@@ -223,6 +230,7 @@ fn a_set_aside_with_a_declared_column_is_refused_before_any_scan() {
     }
 }
 
+/// N-8 of the form's §4; its recorded mutation is M-8.
 #[test]
 fn a_predicate_naming_id_on_a_set_aside_open_is_refused_as_ambiguous() {
     let path = write("ambiguous", IdentityMode::StringIds);
