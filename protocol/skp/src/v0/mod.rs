@@ -138,7 +138,7 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// 2026-11-26): `describe`'s `identity` gains `candidate_columns: Option<Vec<String>>`, the engine's
 /// candidate list on the session tier and `null`, still present, on a native or a mapped identity
 /// (`SKP-V0.md` §1 and §8's `skp/0.15` entry). No command, request member, code or message is
-/// added, removed or changed, and `protocol/data-plane/` has an empty diff. Same discipline again:
+/// added, removed or changed, and `protocol/data-plane/` has an empty diff; the partitioned refusal's fixture message is brought to the engine's Display; the engine message itself is unchanged. Same discipline again:
 /// `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in the same commit as
 /// the literal bump.
 pub const SKP_VERSION: &str = "skp/0.15";

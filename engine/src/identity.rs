@@ -320,7 +320,7 @@ pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -
 ///
 /// **The one list of admitted types.** Its two callers are [`candidate_identity_columns`], which
 /// offers a column, and the admitting arm of [`admit_column_type`], which accepts one, so that
-/// what is offered and what is accepted cannot drift apart again (ADR-016, Note 2026-11-26). It is
+/// what is offered and what is accepted cannot drift apart again (ADR-016 §4 with the Note 2026-11-26). It is
 /// private to this module on purpose: nothing outside it asks what types are admitted.
 fn is_admitted_integer_type(ty: &arrow::datatypes::DataType) -> bool {
     use arrow::datatypes::DataType as D;
@@ -405,6 +405,7 @@ mod tests {
         }
     }
 
+    // Mutation M-W1: the candidate filter back to Int64|UInt64. Expected failure: the list assertion, ["big_signed","big_unsigned"].
     #[test]
     fn the_candidate_list_is_every_admitted_integer_column_in_schema_order_unranked() {
         use arrow::datatypes::Field;
@@ -430,6 +431,7 @@ mod tests {
     /// schema order across all eight widths. (i) One-field schemas: the list names `k` exactly when
     /// `admit_column_type` accepts its type, and that holds for exactly eight types. (ii) One schema
     /// in a deliberately scrambled order.
+    // Mutation M-W1 fails it at (i); Mutation M-W2: the candidate filter without UInt8. Expected failure: (i).
     #[test]
     fn the_candidate_list_and_the_type_check_admit_exactly_the_same_types() {
         use arrow::datatypes::Field;

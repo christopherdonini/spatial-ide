@@ -144,7 +144,7 @@ export interface IdentityInfo {
    * and client state, and this client mirrors it by live-ticket set rather than by value. */
   session_statement: string | null;
   /** `skp/0.15` (ADR-016, Amendment 2 and the Note 2026-11-26): the engine's candidate list for a declaration, non-null exactly when `class === "session-ordinal"` --
-   * every column whose type `open_dataset` admits as an identity column, in schema order, unranked, with nothing preselected; it may be empty. On a native or a mapped
+   * every column whose type `open_dataset` admits as an identity column, less the columns the engine leaves out of the list: a name that holds a comma and a name nothing can address (§8's skp/0.15 entry), in schema order, unranked, with nothing preselected; it may be empty. On a native or a mapped
    * identity the wire carries the key as `null`. Declared optional here so that a describe from before `skp/0.15` still types; the wire always carries the key, and
    * `__tests__/fixtures.test.ts` pins it on the real fixture. Never a declaration and never a recommendation. */
   candidate_columns?: string[] | null;
