@@ -715,3 +715,28 @@ New:
 8. **Next:**
    - the correction commit, with the suites that start no app and `node --check` of the file green at its head;
    - each gate reads the merge and the correction in its run part.
+
+## Amendment 10 — 2026-11-27 — the custodian's: the correction at f7770e1a, and §7's count again
+
+*References only. Nothing above is edited.*
+
+1. **The correction commit** is f7770e1aa225b7902ea56a77c0d0dbd8321fb942, on the merge b018f914, as Amendment 9 recorded before it. The worker's report is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-correction-31-worker-report.md`. It changes the four files Amendment 9 item 4 names and nothing else: 17 insertions and 13 deletions.
+2. **The step,** by the report:
+   - Step (3) begins with text-id's function, opening `no-id-column.parquet` and waiting for the close of step (1)'s open. The control follows unchanged.
+   - Step (4)'s open was its own call with its own admitted check. It is now the function's open, which makes the same call and the same check, then waits for the close of the control's open. Then the first folder is removed.
+   - The steps keep their numbers, and step (5) and M-RD8 do not change. No assertion is removed or loosened, and nothing is retried.
+3. **The ruled texts,** by the report: the e2e README section (the ruling's item 6), S-R2's span and new line (item 5) and the F4 pair (Amendment 7 item 3) were sliced by one script from main's bytes, after its checks passed. The worker compared each clause of the item 6 section with the corrected step, and reports that every clause matches. No clause went to the advisor.
+4. **Class 8 again** (Amendment 9 item 6). By §7's counting command, by ranges, from text-id's corrected head b7a3dae6 to f7770e1a: 795 insertions and 128 deletions, 923 changed lines over 39 files, against §7's 900 lines and 50 files. §7 is not edited.
+   - From the base 2df8b4ae, the whole is 998 lines. The merge's own range, 2df8b4ae to b7a3dae6, is 75 lines in 2 files, and it is counted out.
+   - The custodian's own run of the command gives these figures.
+5. **The checks at the head,** by the report:
+   - `node --check` of the file: green;
+   - `cargo test --locked` of spatial-engine, spatial-kernel and spatial-skp: 1122 passed; `cargo fmt --check`: clean;
+   - the shell's typecheck and tests: 1699 passed;
+   - the verify scripts and the scripts' `node --test`: green.
+6. **The branch's CI,** read by the custodian: green at b018f914, and green at f7770e1a in every workflow. The Rust workspace is run 46067082503, 46067076762, and the shell is 46067082578, 46067076804.
+7. **The departures,** by the report:
+   - The worker read its own definition from the worktree.
+   - Its commit also carries the session's Claude-Session line.
+   - The function's doc comment in text-id's code names this step's (3) and (4) as callers, which is now true, and it is not edited.
+8. **Next:** the pull request's body names this head. Each gate reads the merge and the correction in its run part, at the port. The piece stays a draft until text-id is on main.
