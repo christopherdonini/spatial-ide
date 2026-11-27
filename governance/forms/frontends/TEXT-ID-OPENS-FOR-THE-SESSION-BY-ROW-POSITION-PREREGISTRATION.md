@@ -889,3 +889,39 @@ Nothing above is edited.
 6. **Counting** (§7). `<base>` is 83812fd5ee7e211ea6c241321981132117851f0f. The file ceiling stays 84 and the line ceiling stays 2,150.
 7. **The node** goes in progress with its branch as evidence.
 8. **Next:** the build, phase 2 (the code), on the recorded base. Its e2e runs wait under ADV-2026-11-26-19.
+
+## Amendment 9 — 2026-11-27 — budget overrun, §7 not edited: class 8, the size at the code's head, before the gates
+
+*Written by the custodian after the code and before its gates are dispatched. References and counts only; every count below was taken by script with §7's own counting command. §7 is not edited, and nothing above is edited.*
+
+1. **The figures.**
+   - Declared: §7's 1,950 changed lines over 80 files; the line ceiling restated to 2,100 (Amendment 3 item 4) and then to 2,150 (Amendment 6 item 4); the file ceiling 84 (Amendment 4; Amendment 6 item 4).
+   - Final, by §7's command at ebf961d31fe959fc4dc42cef6827f78152aca0db, with `<base>` 83812fd5ee7e211ea6c241321981132117851f0f (Amendment 8 item 6): 2313 insertions and 221 deletions, 2534 changed lines over 84 files.
+   - The files meet the ceiling. The lines run 384 over 2,150.
+   - This is class 8 (`docs/PREREGISTRATION-TEMPLATE.md`, class 8). It opens no gate route, since the piece is under full gating. No line is cut to meet the ceiling.
+2. **The estimate, with the count beside each part.** The counts are insertions plus deletions, by file group. §7's rows for the literal and for the request member have no files of their own: their lines sit in the files of the other rows.
+
+   | Part | Estimated (about) | Counted |
+   |---|---|---|
+   | engine product (`engine/src/`, 4 files; `dataset.rs`'s own test module included) | 150 | 225 |
+   | kernel product (`kernel/src/`, 3 files) | 80 | 74 |
+   | protocol code and docs (`protocol/skp/src/`, `SKP-V0.md`, the conformance README; 4 files) | 90 | 85 |
+   | shell product (`frontends/shell/src/`, tests apart; 9 files) | 140 | 197 |
+   | the literal, and the request member in the Rust literals and the JSON | 190 and 65 | not apart; the protocol data and conformance fixtures, 20 files, count 338; the 21 engine and kernel test files of 8 lines or fewer count 41 |
+   | tests: engine and kernel (27 files) | | 1007 |
+   | tests: `protocol/skp/tests/fixtures.rs` | | 61 |
+   | tests: the shell's unit tests and e2e scripts (12 files) | | 468 |
+   | tests, all three rows | 1,090 | 1536 |
+   | words and the ADR append (4 files) | 70 | 79 |
+   | Amendment 3 item 4's additions | about 185 | in the rows above |
+   | total | about 2,060; the architect's 2,110 to 2,131 (Amendment 6 item 4) | 2534 |
+3. **Where the lines beyond the estimate sit.**
+   - **Tests:** 1536 against about 1,090. The four new engine and kernel test files hold 912: `kernel/tests/text_id_set_aside_not_saved_or_published.rs` 367, `engine/tests/text_id_set_aside_session_tier.rs` 260, `kernel/tests/skp_admission_remediation.rs` 190 and `engine/tests/text_id_set_aside_scan_counts.rs` 95. In the shell, `AdmissionPanel.test.ts` counts 132 and `e2e/admission-remediation.mjs` 122.
+   - **Engine product:** 225 against about 150, of which `dataset.rs` counts 138.
+   - **Shell product:** 197 against about 140, of which `AdmissionPanel.tsx` counts 86 and the new `RowPositionChoice.tsx` 39.
+   - **The worker's own account** (`state/consults/2026-11-27-text-id-opens-for-the-session-by-row-position-build-worker-report-phase-2.md`) gives the same total. Its figure for `engine/tests/text_id_set_aside_scan_counts.rs` is 94; the script counts 95.
+4. **The reason,** for the gates to check: the overrun sits mostly in the tests, and then in the engine and shell products. Whether it is the declared design in more lines or a design that grew is the question of item 5.
+5. **The question both gates answer in so many words,** as ADV-2026-11-27-06 item 3 put it for B: is every product item of the engine, the kernel, the protocol and the shell, and every test, inside §2 with its amendments as gated? A gate that finds an item §2 does not describe names it, and that item goes to the advisor before anything else.
+6. **The worker's departures, for the gates** (the report's own list, by its numbers): 2, the scan-count test's input changed in its own commit after M-7 first came back not red; 6, K-6 covers R1 only, and M-13 and M-14 follow the tests' own doc comments; 7, `engine/ADMISSION-RESULTS.md`, outside the Scope, keeps the old refusal text; 9, the cites in `KNOWN-LIMITATIONS.md` item 3. No skeleton commit was made, so no red at a skeleton was observed. M-25, the e2e step, is not observed: E-1 waits for the port (ADV-2026-11-26-19).
+7. **The identity route's head moved after the base.** That head is now 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9, which merges PR A's head d6c2daf69eb500027197945f5a4302f0508e0f69 (that form's Amendment 10). It is not in this branch. What it brings changes 5 files, and this piece changes one of them, `frontends/shell/e2e/README.md`. By ADV-2026-11-27-01 item 7, if the route's head moves at its build gates, this piece takes the new head in before its own gates. It comes in by a merge commit, with the reviewer's narrow read (ADV-2026-11-23-15 item 4).
+8. **Next:** the build gates, after the route's head is in (item 7). Whether they go in two parts, and which of the route's heads they wait for, go to the advisor.
