@@ -4879,3 +4879,12 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 78 — 2026-11-23 — OP6 moves to the recovery offer's form (ADV-2026-11-23-16 item 8): references only
+
+1. **OP6** (§9: crash, then the recovery offer) moves to the operator Part of `governance/forms/kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md`, by ADV-2026-11-23-16 item 8 (question (iii), D13), filed at `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-16-the-recovery-offer-open-1-c-open-4-b-open-3-a-open-2-not-as-drafted-the-unsaved-twin-removed-op6-moves.md` in `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`. From this amendment, step 2's operator Part is P0 and OP1 to OP5 (Amendment 54 item 18 otherwise unchanged), and OP6 is run and recorded under the recovery offer's form.
+2. **The sitting script of 2026-11-24** names OP6 once, in the opening paragraph of its Part AD, as joining that Part with step 3; it names no OP6 row or step, so no human step of the sitting is OP6. The advisor was told so before 05:00Z, as the same item asks.
+
+Read the last amendment first.
+
+Nothing above is edited.

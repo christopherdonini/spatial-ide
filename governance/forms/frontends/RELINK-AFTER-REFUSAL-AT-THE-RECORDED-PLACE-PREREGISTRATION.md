@@ -346,3 +346,429 @@ After the merge, lead-data writes the owner's-index pointers.
 - **OPEN-9, "this section" in R8's bullet.** It sits in §12.3 but covers §12.2 to §12.4. Recommended: "§12" in place of "this section", as one changed word for the architect. Otherwise the bullet stays as carried.
 
 ## §10. Amendments (opens empty, append-only; classes 1 to 9)
+
+### Amendment 1 — 2026-11-22 — post-result amendment after the architect's form gate, attempt 1 (FAIL): the gate's words for C-1, E-1, D-1 to D-4 and D-6 to D-9; S12, item 73, item 69 and OPEN-9 as ruled; the OPEN items; when the code starts
+
+Post-result amendment, written after the architect's form gate, attempt 1 (FAIL), whose findings are this round's results. Nothing above is edited: each new text below is read in place of its old text, and the form's own text stays as filed. The gate stays FAIL in every record. No code is written before the architect's attempt 2, which reads this amendment alone, ends PASS or PASS WITH NOTES (ADV-2026-11-22-35 item 1; ADV-2026-11-22-44 item 1).
+
+**Authority.** The advisor's ruling under the delegation of 2026-11-13, not the human's words: ADV-2026-11-22-44 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-44-node-f-s12s-new-words-the-pieces-other-words-open-1-to-open-9-its-code-starts-after-the-tag.md`). **Evidence:** the gate report, `state/consults/gates/2026-11-22-relink-after-refusal-at-the-recorded-place-form-gate-architect.md` (gate-log row 850).
+
+**How the texts were copied.** Each new text in items 1 and 2 is the architect's, from the gate report. Each new text in item 3, and S12's new words in item 3, are the advisor's wording under the delegation of 2026-11-13 (ADV-2026-11-22-44 items 2, 4, 5 and 7, and its item 6), never the human's. The old texts are the form's, except S12's, which is the code's at main. Every text is copied by the custodian's script, each the text between its fence lines in its source, which are not part of it. Item 73's and item 69's old texts are made from the ruled sentence by putting back the one change the ruling names (D-5's words; "after such a refusal"), and OPEN-9's two texts are the ruling's quoted words. The script checked at this filing that each old text occurs exactly once in the form above this amendment, that no two overlap there, and that S12's old text is `RELINKED_FILE`'s whole text in `frontends/shell/src/project/reopenNotices.ts` at main. The clause checks stay in the gate report. Code cites inside the texts are reading aids at be11bd986dbcd8301f46fb124e0b512f45c4b8ec.
+
+#### 1. The gate's words for C-1 and E-1 (ADV-2026-11-22-44 item 1)
+
+**C-1, text 1 of 2 (§2 item 5).** Old:
+
+````text
+The app shows no other new string: the button's label is the existing `RELINK_CHOICE`.
+````
+
+New:
+
+````text
+`RELINKED_FILE` (S12, `reopenNotices.ts:35`) is shown after every re-linked open whose `check` differs (`reopenApply`, `openProject.ts:135`). Its last sentence says that the project now finds its data at the chosen file. After a re-link that follows a refused locator, that is untrue until the project is saved (F-3). Its words change in the same constant, true for both routes, as a draft for the advisor; `openProject.ts` is not touched. The app shows no other new string: the button's label is the existing `RELINK_CHOICE`.
+````
+
+S12's new words are ruled in item 3 below (ADV-2026-11-22-44 item 2).
+
+**C-1, text 2 of 2 (OPEN-3 (a)).** Old:
+
+````text
+(a) None. The refusal's line carries the save sentence. Recommended, since it keeps clear of `openProject.ts`.
+````
+
+New:
+
+````text
+(a) None beyond S12's changed words (§2 item 5). The refusal's line carries the save sentence. Recommended, since it keeps clear of `openProject.ts`.
+````
+
+**E-1, text 1 of 3 (§4, P0).** Old:
+
+````text
+- S-1 (ii) fails, and R10 fails at the re-link. Both are recorded with the commit id.
+````
+
+New:
+
+````text
+- S-1 (ii) fails, and R10 fails at its button check, since commit 1 renders no button in the refused block. Both are recorded with the commit id.
+````
+
+**E-1, text 2 of 3 (§3, E-1).** Old:
+
+````text
+| E-1 | real app: F-1 then the relink hook | the hook returns "not-asked" | "admitted" |
+````
+
+New:
+
+````text
+| E-1 | real app: F-1, the refused block, then the relink hook | no `.admission-reopen-relink` in the refused block | the button shows; the hook returns "admitted" |
+````
+
+**E-1, text 3 of 3 (§5, I4).** Old:
+
+````text
+- I4 (invalid run): R10 at P0 fails for any reason but "not-asked".
+````
+
+New:
+
+````text
+- I4 (invalid run): R10 at P0 passes its button check, or fails at any other check.
+````
+
+#### 2. The gate's words for D-1 to D-4 and D-6 to D-9 (ADV-2026-11-22-44 item 1)
+
+**D-1, text 1 of 2 (§1, the class).** Old:
+
+````text
+says the ruling "runs for a week from 2026-11-16". That week has ended, so `governance/AUTONOMY.md` §21a and §21c now govern.
+````
+
+New:
+
+````text
+says the ruling "runs for a week from 2026-11-16". Whether that week has ended is open with the human (ADV-2026-11-22-32 items 2 and 4). Until they answer, the form names its class under item 2 of that ruling and under `governance/AUTONOMY.md` §21a to §21c, and takes the fuller (ADV-2026-11-22-32 item 2). Both give this piece the full class.
+````
+
+**D-1, text 2 of 2.** Old:
+
+````text
+That is the class item 2 (a) of the expired ruling gave too
+````
+
+New:
+
+````text
+That is the class item 2 (a) of that ruling gives too
+````
+
+**D-2 (§8).** Old:
+
+````text
+12. A merge before the tag without the human's word; a squash or a rebase merge.
+````
+
+New:
+
+````text
+12. A merge before the tag without the human's word; a squash or a rebase merge.
+13. Code committed on a base that does not hold the merges of PR 353 and PR 359 (the custodian's overlap note after the title).
+````
+
+**D-3 (§4).** Old:
+
+````text
+Commit 1 adds four things:
+````
+
+New:
+
+````text
+Commit 1 adds five things:
+````
+
+**D-4 (§4, S-1 (iv)).** Old:
+
+````text
+- (iv) a dataset-open refusal gives null;
+````
+
+New:
+
+````text
+- (iv) a dataset-open refusal, built with `options.reopen` absent and owner `REOPEN_LOCATOR_REFUSAL_NOTICE`, gives null;
+````
+
+**D-6 (§2 item 6).** Old:
+
+````text
+Its comment names `relinkOffer`, the button, `handleRelink`, :807-813, `data_at` and `judge`.
+````
+
+New:
+
+````text
+Its comment names `relinkOffer`, the button, `handleRelink`, `Projects::open_project`'s data step, `data_at` and `judge`.
+````
+
+**D-7, text 1 of 3.** Old:
+
+````text
+without-asking.md:17` @ 0a2f0022):
+````
+
+New:
+
+````text
+without-asking.md:17` @ 0a2f0022, sub-line):
+````
+
+**D-7, text 2 of 3.** Old:
+
+````text
+four-files.md:13` @ 0a2f0022):
+````
+
+New:
+
+````text
+four-files.md:13` @ 0a2f0022, sub-line):
+````
+
+**D-7, text 3 of 3.** Old:
+
+````text
+ADV-2026-11-21-15 item 1 (:11 @ 0a2f0022):
+````
+
+New:
+
+````text
+ADV-2026-11-21-15 item 1 (:11 @ 0a2f0022, sub-line):
+````
+
+**D-8 (§3, R10).** Old:
+
+````text
+- R10: `filter-zoned.parquet`, copied read-only as `reopen.mjs` copies it (:44).
+````
+
+New:
+
+````text
+- R10: `filter-zoned.parquet` (`reopen.mjs:44`, read only), copied into a new folder by `openAndSave` (:203-208), which saves it through `e2eSaveProjectToFolder`.
+````
+
+**D-9 (§9).** Old:
+
+````text
+(`frontends/shell/src/skp/client.ts:171`)
+````
+
+New:
+
+````text
+(`frontends/shell/src/skp/client.ts:165-172`)
+````
+
+D-5 is carried in item 3, inside the sentence the advisor ruled.
+
+#### 3. The ruled words (ADV-2026-11-22-44 items 2 to 5 and 7)
+
+**S12, the constant `RELINKED_FILE` in `frontends/shell/src/project/reopenNotices.ts` (§2 item 5, as item 1 above declares it; ADV-2026-11-22-44 item 2).** The change is in the same constant. Old, the constant's whole text at main:
+
+````text
+The file you chose differs from what the project recorded when it was saved.{parts} On this machine the project now finds its data at the file you chose.
+````
+
+New:
+
+````text
+The file you chose differs from what the project recorded when it was saved.{parts} The project was opened on the file you chose, and it records that file's place when you save it.
+````
+
+**The line beside the refusal, `REOPEN_LOCATOR_REFUSAL_NOTICE`:** approved as §2 item 5 drafts it (ADV-2026-11-22-44 item 3). No text changes.
+
+**Item 73's changed sentence (§2 item 6), with the gate's D-5 (ADV-2026-11-22-44 item 4).** Old:
+
+````text
+The project file still records the old place until you save the project, so an open before that save is refused again and the choice is offered again.
+````
+
+New:
+
+````text
+The project file still records the old place until you save the project, so an open before that save, while the file is not back at that place, is refused again and the choice is offered again.
+````
+
+**Item 69's added sentence (§2 item 6; OPEN-7) (ADV-2026-11-22-44 item 5).** Old:
+
+````text
+A data file that you choose after such a refusal (item 73) is opened as you chose it, with no check of the names on its path.
+````
+
+New:
+
+````text
+A data file that you choose after a refusal for a missing file (item 73) is opened as you chose it, with no check of the names on its path.
+````
+
+The item's comment says that this sentence is added by ADV-2026-11-22-44.
+
+**OPEN-9, R8's bullet (§2 item 3) (ADV-2026-11-22-44 item 7).** Old:
+
+````text
+Wherever this section says
+````
+
+New:
+
+````text
+Wherever §12 says
+````
+
+The rest of the bullet stays as carried.
+
+#### 4. The OPEN items (ADV-2026-11-22-44 items 7 and 8)
+
+By the custodian's summary, not the ruling's words: OPEN-1 (A); OPEN-2 (a); OPEN-3 (a), as item 1 rewords it; OPEN-4 (a); OPEN-5 (a); OPEN-7, the sentence of item 3; OPEN-8, the path as it is; OPEN-9, the change of item 3, with the phrase "on the same machine" at the neighbouring bullet not changed in this piece. OPEN-6: the code starts when PR 353 and PR 359 are on main, so after the tag, and on no other base (§8 item 13, from D-2); to that extent ADV-2026-11-22-11 item 2 is changed for this piece.
+
+#### 5. For the attempt and the build
+
+By the custodian's summary, not the ruling's words: attempt 2 reads this amendment alone. It checks S12's two new clauses once, on both routes; it checks "a refusal for a missing file" once against the one refusal that offers the choice; and if it finds "on the same machine" untrue beside the new bullet, the architect gives words, which go to the advisor (ADV-2026-11-22-44 items 2, 5 and 7). A clause of item 3's words that fails at the attempt goes to the advisor as the architect's own words. The build's two gates read every clause of item 3's words against the built code, and an untrue one goes to the advisor unreworded (its item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 2 — 2026-11-23 — post-result amendment after the architect's form gate, attempt 2 (PASS WITH NOTES): the gate's words for N-1 to N-4; ADV-2026-11-22-44 items 4 and 5 copied whole (ADV-2026-11-23-01 item 6)
+
+Post-result amendment, written after the architect's form gate, attempt 2 (PASS WITH NOTES), whose notes are this round's results. Nothing above is edited: each new text below is read in place of its old text, and the form's own text, Amendment 1's included, stays as filed. The code still starts as Amendment 1 says: after PR 353 and PR 359 are on main, after the tag.
+
+**Evidence.** The gate report, `state/consults/gates/2026-11-22-relink-after-refusal-at-the-recorded-place-form-gate-architect-attempt-2.md` (gate-log row 854). It gives N-1 to N-4 as Documentation, each to be fixed before the merge by an appended amendment, with no Correctness or Evidence finding.
+
+**How the texts were copied.** Every old and new text in sections 1 to 4 is the architect's, from that report, each the one line between its fence lines, copied by the custodian's script; each old text occurs once in this file, checked at main 54710d4cd39880a0ea075658263dcdc6f048bdc4. None of them is the human's wording or the advisor's. Section 6 is the advisor's wording under the delegation of 2026-11-13, copied whole by the same script from the filed ruling. N-1 puts on the form what ADV-2026-11-22-44 items 4 and 5 ruled and Amendment 1 left off: the custodian's slip.
+
+#### 1. N-1 (Amendment 1 item 3; ADV-2026-11-22-44 items 4 and 5)
+
+**Text 1 of 2.** Old:
+
+````text
+**Item 73's changed sentence (§2 item 6), with the gate's D-5 (ADV-2026-11-22-44 item 4).** Old:
+````
+
+New:
+
+````text
+**Item 73's changed sentence (§2 item 6), with the gate's D-5 (ADV-2026-11-22-44 item 4).** Item 73's title and the rest of its paragraph are approved as §2 item 6 drafts them; this sentence alone changes. Old:
+````
+
+**Text 2 of 2.** Old:
+
+````text
+The item's comment says that this sentence is added by ADV-2026-11-22-44.
+````
+
+New:
+
+````text
+The sentence is placed at the end of the item's paragraph (ADV-2026-11-22-44 item 5). The item's comment says that this sentence is added by ADV-2026-11-22-44.
+````
+
+#### 2. N-2 (Amendment 1 item 3, S12's source comment)
+
+**Text 1 of 1.** Old:
+
+````text
+The change is in the same constant.
+````
+
+New:
+
+````text
+The change is in the same constant. The file's header, or S12's own doc comment, names ADV-2026-11-22-44 item 2 as the source of S12's words, and names the case a gate gave as not ordinary use: a save that is refused records nothing (`SaveFailure::LineageNotKept`, item 71).
+````
+
+#### 3. N-3 (Amendment 1's opening paragraph)
+
+**Text 1 of 1.** Old:
+
+````text
+(ADV-2026-11-22-35 item 1; ADV-2026-11-22-44 item 1)
+````
+
+New:
+
+````text
+(ADV-2026-11-22-44 item 1)
+````
+
+#### 4. N-4 (Amendment 1 item 2, D-4, case (iv))
+
+**Text 1 of 1.** Old:
+
+````text
+- (iv) a dataset-open refusal, built with `options.reopen` absent and owner `REOPEN_LOCATOR_REFUSAL_NOTICE`, gives null;
+````
+
+New:
+
+````text
+- (iv) a dataset-open refusal, built with `options.reopen` absent, `inFlight` false and owner `REOPEN_LOCATOR_REFUSAL_NOTICE`, gives null;
+````
+
+#### 5. For the build
+
+The report also names two cases for the source comments, not blocking: for item 69's, a name on the path whose metadata cannot be read; for item 73's, a link or a wrong kind put at the old place. They are the worker's words at the build, read by the build's two gates.
+
+The checks that attempt 2 could not make, because the words had not reached the form (item 69's "a refusal for a missing file", and item 73's changed sentence), are made by the architect's gate on the build, after the tag (ADV-2026-11-23-01 item 6, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-01-the-humans-four-lines-in-force-the-sitting-step-the-2026-11-16-directive-to-the-tag-the-spend-limit.md`). Attempt 2 checked S12's two clauses on both routes; N-2 goes into the constant's source comment as the architect words it, and S12's text stands (ADV-2026-11-23-03 item 4, `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-03-the-reuse-lookup-is-a-piece-the-held-pieces-wait-for-the-tag-known-limitations-not-shipped-nodes-f-and-d.md`).
+
+#### 6. ADV-2026-11-22-44 items 4 and 5, whole
+
+Copied by script, byte for byte, from the filed ruling (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-44-node-f-s12s-new-words-the-pieces-other-words-open-1-to-open-9-its-code-starts-after-the-tag.md`, at main 54710d4cd39880a0ea075658263dcdc6f048bdc4), from the line that opens item 4 to the line before item 6. The advisor's wording under the delegation of 2026-11-13; not the human's.
+
+`````text
+4. **Item 73: approved as section 2 item 6 drafts it, title and paragraph, with the gate's D-5.** The one changed sentence reads:
+
+```text
+The project file still records the old place until you save the project, so an open before that save, while the file is not back at that place, is refused again and the choice is offered again.
+```
+
+5. **Item 69's added sentence (OPEN-7): approved with three words changed**, placed at the end of the item's paragraph. The draft's "after such a refusal" could be read of a refusal for a link, where no choice is offered (OPEN-5). The sentence:
+
+```text
+A data file that you choose after a refusal for a missing file (item 73) is opened as you chose it, with no check of the names on its path.
+```
+
+   The attempt checks "a refusal for a missing file" once against the one refusal that offers the choice. The item's comment says that this sentence is added by this ruling.
+`````
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 3 — 2026-11-23 — the code starts now, on a base that holds the heads of PR 353, PR 358 and PR 359 (the human's message of 2026-11-23 item 3 (a); ADV-2026-11-23-15 items 4 and 7 (a))
+
+*Written by the custodian, 2026-11-23, before any of the piece's code. References and hashes only. Nothing below is a quotation.*
+
+1. **Authority.** The human's message of 2026-11-23, item 3 (a), filed at `state/directives/2026-11-23-the-humans-message-never-idle-product-first-what-to-build-now-the-pauses-lifted-for-product-pieces-what-does-not-change.md`; and the advisor's ruling ADV-2026-11-23-15, items 3, 4 and 7 (a), under the delegation of 2026-11-13, filed at `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-15-the-humans-message-filed-the-relink-built-now-on-three-held-heads-two-forms-now-the-gap-pieces-the-sitting-hour.md`. By that ruling's item 3, ADV-2026-11-22-44 item 8 is overturned by the human: the code no longer waits for the tag. Amendment 1 item 4's OPEN-6 sentence and Amendment 2's opening sentence on when the code starts are read with this amendment. The merge still waits for the tag, and for PR 353, PR 358 and PR 359 on main (ADV-2026-11-23-15 item 5).
+2. **The base.** Branch `cut/relink-after-refusal`. Its base is 0f02c164e070960c326573560815f2eb0a880684: main at 0bcf543452af79df6251cc7d86ab9f2cf644fcc2, then three merge commits, in the merge order, taking in the head of PR 353 (09ce1dfe8d6b05f2910ec9278c08a6839f55da36, by 083858308b99a807741751cbd2815305e85703a0), of PR 358 (7a3fd37b22bd43ab48fba8aa465fc7bf1b1cb2fd, by 61b35603a33d31b7aae95f8e77c23ad50a50e04d) and of PR 359 (8b8c38815a5fbc1e41e392366784a7c1c51a5783, by 0f02c164e070960c326573560815f2eb0a880684). Each merge was clean. The base differs from main by the union of the three PRs' files and nothing else (24 files, compared by script). PR 353 counts by rule (00), since both touch `protocol/`; PR 358 by `KNOWN-LIMITATIONS.md`; PR 359 by `frontends/shell/e2e/reopen.mjs` and `frontends/shell/e2e/README.md`.
+3. **The piece's range.** The piece's own diff is 0f02c164e070960c326573560815f2eb0a880684...head. Section 7's size and file list, section 4's mutations, and both gates are read on that range; section 7's counting command is read with that range in place of the merge base. Section 7 is not edited.
+4. **Block-on-sight item 13** (Amendment 1, D-2) is read as: a base that does not hold the heads of PR 353, PR 358 and PR 359 (ADV-2026-11-23-15 item 7 (a)).
+5. **A held head that moves.** If a base PR's head moves (PR 359's commit 4 is due after the sitting), the branch takes the new head in by a merge commit, and the reviewer reads once, narrowly, whether the piece's own lines or tests are affected (ADV-2026-11-23-15 item 4). If the human drops or changes a base PR, the piece goes to the advisor.
+6. **No run from 05:00Z on 2026-11-24** until the human says the sitting is over (ADV-2026-11-23-15 item 9). A run still going then is stopped by its own agent and recorded as not finished.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 4 — 2026-11-23 — the closing amendment, after both build gates (PASS WITH NOTES): references and hashes only (the architect's D-7, the reviewer's D-6)
+
+Written after both build gates' outcomes were seen. References and hashes only, under the record cap; nothing in §1 to §9 changes.
+
+1. **The commits** on `cut/relink-after-refusal`, over the base `0f02c164e070960c326573560815f2eb0a880684` (Amendment 3):
+   - P0, `3885d02bc4dbb4e02a15ca208b5a0f41085766eb`;
+   - the code, `32342fd4e9579381121b0925f27d5c1287b1133c`;
+   - the words, `d03eaae777b34304daeb1b1d40043cdb4016f72f`;
+   - commit 4, `06a2825a1dd9e55649605487f1065810905dad58`, which the brief did not name and which changed test text only: comments and one assertion message;
+   - the gates' words, `e4e6493d92ec941425dd6566c0a4ec154c7eb633`: comments and docs only, so no narrow read (ADV-2026-11-22-05).
+2. **Each mutation and the commit it was observed at:**
+   - M-S1 to M-S3, M-K1, M-K2 and M-K2b: by the worker at `32342fd4`, and again by the reviewer's build gate at `06a2825a`;
+   - M-E1: by the tester at `06a2825a`;
+   - P0: observed at `3885d02b`. The code's RECORDED MUTATIONS lines do not carry it.
+3. **M-K2 as §4 words it** fails K-F1 at the first save's `at` check, not at F-4's `at` check. Its prediction is missed in its place only. **M-K2b**, the same mutation at a later save only, was added after the result, and it fails at F-4's `at` check.
+4. **No `verify-mutation` run** is an observation here. `frontends/shell/e2e/reopen.mjs` records M-E1 after its RECORDED MUTATIONS line from `e4e6493d`.
+5. **The evidence**, each by its path, the commit that filed it, and the sha256 of its bytes as filed:
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-worker-report.md`, filed at `a21d5de7d44035339e2cce56112c54178932afb2`, sha256 `0a56ccb9b70be32c2954a95604fb84fa129f988ac07838b5dd9fa573328d26e6`;
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-e2e-tester-report.md`, filed at `a846072d4be622ade7356d36bccd13c346ffa34a`, sha256 `71a55bbfc4cf3dc1f1870aa7cb2a7c52246661c43ddd2f6f1355d8dbec721f94`;
+   - `state/consults/gates/2026-11-23-relink-after-refusal-at-the-recorded-place-build-gate-architect.md`, filed at `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`, sha256 `a29778fc2839c78e37e28de676f2833fd467054ab5d21f3c2e8e56dcece1cf49`;
+   - `state/consults/gates/2026-11-23-relink-after-refusal-at-the-recorded-place-build-gate-reviewer.md`, filed at `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`, sha256 `23620871e1b6c26cb0c2f4ffb66fad632c08fb9efecdeb7fcf9880ee26c26f2a`;
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-fix-worker-report.md`, filed by this amendment's commit, sha256 `53ac1cf80b8d460d8a3bf8952db03e1d2da71036936f82344454cfcf24125d7e`.
+6. **The architect's D-8**, the words of `client.ts`'s doc, lies outside §7. It goes to the docs lane.
+
+Read the last amendment first.
+
+Nothing above is edited.
