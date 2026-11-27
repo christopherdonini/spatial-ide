@@ -1257,3 +1257,15 @@ A code or test comment that names one gives this form's name with the id (`SHELL
    2. the shell's typecheck and tests, CI's `node --test` and the verify scripts, green at the new head;
    3. the PR body, naming that commit.
    Each gate reads the correction in its run part, and no separate narrow read is owed. E-SCALE stays last at the port.
+
+## Amendment 18 — 2026-11-27 — the custodian's: the correction, at 56897cb4
+
+*References only. Nothing above is edited.*
+
+1. **The commit.** 56897cb477be31fed65a898a38dde8a3b3936de1 holds the ruling's items 1 to 5 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-29-shell-scale-displays-five-questions-scale-bar-max-px-to-its-test-a-form-amendment-then-one-correction-commit.md`) and nothing else: 9 files, 16 insertions and 13 deletions against cbea7d4e. Its worker's report is filed at `state/consults/gates/2026-11-27-shell-scale-display-correction-29-worker-report.md`.
+2. **The custodian's check of the words.** A script read the ruling's six fences at this commit, with doc-comment wraps joined. Each of their 11 Olds occurs 0 times, and each of their 11 News and 3 added lines occurs once.
+3. **§7, by the worker's count:** 496 of 760 lines over 11 files, every file under its ceiling. `e2e-test-surface.ts` has 3 lines and no ceiling, which is the class 8 that Amendment 17 records. §7 is not edited.
+4. **The suites that start no app,** green at this commit by the worker's report: the shell's typecheck and tests (1688 of 1688), CI's `node --test` (623 of 623), verify-cites, verify-quotes, verify-test-claims, verify-mutation (a check only) and verify:plan.
+5. **Next:**
+   - the PR body names this commit;
+   - the run parts at the port, with E-SCALE last. Each gate reads the correction in its run part. The reviewer observes M2 and M5 again at this head (Amendment 17 item 5).
