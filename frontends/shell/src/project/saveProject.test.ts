@@ -67,7 +67,7 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     const calls = sent();
     expect(calls.map((c) => c.command), "the picker once, then the save twice").toEqual(["binding_pick_project_folder", "save_project", "save_project"]);
     expect(calls[1].request).toEqual({
-      skp: "skp/0.14",
+      skp: "skp/0.15",
       dataset: "ds_1",
       folder: FOLDER,
       workspace: {

@@ -85,7 +85,8 @@ geometry { column, encoding: "geoarrow.polygon"|"geoarrow.multipolygon"|"geoarro
 identity { source: "file:id"|"mapped:<col>"|"session-ordinal:file_row_number",
            uniqueness: "verified-at-open-full-file"|"declared-not-verified"|"by-construction-within-generation",
            verified_rows: Option<DecU64>, max_value: Option<DecU64>, js_exact: Option<bool>,
-           class: "native"|"mapped"|"session-ordinal", session_statement: Option<String> }
+           class: "native"|"mapped"|"session-ordinal", session_statement: Option<String>,
+           candidate_columns: Option<[String]> }
 schema   [ { name, arrow_type, nullable, projectable } ]
 covering_bbox: bool
 row_count { basis, value: Option<DecU64> }
@@ -96,6 +97,8 @@ coverage { state: "watching"|"checks-only", reason: Option<String> }
 checks   { state: "full"|"degraded", components: ["mtime"|"footer-hash"] }
 session_end: "observed-change"|"coverage-lost"|null
 ```
+
+**`identity.candidate_columns` (from `skp/0.15`).** On the session tier alone (`class` `"session-ordinal"`) it is the engine's candidate list for a declaration: every column whose type `open_dataset` admits as an identity column, less the columns the engine leaves out of the list: a name that holds a comma and a name nothing can address (§8's skp/0.15 entry), in schema order, unranked and unpreselected, and it may be empty. On a native or a mapped identity it is `null`, and the key is always present. It is the same list, from the same engine function, that `engine.identity_unusable` carries in its `candidate_columns` field. It names what a caller may declare; it is never a declaration and never a recommendation (ADR-016, Amendment 2 and the Note 2026-11-26).
 
 `duckdb_version()` is deliberately **not** in `describe`: it runs a query and can fail on connection
 pressure (`ConnectionsExhausted`), which would make a command described as pure able to fail on
@@ -241,8 +244,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.14` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.14`.
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.15` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.15`.
 4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eight
    commands and cannot adapt to a future kernel.
 5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset` and for `open_project` (§2, C3; §12.3).
@@ -731,8 +734,9 @@ variant-name rule, unchanged), each carrying `detail` in `SkpError.fields`:
   boundary's own words: the check does not establish snapshot consistency, cannot detect every
   in-place modification, and may detect a change during a query only after that query has finished
   reading.
-- **`engine.identity_ordinal_partitioned_unsupported`** — a partitioned source reached the
-  session-ordinal path (boundary 7). No file-list or packing contract is introduced by it.
+- **`engine.identity_ordinal_partitioned_unsupported`** — the path is read as a folder or a
+  pattern, not as one file (boundary 7): refused before any identity is read, whether or not an
+  identity column is declared. No file-list or packing contract is introduced by it.
 - **`engine.internal_inconsistency`** — a retype, not a new failure: the provenance-arm
   contradiction in `dataset::open_inner` used to arrive as `engine.source`, telling a caller its
   file was unreadable when the contradiction is in this tree's own record.
@@ -1166,6 +1170,23 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 §1 and §4 are updated in place to count eight commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.13"` → `"skp/0.14"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the three shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.14` as an unsupported future version is renumbered to name `skp/0.15`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
 
+### Note: a `relink` after a refused locator (2026-11-23; no literal change)
+
+**`skp/0.14` stands; no literal is bumped and no fixture changes.**
+
+- **The change.** §12.3's `relink` bullet names a second case in which a client sends one, after `skp.project_target_unresolvable` with a `locator`. The kernel already used a `relink` before any locator at `skp/0.14`, so its answers do not change.
+- **The machine.** §12.3 gains the bullet that says what "the machine" and "this machine" mean wherever §12 says them.
+- **What did not change.** No key, value, code, message or command is added or removed, and `protocol/data-plane/` has an empty diff.
+
+### skp/0.15 — the session tier's candidate list on `describe.identity` (identity-declaration-route-for-session-tier, ADR-016 Amendment 2 and the Note 2026-11-26)
+
+**The version's FULL field set, as §8's own discipline requires:** one member on one reply, and nothing else. No command, request member, code or message is added, removed or changed; the other reply members are as at `skp/0.14`; the partitioned refusal's fixture message is brought to the engine's Display; the engine message itself is unchanged.
+
+- **`describe`'s `identity` gains `candidate_columns: Option<[String]>`.** It is `Some` exactly when `class` is `"session-ordinal"`, and the list may be empty. It is `null` on a native or a mapped identity, and the key is always present (`deny_unknown_fields` stays on in both directions). The list is the engine's, from the same function and in the same order as the refusal's `candidate_columns` field; the kernel carries it as the engine gives it.
+- **`candidate_columns`, on `engine.identity_unusable` and on `describe.identity`, widens in this version** (ADR-016, Note 2026-11-26). It names every column whose type `open_dataset` admits as an identity column — `Int8`, `Int16`, `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32` or `UInt64` — in schema order across all widths, unranked and unpreselected. Two kinds of column stay out of it, as before: a name that holds a comma (the `skp/0.2` P3c addendum) and a name nothing can address. The `skp/0.2` entry's "`Int64` and `UInt64` only" records that version and is not edited. No fixture changes for this: each fixture's list holds names only.
+
+§1's `describe` block is brought current in place. `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.14"` → `"skp/0.15"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it, and the three `describe` fixtures gain the member. The version-refusal fixture that named `skp/0.15` as an unsupported future version is renumbered to name `skp/0.16`.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1280,7 +1301,7 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 
 ### 10.1 Version
 
-`skp` is now compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13` and `skp/0.14` entries).
+`skp` is now compared against `"skp/0.15"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13`, `skp/0.14` and `skp/0.15` entries).
 
 ### 10.2 The wire shape
 
@@ -1335,7 +1356,7 @@ Five new codes, all minted by the host:
 
 ### 11.1 Version
 
-`skp` is compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13` and `skp/0.14` entries).
+`skp` is compared against `"skp/0.15"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13`, `skp/0.14` and `skp/0.15` entries).
 
 ### 11.2 The wire shape
 
@@ -1393,7 +1414,7 @@ From `skp/0.14`, one code more, which a later save can give: `skp.project_file_n
 
 ### 12.1 Version
 
-`skp` is compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14` entry).
+`skp` is compared against `"skp/0.15"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14` and `skp/0.15` entries).
 
 ### 12.2 The wire shape
 
@@ -1429,8 +1450,9 @@ refused   = { reason: "over-bound", line: n | null, limit } | { reason: "damaged
 - **Two calls, no state between them.** The kernel keeps nothing between the first call and the second. A `question` or a `not_found` is answered by calling again, with `answer` or with `relink`.
 - **`question`** means the folder is not one the machine remembers for the project, and the folder it remembers first still holds a project file of this identity, or one the reader refuses, or cannot be read, it or its project file. Nothing was written. The answer `copy` mints a new identity into this folder; the answer `same` is remembered for this folder.
 - **The data** is found by the project-relative locator the file carries, through the resolver's check, which refuses a locator it cannot resolve; otherwise by the location this machine's store holds for the dataset, and a location that is absent, or whose file is missing, is `not_found`.
-- **A `relink`** is an absolute UTF-8 path to a file the client chose after `not_found`. It replaces the dataset's entry in the machine store whatever the entry held. A client sends one after a `not_found`.
+- **A `relink`** is an absolute UTF-8 path to a file the client chose after a `not_found`, or after a refusal as `skp.project_target_unresolvable` that names a `locator`. It is used in place of every locator the project file carries, and the resolver's check is not made on it. It replaces the dataset's entry in the machine store whatever the entry held. The project file keeps its locators until a later `save_project` judges them again (§11.3), so a call without a `relink` before that save is refused again while the file is not at the place the locator records.
 - **The open** is `open_dataset`'s, with the claims the project file recorded and the request's `cancel_key`. A project is open once at a time within one user's machine store, where its lock is kept: a reopen of a project whose lock another open holds is refused as `skp.project_open_elsewhere`. The lock does not reach another user's store on the same machine.
+- **The machine.** Wherever §12 says "the machine" or "this machine", it means one user's machine store: the `spatial-ide/projects` folder in the per-user data directory, with one folder for each project identity, holding that identity's `folders.json`, `locations.json`, `open.lock` and the lineage file kept on this machine. Another user of the same computer has a store of its own, which this user's calls neither read nor write.
 - **No reply carries a path.** A refusal may name the request's own `folder` or `relink` as sent, a locator's JSON path and its segment as the project file spells it, a machine-store file by its fixed name, and an identity. One exception: an engine refusal keeps the engine's own message, unedited (§5), and that message may name the path the engine was given.
 - **Cancellable**, through `cancel` and the request's `cancel_key`, as `open_dataset` is, and not progress-reporting. A key that a live `open_dataset` or `open_project` call holds is refused as `skp.cancel_key_in_use`. A cancel that the call sees before the engine's open returned refuses it as `engine.cancelled`. The call looks between its steps, so a `question`, a `not_found` or another refusal already decided can still be the reply. A cancel after the engine's open returned a dataset is not seen: the call goes on as it would with none.
 

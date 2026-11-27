@@ -489,7 +489,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
     let request =
         |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
             serde_json::json!({
-                "skp": "skp/0.14", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "skp": "skp/0.15", "dataset": "ds_00112233445566778899aabbccddeeff",
                 "folder": folder,
                 "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
             })
@@ -572,7 +572,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
 fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_constructors_build() {
     use serde_json::{json, Value};
     let request = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.14", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+        json!({"skp": "skp/0.15", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
                "answer": answer, "relink": relink})
     };
     for (what, wire) in [
@@ -781,7 +781,7 @@ fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_const
 fn the_open_project_closed_sets_refuse_any_other_value() {
     use serde_json::{json, Value};
     let call = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.14", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+        json!({"skp": "skp/0.15", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
                "answer": answer, "relink": relink})
     };
     let bad_request = |wire: Value, what: &str| {
@@ -900,7 +900,9 @@ fn the_open_project_closed_sets_refuse_any_other_value() {
 /// `skp/0.2`: `engine.identity_unusable` gains a `candidate_columns` field (NEXT-CUT.md P0) — the
 /// file's 64-bit integer columns, schema order, comma-joined (`SkpError::fields` has no list shape
 /// on the wire — `kernel/src/skp.rs::error_of`). `message` stays whatever `EngineError::Display`
-/// already produced; the candidate list rides only in `fields`.
+/// already produced; the candidate list rides only in `fields`. From `skp/0.15` the list holds
+/// every integer width admission takes (ADR-016, Note 2026-11-26); this fixture's list names one
+/// column and is unchanged.
 #[test]
 fn identity_unusable_error_fixture_carries_candidate_columns() {
     let v = fixture("v0-error-identity_unusable-with-candidates");
@@ -972,14 +974,14 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.14` (`open_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
-/// test was `skp_version_is_skp_0_13` before that part, `skp_version_is_skp_0_12` before piece 1c,
-/// `skp_version_is_skp_0_11` before piece 1b and `skp_version_is_skp_0_10` before the lines cut,
-/// PL-5).
-/// Mutation: the literal back to `"skp/0.13"`. Expected failure: this test fails by name.
+/// `skp/0.15` (`identity-declaration-route-for-session-tier`, ADR-016 Amendment 2; this test was
+/// `skp_version_is_skp_0_14` before that piece, `skp_version_is_skp_0_13` before `open_project`
+/// (B2 piece 1c), `skp_version_is_skp_0_12` before piece 1c, `skp_version_is_skp_0_11` before
+/// piece 1b and `skp_version_is_skp_0_10` before the lines cut, PL-5).
+/// Mutation: the literal back to `"skp/0.14"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_14() {
-    assert_eq!(SKP_VERSION, "skp/0.14");
+fn skp_version_is_skp_0_15() {
+    assert_eq!(SKP_VERSION, "skp/0.15");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row

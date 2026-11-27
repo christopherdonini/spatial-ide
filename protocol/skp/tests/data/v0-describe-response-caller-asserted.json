@@ -28,7 +28,8 @@
     "max_value": "99999",
     "js_exact": true,
     "class": "native",
-    "session_statement": null
+    "session_statement": null,
+    "candidate_columns": null
   },
   "schema": [
     { "name": "id", "arrow_type": "UInt64", "nullable": false, "projectable": false },

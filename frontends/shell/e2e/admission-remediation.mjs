@@ -3,7 +3,8 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- ASSERT'/PASTED'/AXISTRAP'/NODEF'/MAP'/DUPKEY'/BOTHNEEDED'/
-// CONFLICT'/CANCELOPEN'/NOPERSIST'/OVERBOUND' for NEXT-CUT.md's admission-remediation cut, phase P5.
+// CONFLICT'/CANCELOPEN'/NOPERSIST'/OVERBOUND' for NEXT-CUT.md's admission-remediation cut, phase P5, and
+// DECLARE-SESSION' for the identity-declaration-route-for-session-tier piece (E-1).
 // Sibling to regression.mjs/filter-panel.mjs/style.mjs/publish.mjs -- same attach-or-launch path
 // (lib.mjs's attachOrLaunch), same in-page hooks (src/e2e-test-surface.ts: openPath, crsCatalog,
 // capturePixels), same E2E-verified evidence-class limit (e2e/README.md). Every step below drives
@@ -477,6 +478,75 @@ async function stepMap(page, consoleHandle) {
 }
 
 /**
+ * `DECLARE-SESSION'` (E-1 of `IDENTITY-DECLARATION-ROUTE-FOR-SESSION-TIER-PREREGISTRATION.md`): the route the panel offers for a file that opened on
+ * the session tier, through the real DOM and not `openPath`. `no-id-column.parquet` opens on the session tier; the declaration control
+ * (`.admission-declare-identity`) is opened with a click on its summary; the candidates are exactly `parcel_key`, with none checked; the radio is
+ * clicked and then "Declare this column". The Identity row then reads `mapped:parcel_key — verified-at-open-full-file` and no "Session identity" row
+ * is left. The 120 s bound is a declared bound for the poll, not a duration.
+ */
+async function stepDeclareSession(page, consoleHandle) {
+  await assertSessionTier(page, consoleHandle, "DECLARE-SESSION'", FIXTURE_NO_ID_COLUMN);
+
+  const opened = await page.evaluate(() => {
+    const summary = document.querySelector(".admission-declare-identity summary");
+    if (summary === null) return false;
+    summary.click();
+    return true;
+  });
+  if (!opened) throw new Error("DECLARE-SESSION': .admission-declare-identity summary not present after the session-tier admission");
+
+  const form = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        candidates: Array.from(document.querySelectorAll(".admission-declare-identity .identity-declaration-candidate")).map((el) => el.textContent?.trim()),
+        checked: document.querySelectorAll(".admission-declare-identity .identity-declaration-candidate input:checked").length,
+      })),
+    (v) => v.candidates.length > 0,
+    10_000
+  );
+  if (!form.ok) throw new Error(`DECLARE-SESSION': the declaration form listed no candidates within 10s (last: ${JSON.stringify(form.last)})`);
+  if (JSON.stringify(form.last.candidates) !== JSON.stringify(["parcel_key"])) {
+    throw new Error(`DECLARE-SESSION': candidate list was not exactly ["parcel_key"]. Actual: ${JSON.stringify(form.last.candidates)}`);
+  }
+  if (form.last.checked !== 0) throw new Error(`DECLARE-SESSION': ${form.last.checked} candidate(s) were checked before any pick; none may be preselected`);
+
+  const submitted = await page.evaluate(() => {
+    const radio = document.querySelector(".admission-declare-identity .identity-declaration-candidate input");
+    if (radio === null) return "no radio";
+    radio.click();
+    return "picked";
+  });
+  if (submitted !== "picked") throw new Error(`DECLARE-SESSION': could not pick the candidate (${submitted})`);
+  const clicked = await waitForCondition(
+    () =>
+      page.evaluate(() => {
+        const button = Array.from(document.querySelectorAll(".admission-declare-identity button[type=submit]")).find((b) => b.textContent?.trim() === "Declare this column");
+        if (button === undefined || button.disabled) return false;
+        button.click();
+        return true;
+      }),
+    (v) => v === true,
+    10_000
+  );
+  if (!clicked.ok) throw new Error("DECLARE-SESSION': the Declare this column button never became enabled after the pick");
+
+  const expected = "mapped:parcel_key — verified-at-open-full-file";
+  const settled = await waitForCondition(
+    () =>
+      page.evaluate(() => {
+        const rows = Object.fromEntries(
+          Array.from(document.querySelectorAll(".describe-summary dt")).map((dt) => [dt.textContent, dt.nextElementSibling?.textContent ?? null])
+        );
+        return { identity: rows["Identity"] ?? null, hasSessionRow: "Session identity" in rows };
+      }),
+    (v) => v.identity !== null && v.identity.includes(expected) && !v.hasSessionRow,
+    120_000
+  );
+  if (!settled.ok) throw new Error(`DECLARE-SESSION': the summary never read "${expected}" with no "Session identity" row within 120s (last: ${JSON.stringify(settled.last)})`);
+  return `no-id-column.parquet: session tier, the control opened, exactly "parcel_key" listed with none checked; declared from the panel -> the Identity row reads "${expected}", no "Session identity" row`;
+}
+
+/**
  * `DUPKEY'`: `dupkey-refused.parquet` has a native `id` column holding a constant value -- ADR-016's
  * own uniqueness scan runs for a native column too, so a PLAIN open already refuses (a genuine
  * uniqueness refusal, not a missing-column one). Declaring the SAME `id` column again re-runs the
@@ -863,6 +933,8 @@ async function main() {
     await runStep("NODEF'", 30_000, () => stepNodef(page));
     // MAP' and BOTHNEEDED': 120s as outer bounds, each half adds one settle (45s at most). A bound, not a duration.
     await runStep("MAP'", 120_000, () => stepMap(page, consoleHandle));
+    // DECLARE-SESSION': the declaration route through the real DOM (E-1); its poll bound is 120s, a bound and not a duration.
+    await runStep("DECLARE-SESSION'", 180_000, () => stepDeclareSession(page, consoleHandle));
     await runStep("DUPKEY'", 30_000, () => stepDupkey(page));
     await runStep("BOTHNEEDED'", 120_000, () => stepBothNeeded(page, consoleHandle));
     await runStep("CONFLICT'", 30_000, () => stepConflict(page));

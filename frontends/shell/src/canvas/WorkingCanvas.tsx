@@ -39,13 +39,14 @@ import type { ResidentBatch } from "./decodeBatch";
 import { bboxForFit, chooseFitTarget, extentOfBatch, fitViewStateForBbox, unionBbox } from "./extent";
 import type { FitViewState } from "./extent";
 import {
+  ceilingKindOf,
   DECKGL_PICK_INDEX_CEILING,
   MAX_RESIDENT_VERTICES,
-  PickCeilingExceeded,
   residentAttributeBytes,
   ResidentVertexCeilingExceeded,
   withinAttributeCeiling,
 } from "./limits";
+import type { CeilingKind } from "./limits";
 import { buildHighlightLayers, createDrawnEmitter } from "./highlightLayers";
 import type { Highlight } from "./highlightLayers";
 import { OffsetFrame, RECENTER_BUDGET_PX, RECENTER_MAX_DRIFT, recenterThresholdForBudget } from "./offsetFrame";
@@ -145,7 +146,7 @@ export interface WorkingCanvasHandle {
   /** The camera the canvas last wrote, as a project file's `view` holds it (B2 piece 1c, Save project): `centre` is the camera's local
    * target plus the offset frame's origin it was written against, member by member -- the dataset-space point, the only form of it that
    * leaves this module (ADR-010 rule 1) -- and `zoom` is the held zoom unchanged, the base-2 log of the CSS pixels one unit spans. `null`
-   * before the canvas's first camera write. It changes nothing. Its product caller is `App.tsx`'s save. Optional in the type only, as
+   * before the canvas's first camera write. It changes nothing. Its product callers are `App.tsx`'s save and `App.tsx`'s `readZoom`, which the status bar's scale item (`layout/regionParts.tsx`) calls. Optional in the type only, as
    * `fitToBbox` is; the component always provides it. */
   currentView?(): { centre: [number, number]; zoom: number } | null;
   /** The box the canvas shows now, in the authoritative CRS (ADR-010 rule 1): the camera last written, its target plus the offset
@@ -162,7 +163,7 @@ export interface WorkingCanvasHandle {
    * is the reopen's workspace apply (Amendment 54 item 5 (h)). Optional in the type only, as `currentView?` is; the component always provides it. */
   applyView?(view: { centre: readonly [number, number]; zoom: number }): void;
   /**
-   * Clears BOTH the fit anchor (`fitAnchorRef`) and the one-shot auto-fit flag (`hasAutoFitRef`) --
+   * Clears the fit anchor (`fitAnchorRef`) and, unless `{ keepCamera: true }` is passed (below), the one-shot auto-fit flag (`hasAutoFitRef`) --
    * called, on both arms, after an issued outcome (`App.tsx`'s `applyFilter`); on the candidate
    * residency arm, also at the start of a reissue begun while the session is live
    * (`candidateArmSession.ts`'s `reissueUnrestricted`; an Apply after the session has ended runs none,
@@ -189,8 +190,13 @@ export interface WorkingCanvasHandle {
    * lifetime -- "the layer" the button fits is the layer the user is actually looking at right now:
    * (dataset, filter generation), not (dataset) alone. It also clears the area last reported, so a
    * size change asks nothing until the next report (the auto-fit that follows does not report).
+   *
+   * **`{ keepCamera: true }` (colour-by-refill-keeps-the-view).** With it the one-shot auto-fit flag (`hasAutoFitRef`) is left as it stands, so a refill after the camera was fitted or set from a saved view does
+   * not fit again and the camera stays where it stands; the fit anchor and the area last reported are still cleared. A canvas still waiting to fit (the flag false: after an open, an Apply, a Clear, a card change or a refused Apply's re-issue,
+   * until a batch with an extent has arrived) stays waiting, and fits as it would have. Without the option the method does what it did before. Its one product caller is the Colour-by
+   * effect (`App.tsx`), through `issueQueryRef` and `reissueUnrestricted`.
    */
-  resetFitForNewGeneration(): void;
+  resetFitForNewGeneration(options?: { keepCamera: true }): void;
   /** N4 (viewport-residency cut P1b, G6 instrument): the CURRENT resident vertex/feature totals,
    * read directly off the same `ResidentSet` `pushBatch`/`clearStream` already maintain -- no new
    * counting logic, a read-only accessor. Reached from the DEV-only `residencyEndStep` E2E hook
@@ -560,7 +566,7 @@ export interface WorkingCanvasProps {
    * `streamHandle`. This is a report, not an action: `limits.ts`'s own contract says the offending
    * stream must be *cancelled*, and only the caller (which owns the `ViewportStreamManager`) can
    * reach the SKP `cancel` command -- see `App.tsx`'s handler. */
-  onCanvasRefusal: (streamHandle: string, message: string) => void;
+  onCanvasRefusal: (streamHandle: string, message: string, kind: CeilingKind) => void;
   /** Fires only for `ResidentVertexCeilingExceeded` (never `PickCeilingExceeded`), alongside
    * `onCanvasRefusal` above, not instead of it -- rider 1 (DECISIONS-PENDING.md entry 0, option
    * (a)): the human's persistent "N of M features rendered — declared ceiling reached" status
@@ -1535,9 +1541,10 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
           residentRef.current.addBatch(batch);
         } catch (e) {
           end("buffer-build");
-          if (e instanceof ResidentVertexCeilingExceeded || e instanceof PickCeilingExceeded) {
+          const ceilingKind = ceilingKindOf(e);
+          if (ceilingKind !== null && e instanceof Error) {
             logSessionEvent("canvas-refusal", e.message);
-            onCanvasRefusalRef.current(streamHandle, e.message);
+            onCanvasRefusalRef.current(streamHandle, e.message, ceilingKind);
             if (e instanceof ResidentVertexCeilingExceeded) {
               // Read now, not after: `addBatch` above added nothing on refusal, so this is exactly
               // "resident features at the moment of refusal" -- rider 1's own definition.
@@ -1657,9 +1664,9 @@ const WorkingCanvas = forwardRef<WorkingCanvasHandle, WorkingCanvasProps>(functi
         return computeAuthoritativeViewportBbox({ ...camera, widthPx, heightPx });
       },
 
-      resetFitForNewGeneration() {
+      resetFitForNewGeneration(options) {
         fitAnchorRef.current = null;
-        hasAutoFitRef.current = false;
+        if (options?.keepCamera !== true) hasAutoFitRef.current = false;
         lastQueriedRef.current = null;
       },
 

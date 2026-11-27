@@ -219,6 +219,16 @@ pub struct IdentityInfo {
     /// `engine/ADMISSION-PREREGISTRATION.md` §13 D). The generation that namespaces the ordinals is
     /// kernel and client state, minted per open, never persisted and never published.
     pub session_statement: Option<String>,
+    /// **`skp/0.15`** (ADR-016, Amendment 2 and the Note 2026-11-26): the candidate list a caller
+    /// may declare an identity column from, `Some` exactly when `class` is `"session-ordinal"`.
+    /// It may be empty. On a native or a mapped identity it is `None`, and the key is still
+    /// present on the wire, as `null`: the refusal carries the list there.
+    ///
+    /// It is the engine's list, from the same function and in the same order as
+    /// `engine.identity_unusable`'s `candidate_columns` field: schema order, unranked,
+    /// unpreselected. It names what may be declared and is never a declaration or a
+    /// recommendation.
+    pub candidate_columns: Option<Vec<String>>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -779,8 +789,9 @@ pub enum ProjectRelativeLocator {
 /// `folder` is the project folder, an absolute UTF-8 path. `cancel_key` is client-minted, as
 /// `open_dataset`'s is, and names this call for `cancel`. `answer` is `null` at the first call and
 /// is the client's answer to a `question` reply at the second. `relink` is `null`, or the absolute
-/// UTF-8 path of the data file the client chose after a `not_found` reply. Both keys are always
-/// present, `null` for none.
+/// UTF-8 path of the data file the client chose after a `not_found` reply or after a refusal as
+/// `skp.project_target_unresolvable` with a `locator`; it is used in place of the project file's
+/// locators (SKP-V0.md §12.3). Both keys are always present, `null` for none.
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OpenProjectRequest {
