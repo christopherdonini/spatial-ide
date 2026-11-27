@@ -1095,3 +1095,24 @@ Nothing above is edited.
 1. **The ruling** is ADV-2026-11-27-27, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-27-the-c1-pieces-shared-path-with-a-in-saveproject-test-ts-counts-met-by-the-order-route-text-id-c1-then-a-the-form-commits-now.md`.
 2. **Class 2.** This form's base comparison under ADV-2026-11-23-15 item 4 named `frontends/shell/src/project/saveProject.test.ts` against the identity route only. Piece A (`a-second-save-is-announced`, in progress) changes that file too, so it is a shared path under rule (00) (the ruling's items 1 and 3).
 3. **It is met by the order** (its item 2): the identity route, this piece, the C1 follow-up piece `text-id-reopen-with-a-recorded-declaration`, then A. A takes main in by a merge commit, with the reviewer's narrow read of that file. No head is merged into A now, and A's runs at the port are not moved.
+
+## Amendment 18 — 2026-11-27 — the custodian's: ADV-2026-11-27-31, before the correction of `TEXTID'` (d)
+
+*References only. Nothing above is edited. Written before the correction's code.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-31-both-e2e-steps-corrected-before-the-port-textid-d-and-e-r1-no-gate-runs-again-the-readme-section-replaced-whole.md`. It rules that this piece's step `TEXTID'` (d) and the C1 piece's E-R1 are both corrected before the port serves them.
+2. **Class 9, on the ruling's item 2: E-1 (d) gains an act.**
+   - After (d) has read `project.spatial`, and before it reopens, the step opens another file that admits (`no-id-column.parquet`). It then waits for the close of (a)'s open.
+   - The fault is the form's: its §4 row has the save, the read of `project.spatial` and the reopen, and no act that ends (a)'s open.
+3. **The wait** is the close's own signal, as the ruling's item 2 defines it, polled to a harness bound that fails the step by name.
+   - It is one function in the suite's file, and the C1 piece's step calls the same one.
+   - The reopen is not retried.
+   - No assertion of the step is removed or loosened.
+   - A signal other than the ruling's, or an assertion that must change, goes to the advisor before the commit.
+4. **The words:** the step's doc comment and clause (d) of the e2e README's section "Row-position spec" gain the act, in the worker's words.
+5. **The route:** one correction commit on 2df8b4ae, on this piece's branch.
+   - No gate runs again. Each gate reads the correction in its run part, with the run.
+   - The suites that start no app and `node --check` of the file are green at the new head.
+   - Its lines count in this piece's closing count.
+6. **Unchanged** (the ruling's items 2 and 10): M-25, rows AH5 and AH6, and the port order.
+7. **At the merge check** (the ruling's item 11): that (d)'s wait is the ruling's item 2's, and that no assertion of the step went.
