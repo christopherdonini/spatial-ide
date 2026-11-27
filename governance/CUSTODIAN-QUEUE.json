@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-27T22:03:33.655Z",
-  "plan_hash": "1deb3fe0686cfd2cb47f5473a4488266d3f45782a56611184d7ec9c4a596ced9",
+  "generated_at": "2026-11-27T22:23:10.681Z",
+  "plan_hash": "aee847eab72093b26226d2a3ec9140a9aa2eedf2eb0ff03d6067c7fa02a8353f",
   "priorities_approved": true,
   "next": {
     "id": "large-utf8-and-utf8-view-attribute-columns",
@@ -2503,6 +2503,25 @@
         "done": null
       },
       "summary": "PROPOSED 2026-11-27 by ADV-2026-11-27-33 item 5, graded S3: the custodian's proposed node of the daily batch (ADV-2026-11-27-31 item 5); on the protocol line after the recovery offer; not started while a product piece's step can use the place; its form, and which of the two ways it takes, are ruled when its turn comes."
+    },
+    {
+      "id": "reload-asking-first-or-off-in-the-installed-build",
+      "title": "Asking first, or switching the reload off, in the installed build: the item ADR-037 does not decide, a piece of its own built on B's head (reload-ends-the-old-pages-opens)",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "budget_minutes": 60,
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "evidence": null,
+      "dates": {
+        "opened": "2026-11-27",
+        "done": null
+      },
+      "summary": "PROPOSED 2026-11-27 by ADV-2026-11-26-13 item 4 (state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-13-adr-037-open-questions-no-skp-v0-edit-publish-cancelled-the-gate-waits-asking-first-a-piece-of-its-own.md), placed a day late by the custodian: one proposed node built on B's head; its form after B's S0 has shown what the release build does for Ctrl+R, F5 and the menu; its OPEN items go to the advisor; a new crate, a new Cargo feature or a lockfile change is the human's (that item). By ADV-2026-11-27-37 item 5, B's S0 (b), met by a read of the pinned sources (ADV-2026-11-26-17 item 3), counts for drafting the form, recorded as read from the source and not observed; the form is the architect's draft on B's head, place (d) of that ruling's item 6. No form yet."
     }
   ],
   "unscheduled": [
