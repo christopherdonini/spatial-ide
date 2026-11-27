@@ -141,4 +141,12 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// added, removed or changed, and `protocol/data-plane/` has an empty diff. Same discipline again:
 /// `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in the same commit as
 /// the literal bump.
-pub const SKP_VERSION: &str = "skp/0.15";
+///
+/// `skp/0.16` (text-id-opens-for-the-session-by-row-position, ADR-016 Amendment 3): `open_dataset`
+/// and `open_project` gain the request member `set_aside_file_id: bool`, always present and `false`
+/// for no choice, `describe`'s `identity` gains `set_aside_column: Option<String>`, `null` except on
+/// an open made by that choice, and a new code, `engine.identity_set_aside_refused` (`detail`)
+/// (`SKP-V0.md` §1, §5 and §8's `skp/0.16` entry). `protocol/data-plane/` has an empty diff. Same
+/// discipline again: `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in
+/// the same commit as the literal bump.
+pub const SKP_VERSION: &str = "skp/0.16";

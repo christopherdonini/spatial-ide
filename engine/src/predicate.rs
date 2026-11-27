@@ -282,9 +282,15 @@ pub enum FilterError {
 
     /// The predicate referenced the wire's `id` name while a declared identity mapping means that
     /// name **also** exists, unrelated, in the source file — see [`identity_alias_ambiguity`].
+    ///
+    /// `by_row_position` names the tier: it is true when the dataset is on the session tier by the
+    /// caller's choice to set aside the file's own `id` column (ADR-016 Amendment 3), whose
+    /// `source_column` is `file_row_number`. It cannot be read from `source_column` alone, because a
+    /// mapped identity may be declared from a file column literally named `file_row_number`.
     IdentityAliasAmbiguous {
         column: String,
         source_column: String,
+        by_row_position: bool,
     },
 
     /// The predicate binds, but its inferred type is not `BOOLEAN`. An int-to-bool (or any other)
@@ -349,7 +355,13 @@ impl fmt::Display for FilterError {
                 "refused: `{}` cannot be filtered on — {reason}",
                 crate::addressability::render_visible_escape(column)
             ),
-            Self::IdentityAliasAmbiguous { column, source_column } => write!(
+            Self::IdentityAliasAmbiguous { column, by_row_position: true, .. } => write!(
+                f,
+                "refused: `{column}` is ambiguous — this dataset is identified by row position for \
+                 this session, and the file also carries its own column named `{column}`; a \
+                 predicate cannot say which one it means"
+            ),
+            Self::IdentityAliasAmbiguous { column, source_column, by_row_position: false } => write!(
                 f,
                 "refused: `{column}` is ambiguous — this dataset's identity is mapped from \
                  `{source_column}`, and the file also carries its own, unrelated column literally \
@@ -1129,7 +1141,14 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
 /// refused here. Proven through SKP by `kernel/tests/skp_admission_remediation.rs::a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous`. The note
 /// this replaces said no product entry point constructed a `Mapped` identity; that stopped being
 /// true when the admission-remediation cut threaded `open_dataset`'s `identity` into the engine.
-fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
+///
+/// **A second arm, for the session tier by the caller's choice** (ADR-016 Amendment 3, Decision 5):
+/// a dataset whose [`crate::identity::DatasetIdentity::set_aside_column`] is `Some` carries the
+/// file's own `id` column beside an identity that is the row position, so the name `id` would mean
+/// two columns there as well. It answers `("id", "file_row_number", true)`, the last member naming
+/// the tier. A session-tier open of a file with no `id` column does not reach this arm and still
+/// refuses `id` as an unknown column.
+fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String, bool)> {
     match dataset.identity().source() {
         IdSource::Mapped { column, .. } if column != ID_COLUMN => {
             let file_has_its_own_id = dataset
@@ -1137,8 +1156,15 @@ fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
                 .fields()
                 .iter()
                 .any(|f| f.name() == ID_COLUMN);
-            file_has_its_own_id.then(|| (ID_COLUMN.to_string(), column.clone()))
+            file_has_its_own_id.then(|| (ID_COLUMN.to_string(), column.clone(), false))
         }
+        IdSource::SessionOrdinal => dataset.identity().set_aside_column().map(|set_aside| {
+            (
+                set_aside.to_string(),
+                crate::identity::FILE_ROW_NUMBER_COLUMN.to_string(),
+                true,
+            )
+        }),
         _ => None,
     }
 }
@@ -1179,11 +1205,12 @@ fn namespace_admit(
     }
 
     for name in columns {
-        if let Some((ambiguous_name, source_column)) = &alias {
+        if let Some((ambiguous_name, source_column, by_row_position)) = &alias {
             if name == ambiguous_name {
                 return Err(FilterError::IdentityAliasAmbiguous {
                     column: name.clone(),
                     source_column: source_column.clone(),
+                    by_row_position: *by_row_position,
                 });
             }
         }

@@ -66,6 +66,37 @@ fn open_dataset_request_with_crs_assertion_and_identity_round_trips() {
     );
 }
 
+/// **W-1** (`skp/0.16`, `text-id-opens-for-the-session-by-row-position`): the set-aside fixtures
+/// round-trip, and an `open_dataset` request without `set_aside_file_id` is refused at deserialize,
+/// because the member is required and carries no `#[serde(default)]`.
+///
+/// **A guard**, declared as such: the members and both fixtures land with the skeleton, so this
+/// test is green there, and its proof is its mutation.
+/// Mutation M-17: `#[serde(default)]` on `OpenDatasetRequest::set_aside_file_id`. Expected failure:
+/// this test fails by name, at the request that lacks the member.
+#[test]
+fn an_open_dataset_request_without_set_aside_file_id_is_refused_and_the_set_aside_fixtures_round_trip(
+) {
+    round_trip::<OpenDatasetRequest>("v0-open_dataset-request-set-aside");
+    round_trip::<DescribeResponse>("v0-describe-response-session-ordinal-set-aside");
+    let request: OpenDatasetRequest =
+        serde_json::from_value(fixture("v0-open_dataset-request-set-aside")).unwrap();
+    assert!(
+        request.set_aside_file_id,
+        "this fixture's point is the choice, made"
+    );
+    let described: DescribeResponse =
+        serde_json::from_value(fixture("v0-describe-response-session-ordinal-set-aside")).unwrap();
+    assert_eq!(described.identity.set_aside_column.as_deref(), Some("id"));
+
+    let mut without = fixture("v0-open_dataset-request-set-aside");
+    without.as_object_mut().unwrap().remove("set_aside_file_id");
+    assert!(
+        serde_json::from_value::<OpenDatasetRequest>(without).is_err(),
+        "a request that lacks `set_aside_file_id` must be refused at deserialize"
+    );
+}
+
 /// **Known gap, not introduced by this piece.** `SKP-V0.md` §7.2 describes `bbox_crs`/`filter`'s
 /// discipline as "the field carries no `#[serde(default)]`, so a request that omits the key
 /// entirely is a deserialize failure" — but plain `Option<T>` struct fields are deserialized by
@@ -85,6 +116,7 @@ fn omitting_crs_assertion_or_identity_key_is_currently_tolerated_not_refused() {
         "path": "C:/data/parcels.parquet",
         "cancel_key": "open-1",
         "identity": null,
+        "set_aside_file_id": false,
         // crs_assertion key omitted entirely
     });
     let parsed: OpenDatasetRequest = serde_json::from_value(v).expect(
@@ -489,7 +521,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
     let request =
         |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
             serde_json::json!({
-                "skp": "skp/0.15", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "skp": "skp/0.16", "dataset": "ds_00112233445566778899aabbccddeeff",
                 "folder": folder,
                 "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
             })
@@ -572,8 +604,8 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
 fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_constructors_build() {
     use serde_json::{json, Value};
     let request = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.15", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
-               "answer": answer, "relink": relink})
+        json!({"skp": "skp/0.16", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+               "answer": answer, "relink": relink, "set_aside_file_id": false})
     };
     for (what, wire) in [
         ("a first call", request(Value::Null, Value::Null)),
@@ -781,8 +813,8 @@ fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_const
 fn the_open_project_closed_sets_refuse_any_other_value() {
     use serde_json::{json, Value};
     let call = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.15", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
-               "answer": answer, "relink": relink})
+        json!({"skp": "skp/0.16", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+               "answer": answer, "relink": relink, "set_aside_file_id": false})
     };
     let bad_request = |wire: Value, what: &str| {
         assert!(
@@ -797,7 +829,13 @@ fn the_open_project_closed_sets_refuse_any_other_value() {
         );
     }
     bad_request(call(Value::Null, json!(1)), "a relink that is not text");
-    for key in ["answer", "relink", "folder", "cancel_key"] {
+    for key in [
+        "answer",
+        "relink",
+        "folder",
+        "cancel_key",
+        "set_aside_file_id",
+    ] {
         let mut wire = call(Value::Null, Value::Null);
         wire.as_object_mut().unwrap().remove(key);
         bad_request(wire, &format!("a request without `{key}`"));
@@ -974,14 +1012,15 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.15` (`identity-declaration-route-for-session-tier`, ADR-016 Amendment 2; this test was
-/// `skp_version_is_skp_0_14` before that piece, `skp_version_is_skp_0_13` before `open_project`
+/// `skp/0.16` (`text-id-opens-for-the-session-by-row-position`, ADR-016 Amendment 3; this test was
+/// `skp_version_is_skp_0_15` before that piece, `skp_version_is_skp_0_14` before
+/// `identity-declaration-route-for-session-tier`, `skp_version_is_skp_0_13` before `open_project`
 /// (B2 piece 1c), `skp_version_is_skp_0_12` before piece 1c, `skp_version_is_skp_0_11` before
 /// piece 1b and `skp_version_is_skp_0_10` before the lines cut, PL-5).
-/// Mutation: the literal back to `"skp/0.14"`. Expected failure: this test fails by name.
+/// Mutation: the literal back to `"skp/0.15"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_15() {
-    assert_eq!(SKP_VERSION, "skp/0.15");
+fn skp_version_is_skp_0_16() {
+    assert_eq!(SKP_VERSION, "skp/0.16");
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row

@@ -99,6 +99,7 @@ impl Rig {
             cancel_key: "k".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         self.host.open_dataset(req).expect("open").dataset
     }
@@ -162,7 +163,8 @@ impl Rig {
     ) -> Result<Value, SkpError> {
         let wire = json!({
             "skp": SKP_VERSION, "folder": folder.display().to_string(), "cancel_key": "k",
-            "answer": answer, "relink": relink.map(|p| p.display().to_string())
+            "answer": answer, "relink": relink.map(|p| p.display().to_string()),
+            "set_aside_file_id": false
         });
         let req: OpenProjectRequest = serde_json::from_value(wire).expect("the request");
         let reply = self.projects.open_project_command(req)?;

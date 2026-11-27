@@ -87,3 +87,11 @@ This directory's fixtures were updated again in place, to the `skp/0.15` literal
 fixture that named `skp/0.15` as an unsupported future version was renumbered to name `skp/0.16`
 instead. No row is added: the version adds one member to `describe`'s `identity`, and this directory
 holds no `describe` response. The existing rows' `spec` citations are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.16` literal of PLAN node
+`text-id-opens-for-the-session-by-row-position` (its form's Amendment 2 item 2); the version-refusal
+fixture that named `skp/0.16` as an unsupported future version was renumbered to name `skp/0.17`
+instead. The version adds the required request member `set_aside_file_id` to `open_dataset` and
+`open_project`, so every document of those two wire types carries it, and three rows are added: an
+accepted `open_dataset` request that makes the choice, and the two requests that lack the member,
+each refused at deserialize. The existing rows' `spec` citations are not rewritten.

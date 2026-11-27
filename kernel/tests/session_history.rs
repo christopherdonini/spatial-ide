@@ -76,6 +76,7 @@ fn open(host: &SkpHost, path: &Path) -> DatasetHandle {
         cancel_key: "k".to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     };
     host.open_dataset(req).expect("open").dataset
 }
@@ -568,6 +569,7 @@ fn a_header_member_past_a_reader_bound_is_refused_by_name_and_no_record_is_made(
             definition_json: LV95_PROJJSON.to_string(),
         }),
         identity: None,
+        set_aside_file_id: false,
     };
     let handle = host.open_dataset(open).expect("open").dataset;
     let recorder = StepRecorder::new(dir.join("store"), host);

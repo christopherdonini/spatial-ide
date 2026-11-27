@@ -706,6 +706,7 @@ impl Projects {
         cancel_key: &str,
         answer: Option<Answer>,
         relink: Option<&Path>,
+        set_aside_file_id: bool,
     ) -> Result<Reopen, OpenFailure> {
         let host = self.recorder.host();
         let (_end_open_on_drop, cancel) = host.begin_open(cancel_key).map_err(OpenFailure::Open)?;
@@ -824,6 +825,9 @@ impl Projects {
             cancel_key: cancel_key.to_string(),
             crs_assertion: admission.crs_assertion,
             identity: admission.identity,
+            // The caller's choice at this reopen (ADR-016 Amendment 3), never the project file's:
+            // the file records nothing of it.
+            set_aside_file_id,
         };
         let opened = host.open_under(req, &cancel).map_err(|e| {
             if cancel.is_cancelled() {
@@ -906,7 +910,13 @@ impl Projects {
         });
         let relink = req.relink.as_deref().map(Path::new);
         let folder = Path::new(&req.folder);
-        let reopened = self.open_project(folder, &req.cancel_key, answer, relink);
+        let reopened = self.open_project(
+            folder,
+            &req.cancel_key,
+            answer,
+            relink,
+            req.set_aside_file_id,
+        );
         Ok(match reopened.map_err(|e| open_error_of(e, &req.folder))? {
             Reopen::Question => OpenProjectResponse::Question(ReopenQuestion {
                 kind: ReopenQuestionKind::CopyOrSame,
@@ -1550,6 +1560,7 @@ mod tests {
             cancel_key: "k".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         let handle = host.open_dataset(open).expect("open").dataset;
         let style = r##"{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#4285f4"},"fill_opacity":{"literal":0.35},"outline_color":{"literal":"#000000"},"outline_width":{"literal":1.5}}}"##;
@@ -1583,7 +1594,10 @@ mod tests {
         /// One reopen of the project folder: what `open_project_command`'s `Reopen::Opened` arm
         /// receives.
         fn reopened(&self) -> Opened {
-            match self.projects.open_project(&self.folder, "k", None, None) {
+            match self
+                .projects
+                .open_project(&self.folder, "k", None, None, false)
+            {
                 Ok(Reopen::Opened(o)) => *o,
                 other => panic!("the reopen did not open: {other:?}"),
             }

@@ -29,7 +29,8 @@
     "js_exact": true,
     "class": "native",
     "session_statement": null,
-    "candidate_columns": null
+    "candidate_columns": null,
+    "set_aside_column": null
   },
   "schema": [
     { "name": "id", "arrow_type": "UInt64", "nullable": false, "projectable": false },

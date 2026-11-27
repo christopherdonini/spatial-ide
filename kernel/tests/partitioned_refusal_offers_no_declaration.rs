@@ -65,6 +65,7 @@ fn a_folder_opened_with_or_without_a_declared_identity_is_refused_by_name_and_of
             cancel_key: key.to_string(),
             crs_assertion: None,
             identity,
+            set_aside_file_id: false,
         })
         .expect_err("a folder is refused")
     };

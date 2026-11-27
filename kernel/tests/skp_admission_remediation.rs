@@ -72,6 +72,7 @@ fn open_req(
         cancel_key: cancel_key.to_string(),
         crs_assertion,
         identity,
+        set_aside_file_id: false,
     }
 }
 

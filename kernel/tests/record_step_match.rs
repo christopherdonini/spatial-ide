@@ -65,6 +65,7 @@ fn open(host: &SkpHost, dir: &Path) -> DatasetHandle {
         cancel_key: "k".to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     };
     host.open_dataset(req).expect("open").dataset
 }

@@ -167,6 +167,18 @@ pub enum EngineError {
         candidate_columns: Vec<String>,
     },
 
+    /// The caller's choice to set aside the file's own `id` column (ADR-016 Amendment 3) cannot be
+    /// taken: it was sent beside a declared identity column, the file has no column named `id`, or
+    /// the file's own `id` column serves as its identity.
+    ///
+    /// **Refused by name, and nothing opens.** The choice answers a refusal of the file's own `id`
+    /// column; the engine never makes it, infers it or falls back to it. Each case states a fact
+    /// about this engine's own check and no consequence (the human's ruling of 2026-09-16, round 7:
+    /// "Engine messages state engine facts; owners state consequences."). Two of the three are
+    /// reachable only if the file changes between attempts, or through a client other than the
+    /// shell, which offers the choice only beside the refusal.
+    IdentitySetAsideRefused { detail: String },
+
     /// The source is not the file this dataset opened against — the **structural descriptor**
     /// differs (R-D1/R-D2, `engine/ADMISSION-PREREGISTRATION.md` §2e).
     ///
@@ -363,10 +375,10 @@ impl fmt::Display for EngineError {
             }
             Self::IdentityUnusable { column, detail, candidate_columns: _ } => write!(
                 f,
-                "refused: `{}` cannot serve as stable feature identity — {detail}. \
-                 Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent",
+                "refused: `{}` cannot serve as stable feature identity — {detail}",
                 crate::addressability::render_visible_escape(column)
             ),
+            Self::IdentitySetAsideRefused { detail } => write!(f, "refused: {detail}"),
             // **Two sentences, and both are facts about this engine's own check**: what it found
             // differing, and what the check does not establish (boundary 4's limitation, in that
             // boundary's own words). No "snapshot" claim and no "was verified" anywhere (A1,

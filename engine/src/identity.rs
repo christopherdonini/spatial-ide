@@ -203,6 +203,11 @@ pub struct DatasetIdentity {
     /// the native and mapped paths, where the list is carried by the refusal instead. Unranked and
     /// unpreselected, as it is there.
     candidate_columns: Vec<String>,
+    /// Whether this identity is the session tier **by the caller's choice** to set aside the file's
+    /// own `id` column (ADR-016 Amendment 3), rather than because the file has no such column.
+    /// Private: [`Self::set_aside_column`] is the only reader, and only
+    /// [`Self::new_session_ordinal_set_aside`] sets it.
+    set_aside_file_id: bool,
 }
 
 /// Values at or above this cannot survive a round trip through a JS `Number` (ADR-016 §7).
@@ -221,6 +226,7 @@ impl DatasetIdentity {
             verified_rows,
             max_value,
             candidate_columns: Vec::new(),
+            set_aside_file_id: false,
         }
     }
 
@@ -237,7 +243,33 @@ impl DatasetIdentity {
             verified_rows: None,
             max_value: None,
             candidate_columns,
+            set_aside_file_id: false,
         }
+    }
+
+    /// The session tier's identity **by the caller's choice** to set aside the file's own `id`
+    /// column — ADR-016 Amendment 3.
+    ///
+    /// Everything [`Self::new_session_ordinal`] says holds unchanged (the same source, the same
+    /// uniqueness basis, no count and no extreme value, the same statement: Decision 3), and the
+    /// set-aside is recorded beside it so that `describe` can say the user chose row position.
+    /// The one caller is `dataset::set_aside_outcome`.
+    pub(crate) fn new_session_ordinal_set_aside(candidate_columns: Vec<String>) -> Self {
+        Self {
+            set_aside_file_id: true,
+            ..Self::new_session_ordinal(candidate_columns)
+        }
+    }
+
+    /// The column the caller chose to set aside, which is always the file's own `id`: `Some("id")`
+    /// on a session-tier open made by that choice, and `None` on every other open — a file with no
+    /// `id` column included.
+    ///
+    /// **Its product callers**: the kernel's `describe_dataset`, which carries it as
+    /// `describe.identity.set_aside_column`, and `predicate::identity_alias_ambiguity`, which
+    /// refuses a predicate naming `id` on such an open as ambiguous.
+    pub fn set_aside_column(&self) -> Option<&'static str> {
+        self.set_aside_file_id.then_some(crate::envelope::ID_COLUMN)
     }
 
     /// Columns an operator could declare a mapping to, on the session tier. Empty elsewhere.
@@ -351,8 +383,8 @@ pub(crate) fn admit_column_type(
             column: column.to_string(),
             detail: format!(
                 "type is {other}; identity must be an integer that widens into u64 without \
-                 transformation. A hash, a dictionary index or a row ordinal is not a mapping — it \
-                 is a synthesized identity, which ADR-016 refuses"
+                 transformation. A hash, a dictionary index or a row ordinal is not a mapping: it \
+                 gives no stable identity"
             ),
             candidate_columns: candidate_identity_columns(schema),
         }),

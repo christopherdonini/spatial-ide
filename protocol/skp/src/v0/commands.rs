@@ -37,6 +37,15 @@ pub struct OpenDatasetRequest {
     /// §3–§7). Same discipline as `crs_assertion` above: `null` means "no declaration", never an
     /// absent key.
     pub identity: Option<IdentityDeclaration>,
+    /// **`skp/0.16`** (ADR-016, Amendment 3): the caller's choice to set aside a single file's own
+    /// `id` column and open the file on the session tier, identified by row position for this
+    /// session only. Always present, `false` for no choice: it carries no `#[serde(default)]`, so a
+    /// request that omits the member is a deserialize failure. It is a member of its own and never
+    /// travels inside [`IdentityDeclaration`], which is also what a project records, and nothing of
+    /// it is recorded in a project file, a session history or a bundle. It is refused by name
+    /// (`engine.identity_set_aside_refused`) beside a declared `identity`, over a file with no
+    /// `id` column, and over a file whose own `id` column serves.
+    pub set_aside_file_id: bool,
 }
 
 /// `skp/0.2`: a caller-asserted CRS for `open_dataset` (ADR-015 §4). Admitted only over a file
@@ -229,6 +238,12 @@ pub struct IdentityInfo {
     /// unpreselected. It names what may be declared and is never a declaration or a
     /// recommendation.
     pub candidate_columns: Option<Vec<String>>,
+    /// **`skp/0.16`** (ADR-016, Amendment 3): the column the caller chose to set aside, `Some("id")`
+    /// exactly on a session-tier open made by that choice (`open_dataset`'s `set_aside_file_id`) and
+    /// `None` on every other open, a file with no `id` column included. The key is always present on
+    /// the wire, as `null` when `None`. A client that shows the identity says beside the session
+    /// statement that this member is set, so that the summary says the user chose row position.
+    pub set_aside_column: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -802,6 +817,11 @@ pub struct OpenProjectRequest {
     pub answer: Option<ReopenAnswer>,
     #[serde(deserialize_with = "key_present")]
     pub relink: Option<String>,
+    /// **`skp/0.16`** (ADR-016, Amendment 3): the caller's choice to set aside the data file's own
+    /// `id` column, as `open_dataset`'s member of the same name. Always present, `false` for no
+    /// choice, and never recorded: a project saved after such an open records nothing of it, so
+    /// opening the project again refuses the column and asks again.
+    pub set_aside_file_id: bool,
 }
 
 /// The answer to a `question` reply (see [`ReopenQuestion`]): the client says whether this folder
@@ -1057,6 +1077,7 @@ mod tests {
             cancel_key: "open-1".into(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         let json = serde_json::to_string(&req).unwrap();
         let _back: OpenDatasetRequest = serde_json::from_str(&json).unwrap();
@@ -1078,6 +1099,7 @@ mod tests {
             cancel_key: "open-1".into(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         let v: serde_json::Value =
             serde_json::from_str(&serde_json::to_string(&req).unwrap()).unwrap();
@@ -1104,6 +1126,7 @@ mod tests {
             identity: Some(IdentityDeclaration {
                 column: "parcel_key".into(),
             }),
+            set_aside_file_id: false,
         };
         let json = serde_json::to_string(&req).unwrap();
         let back: OpenDatasetRequest = serde_json::from_str(&json).unwrap();
