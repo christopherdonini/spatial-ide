@@ -993,3 +993,49 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 7 — 2026-11-23 — post-result amendment, after the build stopped at step 6 on I2: RF10's file joins the Scope for one line; two deviations recorded
+
+*Written by the custodian after the build's result, as drafted in the custodian's message to the advisor and ruled as drafted by the advisor's ADV-2026-11-23-23 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-23-colour-by-refill-amendment-7-as-drafted-no-narrow-read-deviations-class-2-runs-before-05z-or-after-the-sitting.md`), with no architect's narrow read first. It names that ruling and the stop I2.*
+
+1. **What was seen.** The build (worker-high, dispatched at 2026-11-23T18:28:54Z, its transcript from 2026-11-23T18:28:54Z to 2026-11-23T19:23:28Z) stopped at step 6 on I2. Its head da55b7a608369030a88182955840c6b33b9cebcf is pushed to `cut/colour-by-refill-keeps-the-view` (base e4e6493d, the re-link head), with no PR: 922 of 980 lines over the 11 paths; P0 red as registered; every mutation failed the tests the register names; every suite exit 0 but the shell's `npm run verify`, which fails one test of 1609. It is RF10, in `frontends/shell/src/canvas/WorkingCanvas.test.ts`, a file outside §7, declared unchanged. RF10 finds the reset by the text `resetFitForNewGeneration() {` (:855 at the head); §2.2 (i)'s signature makes the method `resetFitForNewGeneration(options) {`, so the search finds nothing. The worker did not edit the test and did not bend the signature. Its proposed search, the method's name with an open parenthesis, would first find the interface's declaration (:198 at the head), not the method (:1665).
+
+2. **Scope.** `frontends/shell/src/canvas/WorkingCanvas.test.ts` joins the paths §7 names, for RF10 alone. The text RF10 searches for (:855 at the head) becomes `resetFitForNewGeneration(options) {`, which occurs once in `WorkingCanvas.tsx` at the head. One comment line beside RF10 records its first recorded mutation (the clear in the reset deleted), re-run at the new head, failing RF10 by name; if it passes, that is a stop to the advisor. RF10's name, its assertions and its earlier records are unchanged.
+
+3. **§7 is not edited.** The lines count toward the ceiling of 980 (about 925 after).
+
+4. **Deviations, recorded (class 2), with no rework.** (a) The worker made the e2e fixture without first stating its bytes, as ADV-2026-11-23-18 item 3 asks: 328,242,802 bytes, sha256 2ce715fd1a9e797099bcbe252b462069a523f390fd7561a99de813818830af84; C: 43,501 MB free after it. (b) A fourth commit, da55b7a6, adds a 2-line recorded-mutation comment for the fixture generator (path 9), because verify-mutation named that test as unrecorded.
+
+5. **Next.** The worker makes the change as commit 5 on the same branch, runs `npm run verify` and the suites again, and pushes. Then the build gates, whose reviewer reads the changed line and the re-run with the rest of the diff, and E-RK1 by the tester. Commit 5, the suites and E-RK1 are runs: each is done before 05:00Z on 2026-11-24 or after the sitting is over.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 8 — 2026-11-24 — the custodian's, under ADV-2026-11-24-01 item 5, before E-RK1's second series: references and hashes only
+
+*Written by the custodian before any run of the second series, as the ruling's item 5 asks. It holds the ruling by reference and words nothing of its own.*
+
+1. **Authority.** The advisor's ruling ADV-2026-11-24-01 (`state/directives/2026-11-24-advisor-ruling-adv-2026-11-24-01-colour-by-refills-e2e-before-the-change-the-fix-commits-suite-over-p0-the-three-void-runs-recorded-a-log-folder-finding.md`, sha256 236427cdb0913e83a7d094e3a9888784c6b35f24cfd8a50f2957a3ca2ef2966d at main 4a5dfdb7), under the human's delegation of 2026-11-13; it is not the human's words.
+2. **Its item 1, the run before the change.** E-RK1's counted run before the change runs over P0's tree, 8329a53c250cf9beea3634554b4babf9ecc176a7, with `frontends/shell/e2e/colour-refill.mjs` taken from the fix commit c60660bd196d73086c603aac7605d493784167b8 and no other file: blob 1a5178c83b447e06a3f4f00920c51e990761673e, 15866 bytes, sha256 0e94e0478db0428c4ac20e297f4efdab78440756c4d2a39a2b38623a449ff35d. Its item 2 says how the tester writes, shows, runs and restores that one file, and which ends are a stop. The head's runs and M-A1's run are at the fix commit.
+3. **The fix commit.** c60660bd196d73086c603aac7605d493784167b8 on `cut/colour-by-refill-keeps-the-view`; its parent is 480445f9a49841a4317015b3821ae28d4597e05b, the reviewer's words D-1 to D-6; it changes `frontends/shell/e2e/colour-refill.mjs` alone, 23 lines added and 9 removed. By §7's counting command, with B the build base e4e6493d (the re-link's head), `git diff --numstat e4e6493d...c60660bd` gives 941 lines over 12 paths, §7's eleven and the one Amendment 7 adds, under the ceiling of 980.
+4. **The rest, by reference.** The three VOID runs are in `state/consults/2026-11-24-colour-by-refill-keeps-the-view-e2e-tester-reports-two-p0-warm-ups-void.md` and `state/consults/2026-11-24-colour-by-refill-keeps-the-view-e2e-diagnosis-tester-report.md`; the series report gives each with its commit and its end (item 3). The reviewer's narrow read of the fix commit follows the series (item 4). The finding on the session log's folder is `state/consults/2026-11-24-finding-the-shells-session-log-does-not-follow-a-changed-localappdata.md` (item 6).
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 9 — 2026-11-24 — the custodian's, after the architect's build gate (PASS WITH NOTES, gate-log row 896): references only
+
+1. **The gate.** Row 896. Its report is `state/consults/gates/2026-11-24-colour-by-refill-keeps-the-view-build-gate-architect.md`, read at d636c3b6a952779a9ef2652cfd891541d3d53339, the head of PR 365. It has no Correctness or Evidence finding. It checked item 51, item 61's changed span, AC12's third cell and the e2e README entry clause by clause.
+2. **D-A1 and D-A2.** These are that report's words for two comments in `KNOWN-LIMITATIONS.md`. They are applied on the branch with no re-gate (AUTONOMY §31), and the PR body lists them. They are applied in one commit after the advisor rules the words, with the ruling's id in place of each "landed for the advisor's ruling" clause, as the report says.
+3. **OQ-1 and OQ-2 go to the advisor.**
+   - OQ-1: what "at the final candidate" means for §4's no-regression series.
+   - OQ-2: whether item 61's comment is a verbatim mark.
+
+   The merge request waits for both answers.
+4. **The closing amendment** records what the report's last list names, references and hashes only.
+
+Read the last amendment first.
+
+Nothing above is edited.

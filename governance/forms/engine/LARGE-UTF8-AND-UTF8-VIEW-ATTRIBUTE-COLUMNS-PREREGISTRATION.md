@@ -765,3 +765,36 @@ The filter namespace, which ADR-021's Note 2026-09-24 item 1 defines by that lis
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5 — 2026-11-24 — the closing amendment: references and hashes only
+
+*Written by the custodian after both build gates. It records what the two gates ask of the closing amendment and words nothing of its own beyond where each item points.*
+
+1. **The build**, on the base `69066c72f0a20a290b7d06fdb271c7e6edada5c1`, a merge commit whose second parent is PR 350's head `74c06805a61c64485d9bed90118c4aedfa27d9a5` (Amendment 4, item 8; ADV-2026-11-23-15 item 4). PR 350's head is unchanged at this amendment. The commits on PR 364:
+   - `e106af501ea63cae9fe251673e7311b0bf1d4ec4`, the tests at the base (P0);
+   - `cea0ef8c12417a2dc3ab1eeb31efbd4fe67accd8`, the fix;
+   - `a15a240d15987658f3aa26164e858ad9b22df0a6`, ADR-023's note (Proposed) and the recorded mutations;
+   - `b035ccb3727e2468ab289ecf539c83d928fe60a9`, the two notes in the words of ADV-2026-11-23-28 items 1 and 2;
+   - `50c7c3314fe9d9b5afe7fd78417c5afd0c7992ba`, the reviewer's DOC-1 to DOC-4.
+
+   The worker reports: `state/consults/2026-11-23-large-utf8-and-utf8-view-attribute-columns-worker-report.md`, `state/consults/2026-11-23-large-utf8-and-utf8-view-attribute-columns-words-worker-report.md` and `state/consults/2026-11-23-large-utf8-and-utf8-view-attribute-columns-words-2-worker-report.md`.
+2. **The gates.**
+   - The form gates: gate-log rows 873 (FAIL) and 883 (PASS WITH NOTES).
+   - The reviewer's build gate at b035ccb3: row 887, PASS WITH NOTES (`state/consults/gates/2026-11-23-large-utf8-and-utf8-view-attribute-columns-build-gate-reviewer.md`). It observed P0 again and the mutations M1 to M4 with the probes M1b, P1 and P2.
+   - The architect's build gate at 50c7c331: row 894, PASS WITH NOTES (`state/consults/gates/2026-11-24-large-utf8-and-utf8-view-attribute-columns-build-gate-architect.md`). It found no Correctness, Evidence or new Documentation finding.
+3. **§7, class 8** (ADV-2026-11-23-28 item 4; the reviewer's DOC-5 (a); the architect's item 1). By the diff `69066c72...50c7c331` the piece touches 7 files against §7's 5, and 175 lines (159 insertions, 16 deletions) against 220. The two files over are ADR-023 and ADR-021, each of them joined to the Scope by Amendment 2. §7 is not edited.
+4. **ADR-021's note, class 9** (the reviewer's DOC-5 (b); the architect's item 2). The ruling is ADV-2026-11-23-28 item 2 (`state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-28-large-utf8-open-5-to-9-the-adr-023-note-with-two-changes-an-adr-021-note-class-9-no-skp-v0-note.md`). Amendment 2 item 4 said the amendment that records the ruling comes before any change to that file. No amendment recorded it before the note landed at b035ccb3, committed at 2026-11-23T21:46:57Z. This amendment records the ruling and discloses that order. The note is not code.
+5. **I1** (the reviewer's DOC-5 (c); the architect's item 3). For the `Utf8View` half, the test adds a second setting to the string-view setting, as `engine/tests/large_utf8_and_utf8_view_admission.rs`, line 48 at 50c7c331 holds it. Lines 42 to 43 there record that the string-view setting alone was tried at cea0ef8c and left the export `Utf8`. D2 asked for that to be tried and recorded, and this item records it.
+6. **T1's P0** (the reviewer's DOC-5 (d); the architect's item 4). T1's P0 was taken at e106af50. Its `SET` string changed at cea0ef8c. The reviewer observed the head's T1 red again at the base, at the `LargeUtf8` refusal assertion, and probe M1b shows the `Utf8View` half is live (row 887's report, its DOC-5 (d) and its check 3).
+7. **The form's T3 sentence** (the reviewer's DOC-5 (e); the architect's item 5). Amendment 2 E2's New text is corrected by reference: by the reviewer's probes P1 and P2, the string-view setting alone does not change the export. The bound T3 pins is the T3 doc comment as DOC-1 leaves it at 50c7c331. The form above is not edited.
+8. **The words applied after the reviewer's gate** (the architect's item 6). DOC-1 to DOC-4 were applied at 50c7c331 in the reviewer's words. They change comment lines only, as the architect's gate read them at that head (row 894's report, its check 7). They are listed in the PR body.
+9. **The ADR notes' words** (ADV-2026-11-23-21 item 2; Amendment 2). Both notes equal the ruled fences of ADV-2026-11-23-28 items 1 and 2:
+   - the reviewer compared them by script at b035ccb3;
+   - the architect read them from the diff at 50c7c331;
+   - words-2 did not touch either file.
+10. **The checks:** PR 364 at 50c7c331, 20 of 20 SUCCESS, read at 2026-11-24T02:58:48Z.
+11. **The merge:** after the tag, and after PR 350 (its base), by a merge commit (§9; Amendment 2's merge line). Main is merged into the branch before the merge request.
+
+Read the last amendment first.
+
+Nothing above is edited.

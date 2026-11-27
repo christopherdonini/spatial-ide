@@ -62,6 +62,7 @@ const SCRATCH = mkdtempSync(join(TEMP_BASE, "spatial-project-"));
 const FOLDER_ONE = mkdtempSync(join(TEMP_BASE, "spatial-project-first-"));
 const FOLDER_TWO = mkdtempSync(join(TEMP_BASE, "spatial-project-second-"));
 const FOLDER_THREE = mkdtempSync(join(TEMP_BASE, "spatial-project-third-"));
+const FOLDER_FOUR = mkdtempSync(join(TEMP_BASE, "spatial-project-fourth-"));
 process.env.LOCALAPPDATA = SCRATCH;
 
 const { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } = await import("./lib.mjs");
@@ -91,7 +92,7 @@ const sha256 = (path) => createHash("sha256").update(readFileSync(path)).digest(
 
 /** The folders and the scratch store go at the end of every run; a folder the app still holds open is named, not hidden. */
 function dropFolders() {
-  for (const path of [FOLDER_ONE, FOLDER_TWO, FOLDER_THREE, SCRATCH]) {
+  for (const path of [FOLDER_ONE, FOLDER_TWO, FOLDER_THREE, FOLDER_FOUR, SCRATCH]) {
     try {
       rmSync(path, { recursive: true, force: true, maxRetries: 10, retryDelay: 500 });
     } catch (e) {
@@ -390,6 +391,39 @@ async function stepNoticeS18(page, ctx) {
   return `the save notices hold S18's text once; the dataset entry's locators read ${kinds}`;
 }
 
+/**
+ * E-1 (RELOAD-ENDS-THE-OLD-PAGES-OPENS-PREREGISTRATION.md section 4, the E-1 row; ADV-2026-11-26-23 item 1): open, save, reload, reopen. The fixture is opened and
+ * its first pixels drawn, the open is saved into the fourth folder, and the page is reloaded with no close in the page between that save and the reload. The reopen
+ * of the fourth folder through `e2eOpenProjectFolder` must then answer `admitted`: the old page's open, and the project lock it holds, end with the old page.
+ * Before the fix the answer is `skp.project_open_elsewhere`.
+ */
+async function stepReloadReopen(page, consoleHandle) {
+  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE);
+  if (outcome.kind !== "admitted") throw new Error(`openPath(fixture) returned ${JSON.stringify(outcome)}, expected {kind:"admitted"}`);
+  await waitFor(
+    "the first pixels of the fixture (capturePixels reporting a non-background pixel)",
+    () => page.evaluate(async () => (await window.__SPATIAL_E2E__.capturePixels([])).nonBackgroundCount),
+    (n) => n > 0,
+    60_000,
+    500
+  );
+  await settle(consoleHandle, "after the fixture's first look");
+  const saved = await hookSave(page, FOLDER_FOUR);
+  if (saved !== "asked") throw new Error(`the e2eSaveProjectToFolder into the fourth folder answered ${JSON.stringify(saved)}, expected "asked"`);
+  await readFolder(page, FOLDER_FOUR);
+  await page.reload({ waitUntil: "load" });
+  await waitFor(
+    "the app header, the openPath hook and the e2eOpenProjectFolder hook, after the reload",
+    () => page.evaluate(() => document.querySelector(".app-header") !== null && typeof window.__SPATIAL_E2E__?.openPath === "function" && typeof window.__SPATIAL_E2E__?.e2eOpenProjectFolder === "function"),
+    (ready) => ready === true,
+    MOUNT_READY_TIMEOUT_MS,
+    300
+  );
+  const answer = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), FOLDER_FOUR), 90_000, "e2eOpenProjectFolder");
+  if (answer !== "admitted") throw new Error(`the reopen of the fourth folder after the reload answered ${JSON.stringify(answer)}, expected "admitted"`);
+  return 'the fixture was opened and saved into the fourth folder, the page was reloaded, and the reopen of that folder answered "admitted"';
+}
+
 async function main() {
   const DEADLINE_MS = Number(process.env.SPATIAL_E2E_DEADLINE_MS ?? 900_000);
   const watchdog = setTimeout(() => {
@@ -467,7 +501,8 @@ async function main() {
       (await runStep("SECOND-SAVE", 120_000, () => stepSecondSave(page, ctx))) &&
       (await runStep("INSIDE-OPEN", 180_000, () => stepInsideOpen(page, consoleHandle, ctx))) &&
       (await runStep("INSIDE-SAVE", 120_000, () => stepInsideSave(page, ctx))) &&
-      (await runStep("NOTICE-S18", 30_000, () => stepNoticeS18(page, ctx)));
+      (await runStep("NOTICE-S18", 30_000, () => stepNoticeS18(page, ctx))) &&
+      (await runStep("E-1", 300_000, () => stepReloadReopen(page, consoleHandle)));
 
     const hashAfter = sha256(FIXTURE);
     console.log(`project: fixture sha256 after ${hashAfter}${hashAfter === hashBefore ? " (unchanged)" : " (CHANGED)"}`);
