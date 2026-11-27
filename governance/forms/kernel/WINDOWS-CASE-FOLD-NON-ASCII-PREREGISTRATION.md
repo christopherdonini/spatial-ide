@@ -320,3 +320,46 @@ The form's other pins (`grant.rs`, `publish/mod.rs`, `bundle/redaction.rs`, `ses
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2 — 2026-11-27 — the custodian's closing amendment, written after both build gates' reports were seen: references and hashes only
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The head** is 74178ea95741985c604c552174d42dcf63e374fc (PR 367), over the base main 4b9fd558d0437b3249e1bba58334a6d55074c199. Its commits:
+   - f13dbd87, the code with T1 to T4;
+   - f9496e56, the five mutations recorded beside their tests;
+   - 74178ea9, the build gates' words.
+2. **The gates,** both at f9496e56033038ab468ba3b92364aa17379535d7:
+   - the architect, PASS WITH NOTES: `state/consults/gates/2026-11-27-windows-case-fold-non-ascii-build-gate-architect.md`, sha256 ea039cafff1078b53d06556c4233ce8d20d943e3643b4bbc20144b5eb752d81d, gate-log row 931;
+   - the reviewer, FAIL on words only: `state/consults/gates/2026-11-27-windows-case-fold-non-ascii-build-gate-reviewer.md`, sha256 a734c1d7d1e80e8628d597df2e8c64fea1415527591aa31edda08c05e911d0ff, row 932.
+   - ADV-2026-11-27-13 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-13-the-case-fold-pieces-three-places-g1-for-component-eqs-doc-c1-whole-for-folds-doc-class-6-at-148-m1-at-t3-in-the-closing-amendment.md`) rules the three places where their words differ.
+3. **The words commit** (that ruling's items 1, 2 and 6). 74178ea9 holds places 1 and 2 and nothing else:
+   - the architect's G1 for `component_eq`'s doc;
+   - the reviewer's C1, whole, for `fold`'s doc.
+   A script copied both from the reports as filed on main. `git diff --numstat f9496e56...74178ea9` gives normalize.rs 10/7.
+4. **Class 6, at the count** (item 3).
+   - §21c's counting rule, as the Scope line names it, gives 148 lines in 2 files at the words commit, by `git diff --numstat 4b9fd558...74178ea9`: log.rs 26/2 and normalize.rs 103/17.
+   - The declared figure is 145. The estimate was 122, and about 138 after Amendment 1 item 12.
+   - The lines past 145 come from C1, a gate's correction of an untrue claim. The Scope line is not edited, and nothing is cut to come back to 145.
+   - 148 is inside §21c's 150, so the route does not change.
+5. **Class 2, place 3: M1 also fails T3** (item 4).
+   - The form's M1 prediction is not edited.
+   - The architect's draft row, from its D1, adopted verbatim: "M1 also fails T3 `kernel/src/permission/audit/log.rs::tests::a_log_under_a_non_ascii_case_variant_of_the_destination_is_refused_on_windows`, first assertion, unpredicted: is_inside maps both strings through `fold` (the Change line). Class 2; the prediction stands."
+   - The reviewer's observation, from its report's check of the mutations: at f9496e56033038ab468ba3b92364aa17379535d7, on Windows, M1 (`fold` is `c.to_ascii_uppercase()`) was applied alone and the `permission::audit` tests were run. The run printed, verbatim, `test result: FAILED. 32 passed; 3 failed`. T3's failing assertion, as printed: `assertion failed: is_inside(Path::new("D:/maps/été/audit.jsonl"), Path::new("D:/maps/ÉTÉ"))`.
+   - T3's doc in the source keeps its M4 line and gains nothing.
+6. **The probe's two sets** (item 2's last bullet). This is the custodian's reading of the reviewer's report, check 3.
+   - **The 27 that the volume equates and `fold` keeps apart: shown.** The report lists them, verbatim: "The L list is exactly U+1F80-1F87, U+1F90-1F97, U+1FA0-1FA7, 1FB3, 1FC3 and 1FF3." These are the letters of class (ii).
+   - **The 225 that `fold` joins and the volume does not: not shown.** The report names Cherokee (86) and Georgian (48) among them. It also lists, separately, 18 code points of the compatibility and titlecase set as not equated. It does not class the rest of the 225. So the doc's "three declared classes" is a declaration, not a proof.
+7. **N3's NTFS facts are not proven by the piece's tests** (item 5). T1 to T4 pin `fold`'s results, not a volume's. The reviewer's probes, in its report's check 3, are the gate's observation: one NTFS volume, on 2026-11-27.
+8. **The tests,** by name at 74178ea95741985c604c552174d42dcf63e374fc, with no hash pin at a branch commit (item 5):
+   - T1 `kernel/src/permission/audit/normalize.rs::tests::non_ascii_case_differences_collapse_as_ntfs_compares_names_on_windows`;
+   - T2 `kernel/src/permission/audit/normalize.rs::tests::the_resolved_parent_keeps_its_on_disk_case_and_a_username_in_another_case_still_collapses_on_windows`;
+   - T3 `kernel/src/permission/audit/log.rs::tests::a_log_under_a_non_ascii_case_variant_of_the_destination_is_refused_on_windows`;
+   - T4 `kernel/src/permission/audit/normalize.rs::tests::a_destination_that_is_exactly_a_root_becomes_the_roots_token`.
+   The reviewer observed M1 to M5 at f9496e56. Its report says the RECORDED MUTATION lines match what it saw, except M1 at T3 (item 5 above).
+9. **CI at the head 74178ea95741985c604c552174d42dcf63e374fc:** Product CI — Rust workspace 45949718578; Product CI — Rust workspace 45950001340; Product CI — shell 45949718642; Product CI — shell 45950001368; Governance CI — plan, queue, site 45949718635; Governance CI — plan, queue, site 45950001330, each completed with success. `gh pr checks 367` gives pass 20 (the custodian's read at 2026-11-27T06:32:11Z).
+10. **The reviewer's FAIL** closes with no further attempt (item 6). The advisor verifies it at the merge check. The merge is by a merge commit, after that check.
+
+Read the last amendment first.
+
+Nothing above is edited.

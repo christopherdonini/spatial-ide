@@ -592,3 +592,18 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-27 — the advisor's merge check at 79f4380b: HOLD, nothing in the piece wrong; references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The verdict.** HOLD at 79f4380badd71679a0d28318b2f8514c7ab59bae (`state/consults/merge-checks/PR-366-79f4380badd7.md`, sha256 7d950142631ab7d07869f55c3ed556bc2bcb93610b85154616c64878c830483d of the advisor's file). It is written ahead of the merge.
+2. **Its one cause** (its item 1). The branch holds PR 365 at 2095a7ac471d2441fd8e054a448d334c7bcde455. PR 365's head is 639a96cc25873c99d606b4d75541bd8f3de37543, and it may move at its series.
+   - It settles as Amendment 5 item 3 says: PR 365's settled head comes in by a merge commit, with the reviewer's narrow read and green checks.
+   - That merge meets `KNOWN-LIMITATIONS.md`, which both pieces change in separate items. The narrow read says whether item 20 is unchanged by it.
+   - The advisor then reads only the merge, the checks and the amendment that records them, and writes the verdict for the new head.
+3. **What the verdict read** is its item 2. Nothing in the piece is wrong.
+
+Read the last amendment first.
+
+Nothing above is edited.
