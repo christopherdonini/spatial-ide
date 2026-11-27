@@ -1100,3 +1100,23 @@ Nothing above is edited.
 6. **Next:**
    - the advisor's answer on item D;
    - then the worker, from 530d7b0e, with the suites that start no app run at the base first (Amendment 8 item 7).
+
+## Amendment 10 — 2026-11-27 — the custodian's: ADV-2026-11-27-23, the string ids named with the form in this piece's comments and test names (class 9)
+
+*Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-23, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-23-shell-scale-displays-string-ids-named-with-the-form-in-its-comments-and-test-names-class-9-in-the-architects-sentence.md`. It answers item D of the narrow read, which is filed at `state/consults/gates/2026-11-27-shell-scale-display-section-2-against-the-base-architect-read.md` (Amendment 9 items 1 and 5).
+2. **Class 9,** a scope addition on that ruling (its item 1). §2 item 7's filed line is not edited.
+   - In this piece, every code comment, test comment and test name that names one of this form's string ids names the form with it: `SHELL-SCALE-DISPLAY S-1` to `SHELL-SCALE-DISPLAY S-4`. This holds in every file the piece writes (its item 2).
+   - Milestone 5's lines are not changed.
+   - This form's own text, Part AI, the KNOWN-LIMITATIONS item and the e2e README keep the bare ids.
+3. **The architect's sentence** (its item 3), byte for byte from the filed read's item D. Only its four cites are written in words at 530d7b0e, with no hash:
+
+````text
+A code or test comment that names one gives this form's name with the id (`SHELL-SCALE-DISPLAY` S-1 to S-4), because at the base milestone 5's S-1 is the Problems tab's label and its S-3 is the attention strip's button (line 368 of `frontends/shell/src/layout/StudioLayout.test.tsx`, lines 125 and 310 of `frontends/shell/src/layout/StudioLayout.tsx`, and line 2540 of `frontends/shell/src/App.tsx`, each at 530d7b0e).
+````
+
+   It requires no more than the ruling's item 2, which also covers test names.
+4. **The moved lines** are class 3, as the read has them (its item 4; Amendment 9 item 3).
+5. **The worker starts** now that this amendment and the read are on main (its item 4).
+6. **The merge** is never before the identity route either (its item 5; ADV-2026-11-27-21 item 6).
