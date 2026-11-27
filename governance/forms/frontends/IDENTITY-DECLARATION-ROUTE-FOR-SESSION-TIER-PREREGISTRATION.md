@@ -1462,3 +1462,23 @@ Read the last amendment first.
 6. **The head** the read parts read is 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9 (Amendment 10 item 4), or a later head recorded by amendment.
 
 Read the last amendment first.
+
+## Amendment 12 — 2026-11-27 — the custodian's: the two read parts and ADV-2026-11-27-15, before the correction
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The read parts** at 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9 are filed at `state/consults/gates/2026-11-27-identity-declaration-route-for-session-tier-build-gate-architect-read-part.md` and `state/consults/gates/2026-11-27-identity-declaration-route-for-session-tier-build-gate-reviewer-read-part.md`, with no gate-log row. The ruling on their four places is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-15-the-identity-routes-four-places-d2-loses-its-whole-file-clause-row-i8s-note-by-one-span-class-9-the-known-limitations-comment-one-span-d-b-and-d-d-both-apply.md`.
+2. **A ruled string changed after a gate's finding** (its item 1). The reviewer's C-1 found D2's clause on the whole-file check untrue for a typed name that is refused before the scan. D2 is now item 1's text, replacing the D2 of ADV-2026-11-23-26 item 2.
+   - One span, the same in the constant `DECLARE_IDENTITY_FIRST_LINE` and in walkthrough row AG2.
+   - The comment above the two constants is in the worker's words, read at the run part.
+   - At the merge check, item 8 replaces ADV-2026-11-23-26 item 5 for D2.
+3. **Class 9** (its item 2). Row I8's note joins the region by item 2's one span. §9 item 18 then reads as item 2 gives it: row I4 changed beyond its quote; row I8 changed beyond its quote and this span; or a past result log edited.
+4. **Its items 3 and 4.** The KNOWN-LIMITATIONS comment under item 3 takes item 3's span. In `IdentityDeclarationForm.tsx`, the architect's D-b (its three spans) and the reviewer's D-d (in item 4's words) both apply.
+5. **The correction** holds the gates' own words for the rest (item 5), and items 1 to 4, and nothing else.
+   - The rest is the reviewer's D-a, D-b, D-c, D-e, D-f, D-h and D-j, and the architect's D-a.
+   - The run part reads items 1 to 4 clause by clause at the corrected head, with item 1's comment.
+6. **verify-mutation** (its item 6). At the run part, a gate says whether each of the three tests that D-f does not cover is this piece's to record. A check that still exits 1 at the corrected head is explained in the closing amendment, test by test.
+7. **Text-id** (its item 7). Text-id's merge-in of the corrected head has a narrow read, which says whether its three places then hold the texts of items 1 and 2.
+8. **What the read parts did not run at the head:** conformance on its own, clippy, the shell's `npm run verify` and CI's `node --test`. These run in the run part at the corrected head, with E-1 and M-E1, after the port series.
+
+Read the last amendment first.
