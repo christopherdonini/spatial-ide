@@ -1063,3 +1063,27 @@ Nothing above is edited.
    - each gate reads the corrections in its run part, and the reviewer runs M-15 again there;
    - the architect's E1 is for the run part, and no test is added for the owner line on item 1's path.
    The overrun stays class 8. The reviewer's three departures go into the closing amendment (item 11).
+
+## Amendment 16 — 2026-11-27 — the custodian's: the corrections at 2df8b4ae, and the C1 piece's node
+
+*References only. Nothing above is edited.*
+
+1. **The corrections** (ADV-2026-11-27-22 item 10; Amendment 15) are two commits on `cut/text-id-opens-for-the-session-by-row-position` from fc6d4b0098a08bc554f7f3ce15a1aa89564925cb, pushed:
+   - 01206b20a10673644ae87e8fa5d6ce4c85e7046a, the words of items 1, 2, 3, 5 and 8;
+   - 2df8b4aeeba1d3820ec0ba9e9f2bcd4ee7338a3e, item 9's test, now the head.
+   - The worker's report is filed at `state/consults/gates/2026-11-27-text-id-opens-for-the-session-by-row-position-correction-worker-report.md`.
+2. **Checked by git,** fc6d4b00..2df8b4ae: 93 insertions and 13 deletions over 11 files.
+   - Item 9's test is beside K-U1, in `kernel/tests/publish_identity_tier.rs` (67 lines added). That is the path outside §7, class 9 (Amendment 15).
+   - The closing count stays ADV-2026-11-27-22 item 7's.
+3. **The suites that start no app,** at the head, by the worker's report (ADV-2026-11-27-22 item 10):
+   - These were green: cargo fmt, the workspace's cargo tests, the shell's typecheck and tests, verify-cites, verify-quotes, verify-test-claims, verify:plan and CI's `node --test`.
+   - `verify-mutation` from 83812fd5 exited 1, with 5 of 36 new tests named by no recorded mutation. By git blame at the head:
+     - two are on PR A's branch and came in by the merge commit fc6d4b00;
+     - three are this piece's build commits: two tests, and one fixture generator marked `#[ignore]`.
+   - The script sees only a preregistration changed in the same diff, and this form is on main. Its run is a run of the mutation set, never an observation (§4). The gates read the failure in their run parts.
+4. **Next:**
+   - the series at the port, turn 7;
+   - then each gate's run part reads the corrections, and the reviewer runs M-15 again (ADV-2026-11-27-22 item 10).
+5. **C1's follow-up piece** (ADV-2026-11-27-22 item 4) is PLAN node `text-id-reopen-with-a-recorded-declaration`, proposed, with no gate yet.
+   - Its full form is drafted now by this form's drafter, the architect, on 2df8b4ae.
+   - At this piece's merge check, either that piece is ready to merge directly behind it, or a KNOWN-LIMITATIONS sentence is ruled first.

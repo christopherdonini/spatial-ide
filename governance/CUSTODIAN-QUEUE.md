@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `e81180b922ae0213cc70f3648ac3389d9bf2252f339babb10ecb115ab59cbb2c`) at `2026-11-27T11:01:59.604Z`.
+Generated from `PLAN.yaml` (sha256 `8a7a84334df3e5646b2f12e89704569e3f6dc21674011046a0ffa09036d11767`) at `2026-11-27T11:26:15.314Z`.
 
 ## 1. Next
 
@@ -117,6 +117,7 @@ Generated from `PLAN.yaml` (sha256 `e81180b922ae0213cc70f3648ac3389d9bf2252f339b
 - **stale-lines-outside-the-four-files** — Same-class stale lines outside the docs-lane piece's four files: residencyStatus.test.ts's titles and comments calling ruled strings drafts, residencyArm.test.ts's App-cannot-be-rendered comment, WorkingCanvas.test.ts's no-mount line, and engine/src/identity.rs's two stale line cites into session_identity.rs (phase `prototype`) — never queued until placed
 - **app-key-remount-unit-test** — A unit test that pins App's per-dataset key remount of WorkingCanvas: App.layout.test.tsx's stand-in records mounts per dataset prop value, so R1 passes with or without the key (phase `prototype`) — never queued until placed
 - **filter-identity-alias-ambiguous-guidance-line-and-note** — A guidance line in the app for skp.filter_identity_alias_ambiguous, in the human's wording at P6, and a KNOWN-LIMITATIONS note: a declared identity beside the file's own id column refuses the first filter on id, and the message does not say what to do (phase `prototype`) — never queued until placed
+- **text-id-reopen-with-a-recorded-declaration** — At a reopen whose project file records a declaration of the column id, the shell offers the row-position choice although the attempt declared a column (text-id's C1; ADR-016's draft Amendment 3, Decision 1): its own full form chooses between not offering it there and opening without the recorded declaration (phase `prototype`) — never queued until placed
 - **identity-scan-refuses-a-null-by-name** — A null in the identity column is refused as a null, for every type admission takes, in the same scan, in place of a detail that says two features share an identity (R6 of the text-id consult) (phase `prototype`) — never queued until placed
 - **docs-14-corpus-attribution-vs-docs-08** — docs/14 asks corpus attribution in demos and published bundles, which docs/08 line 40 now says are never redistributed (phase `prototype`) — never queued until placed
 - **e2e-first-poll-readout-elsewhere** — Two more e2e suites take a hover id from the readout's first poll after a pointer move: source-changed.mjs hoverAt and residency-harness.mjs tryHoverCandidate (phase `prototype`) — never queued until placed
