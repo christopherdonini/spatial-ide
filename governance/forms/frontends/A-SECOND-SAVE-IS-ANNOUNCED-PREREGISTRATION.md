@@ -563,3 +563,16 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
    - The run at T is made at T as it stands.
 7. **The reviewer's three departures** (its item 6) are accepted, and the closing amendment records them as the reviewer disclosed them.
 8. **Next:** the correction worker; then E-A1 at T and at P in A's port turn; then the run parts.
+
+## Amendment 8 — 2026-11-27 — the custodian's: the correction commit, at 38e9209d, and §7's count at it
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The correction commit** is 38e9209db45d9b00063b2801381554d57f330fa7, over dab4e9d3b45f487d9e0af2531030104a6dd5b761.
+   - It changes 4 files, 5 lines added and 5 deleted: `frontends/shell/e2e/README.md` 1/1, `frontends/shell/e2e/conditions.mjs` 2/2, `frontends/shell/src/App.conditions.test.tsx` 1/1, `frontends/shell/src/project/saveProject.test.ts` 1/1.
+   - It holds Amendment 7 items 2, 4 and 5 and nothing else.
+   - The worker's report is filed at `state/consults/2026-11-27-a-second-save-is-announced-correction-worker-report.md`.
+2. **§7's count at the corrected head,** by §7's command (`git diff --numstat f64fac32...38e9209d --` over the seven paths; no merge commit lies in the range): 237 lines added and 30 deleted, 267 over 7 files. The ceiling is 280, so there is no class 8.
+3. **E-A1's block** at 38e9209d, from the line starting `  // 1b.` up to the line starting `  // 2. The write`, excluded: sha256 bafadedc8a3576d73ba23f4c8a84a3c8ec753927f971a7e128390a3a19f821eb, the same as at T and at dab4e9d3. Lines 142 and 147 are unchanged.
+4. **The worker's checks at the head:** `node --check` of `conditions.mjs`, the shell's typecheck and tests (1673 passed), verify-cites, verify-quotes, verify-test-claims and verify-mutation, all exit 0.
+5. **Next,** in A's port turn: E-A1 at T as it stands, and at P at 38e9209d. Then both gates' run parts read Amendment 7 items 2, 4 and 5 at 38e9209d, and step 3's record line in the run at P.

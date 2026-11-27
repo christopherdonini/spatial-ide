@@ -984,3 +984,23 @@ Nothing above is edited.
    - cargo fmt, verify-cites, verify-quotes, the shell's typecheck and tests (1697 passed), and cargo check of the workspace all exited 0.
    - The worker's departures on the holds are in its report. The reviewer's read part reads them.
 4. **Next:** both read parts at fc6d4b00 (Amendment 10 item 2; Amendment 11 item 5), when the Opus places allow.
+
+## Amendment 13 — 2026-11-27 — the custodian's: the architect's read part at fc6d4b00, and §9 item 10's check
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The architect's read part** at fc6d4b0098a08bc554f7f3ce15a1aa89564925cb is filed at `state/consults/gates/2026-11-27-text-id-opens-for-the-session-by-row-position-build-gate-architect-read-part.md`, with no gate-log row.
+2. **Its findings, by its own labels:**
+   - **C1**, Correctness, for the advisor. A project reopen whose project file records a declaration of the file's `id` column is offered the row-position choice, and the engine then refuses it as S-6b.
+   - **R-ENG** (Amendment 10 item 5): the five things of ADV-2026-11-27-12 item 3, (a) to (e). Its item 3 (c) is answered yes, by reading. R-ENG's second sentence is found untrue and goes to the advisor unreworded. On its item 5, `engine/ADMISSION-RESULTS.md` is a record of a past run.
+   - **D1 to D3**, Documentation, each with no code change:
+     - D1 is a pair for the `IdentitySetAsideRefused` doc in `engine/src/error.rs`;
+     - D2 is the range of the closing count;
+     - D3 is SKP-V0's skp/0.16 entry, with no pair.
+   - **E1**, Evidence, for the run part.
+   - **Amendment 9 item 5's question:** nothing lies outside §2. **Class 8:** the declared design in more lines.
+3. **§9 item 10,** which the read part left to the custodian.
+   - The custodian searched the added lines of 83812fd5...ebf961d3 and of ebf961d3..fc6d4b00 by pattern, with a positive control. None of the counts in item 1 of the human's message (`state/directives/2026-11-23-the-humans-message-text-id-files-open-for-the-session-by-row-position-ahead-of-the-recovery-offer-and-a-bbox-consult.md`) stands in them.
+   - The numbers are not written here.
+4. **Nothing is changed yet.** The reviewer's read part comes first. Then both go to the advisor together, with any places where the two gates' words differ (ADV-2026-11-27-10 item 2).
+5. **Next:** the reviewer's read part; the advisor's ruling; the corrections; then the series in this piece's port turn.
