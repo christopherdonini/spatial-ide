@@ -560,7 +560,7 @@ function assertBar(label, seen, expectedWidthPx, expectedTitle) {
   if (Math.abs(seen.bar.width - expectedWidthPx) > SCALE_WIDTH_TOLERANCE_PX) throw new Error(`E-SCALE ${label}: the bar is ${seen.bar.width} CSS px wide, expected ${expectedWidthPx} within ${SCALE_WIDTH_TOLERANCE_PX}`);
   const inside = seen.item.left >= seen.status.left - 0.5 && seen.item.right <= seen.status.right + 0.5 && seen.item.top >= seen.status.top - 0.5 && seen.item.bottom <= seen.status.bottom + 0.5;
   if (!inside) throw new Error(`E-SCALE ${label}: the item's rect ${JSON.stringify(seen.item)} is not inside .status-bar's ${JSON.stringify(seen.status)}`);
-  if (seen.title !== expectedTitle || seen.aria !== expectedTitle) throw new Error(`E-SCALE ${label}: the title ${JSON.stringify(seen.title)} and the accessible name ${JSON.stringify(seen.aria)} are not ${JSON.stringify(expectedTitle)}`);
+  if (seen.title !== expectedTitle || seen.aria !== expectedTitle) throw new Error(`E-SCALE ${label}: the title ${JSON.stringify(seen.title)} and the aria-label ${JSON.stringify(seen.aria)} are not ${JSON.stringify(expectedTitle)}`);
 }
 
 async function stepScale(page, consoleHandle) {

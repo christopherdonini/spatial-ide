@@ -12,11 +12,13 @@ import {
   readingAtPxPerUnit,
   scaleLabel,
   scaleReading,
-  SCALE_BAR_MAX_PX,
   SCALE_BAR_MIN_PX,
   SCALE_EXPONENT_MAX,
   SCALE_EXPONENT_MIN,
 } from "./scaleBar";
+
+/** §7's maximum of the bar's CSS width. No product code reads it, so it is declared here, beside the one test that checks it (U-SB2). */
+const SCALE_BAR_MAX_PX = 150;
 
 describe("scaleBar (SHELL-SCALE-DISPLAY U-SB1 to U-SB4)", () => {
   // RECORDED MUTATION U-SB1 (M1): in `readingAtPxPerUnit`, each `>=` against SCALE_BAR_MIN_PX becomes `>`. Expected failure: the 30 and 12 cases.

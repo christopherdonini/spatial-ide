@@ -196,7 +196,8 @@ export interface E2eTestSurface {
    * answers as `e2eOpenProjectFolder` does, or `not-asked` when no `not_found` stands. Only caller: `e2e/reopen.mjs`. */
   e2eRelinkFile?: (file: string) => Promise<string>;
   /** **DEV-ONLY E2E TEST SEAM** (same item). Reads the applied workspace: the drawn view's filter text, clauses and style state, and the canvas's
-   * held `currentView`. It changes nothing. Only caller: `e2e/reopen.mjs`, which must see the state a reopen applied. */
+   * held `currentView`. It changes nothing. Its callers: `e2e/reopen.mjs`, which must see the state a reopen applied, and E-SCALE in
+   * `e2e/layout.mjs`, which must know the zoom the canvas holds after a wheel notch to say what the scale item should then show. */
   e2eReadWorkspace?: () => Promise<{
     filter: string | null;
     clauses: { text: string; enabled: boolean }[];

@@ -230,6 +230,7 @@ export function WatcherStatusItem({ facts, sessionEnded }: { facts: WatcherFacts
  * there is none. It subscribes to the view-box store, as `FeaturePanel` does, so a pan or zoom renders this item and not `App`. Its snapshot is the
  * canvas's zoom, or `null` while the store holds no box: until the dataset's own canvas has reported, the unit and a zoom are not known to belong together.
  * No `role="status"`, no timer and no await: it changes at every zoom, and a live region would announce each change.
+ * With a bar the item has `role="img"`: ARIA 1.2 prohibits `aria-label` on a `div` with no role, and with this role the label names the whole item and its children are presentational.
  * `unit` is a `string` and `getBox` returns `object | null`, which the item only compares with `null`, so that no file under `layout/` imports from `skp/` or `canvas/` (layoutBoundary.test.ts U4).
  */
 export function ScaleItem({
@@ -250,7 +251,7 @@ export function ScaleItem({
   if (reading.kind === "out-of-range") return <div className="status-scale">{SCALE_OUT_OF_RANGE_TEXT}</div>;
   const decimal = scaleLabel(reading.mantissa, reading.exponent);
   return (
-    <div className="status-scale" title={scaleBarTitle(decimal)} aria-label={scaleBarTitle(decimal)}>
+    <div className="status-scale" role="img" title={scaleBarTitle(decimal)} aria-label={scaleBarTitle(decimal)}>
       <span className="status-scale-bar" style={{ width: `${reading.widthPx}px` }} />
       {scaleBarLabel(decimal)}
     </div>
