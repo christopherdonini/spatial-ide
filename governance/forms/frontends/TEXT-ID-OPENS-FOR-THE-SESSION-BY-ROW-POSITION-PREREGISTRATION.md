@@ -925,3 +925,24 @@ Nothing above is edited.
 6. **The worker's departures, for the gates** (the report's own list, by its numbers): 2, the scan-count test's input changed in its own commit after M-7 first came back not red; 6, K-6 covers R1 only, and M-13 and M-14 follow the tests' own doc comments; 7, `engine/ADMISSION-RESULTS.md`, outside the Scope, keeps the old refusal text; 9, the cites in `KNOWN-LIMITATIONS.md` item 3. No skeleton commit was made, so no red at a skeleton was observed. M-25, the e2e step, is not observed: E-1 waits for the port (ADV-2026-11-26-19).
 7. **The identity route's head moved after the base.** That head is now 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9, which merges PR A's head d6c2daf69eb500027197945f5a4302f0508e0f69 (that form's Amendment 10). It is not in this branch. What it brings changes 5 files, and this piece changes one of them, `frontends/shell/e2e/README.md`. By ADV-2026-11-27-01 item 7, if the route's head moves at its build gates, this piece takes the new head in before its own gates. It comes in by a merge commit, with the reviewer's narrow read (ADV-2026-11-23-15 item 4).
 8. **Next:** the build gates, after the route's head is in (item 7). Whether they go in two parts, and which of the route's heads they wait for, go to the advisor.
+
+## Amendment 10 — 2026-11-27 — the custodian's: the build gates in two parts, the route's head before them, and what the architect's read part gives on R-ENG (ADV-2026-11-27-11; ADV-2026-11-27-12), before either gate
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The rulings.** ADV-2026-11-27-11 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-11-text-id-takes-the-routes-head-after-its-read-part-corrections-its-gates-in-two-parts-class-8-the-port-order.md`) and ADV-2026-11-27-12 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-12-the-line-beside-an-engine-refusal-at-a-reopen-what-text-ids-architect-read-part-gives-before-the-words-are-ruled.md`). They settle what Amendment 9 item 8 left to the advisor.
+2. **Two parts** (ADV-2026-11-27-11 item 2, on the terms of ADV-2026-11-27-08 item 3).
+   - **The read part, now.** Each gate reads or runs everything that starts no app: the diff against this form; the unit tests and their mutations, observed again inside the machine's holds; the clause checks of every ruled string and document; Amendment 9 item 5's question; and item 5 below. Its report is filed as the read part, with its findings and no gate-log verdict.
+   - **The run part, when the port has served it.** Each gate reads the tester's series, E-1 with its step TEXTID' and M-25, and then gives its verdict.
+   - **Findings of the read part are corrected before the series runs.** A correction that changes code is read by the same gate in its run part.
+   - §10's suites that start no app stay green before the read part. Only the e2e series moves in time.
+3. **The route's head comes first** (ADV-2026-11-27-11 item 1). The route's two read parts end, and their corrections are committed on the route's branch. This piece then takes that head in by a merge commit, and its read parts start on the result.
+   - The one shared path, `frontends/shell/e2e/README.md`, is named in both read parts' briefs. A resolution made by hand is read line by line in the reviewer's read part.
+   - If the route's head moves again at its run part, it comes in with the reviewer's narrow read (ADV-2026-11-23-15 item 4).
+4. **Class 8** (ADV-2026-11-27-11 item 3; Amendment 9). The gates go on, and both answer Amendment 9 item 5's question in so many words. The custodian's read by name found nothing outside §2 (ADV-2026-11-27-12 item 5).
+5. **R-ENG, `ENGINE_REFUSAL_NOTICE`** (ADV-2026-11-26-05 item 10; ADV-2026-11-27-11 item 5; ADV-2026-11-27-12 items 2 to 5).
+   - The architect's read part gives the advisor the five things of ADV-2026-11-27-12 item 3, (a) to (e). It also says whether `engine/ADMISSION-RESULTS.md` is a record of a past run or a description of what the engine does today (that ruling's item 5).
+   - Both read parts check R-ENG's sentences against the new arm. A clause found untrue goes to the advisor unreworded.
+   - The string is not changed until the advisor rules. If item 3 (c) of that ruling is yes, the new words land in this piece as class 9, recorded before their code and before the run part.
+6. **The port.** This piece's series is seventh in ADV-2026-11-27-11 item 4's order.
+7. **Next:** the route's read parts and their corrections; the merge of the route's head; then both read parts, at that merge.
