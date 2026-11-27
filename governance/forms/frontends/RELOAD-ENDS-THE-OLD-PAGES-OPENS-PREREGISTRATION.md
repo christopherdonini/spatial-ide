@@ -740,3 +740,113 @@ The check covers each of ADV-2026-11-26-18 item 2's six things, with its proof:
 4. **ADV-2026-11-26-24 item 2 applies from this base.** The red commit is the branch's first commit after ca57685263df8628e1b6d452e1423319a30b6596. The code worker (worker-high) was dispatched on this base on 2026-11-27, with no e2e run.
 
 Read the last amendment first.
+
+## Amendment 3 — 2026-11-27 — class 8: the size at the code's head (ADV-2026-11-27-06; ADV-2026-11-27-07), before the gates
+
+*Written by the custodian after the code and before its gates are dispatched. References and counts only. §7 is not edited, and nothing above is edited.*
+
+1. **The figures.**
+   - Declared in §7: at most 1250 changed lines over at most 8 files.
+   - Final, by §7's own command at 7bd3bf2269d058bf454d936ae06d4a8e08d88ec4, with `<merge-base>` ca57685263df8628e1b6d452e1423319a30b6596 (Amendment 2 item 3): 1670 insertions and 17 deletions, 1687 changed lines over 8 files.
+   - The file count is within the ceiling. The lines run 437 over it.
+   - This is class 8, and the gates go on (ADV-2026-11-27-06 item 1). No line is cut to meet the ceiling.
+
+2. **§7's estimate, with the count beside each row.** The counts are insertions plus deletions, from the same command.
+
+   | Part | Estimated (about) | Counted |
+   |---|---|---|
+   | `page.rs` code | 240 | 509: lines 1 to 509, before the test module |
+   | `page.rs` tests | 560 | 809: lines 510 to 1318, the test module |
+   | `lib.rs` | 35 | 70 (66 + 4) |
+   | `commands.rs` | 45 | 58 (51 + 7) |
+   | `project.mjs` | 90 | 39 (37 + 2) |
+   | `e2e/README.md` | 12 | 4 (2 + 2) |
+   | `e2e-test-surface.ts` | 4 | 4 (2 + 2) |
+   | ADR-037 | 200 | 193 |
+   | `docs/README.md` | 1 | 1 |
+   | the ADR-020 note, if it lands | 7 | 0: not added, since ADV-2026-11-26-21 is not approved (§2 item 11) |
+   | total | 1187, or 1194 with the note | 1687 |
+
+3. **`page.rs`, where the lines beyond the estimate sit.**
+   - **The worker's own account,** in the code worker's report at the head: 509 lines of code and 808 of tests, against the form's 240 and 560. The custodian's script counts the test module at 809. The worker's figure leaves out one line of the module.
+   - **By item.** The custodian counted by a script over `page.rs` at 7bd3bf22. Each item runs from its first doc or attribute line to the line before the next item's first line.
+   - **The product part,** lines 1 to 509: 509 lines, of which 132 are comment, 35 blank and 342 code. The estimate was 240.
+
+     | Item | Lines |
+     |---|---|
+     | the module's doc comment (1 to 30) | 30, of which 28 comment |
+     | the `use` lines (31 to 46) | 16 |
+     | `InFlight`, `Waiting`, `State`, `Pages` and `impl Default for Pages` (47 to 91) | 45, of which 8 comment |
+     | `StopFn`, `LogFn`, `EndParts` and `Settled` (92 to 121) | 30, of which 12 comment |
+     | the four guards `Ticket`, `WaitGuard`, `EndGuard` and `LateGuard`, each with its `Drop` (122 to 185) | 64, of which 9 comment |
+     | `fn cancelled` (186 to 191) | 6, of which 2 comment |
+     | `impl Pages` (192 to 442), below | 251, of which 56 comment |
+     | `fn close_one` (443 to 455) | 13, of which 2 comment |
+     | `fn run_end` (456 to 509) | 54, of which 15 comment |
+
+     Inside `impl Pages`:
+
+     | Method | Lines |
+     |---|---|
+     | the opening line, `new`, `lock`, `bump` and `change` (192 to 212) | 21 |
+     | `admit` (213 to 257) | 45 |
+     | `try_admit` (258 to 284) | 27 |
+     | `settle` (285 to 351) | 67 |
+     | `forget` (352 to 359) | 8 |
+     | `page_started` (360 to 397) | 38 |
+     | `cancel`, with the closing brace (398 to 442) | 45 |
+
+   - **The test module,** lines 510 to 1318: 809 lines. The estimate was 560.
+     - **The rig:** 377 lines, of which 18 are comment.
+
+       | Item | Lines |
+       |---|---|
+       | the `use` lines (512 to 533) | 22 |
+       | `HARNESS_BOUND` and `STYLE` (534 to 539) | 6 |
+       | `Latch` and its `impl` (540 to 569) | 30 |
+       | `Mode` (570 to 584) | 15 |
+       | `TestArm`, `HeldWatch` and their four `impl`s (585 to 633) | 49 |
+       | `Seen` and its `impl` (634 to 653) | 20 |
+       | `Rig`, `fn rig` and `impl Rig` (654 to 709 and 730 to 872) | 199 |
+       | `poll`, `ready` and `assert_pending` (710 to 729) | 20 |
+       | `held_open` (873 to 888) | 16 |
+
+     - **The tests:** 429 lines in 14 test functions, of which 12 lines are comment.
+
+       | Test | Lines |
+       |---|---|
+       | `a_page_end_closes_its_opens_and_frees_the_lock` | 21 |
+       | `a_page_end_frees_the_lock_after_the_close` | 15 |
+       | `an_open_settled_after_its_page_ended_is_closed` | 35 |
+       | `the_gate_waits_for_ends_earlier_opens_and_late_closes` | 63 |
+       | `a_name_the_page_closed_is_not_closed_again` | 19 |
+       | `a_page_end_cancels_registered_publishes` | 16 |
+       | `the_gate_cancel_is_the_kernels_cancelled_refusal` | 34 |
+       | `a_cancel_at_the_gate_and_the_kernels_other_answers` | 82 |
+       | `a_second_reload_ends_the_ending_pages_gate_waiters` | 20 |
+       | `a_panic_in_the_end_still_opens_the_gate` | 15 |
+       | `page_started_returns_and_starts_the_end_on_a_poisoned_lock` | 27 |
+       | `a_ticket_dropped_unsettled_does_not_hold_the_gate` | 12 |
+       | `a_gate_waiting_future_dropped_leaves_no_entry_to_cancel` | 17 |
+       | `a_reopen_behind_an_earlier_pages_reopen_waits_then_opens` | 53 |
+
+     - **The module's frame:** 3 lines (510, 511 and 1318).
+
+4. **The reason.** `page.rs` runs 518 lines past its two estimates: 269 in the product part and 249 in the test module.
+   - The product part's 269 are 167 comment and blank lines, and 102 code lines beyond the 240.
+   - In the test module, the 14 tests take 429 lines, 131 under the 560. The rig's 377 lines and the module's 3 frame lines make up the rest.
+
+   Whether the 342 code lines are the design §2 states is the question of ADV-2026-11-27-06 item 3, which both gates answer.
+
+5. **Three means that the words of §2 do not name** (ADV-2026-11-27-07 items 1 and 2). By that ruling they are read as inside §2 items 3, 4, 7 and 8. They are not class 9.
+   - `projects_of` in `commands.rs`;
+   - the `host` parameter of `open_project`;
+   - `start_page_end` in `lib.rs`.
+
+6. **The gates.**
+   - Both gates answer ADV-2026-11-27-06 item 3's question in so many words.
+   - Both read ADV-2026-11-27-07 item 3 (a) to (d).
+   - Both give their words on the security posture (ADV-2026-11-26-18).
+   - What still stands is ADV-2026-11-27-06 item 5.
+
+Read the last amendment first.
