@@ -455,3 +455,21 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
 4. **The ceiling** is restated to 280 changed lines over 7 files before this commit, under ADV-2026-11-26-25 item 10 (§7).
 5. **The finding for milestone 5's second part** (ADV-2026-11-26-25 item 6; §9c) is in the summary of the PLAN node `shell-migration-milestone-5`, from 97fe4f313c1157ffad147a7fcd48d1f8fd2bdd19.
 6. **No span hashes.** The form writes its code lines in words and cites its forms and documents by section (its Authority and Drafted by lines). It has no `path:line` cite to hash: verify-cites's recognizer, run by script over the whole text, found none, and neither did a scan for bare `:n`.
+
+## Amendment 2 — 2026-11-27 — the custodian's: the base under ADV-2026-11-27-08 item 4, before any code
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The ruling.** ADV-2026-11-27-08 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-08-readings-on-363-and-366-right-the-build-gates-of-the-identity-route-and-b-in-two-parts-a-starts-on-pr-as-head-the-order-for-the-places.md`), item 4, replaces the sentence of ADV-2026-11-26-08 item 3 that made A's code wait for PR A's reviewer's second attempt. A is built on PR A's present head with PR 365's present head in, under the five conditions of ADV-2026-11-26-24, commit T first (ADV-2026-11-26-25). A head of either that moves comes in by a merge commit, with the reviewer's narrow read (ADV-2026-11-27-08 item 2).
+2. **What changes, with no line edited.** The Base line at the form's head, §9a's Base and Runs, the stops on the code and the runs, and §8 item 12 no longer wait for PR A's reviewer's second attempt: "Once PR A's reviewer has passed its second attempt" and "no code before PR A's reviewer has passed its second attempt" no longer hold A's code.
+3. **The base.**
+   - By `git merge-base --is-ancestor`, PR A's head d6c2daf69eb500027197945f5a4302f0508e0f69 does not hold PR 365's head 639a96cc25873c99d606b4d75541bd8f3de37543.
+   - The custodian merged 639a96cc25873c99d606b4d75541bd8f3de37543 into d6c2daf69eb500027197945f5a4302f0508e0f69 on the branch `cut/a-second-save-is-announced`, at f64fac32f3c75da5b4ea57e5b38eee89b92ec22a, with no conflict. That commit is the base.
+   - By git, the patch-id of `git diff d6c2daf6 f64fac32` equals that of `git diff 2095a7ac 639a96cc`: PR 365's commits since the head PR A held, 8 files, 36 insertions and 22 deletions.
+   - By git, the patch-id of `git diff 7dbf2f3e f64fac32` equals that of `git diff 806ad308 d6c2daf6`: from the read checkout's merge, which the form gates read, the base differs by PR A's own move only. 7dbf2f3e is still never the base.
+4. **The custodian's reading, sent to the advisor.**
+   - §9a's "A makes no merge of PR 365 of its own" is read as the worker's rule. The custodian's merge before any code, recorded here, is how PR 365's present head is in.
+   - The worker's `--is-ancestor` check reads 639a96cc25873c99d606b4d75541bd8f3de37543 against f64fac32f3c75da5b4ea57e5b38eee89b92ec22a.
+   - The reviewer's narrow read of this merge (ADV-2026-11-23-15 item 4) comes before A's build gates, in a reviewer's place.
+5. **The order.** A's code comes in the places' order (ADV-2026-11-27-08 item 5): after B's read parts, or earlier in a place that the cap on the strongest model keeps free, if its worker's class allows it. Only record commits stand between the base and commit T (§9a).
+6. **What stands.** No app start before the port is free and the tester's start is filed; E-A1's run at T as soon as it is; and the stop if that run ends green, or red for another reason (§9a's Runs; ADV-2026-11-26-24 item 2).

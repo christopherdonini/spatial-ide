@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `cf4677a9adb722d3d65a4bb734389b4aa650d652b755b16bb8a3b7d406296943`) at `2026-11-27T03:36:44.990Z`.
+Generated from `PLAN.yaml` (sha256 `04851e39946ee60e20d1fc617f6d0c30f4c517d6ab3238a283a5c00da6a69134`) at `2026-11-27T03:57:07.984Z`.
 
 ## 1. Next
 
@@ -67,6 +67,7 @@ Generated from `PLAN.yaml` (sha256 `cf4677a9adb722d3d65a4bb734389b4aa650d652b755
 - **relink-after-refusal-at-the-recorded-place** — After a reopen is refused because its data file is not at the place the project folder records, the shell offers to choose the file again (node f of ADV-2026-11-21-15 item 4 (iv), KNOWN-LIMITATIONS item 73) — evidence: branch `cut/relink-after-refusal`
 - **command-bar-enter-after-an-applied-result** — An Enter that lands after an applied filter result and before its render puts the applied text back in the command bar, can show the busy line with nothing pending, and leaves later presses refused (the held-Enter finding, ADV-2026-11-23-11 item 5) — evidence: branch `cut/command-bar-enter-after-applied`
 - **reload-ends-the-old-pages-opens** — A reload of the main window ends the old page opens, so the project the old page saved or reopened opens again with no lock refusal (finding B of Part AD; ADR-037) — evidence: branch `cut/reload-ends-the-old-pages-opens`
+- **a-second-save-is-announced** — A second save of the project is announced: its notice is a new element and carries the save time, and something true on the screen differs from the last save (finding A of Part AD) — evidence: branch `cut/a-second-save-is-announced`
 - **property-testing-trial-proptest-and-fast-check** — A property-testing trial: proptest and fast-check as dev-dependencies only, three properties with bounded cases, each shown failing on a deliberate break, the seeds kept as regressions, a consult after one month (the human message of 2026-11-22, item 3; the draft ADV-2026-11-22-03) — evidence: branch `cut/property-testing-trial`
 
 ## 6. Proposed / unscheduled
@@ -145,7 +146,6 @@ Generated from `PLAN.yaml` (sha256 `cf4677a9adb722d3d65a4bb734389b4aa650d652b755
 - **verify-test-claims-and-verify-mutation-read-files-over-one-mebibyte** — verify-test-claims and verify-mutation read a file over one mebibyte through git: the buffer option for their two git reads (the advisor ruling ADV-2026-11-15-09 item 5, proposed, unplaced) (phase `prototype`) — never queued until placed
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
 - **partitioned-ordinal-refusal-opens-the-identity-form** — A partitioned source is refused by name before any identity is read, and the engine message and the shell guidance stop offering a declaration that cannot work (re-aimed by ADV-2026-11-23-27 item 1) (phase `prototype`) — never queued until placed
-- **a-second-save-is-announced** — A second save of the project is announced: its notice is a new element and carries the save time, and something true on the screen differs from the last save (finding A of Part AD) (phase `prototype`) — never queued until placed
 - **app-log-folder-shared-with-test-runs** — The app session-log folder does not follow a suite LOCALAPPDATA, so the test runs logs and the human sitting logs share one folder, told apart by their stamps alone (phase `prototype`) — never queued until placed
 
 ### Unscheduled

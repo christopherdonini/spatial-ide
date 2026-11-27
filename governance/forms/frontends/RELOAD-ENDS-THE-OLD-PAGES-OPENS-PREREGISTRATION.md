@@ -850,3 +850,17 @@ Read the last amendment first.
    - What still stands is ADV-2026-11-27-06 item 5.
 
 Read the last amendment first.
+
+## Amendment 4 — 2026-11-27 — the custodian's: the build gates in two parts (ADV-2026-11-27-08 item 3), before either gate
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The ruling.** ADV-2026-11-27-08 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-08-readings-on-363-and-366-right-the-build-gates-of-the-identity-route-and-b-in-two-parts-a-starts-on-pr-as-head-the-order-for-the-places.md`), item 3: this piece's two build gates are held in two parts, as PR 361's narrow read was (ADV-2026-11-23-12 item 2). Its item 5 places their read parts after the identity route's.
+2. **What changes, with no line edited.** §10's list headed "Suites, green before either build gate" changes in time only, and for its tester's series alone: `project.mjs` at the red commit and at the head, and the other e2e suites the same series runs at the head. Every other item on that list stays green before the read part.
+3. **The read part.** Each gate reads or runs everything that starts no app: the diff against this form; the unit tests and their mutations, observed again inside the machine's holds; the clause checks of every ruled string and document; the questions of ADV-2026-11-27-06 item 3 and ADV-2026-11-27-07 item 3 (Amendment 3); and its words on the security posture. Its report is filed as the read part, with its findings.
+4. **The run part.** When the port has served it, each gate reads the tester's series, red at f73dfed342bb504949c3d8172c3339bef1ae8b46 and green at the head, and gives its verdict. Before that the gate is not complete and has no gate-log verdict.
+5. **Findings of the read part** are corrected before the series runs, so that the series runs once, at the head the gates will pass. A correction that changes code is read by the same gate in its run part.
+6. **What stands.** ADV-2026-11-26-24 item 2: if the red run ends green, or red for another reason, the piece stops and goes to the advisor, the read part with it.
+7. **The head** the read parts read is 7bd3bf2269d058bf454d936ae06d4a8e08d88ec4 (Amendment 3), or a later head recorded by amendment.
+
+Read the last amendment first.

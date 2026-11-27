@@ -1449,3 +1449,16 @@ Nothing above is edited.
 4. **E-1 and both gates** read this head or a later one. Text-id takes 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9 in before its own gates (ADV-2026-11-27-01 item 7; ADV-2026-11-27-02 item 4).
 
 Read the last amendment first.
+
+## Amendment 11 — 2026-11-27 — the custodian's: the build gates in two parts (ADV-2026-11-27-08 item 3), before either gate
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The ruling.** ADV-2026-11-27-08 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-08-readings-on-363-and-366-right-the-build-gates-of-the-identity-route-and-b-in-two-parts-a-starts-on-pr-as-head-the-order-for-the-places.md`), item 3: this piece's two build gates are held in two parts, as PR 361's narrow read was (ADV-2026-11-23-12 item 2). Its item 5 places their read parts after the case-fold gate and ahead of B's.
+2. **What changes, with no line edited.** The list headed "Suites, green before either gate" changes in time only, and for its e2e item alone (the admission e2e suite with E-1, a tester's series). Every other item on that list stays green before the read part.
+3. **The read part.** Each gate reads or runs everything that starts no app: the diff against this form; the unit tests and the mutations M-K1, M-S1, M-S2 and M-T1, observed again inside the machine's holds; and the clause checks of every ruled string and document (Amendment 9). Its report is filed as the read part, with its findings. M-E1 needs the app, so it belongs to the run part.
+4. **The run part.** When the port has served the tester's series, each gate reads it and gives its verdict. Before that the gate is not complete and has no gate-log verdict.
+5. **Findings of the read part** are corrected before the series runs, so that the series runs once, at the head the gates will pass. A correction that changes code is read by the same gate in its run part.
+6. **The head** the read parts read is 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9 (Amendment 10 item 4), or a later head recorded by amendment.
+
+Read the last amendment first.
