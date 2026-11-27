@@ -558,3 +558,25 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 4 — 2026-11-27 — the merge no longer waits for the tag (ADV-2026-11-27-04 item 4), and the merge-in: references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The rulings.** The human's message of 2026-11-26 approved ADV-2026-11-26-01 (`state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`). Read with ADV-2026-11-27-02 item 1, no merge into main waits for the v0.2 tag. ADV-2026-11-27-04 item 4 asks this form to record it. The closing amendment came before that ruling, so it is recorded here.
+2. **What changes, with no line edited:** the opening Merge line, §9a's Merge line and Amendment 3's Order line no longer wait for the tag. The merge still follows PRs 353, 358 and 359, the re-link (PR 363) and colour-by-refill (PR 365).
+3. **The merge-in.**
+   - Main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at 79f4380badd71679a0d28318b2f8514c7ab59bae (ADV-2026-11-26-15 item 4), over e4116cadbedcd6916dd38bab2681592909a85e4a.
+   - Its narrow read passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer-363-364-366.md`, row 930). 14 checks pass at 79f4380b, after a rerun of the checks that had failed on the rate limit (ADV-2026-11-27-03 item 4).
+4. **PR 365's head has moved.**
+   - This branch holds colour-by-refill at 2095a7ac471d2441fd8e054a448d334c7bcde455. PR 365's head is now 639a96cc25873c99d606b4d75541bd8f3de37543, four commits past it, one of them the fix c60660bd.
+   - By the custodian's reading of the rule this piece's base follows (ADV-2026-11-23-15 item 4), a held head that moves comes in by a merge commit, with the reviewer's narrow read.
+   - PR 365's series on the port may move that head again. So this branch takes it in once that series has settled it, and leaves draft after that read. This is sent to the advisor with this amendment.
+5. **The merge.**
+   - It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed (ADV-2026-11-27-02 item 1).
+   - It also waits for PR 365 and for the pieces before it in the merge order (ADV-2026-11-27-04 item 6).
+   - It does not go into `release/v0.2`.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `21a81a263518f1b03afea55e01eb54eab25601bd35543eabf922430cf230e326`) at `2026-11-27T03:19:18.892Z`.
+Generated from `PLAN.yaml` (sha256 `cf4677a9adb722d3d65a4bb734389b4aa650d652b755b16bb8a3b7d406296943`) at `2026-11-27T03:36:44.990Z`.
 
 ## 1. Next
 
@@ -13,7 +13,6 @@ Generated from `PLAN.yaml` (sha256 `21a81a263518f1b03afea55e01eb54eab25601bd3554
 - **lod-tier-identity-binds-file-name** — The LOD tier builder takes the identity name DuckDB bound and looks it up among the file's own footer names, so a renamed identity column reaches a different column there (lane `kernel-protocol`, order null, budget 60 min)
 - **publish-approval-kernel-parity** — Kernel parity for the publish approval's column line: the kernel's approval prompt carries the column list and prints it, and the shell mirrors it, so the CLI and the shell show the same facts (option (E); S3, not for v0.2) (lane `kernel-protocol`, order null, budget 0 min)
 - **skp-line-cites-outside-close-races** — Stale line cites into kernel/src/skp.rs outside kernel-close-races-followups files -- shell streaming, App.tsx, pool_poll.rs, src-tauri lib.rs, the P4 corpus test and the persisted-artifacts test (lane `kernel-protocol`, order null, budget 0 min)
-- **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) (lane `kernel-protocol`, order null, budget 60 min)
 - **entry-79-b1-consult-items** — Entry 79 — three items routed for Brief B stage B1's close (lane `kernel-protocol`, order 3, budget 30 min)
 - **colour-by-refill-keeps-the-view** — A Colour-by on a new column while attributes are not held refills the map without fitting the camera again (its form decides the shape and may edit residency/) (lane `shell`, order null, budget 0 min)
 - **recentre-stall-three-observations** — The re-centring stall report's three proposed observations (a timer around the layer build, deck's attribute-update counters, the render-trace layers line against the gap's edges), as one node behind the S1 fix (S3) (lane `shell`, order null, budget 90 min)
@@ -55,6 +54,7 @@ Generated from `PLAN.yaml` (sha256 `21a81a263518f1b03afea55e01eb54eab25601bd3554
 
 - **clippy-deny-warnings-workspace** — The workspace clippy diagnostics fixed, so cargo clippy over every target with -D warnings exits 0 (the cloud Linux run lists 48 distinct) — evidence: branch `cut/clippy-deny-warnings-workspace-12c`
 - **cancel-requested-stamped-before-the-flag-and-the-attempts-wrappers** — The cancel tests: the two ATTEMPTS wrappers in kernel/tests/skp_admission.rs and kernel/tests/skp_filter_cancellation.rs, and engine/src/cancel.rs, which publishes the cancelled flag before it stamps CANCELLATION_REQUESTED (the human message of 2026-11-22, item 1; ADV-2026-11-22-01 item 3) — evidence: branch `cut/cancel-stamp-order`
+- **windows-case-fold-non-ascii** — The audit case policy on Windows folds non-ASCII letters as NTFS does, so a profile path differing only in non-ASCII case cannot escape the user-home redaction (wave 3's 1c-2 correction, S2, code-path-only) — evidence: branch `cut/windows-case-fold-non-ascii`
 - **b2-piece-1c-save-and-reopen** — B2 piece 1c -- Save project (linked) and reopen: the project's identity, the project file, the changed-file notice and the saved-here mark (step 3, the recovery offer after a crash, split to b2-piece-1c-step-3-recovery-offer on 2026-11-16) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **record-step-style-match-widening** — record_step admits a style.set match value on fillColor, with the step's dependencies naming the match column and its type (milestone 4's OPEN-4 (A′)), carried in piece 1c's step 1 by class 9 (the 1c form's Amendment 7) — evidence: branch `cut/b2-piece-1c-save-and-reopen`
 - **opened-of-panic-sites-free-the-lock** — A panic while the reopen opened reply is built frees the project lock and closes the dataset (node d of ADV-2026-11-21-15 item 4 (iii), the four panic sites of opened_of) — evidence: branch `cut/opened-of-panic-frees-the-lock`

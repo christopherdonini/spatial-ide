@@ -798,3 +798,24 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-27 — the merge no longer waits for the tag (ADV-2026-11-27-04 item 4), and the merge-in: references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The rulings.** The human's message of 2026-11-26 approved ADV-2026-11-26-01 (`state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`). Read with ADV-2026-11-27-02 item 1, no merge into main waits for the v0.2 tag. ADV-2026-11-27-04 item 4 asks this form to record it. The closing amendment came before that ruling, so it is recorded here.
+2. **What changes, with no line edited:** §9's Merge line, the two Merge lines in the section headed Note 2026-11-23, and Amendment 5 item 11 no longer wait for the tag. The merge still follows PR 350, its base, and is still made by a merge commit.
+3. **The merge-in.**
+   - Main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at a30f5fe866ada34a5397a2f7b60a41f852067cc2 (ADV-2026-11-26-15 item 4), over 50c7c3314fe9d9b5afe7fd78417c5afd0c7992ba.
+   - Its narrow read passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer-363-364-366.md`, row 929). 14 checks pass at a30f5fe8, after a rerun of the checks that had failed on the rate limit (ADV-2026-11-27-03 item 4).
+   - PR 350's head has moved since Amendment 4, by its own merge-in of the same main commit only. The branch holds both sides.
+   - The read's advisory under check 3: main's records cite three files that this piece lengthens. Those cites are a record matter for whichever lands second.
+4. **The body** is brought to the head: the merge-in and its row, and the merge with no tag wait.
+5. **The merge.**
+   - It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed (ADV-2026-11-27-02 item 1).
+   - It also waits for PR 350 and for the pieces before it in the merge order (ADV-2026-11-27-04 item 6).
+   - It does not go into `release/v0.2`.
+
+Read the last amendment first.
+
+Nothing above is edited.

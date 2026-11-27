@@ -772,3 +772,25 @@ Written after both build gates' outcomes were seen. References and hashes only, 
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5 — 2026-11-27 — the merge no longer waits for the tag (ADV-2026-11-27-04 item 4), and the merge-in: references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The rulings.** The human's message of 2026-11-26 approved ADV-2026-11-26-01 (`state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`). Read with ADV-2026-11-27-02 item 1, no merge into main waits for the v0.2 tag. ADV-2026-11-27-04 item 4 asks this form to record it. The closing amendment came before that ruling, so it is recorded here.
+2. **What changes, with no line edited:**
+   - §8 item 12, and the same item in Amendment 1's part 2: a merge before the tag without the human's word is no longer a block. A squash or rebase merge still is.
+   - The opening Merge line, which cites ADV-2026-11-21-15 item 1 (the tag or the human's word), is read the same way. This is the custodian's reading, sent to the advisor with this amendment.
+3. **The merge-in.**
+   - Main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at bf11959dc4f4a83bd3ce10de73d8b35062ed7b16 (ADV-2026-11-26-15 item 4), over the gates' words commit e4e6493d92ec941425dd6566c0a4ec154c7eb633.
+   - Its narrow read passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer-363-364-366.md`, row 928). 14 checks pass at bf11959d.
+   - The heads of PRs 353, 358 and 359 have moved since Amendment 3, each by its own merge-in of the same main commit only. The branch holds both sides of each.
+4. **The body** is brought to the head: the commits through e4e6493d, the gates (rows 867 and 868), Amendment 4, and the merge-in.
+5. **The merge.**
+   - It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed (ADV-2026-11-27-02 item 1).
+   - It also waits for PRs 353, 358 and 359 (Amendment 3), and for the pieces before it in the merge order (ADV-2026-11-27-04 item 6). If PR 359's head moves, the branch takes it in by a merge commit, with the reviewer's narrow read (Amendment 3 item 5).
+   - It does not go into `release/v0.2`.
+
+Read the last amendment first.
+
+Nothing above is edited.
