@@ -58,16 +58,20 @@ export function fieldValue(refusal: FormattedRefusal, key: string): string | und
  *   reinterpreted -- protective behavior, not an error in the operator's file.
  * - `engine.source_changed` (Brief A boundary 4): states what happened and what to do, and nothing
  *   that is not true at this commit -- see its own case below for the human's round-5 ruling.
- * - `engine.identity_ordinal_partitioned_unsupported` (boundary 7, P3): states that a partitioned
- *   source has no single-file row position, and names the two real routes forward.
+ * - `engine.identity_ordinal_partitioned_unsupported` (boundary 7, P3): states that this app cannot
+ *   open a folder or a pattern of files, names the single-file route, and says that declaring an
+ *   identity column does not change the refusal (the refusal comes before any identity is read).
  * - `publish.geographic_crs_not_publishable` (boundary 8, held at P2 and closed at P3).
  * - `engine.internal_inconsistency` (the retyped provenance arm): a defect in this program, not in
  *   the operator's file, and the guidance says so rather than sending them to look at their data.
  *
- * **All four of the strings added here are the human's at P6** (`ADMISSION-PREREGISTRATION.md`
- * §12d's "the four new user-visible states whose strings are sighted at P6"). Three are
- * placeholders written so the states exist and can be read end to end; **their wording is not
- * settled** and no test asserts them verbatim.
+ * **All four of the strings added here were set for the human's sight at P6**
+ * (`ADMISSION-PREREGISTRATION.md` §12d's "the four new user-visible states whose strings are
+ * sighted at P6"). The guidance for `engine.identity_ordinal_partitioned_unsupported` is now the
+ * advisor's wording, under ADV-2026-11-23-27 item 7 and the human's delegation of 2026-11-13; the
+ * other three are unchanged. Two of them, `publish.geographic_crs_not_publishable` and
+ * `engine.internal_inconsistency`, are placeholders written so the states exist and can be read end
+ * to end; **their wording is not settled** and no test asserts them verbatim.
  *
  * **`engine.source_changed` is the exception, and is asserted verbatim by its test.** The human
  * ruled its exact sentence on 2026-09-16 (round 5, item 1) because the placeholder described
@@ -117,10 +121,18 @@ export function refusalGuidance(code: string): string | null {
         "cleared, and features here can no longer be identified; reopen the dataset to continue."
       );
     case "engine.identity_ordinal_partitioned_unsupported":
+      // The gap the operator can see: in the shell on Windows this refusal is reached only through
+      // the dev-only `openPath` hook, from another client (section 0, Reach, of
+      // governance/forms/frontends/PARTITIONED-ORDINAL-REFUSAL-OPENS-THE-IDENTITY-FORM-PREREGISTRATION.md),
+      // or when a file whose name holds `[`, `]`, `{` or `}` is removed after it was picked or checked
+      // and before its open runs (timing inside one open; step 3 of `partitioned_source_detail` in
+      // engine/src/dataset.rs), where this text's "folder or a pattern" does not fit what was picked.
+      // `AdmissionPanel` opens no form for this code (`formFamilyForCode`): the declaration form
+      // sends the same path and is refused again. A single file whose name holds `*` or `?` is
+      // also refused, and this text does not name that case; Windows allows no such name.
       return (
-        "This source is spread across more than one file. Without an identity column carried in " +
-        "the data, a feature's identity here would have to be its position -- and a position is " +
-        "only meaningful within one file. Open a single file, or declare an identity column."
+        "This app cannot open a folder or a pattern of files, and " +
+        "declaring an identity column does not change that. Open a single file instead."
       );
     case "publish.geographic_crs_not_publishable":
       return (
