@@ -198,6 +198,70 @@ async function waitForMountReady(page, timeoutMs = MOUNT_READY_TIMEOUT_MS) {
   );
 }
 
+/** Harness bound on `openAnotherAndWaitForClose`'s poll for the close's row -- a deadline on a real signal, never a duration claim (ADR-018) and never a retry. */
+const CLOSE_ROW_TIMEOUT_MS = 30_000;
+
+/**
+ * The app's Console as the page shows it: every row, in order, with its header, request text and outcome. Expands the Console and its
+ * groups first, as `reopen.mjs`'s `readConsole` does. A reading with no row for a close is a harness finding, not a pass.
+ */
+async function readConsoleRows(page) {
+  await page.evaluate(() => {
+    const panel = document.querySelector(".console-disclosure");
+    if (panel && panel.getAttribute("aria-expanded") !== "true") panel.click();
+  });
+  await page.evaluate(() => document.querySelectorAll('.console-group-header[aria-expanded="false"]').forEach((el) => el.click()));
+  return page.evaluate(() =>
+    [...document.querySelectorAll(".console-entry")].map((el) => ({
+      header: el.querySelector(".console-entry-header")?.textContent ?? el.querySelector(".console-entry-prose")?.textContent ?? null,
+      request: el.querySelector(".console-request-text")?.textContent ?? null,
+      outcome: el.querySelector(".console-outcome")?.textContent ?? null,
+    }))
+  );
+}
+
+/**
+ * Opens `path` -- a file that admits -- to replace the dataset in the window, and waits for the close of the dataset it replaced.
+ * The shell closes a replaced open from an effect and does not wait for it, and a project a first save wrote stays held by the kernel
+ * until that close, so a reopen of the saved folder made before it is refused as `skp.project_open_elsewhere`. The signal is the one
+ * `reopen.mjs` waits for at its R5: a new `close_dataset` row at `ok` in the Console, whose request text is not among those read before the
+ * open (each close names its own handle, so the texts differ). The poll runs to `CLOSE_ROW_TIMEOUT_MS` and then fails the step by name; the
+ * caller's own call that needed the close is never retried. The Console is left as it was found: expanded only for the reads.
+ * Callers: `TEXTID'` (d), and the C1 piece's `TEXTID-C1` (3) and (4) once that branch has this function.
+ */
+async function openAnotherAndWaitForClose(page, stepId, path) {
+  const wasExpanded = await page.evaluate(() => document.querySelector(".console-disclosure")?.getAttribute("aria-expanded") === "true");
+  try {
+    await readConsoleRows(page); // expands the Console; the rows are read again once it has
+    const expanded = await waitForCondition(
+      () => page.evaluate(() => document.querySelector(".console-disclosure")?.getAttribute("aria-expanded") ?? null),
+      (v) => v === "true",
+      10_000
+    );
+    if (!expanded.ok) throw new Error(`${stepId}: the Console never expanded within 10s, so the closes before the open could not be read (last aria-expanded: ${JSON.stringify(expanded.last)})`);
+    const known = (await readConsoleRows(page)).filter((row) => row.header === "close_dataset").map((row) => row.request);
+    const opened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), path);
+    if (opened.kind !== "admitted") throw new Error(`${stepId}: openPath(${path}) returned ${JSON.stringify(opened)}, expected {kind:"admitted"}`);
+    const closed = await waitForCondition(
+      async () => (await readConsoleRows(page)).find((row) => row.header === "close_dataset" && row.outcome === "ok" && !known.includes(row.request)),
+      (row) => row !== undefined,
+      CLOSE_ROW_TIMEOUT_MS,
+      250
+    );
+    if (!closed.ok) {
+      throw new Error(`${stepId}: no new close_dataset row at ok appeared in the Console within ${CLOSE_ROW_TIMEOUT_MS}ms of opening ${path}, its request not among the ${known.length} read before the open`);
+    }
+    return closed.last;
+  } finally {
+    if (!wasExpanded) {
+      await page.evaluate(() => {
+        const panel = document.querySelector(".console-disclosure");
+        if (panel && panel.getAttribute("aria-expanded") === "true") panel.click();
+      });
+    }
+  }
+}
+
 function fractionOf(summary) {
   return summary.totalPixels > 0 ? summary.nonBackgroundCount / summary.totalPixels : 0;
 }
@@ -567,8 +631,9 @@ async function stepDeclareSession(page, consoleHandle) {
  * `TEXTID'` (E-1 of `text-id-opens-for-the-session-by-row-position`): the choice to open a file whose own `id` column cannot serve by row position, through the real DOM.
  * (a) `text-id-no-integer-refused.parquet` (a text `id` and no other integer column) refuses as `engine.identity_unusable` with no candidate to declare; the choice (S-1)
  * is offered; a click opens the file on the session tier, the summary shows S-3 beside the engine's statement, features draw, and the filter `id = 'key-1'` is refused as
- * `skp.filter_identity_alias_ambiguous`. (d) The project is saved to a scratch folder: `project.spatial` on disk holds `"identity": null` and no `set_aside` member; the
- * reopen is refused for the same `id`, only the choice is offered, and a click opens it with S-3. (b) `dupkey-refused.parquet` (a repeated `id`) is offered the choice and,
+ * `skp.filter_identity_alias_ambiguous`. (d) The project is saved to a scratch folder: `project.spatial` on disk holds `"identity": null` and no `set_aside` member. The saved
+ * open of (a) is still in the window and the kernel holds the project it wrote, so before the reopen the step opens `no-id-column.parquet` (it admits) and waits, through
+ * `openAnotherAndWaitForClose`, for the close of (a)'s open; the reopen is made once and is not retried. It is then refused for the same `id`, only the choice is offered, and a click opens it with S-3. (b) `dupkey-refused.parquet` (a repeated `id`) is offered the choice and,
  * chosen, opens. (c) `no-id-column.parquet` opens with no choice offered and no S-3. Every button is the page's own and is clicked, never `openPath` with an option, so the
  * click that sets the choice is the one the user makes. This step is written to be run on the packaged build; the 180 s bounds are harness bounds, not durations.
  */
@@ -626,6 +691,8 @@ async function stepTextid(page, consoleHandle) {
     const text = readFileSync(file, "utf8");
     if (!/"identity":\s*null/.test(text)) throw new Error(`TEXTID' (d): project.spatial holds no "identity": null`);
     if (text.includes("set_aside")) throw new Error("TEXTID' (d): project.spatial holds a set_aside member");
+    // The saved open of (a) is still in the window and holds the project; another file replaces it, and the reopen waits for the close of (a)'s open.
+    await openAnotherAndWaitForClose(page, "TEXTID' (d)", FIXTURE_NO_ID_COLUMN);
     const reopened = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), folder), 120_000, "e2eOpenProjectFolder");
     if (reopened !== "engine.identity_unusable") throw new Error(`TEXTID' (d): the reopen answered ${JSON.stringify(reopened)}, expected "engine.identity_unusable"`);
     if ((await noCandidates()) !== 0) throw new Error("TEXTID' (d): the reopen's refusal opened a declaration form; only the choice is offered");
@@ -648,7 +715,7 @@ async function stepTextid(page, consoleHandle) {
   if (!summary.ok) throw new Error(`TEXTID' (c): no "Session identity" row equal to the engine's statement (last: ${JSON.stringify(summary.last)})`);
   if (summary.last.text.includes(SET_ASIDE_CHOICE_LINE)) throw new Error("TEXTID' (c): the summary shows S-3 for a file whose choice was never made");
   if ((await offered()) !== null) throw new Error("TEXTID' (c): the choice was offered beside an admission");
-  return `(a) text-id-no-integer-refused.parquet: refused with no candidate, the choice offered and clicked, opened with S-3, drawn, the filter naming id refused as skp.filter_identity_alias_ambiguous; (d) project.spatial holds "identity": null and no set_aside, the reopen refused with only the choice, opened with S-3 on a click; (b) dupkey-refused.parquet opened by the choice; (c) no-id-column.parquet opened with no choice and no S-3`;
+  return `(a) text-id-no-integer-refused.parquet: refused with no candidate, the choice offered and clicked, opened with S-3, drawn, the filter naming id refused as skp.filter_identity_alias_ambiguous; (d) project.spatial holds "identity": null and no set_aside, another file opened and the close of (a)'s open seen, the reopen refused with only the choice, opened with S-3 on a click; (b) dupkey-refused.parquet opened by the choice; (c) no-id-column.parquet opened with no choice and no S-3`;
 }
 
 /**
