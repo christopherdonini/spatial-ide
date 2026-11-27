@@ -63,7 +63,7 @@ At a main-window `Started`, the binding:
 
 The rule is that **a call begun under an ended page leaves nothing open.**
 - Each `open_dataset` or `open_project` command notes which page it began under.
-- When its reply is `Opened` and that page has ended, the binding closes the returned name by §3 (ii) and then runs `release_ended`. The name never enters the current page's opens.
+- When its reply is `Opened` and that page has ended, the binding closes the returned name by the host's close and then runs `release_ended`, when `Projects` exists. It stops no pool poll, because none is started for a name that enters no page's opens. The name never enters the current page's opens.
 - Checking the page and entering the name happen in one critical section with §3's taking of the old record. A reply therefore lands either among a live page's opens or in the late-close path, never in neither.
 - The reply then goes back as Tauri delivers it; the page that sent the call is gone.
 
@@ -89,7 +89,7 @@ The rule is that **a reopen is never refused because of an earlier page.**
   - each such open's late close and `release_ended` (§4) has run.
 - **The wait is part of the open call.**
   - The user sees the open's ordinary waiting state.
-  - A `cancel` of the new open's own key ends the wait. The binding answers it as for an open in flight, and the open ends as a cancelled open ends.
+  - A `cancel` of the new open's own key ends the wait. The binding answers it as for an open in flight, and the open ends as a cancelled open ends. One case inside a single request round trip is not covered: when the open leaves the gate after the kernel has answered `unknown` and before the binding looks for the key, the binding answers `unknown` and the open goes on.
   - The binding puts that `cancel` to the kernel first, so the kernel's version check and its lookup by the handle's shape are unchanged. Only when the kernel answers `unknown` for a key that the binding itself holds waiting at the gate does the binding answer `requested`.
   - The open cancelled at the gate returns the refusal that a cancelled open returns from the kernel. The binding makes no code and no text of its own for it.
   - The wait never runs on the event loop's thread or the page's (docs/01, "Never block the canvas").
@@ -97,7 +97,7 @@ The rule is that **a reopen is never refused because of an earlier page.**
 
 ### 6. The first load and other windows (item 2 (c))
 
-- **The first load** is a `Started` like any other. No earlier page has opens, so the end closes and cancels nothing: it runs an empty `release_ended`, writes its session-log line with every count 0, and opens the gate. The hook runs only after `setup()` has managed the state it reads (`lib.rs:199-206`).
+- **The first load** is a `Started` like any other. No earlier page has opens, so the end closes and cancels nothing: it runs an empty `release_ended` when `Projects` exists, writes its session-log line with every count 0, and opens the gate. The hook runs only after `setup()` has managed the state it reads (`lib.rs:199-206`).
 - **A window other than the main one**: its page-load events end nothing, as today's label check already skips them (`lib.rs:222-224`).
 - **No second webview may be created** in this process until an amendment to this ADR keys page ownership by window.
 
