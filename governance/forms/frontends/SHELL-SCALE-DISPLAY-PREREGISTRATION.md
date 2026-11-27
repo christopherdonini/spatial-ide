@@ -1083,3 +1083,20 @@ Nothing above is edited.
     - the architect's narrow read of §2 at the base, with no verdict and no gate-log row (item 4). Its result goes in the next amendment, and the worker starts after it.
     - E-SCALE takes the last place on the port, after A's runs (item 7).
     - Words that no ruling holds go to the advisor before they are committed (item 8).
+
+## Amendment 9 — 2026-11-27 — the custodian's: the architect's narrow read of §2 at the base
+
+*References only. Nothing above is edited.*
+
+1. **The read** (ADV-2026-11-27-21 item 4) is filed at `state/consults/gates/2026-11-27-shell-scale-display-section-2-against-the-base-architect-read.md`, with no verdict and no gate-log row. It read the six files at 530d7b0eff587cce7c71da26295c5dfa2602b63c and the form at main 3bef44e9a439cbc089697826e6ab68edd565d09e.
+2. **What it found:** every §2 item can be built as written at the base, and nothing blocks. The symbols of item 4 still hold as §2 and §4 use them.
+3. **Class 3:** the moved lines are the read's table B.
+   - Each is cited `path:line @ 530d7b0eff587cce7c71da26295c5dfa2602b63c`, with no hash, until a commit on main holds it.
+   - They are adopted by reference, and no filed line is edited.
+4. **Checked by git** (0bcf5434 to 530d7b0e), for files the read did not open:
+   - `App.save.test.tsx`, `e2e/layout.mjs`, `e2e/lib.mjs` and `e2e/export-view.mjs` are unchanged;
+   - `canvas/WorkingCanvas.wiring.test.tsx` gained 159 lines.
+5. **Its item D** is the ids S-1 to S-4, which milestone 5 also uses at the base. It is with the advisor before the code (item 4). Its words are the architect's, and are not adopted here.
+6. **Next:**
+   - the advisor's answer on item D;
+   - then the worker, from 530d7b0e, with the suites that start no app run at the base first (Amendment 8 item 7).
