@@ -140,7 +140,9 @@ grant a second chance. When the ledger is not fresh, stderr carries
 `.claude/state/precompact-<session_id>.jsonl`, with these fields in this order: `at` (ISO-8601 UTC),
 `trigger` (a string as received, else `null`), `decision` (`allowed-fresh`, `allowed-second-chance`,
 `blocked` or `recorded-only`), `reason` (the freshness reason for `blocked` and `recorded-only`,
-else `null`) and `flushed_at` (the ledger block's value, else `null`). `custom_instructions` is
+else `null`) and `flushed_at` (the ledger block's value, else `null`).
+A call whose input carries agent_id (a subagent's compaction) is allowed without a freshness judgment or the block record; its line carries decision allowed-subagent, reason and flushed_at null, and a sixth field, agent_type (a string as received, else null).
+`custom_instructions` is
 never recorded. A line that cannot be written costs one stderr line
 (`precompact-flush: could not append the record line (<message>); the decision stands.`) and never
 changes the decision. A call that exits before the decision (the cloud guard, unparseable stdin, an
@@ -175,6 +177,8 @@ The age is the whole minutes, floored, from the block's `flushed_at` to now. The
 modified tracked files are the `git status --porcelain` lines not starting `??`. Each git call runs
 with the project root as its working directory, a 2000 ms timeout and no shell; a fact whose source
 failed prints `unknown`, never a number.
+
+With agent_id in its input it prints nothing and exits 0.
 
 ## Notification — `notify-telegram.mjs`
 

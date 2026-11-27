@@ -15,3 +15,29 @@ Out-of-scope: ADR: no status line or amendment; security: nothing ADR-020, ADR-0
 **The cancel branch's entries** (item 4) are not added here: this node's list starts empty. The cancel branch takes main in by a merge commit after this node merges, and one commit there adds its ten entries, under its own form's amendment.
 
 **Gating.** The reviewer alone (§21b), reading the Out-of-scope line first. The worker reports, by commit, the count by §21c's rule and each mutation's named failure; a count over 150 lines stops the piece, which then takes both gates (item 3), and a file outside the three stops it and comes to the custodian.
+
+### Amendment 1 — 2026-11-22 — the gate closed, for the merge check
+
+1. **The gate.** The reviewer alone. Attempt 1 at f912819f120a8434d385471b3eedb3d8f92b9274: FAIL on C1 (`state/consults/gates/2026-11-22-verify-cites-shortened-target-list-gate-reviewer.md`, sha256 a1dbdf7bdd5c243142d3f63596a280125fb0f579452dd0d258fc2c46d62b0605; gate-log row 822). The correction at 2069eb88b5e81d71c4097d9583320e9374fe93cf (`state/consults/2026-11-22-verify-cites-shortened-target-list-correction-1-worker-report.md`, sha256 89129410e93c58b0787b9a305b8f76c54d51af06bf91c6636fd3fcce740f6190). Attempt 2, the narrow read of the correction's code line (ADV-2026-11-22-05 item 4), at 2069eb88: PASS WITH NOTES, C1 closed (`state/consults/gates/2026-11-22-verify-cites-shortened-target-list-gate-reviewer-attempt-2.md`, sha256 c7d6a81267760b9a0b8fd5828b349d2d7c75aff42ba5b5e12f39ec9b8e454ad8; row 823).
+
+2. **Doc-1.** Attempt 2's one Documentation finding, a comment line, is applied in the reviewer's words by the custodian's script at e0c84fe2566f6c21161dbe5f2bca2b4ff46bf7b9, the PR's head. No code line changed, so no further read (ADV-2026-11-22-05 item 4).
+
+3. **The count.** `git diff --numstat 8ab25c9c...e0c84fe2`: 144 changed lines over the three Scope files (1 and 0, 50 and 6, 87 and 0), within the Scope line's 150.
+
+4. **The notes.** Attempt 1's notes, on the fifth entry error's missing test and on the correction worker's statement about M2, and attempt 2's notes stand as filed. None blocks.
+
+5. **CI at e0c84fe2**, read at 2026-11-22T12:27:09Z: six runs, all success: DCO sign-off 45021125292, Exposure scan 45021125256, Governance CI — plan, queue, site 45021120731, Governance CI — plan, queue, site 45021125246, Ported notices 45021120735, Ported notices 45021125245.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 2 — 2026-11-22 — merged
+
+1. **Merged** by the advisor by merge commit 7ca0a2fd12c0aa58aefcbca87e0cd37068816fdd, at 2026-11-22T12:50:31Z by GitHub, at the checked head e0c84fe2566f6c21161dbe5f2bca2b4ff46bf7b9; its verdict MERGE filed at `state/consults/merge-checks/PR-351-e0c84fe2566f.md`; main's CI at the merge commit green (4 runs, all success, read at 2026-11-22T12:57:08Z).
+
+2. The fifth entry error the form names, an entry not shaped as path, cite and commit, has no test of its own, as the advisor's message with the verdict asks this amendment to say. The cancel branch now takes main in by a merge commit, its form gaining the list file as an eleventh Scope path first (ADV-2026-11-22-10 item 4).
+
+Read the last amendment first.
+
+Nothing above is edited.

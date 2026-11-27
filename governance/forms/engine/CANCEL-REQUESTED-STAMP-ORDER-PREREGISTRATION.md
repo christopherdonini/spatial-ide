@@ -607,3 +607,57 @@ Made before any code. No outcome has been seen. The words are the architect's, f
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-22 — the shortened-target list joins the Scope as its eleventh file; the words commit
+
+By the advisor's rulings ADV-2026-11-22-10 item 4 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md`) and ADV-2026-11-22-13 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-13-the-cancel-gates-two-texts-for-one-place-the-architects-d1-and-d2-land-doc-1-met-by-them.md`), under the human's delegation of 2026-11-13.
+
+1. **The eleventh file.** `scripts/plan/verify-cites-shortened-target.json` joins §7's Scope as its eleventh file, for its `entries` array only. The node verify-cites-shortened-target-list added it (PR 351, merged by the advisor by merge commit 7ca0a2fd12c0aa58aefcbca87e0cd37068816fdd). The array gains ten entries, one for each unresolved cite in the build worker's report (`state/consults/2026-11-22-cancel-requested-stamp-order-build-worker-report.md`, its verify-cites bullet): seven in this form and three in the two consults it names. Each entry names the citing file, the cite's token as written, and the commit that the rule in the header of `scripts/plan/verify-cites.mjs` names. Nothing else in the file changes, and no cite in this form or in the two consults is touched.
+
+2. **The order.** First the branch takes main in by a merge commit, signed off, never a rebase. Then one commit adds the ten entries and nothing else. At that commit, `node scripts/plan/verify-cites.mjs` exits 0, and §4.5's green `verify-cites` is met there, not at 3f3820c9 (ADV-2026-11-22-10 item 5). If the run at the merge's head names an unresolved cite other than these ten, the worker stops and reports.
+
+3. **The count.** The entries are data, and they count as changed lines like any other line in the Scope. The line count is taken by `git diff --numstat origin/main...HEAD` over the eleven paths at a named commit. After the merge of main the three-dot range starts at the merged main commit, so main's own changes are not counted. The ceiling stays at 800 changed lines, and an overrun is still class 8. §8 item 11 reads the eleventh file as in Scope.
+
+4. **The words commit.** After the entries' commit, one commit applies the architect's D1 to D4 (`state/consults/gates/2026-11-22-cancel-requested-stamp-order-g1-architect.md`, its Documentation section), each in that report's words copied by script, and the clippy line the reviewer's check 9 names (`state/consults/gates/2026-11-22-cancel-requested-stamp-order-g1-reviewer.md`): `spins % 1024 != 0` becomes `!spins.is_multiple_of(1024)`, and nothing else on the line changes. D1 and D2 are taken in place of the reviewer's DOC-1 for the same two comments, by ADV-2026-11-22-13. The closing amendment records DOC-1 as met by them, and that the choice between the two authors' words is that ruling's.
+
+5. **The later commits' read.** The reviewer reads the merge commit, the entries' commit, the words commit and any correction commit once, narrowly (ADV-2026-11-22-10 item 5). For each entry, it checks that the commit is the one the header's rule names. It reads D1 to D4 as applied against the architect's report, and the clippy line as a code line.
+
+6. **Superseded index.**
+   - §7's Scope and Amendment 2 item 9's count: added to by items 1 and 3.
+   - §4.5's green `verify-cites`: met at the entries' commit, by item 2.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 4 — 2026-11-22 — the narrow read; the record before the merge request
+
+1. **The narrow read** of the merge of main (51a1c84dd8502c5b9a7295e113f78101923d9c01), the entries' commit (315e44d3cf3ad5f35f4dc33910708bef9e263669) and the words commit (74c06805a61c64485d9bed90118c4aedfa27d9a5), by item 5 of Amendment 3: the reviewer, PASS WITH NOTES, no Correctness, Evidence or Documentation finding (`state/consults/gates/2026-11-22-cancel-requested-stamp-order-narrow-read-reviewer.md`, gate-log row 830). The worker's report is `state/consults/2026-11-22-cancel-requested-stamp-order-merge-entries-words-worker-report.md`. The count is 726 of the 800 changed lines over the eleven Scope paths (Amendment 3 item 3).
+
+2. **CI at 74c06805a61c64485d9bed90118c4aedfa27d9a5:** every check passing, read by the custodian at 2026-11-22T14:14:04Z. This meets the narrow read's N1 (two Windows jobs pending at its own read).
+
+3. **The gates' Documentation items.** DOC-1 is met by the architect's D1 and D2, applied in the words commit; the choice between the two authors' words is ADV-2026-11-22-13's (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-13-the-cancel-gates-two-texts-for-one-place-the-architects-d1-and-d2-land-doc-1-met-by-them.md`). DOC-2: ADV-2026-11-22-10 is filed (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md`), which also meets the architect's N5. DOC-3 and the architect's N1: the build report's C1 line (`state/consults/2026-11-22-cancel-requested-stamp-order-build-worker-report.md`) gives one wait message for T3, T4 and T5, while as built T3's and T5's messages differ; the report is filed and not edited, and this item is its correction by reference. DOC-4: C2 (ebdd0fd7ce0100fd621529aeb6fd239faafe6c30) says in its message that it edits the doc comment on cancel_for_drop, and its diff to engine/src/cancel.rs from 4a26ed74 edits none; no commit is rewritten (ADV-2026-11-22-10 item 6). DOC-5: the count stands on the gates' own numstat (code gate 1's check 2; the narrow read's check 5).
+
+4. **The clippy line** (ADV-2026-11-22-10 item 6; the architect's N3) is corrected in the words commit, and the narrow read reads its predicate as the same for every u32.
+
+5. **The campaign's wording** (the architect's N2): at C3 the wrappers are gone, so its evidence is the pass counts, 50 of 50 per binary, not a count of wrapper hits; the C1 campaign showed no detection power for skp_filter_cancellation, 0 hits in 50 runs (`state/consults/2026-11-22-cancel-requested-stamp-order-build-worker-report.md`).
+
+6. **The disclosure and the residual** of ADV-2026-11-22-07 item 6 (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-07-the-cancel-forms-notes-in-the-architects-words-the-ninth-file-attempt-2-on-amendment-1.md`) stand as that item gives them, for this build's record. The skp_admission binary passed in CI at 74c06805a61c64485d9bed90118c4aedfa27d9a5 and in both gates' runs.
+
+7. **The stray file** (ADV-2026-11-22-10 item 6): the build worker's 180-byte C4 output, written beside `<S>` and not in it (its report, its departures). A search three levels deep under the sessions' temporary folder found no such file at 2026-11-22T14:02:38Z.
+
+8. **Line cites at the head** (the narrow read's N2): D3 added one line to the doc comment above cancel, so the architect's cancel.rs cites below it, read at 3f3820c9, are one line lower at 74c06805a61c64485d9bed90118c4aedfa27d9a5 (the mark at line 202, drop(publish) at 209). Any later record cites them at a named commit.
+
+9. **The merge request** waits for the v0.2 tag (the human's message of 2026-11-22, item 1). It names any change on main since 069b91e0 to the eleven paths and reads CI again (the architect's N4). Before it, the PR body lists D1 to D4, the disclosure and residual, and C2's message.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+### Amendment 5 — 2026-11-22 — the stray file was removed
+
+1. **Amendment 4 item 7 is incomplete.** The build worker's 180-byte C4 output was removed by the custodian's own call at 2026-11-22T10:02:49Z, by the main session's transcript: the call read the file, removed it and printed REMOVED, and a listing of its folder then counted no such file. That is why the search at 14:02:38Z found none. The removal is what ADV-2026-11-22-10 item 6 allows ("remove it if your own rules let you").
+
+Read the last amendment first.
+
+Nothing above is edited.

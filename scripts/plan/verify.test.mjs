@@ -265,12 +265,13 @@ test('verifyStatusAgreement fails by name when an in-progress node\'s gate names
 });
 
 test('runVerify: --offline note is present and PR/release evidence does not fail solely for being unchecked', () => {
-  const dir = makeTempDir('verify-offline-note-');
+  const dir = makeTempDir('verify-offline-note-pr-');
   const planPath = path.join(dir, 'PLAN.yaml');
   fs.copyFileSync(path.join(fixturesDir, 'valid-plan.yaml'), planPath); // has {pr: 1} and {pr: 2} done evidence
   const result = runVerify({ planPath, repoRoot, siteDir: path.join(dir, 'site'), offline: true });
-  assert.ok(result.notes.some((n) => n.includes('--offline')));
-  assert.ok(!result.failures.some((f) => f.includes('pr')));
+  assert.ok(result.notes.some((n) => n.includes('--offline')), `notes runVerify returned: ${JSON.stringify(result.notes)}`);
+  const evidenceFailure = (f) => /PR #\d|evidence \{pr: \d|\(gh release view\)/.test(f);
+  assert.ok(!result.failures.some(evidenceFailure), `PR/release evidence failures: ${JSON.stringify(result.failures.filter(evidenceFailure))}`);
 });
 
 // Amendment 2 (B1): proof the check is wired into verify:plan, through verifyStatusAgreement (which

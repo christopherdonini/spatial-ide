@@ -1917,3 +1917,110 @@ test("G8's settings.local.json check fails closed and makes no lookup for any ot
   expect((await call($, write('C:\\dev\\wt\\x\\.claude\\settings.local.json'))).deny).toBe(G8_REASON)
   expect(probe.reached.length).toBe(1)
 })
+
+// ---- Monitor (GUARDIAN-MONITOR-PREREGISTRATION.md section 3 and Amendment 2: M-F1 to M-F6, M-T1 to M-T6) ----
+
+// The Monitor event's fields, assumed: the call's input fields description, timeout_ms, command and ws, and the
+// event fields the shell hooks read for a Bash call (the tool's name, the command, the agent's id).
+// That a Monitor event has those fields is assumed, not read.
+const monitor = (command?: string): Input => ({
+  tool: 'Monitor',
+  description: 'guardian-monitor fixture',
+  timeout_ms: 1000,
+  ...(command === undefined ? {} : { command }),
+  ws: 'ws://localhost:0/guardian-monitor-fixture',
+})
+
+const LOG_FIELDS = ['schema', 'time', 'rule', 'tool', 'agent', 'target_sha256', 'reason']
+
+// A Monitor call with `command` is refused with `reason`, never reaches the engine's tool, and writes one log
+// line: the seven declared fields, the tool Monitor, the agent main, the command's sha256 and no command text.
+async function monitorRefused(on: any, $: any, command: string, rule: string, reason: string) {
+  const probe = v1(on)
+  const writes = answerWrites(on)
+  const result = await call($, monitor(command))
+  expect(result.deny).toBe(reason)
+  expect(probe.reached.length).toBe(0)
+  expect(writes.length).toBe(1)
+  const record = JSON.parse(writes[0].text)
+  expect(Object.keys(record)).toEqual(LOG_FIELDS)
+  expect(record).toEqual({
+    schema: 'spatial-guardian/v1',
+    time: record.time,
+    rule,
+    tool: 'Monitor',
+    agent: 'main',
+    target_sha256: await sha256(command),
+    reason,
+  })
+  expect(writes[0].text.includes(command)).toBe(false)
+}
+
+// RECORDED MUTATION: MU1, the Monitor registration removed from register(); MU2, Monitor dropped from the target
+// map of logRefusal (so `target_sha256` reads `unavailable`). Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this
+// change, claude --version 2.1.330 (Claude Code): MU1 and MU2 each -> fails: `M-T1 a Monitor force-push is refused by G1
+// and logged with the tool Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a
+// Monitor plugin install is refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is
+// refused by G9 and logged with the tool Monitor`.
+test('M-T1 a Monitor force-push is refused by G1 and logged with the tool Monitor', async ($, on) => {
+  await monitorRefused(on, $, 'git push --force origin HEAD:refs/heads/guardian-monitor-fixture', 'G1', G1_REASON)
+})
+
+// RECORDED MUTATION: MU1 and MU2, as above M-T1. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change,
+// claude --version 2.1.330 (Claude Code) -> fails: `M-T1 a Monitor force-push is refused by G1 and logged with the tool
+// Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a Monitor plugin install is
+// refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is refused by G9 and logged
+// with the tool Monitor`.
+test('M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor', async ($, on) => {
+  await monitorRefused(on, $, 'gh pr merge 1 --merge', 'G7', G7_REASON)
+})
+
+// RECORDED MUTATION: MU1 and MU2, as above M-T1. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change,
+// claude --version 2.1.330 (Claude Code) -> fails: `M-T1 a Monitor force-push is refused by G1 and logged with the tool
+// Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a Monitor plugin install is
+// refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is refused by G9 and logged
+// with the tool Monitor`.
+test('M-T3 a Monitor plugin install is refused by G8 and logged with the tool Monitor', async ($, on) => {
+  await monitorRefused(on, $, 'claude plugin install some-plugin', 'G8', G8_REASON)
+})
+
+// RECORDED MUTATION: MU1 and MU2, as above M-T1. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change,
+// claude --version 2.1.330 (Claude Code) -> fails: `M-T1 a Monitor force-push is refused by G1 and logged with the tool
+// Monitor`, `M-T2 a Monitor merge is refused by G7 and logged with the tool Monitor`, `M-T3 a Monitor plugin install is
+// refused by G8 and logged with the tool Monitor`, `M-T4 a Monitor clean of the main checkout is refused by G9 and logged
+// with the tool Monitor`.
+test('M-T4 a Monitor clean of the main checkout is refused by G9 and logged with the tool Monitor', async ($, on) => {
+  await monitorRefused(on, $, 'cargo clean', 'G9', G9_REASON)
+})
+
+// RECORDED MUTATION: MU3, the Monitor registration's handler refusing every call (`refuse($, e, cache, CATCH_VERDICT)` in
+// place of `guardShell($, e, next, cache, false)`); MU1 and MU2 cannot fail this test. Observed at
+// 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change, claude --version 2.1.330 (Claude Code) -> fails: `M-T5 a
+// harmless Monitor command reaches the engine unchanged and writes no log line`, `M-T6 a Monitor watch with no command
+// reaches the engine unchanged and writes no log line` (and M-T1 to M-T4, which the same mutation also turns red).
+test('M-T5 a harmless Monitor command reaches the engine unchanged and writes no log line', async ($, on) => {
+  const probe = v1(on)
+  const writes = answerWrites(on)
+  const input = monitor('echo guardian-monitor-probe')
+  const result = await call($, input)
+  expect(result.deny).toBeUndefined()
+  expectPassed(result, probe, input)
+  expect(probe.reached.length).toBe(1)
+  expect(writes.length).toBe(0)
+})
+
+// RECORDED MUTATION: MU3, as above M-T5. Observed at 727dc2fb0dd2d648922cdd1bda7b4fcdb42624f7 with this change, claude
+// --version 2.1.330 (Claude Code) -> fails: `M-T5 a harmless Monitor command reaches the engine unchanged and writes no
+// log line`, `M-T6 a Monitor watch with no command reaches the engine unchanged and writes no log line` (and M-T1 to
+// M-T4, which the same mutation also turns red).
+test('M-T6 a Monitor watch with no command reaches the engine unchanged and writes no log line', async ($, on) => {
+  const probe = v1(on)
+  const writes = answerWrites(on)
+  const input = monitor()
+  expect('command' in input).toBe(false)
+  const result = await call($, input)
+  expect(result.deny).toBeUndefined()
+  expectPassed(result, probe, input)
+  expect(probe.reached.length).toBe(1)
+  expect(writes.length).toBe(0)
+})
