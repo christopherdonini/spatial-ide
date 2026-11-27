@@ -470,3 +470,22 @@ Nothing above is edited.
    - T3 at F-3d also asserts `mapped:parcel_key`;
    - one more recorded mutation values the null site's field as for a file's own `id` whatever the declaration. It is observed failing T3 at F-3d, and it takes the next unused name in this form's series.
 5. **The build gates** read §2 and §4 as amended here.
+
+## Amendment 4 — 2026-11-27 — the custodian's: ADV-2026-11-27-33 item 2, the code on the C1 piece's head, and the list under rule (00)
+
+*References only. Nothing above is edited. Written before any code.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-33-three-free-places-the-null-refusal-builds-on-the-c1-head-the-recovery-offers-k-c34-row-and-a-narrow-read-now-the-fixture-node-s3.md`. By its item 2, this piece's code is built on the C1 piece's head f7770e1aa225b7902ea56a77c0d0dbd8321fb942 (PR 369, a draft, its branch's CI green). That head holds text-id's corrected head, as Amendment 2 asks.
+2. **The list under rule (00)**, made by the custodian at origin/main cf42f02a. It takes, for every open pull request's head and every branch in progress, the files changed over main (three-dot), against §7's seven paths:
+   - `engine/src/fixture.rs`: no unmerged head touches it.
+   - `engine/src/error.rs`: PR 366's commits 2b90ed51, 26cb8745 and 8d1fe83a, which PR 368 carries too.
+   - `engine/README.md`: PR 350's 3f3820c9 and PR 364's a15a240d.
+   - Every other overlap is text-id, the C1 piece, the identity route or PR 365. This piece has no `protocol/` place.
+3. **The two shared paths are held by the base** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-34-the-null-refusal-builds-now-on-f7770e1a-both-shared-paths-held-by-the-base-the-ancestor-test.md`). The custodian sent them to the advisor, counting a head outside the base as not held. Each of those five commits is an ancestor of the base. The heads 79f4380b, a30f5fe8 and f7da1738 have no commit outside the base that touches §7's paths. No merge commit is owed.
+   - The test from that ruling on: a shared path is held by the base when every commit of the other head that touches it is an ancestor of the base.
+   - PR 368's head has one such commit outside the base: its merge 530d7b0e, which takes in the identity route's head 7fa66a68. The merge resolves nothing of its own in those paths, and its first parent's side has no commit outside the base that touches them. This went to the advisor with the build's dispatch.
+4. **Before code,** the worker makes §8's re-read at the base. A moved line is a class-3 row.
+5. **The gates** run in one part each, since §10 names no run through the app.
+6. **If the C1 piece's head moves,** it comes in by a merge commit: before this piece's gates if they have not run, and with the reviewer's narrow read if they have.
+7. **The pull request** stays a draft until its base is on main (§8).
+8. **The verify scripts** run in the same hold as the suites (the ruling's item 7).

@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `c1f5f79d630f632903af0209fe671365b1b0ebb548c3bbc0f3d037f40e413a77`) at `2026-11-27T21:18:33.538Z`.
+Generated from `PLAN.yaml` (sha256 `1deb3fe0686cfd2cb47f5473a4488266d3f45782a56611184d7ec9c4a596ced9`) at `2026-11-27T21:45:19.830Z`.
 
 ## 1. Next
 
@@ -148,6 +148,7 @@ Generated from `PLAN.yaml` (sha256 `c1f5f79d630f632903af0209fe671365b1b0ebb548c3
 - **kernel-close-unbounded-waits-and-the-host-main-thread** — The kernel close waits on two things this code does not bound, and by documentation its binding runs on the host main thread (a finding by reading, ADV-2026-11-22-38 item 6) (phase `prototype`) — never queued until placed
 - **partitioned-ordinal-refusal-opens-the-identity-form** — A partitioned source is refused by name before any identity is read, and the engine message and the shell guidance stop offering a declaration that cannot work (re-aimed by ADV-2026-11-23-27 item 1) (phase `prototype`) — never queued until placed
 - **app-log-folder-shared-with-test-runs** — The app session-log folder does not follow a suite LOCALAPPDATA, so the test runs logs and the human sitting logs share one folder, told apart by their stamps alone (phase `prototype`) — never queued until placed
+- **identity-unusable-fixture-detail-the-engine-writes** — The wire fixture v0-error-identity_unusable-with-candidates.json carries a message and a detail the engine does not write; bring them to a refusal the engine writes, or record the fixture as made by hand (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 

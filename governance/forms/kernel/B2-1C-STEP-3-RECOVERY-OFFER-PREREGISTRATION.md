@@ -2512,3 +2512,13 @@ Nothing above is edited.
    - it takes the next unused literal after that piece's `skp/0.17`.
 2. **Its build is held** at least until that piece's build has a pushed head with its suites green. This replaces the reading of ADV-2026-11-23-35 item 3 that Amendment 12 item 12 and Amendment 13 item 6 record.
 3. **No figure is corrected.** No tracked record of this piece names `skp/0.17` or a later literal as its own. Amendment 12 item 11 already gives it the next unused literal.
+
+## Amendment 15 — 2026-11-27 — the custodian's: ADV-2026-11-27-33 item 3, two steps now, and the base ruled before Part 1's code
+
+*References only. Nothing above is edited. Written before any code.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-33-three-free-places-the-null-refusal-builds-on-the-c1-head-the-recovery-offers-k-c34-row-and-a-narrow-read-now-the-fixture-node-s3.md`. By its item 3, the hold of ADV-2026-11-27-24 item 3 (Amendment 14 item 2) has met its condition. The C1 piece's build has a pushed head with its suites green, f7770e1a.
+2. **Now, lead-data's K-C34 row,** by an amendment, as Amendment 13 item 3 has it under `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-38-the-recovery-offers-seven-points-after-attempt-7-as-the-gate-recommends-k-c34-a-second-mutation-the-adr-036-notes-words.md`, item 6.
+3. **Now, the architect's narrow read,** with no verdict, filed as a consult. It reads Part 1 against the C1 piece's head f7770e1a, and against B's head 5ce0525a with ADR-037 as that head has it, for the three handlers Amendment 10 item 2 puts into `frontends/shell/src-tauri/src/commands.rs` and registers in `frontends/shell/src-tauri/src/lib.rs`. It answers the ruling's item 3 questions, names the shared paths, and recommends the base. It goes to the advisor, who rules the base before Part 1's code.
+4. **The merge:** whatever the base, after B (the ruling's item 3).
+5. **Amendment 13 item 6's last sentence** is read with item 5 of ADV-2026-11-26-01, as the human approved it (`state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`): work goes on between the sitting's parts. While the human sits on a part, this piece is held as every piece is. This records the reading before the code, as the ruling's item 3 asks.
