@@ -85,6 +85,9 @@ fn w2(nulls: u64, rows: u64, present: u64, distinct: u64) -> String {
 /// **T1.** F-1 and F-7: one null among otherwise unique values, and every row null, are refused
 /// as a null with W-1, and the detail names no shared identity. The refusal's source is the file's
 /// own `id`.
+///
+/// Mutation M-1: the null check removed. Observed at commit 69e363251158: this test fails at its `detail` assertion,
+/// the refusal reading the repeat detail.
 #[test]
 fn a_single_null_in_an_otherwise_unique_integer_id_is_refused_by_name_as_a_null() {
     let cases = [
@@ -102,6 +105,9 @@ fn a_single_null_in_an_otherwise_unique_integer_id_is_refused_by_name_as_a_null(
 }
 
 /// **T2.** F-2: a null beside repeated non-null values is one refusal naming both facts.
+///
+/// Mutation M-2: the null refusal always gives W-1. Observed at commit 69e363251158: this test fails at its
+/// `detail` assertion, the refusal naming the null alone.
 #[test]
 fn a_null_beside_repeated_values_is_refused_naming_both() {
     let path = null_bearing(
@@ -117,6 +123,11 @@ fn a_null_beside_repeated_values_is_refused_naming_both() {
 
 /// **T3.** F-3 and F-3d: a single null is refused as W-1 in each of the eight widths, native
 /// (`id`) and declared (`parcel_key`, whose refusal says `mapped:parcel_key`).
+///
+/// Mutation M-3: the null check runs only for `Int64` and `UInt64`. Observed at commit 69e363251158: this test
+/// fails at the native `detail` assertion for `Int8`.
+/// Mutation M-9: the null site values `identity_source` as `IdSource::File` does, whatever the
+/// declaration. Observed at commit 69e363251158: this test fails at the F-3d `mapped:parcel_key` assertion for `Int8`.
 #[test]
 fn a_null_is_refused_by_name_in_every_integer_width_admission_takes() {
     let one = NullBearingValues::OneNull;
@@ -139,6 +150,9 @@ fn a_null_is_refused_by_name_in_every_integer_width_admission_takes() {
 
 /// **T4.** F-4: a nullable column holding no null is admitted in each width, verified over its
 /// 100 rows: the refusal is decided by the null count and never by the field's nullability.
+///
+/// Mutation M-4: refusal on `field.is_nullable()` in place of the count. Observed at commit 69e363251158: this test
+/// fails at the open of the first width, which is refused.
 #[test]
 fn a_nullable_integer_id_holding_no_null_is_still_admitted_in_every_width() {
     for width in WIDTHS {
@@ -153,6 +167,9 @@ fn a_nullable_integer_id_holding_no_null_is_still_admitted_in_every_width() {
 
 /// **T5.** F-5: with no null, the repeated-values detail is today's, byte for byte (2,000 rows,
 /// one distinct value).
+///
+/// Mutation M-5: `nulls` computed as `rows - distinct`. Observed at commit 69e363251158: this test fails at its
+/// `detail` assertion, the repeat refusal reading as a null.
 #[test]
 fn the_repeated_values_refusal_is_unchanged_when_no_value_is_null() {
     let path = write("t5", 2_000, IdentityMode::DuplicateIds);
@@ -167,6 +184,9 @@ fn the_repeated_values_refusal_is_unchanged_when_no_value_is_null() {
 }
 
 /// **T6.** F-6: a null beside a negative value keeps the negative refusal, which runs first.
+///
+/// Mutation M-6: the null check placed before the negative check. Observed at commit 69e363251158: this test fails at
+/// its `negative value (-1)` assertion.
 #[test]
 fn a_null_beside_a_negative_value_keeps_the_negative_refusal() {
     let path = null_bearing(

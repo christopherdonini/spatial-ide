@@ -728,6 +728,9 @@ fn null_in_id_fixture(name: &str) -> PathBuf {
 /// **K1** (`identity-scan-refuses-a-null-by-name`, OPEN-A5). Through `SkpHost::open_dataset`, a null
 /// in the file's own `id` reaches the wire as `engine.identity_unusable` naming `id`, with the
 /// engine's detail for a null and the message that holds it.
+///
+/// Mutation M-8: the null refusal raised as `EngineError::Query`. Observed at commit 69e363251158: this test fails at
+/// its code assertion, `engine.query` for `engine.identity_unusable`.
 #[test]
 fn a_null_in_the_files_own_id_reaches_the_wire_as_identity_unusable_naming_the_null() {
     let path = null_in_id_fixture("null-in-id-refused");
@@ -747,6 +750,9 @@ fn a_null_in_the_files_own_id_reaches_the_wire_as_identity_unusable_naming_the_n
 /// **K2** (text-id's head). The same file opened with the choice to set the file's `id` aside
 /// opens on the session tier by row position, naming `id` as the column set aside: a null refusal
 /// is a refusal of the `id` column itself, which that choice answers.
+///
+/// Mutation M-8, the same: `Query` passes arm (d) through. Observed at commit 69e363251158: this test fails at the
+/// `expect` of the open, which is refused as `engine.query`.
 #[test]
 fn a_null_in_the_files_own_id_opens_by_row_position_when_set_aside() {
     let path = null_in_id_fixture("null-in-id-set-aside");

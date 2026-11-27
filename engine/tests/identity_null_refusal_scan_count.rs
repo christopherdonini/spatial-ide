@@ -17,6 +17,9 @@ use spatial_engine::{Dataset, EngineError};
 
 /// **T7.** F-1 opened natively is refused for its null with exactly one guarded verification scan:
 /// the null count rides the one statement and never a second guarded call.
+///
+/// Mutation M-7: the null count read by a second guarded call over the file. Observed at commit 69e363251158: this
+/// test fails at its delta assertion, which reads 2 for 1.
 #[test]
 fn a_null_refusal_issues_exactly_one_verification_scan() {
     let dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../target/fixtures/identity-null");
