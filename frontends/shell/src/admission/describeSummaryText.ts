@@ -57,6 +57,17 @@ export function sessionStatementLine(identity: IdentityInfo): string | null {
   return identity.session_statement;
 }
 
+/** S-3 (`text-id-opens-for-the-session-by-row-position`; the advisor's words under the human's delegation of 2026-11-13, ADV-2026-11-23-36 item 3, and not the human's): shown beside the session statement. */
+export const SET_ASIDE_CHOICE_LINE = "You chose to open this file by row position: its own id column is not its identity.";
+
+/**
+ * `DescribeSummary`'s line for the user's choice to open the file by row position (ADR-016 Amendment 3). Non-null exactly when `identity.set_aside_column` is a column name: the wire carries `null` on every
+ * other open, and a describe from before `skp/0.16` carries no member, which reads as no choice. It is never shown for a session tier that is not the user's choice, such as a file with no `id` column.
+ */
+export function setAsideChoiceLine(identity: IdentityInfo): string | null {
+  return identity.set_aside_column === null || identity.set_aside_column === undefined ? null : SET_ASIDE_CHOICE_LINE;
+}
+
 /**
  * `DescribeSummary`'s display-convention row (DECISIONS-PENDING.md, RULED 2026-09-23 (late), entry
  * 119 item (5); the gap first recorded at entry 113 (3)). Renders `crs.display_convention` VERBATIM

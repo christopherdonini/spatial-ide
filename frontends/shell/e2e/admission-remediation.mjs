@@ -3,7 +3,10 @@
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
 // E2E TEST SURFACE (e2e/README.md) -- ASSERT'/PASTED'/AXISTRAP'/NODEF'/MAP'/DUPKEY'/BOTHNEEDED'/
-// CONFLICT'/CANCELOPEN'/NOPERSIST'/OVERBOUND' for NEXT-CUT.md's admission-remediation cut, phase P5.
+// CONFLICT'/CANCELOPEN'/NOPERSIST'/OVERBOUND' for NEXT-CUT.md's admission-remediation cut, phase P5, and
+// DECLARE-SESSION' for the identity-declaration-route-for-session-tier piece (E-1).
+// TEXTID' for the text-id-opens-for-the-session-by-row-position piece (E-1): the choice to open a file whose own `id` column cannot serve by row position.
+// TEXTID-C1 for the text-id-reopen-with-a-recorded-declaration piece (E-R1): a reopen whose project file records a declaration of `id` is refused with no choice offered.
 // Sibling to regression.mjs/filter-panel.mjs/style.mjs/publish.mjs -- same attach-or-launch path
 // (lib.mjs's attachOrLaunch), same in-page hooks (src/e2e-test-surface.ts: openPath, crsCatalog,
 // capturePixels), same E2E-verified evidence-class limit (e2e/README.md). Every step below drives
@@ -41,11 +44,18 @@
 // (`kernel/tests/skp_admission_remediation.rs`'s own P1 test: "declaring `id` explicitly still runs
 // the mapped path rather than silently reusing the native one").
 
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-import { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } from "./lib.mjs";
+// TEXTID' saves a project, so, as `project.mjs` does, the app's store is a scratch folder: `LOCALAPPDATA` must be in place before `lib.mjs` reads the environment for the spawn it makes.
+// A run that attaches to a running app leaves that app's own store as it is.
+const TEMP_BASE = realpathSync.native(tmpdir());
+const SCRATCH_STORE = mkdtempSync(join(TEMP_BASE, "spatial-textid-store-"));
+process.env.LOCALAPPDATA = SCRATCH_STORE;
+
+const { attachOrLaunch, attachConsole, waitForSettle, CDP_PORT } = await import("./lib.mjs");
 
 const OUT_DIR = join(dirname(fileURLToPath(import.meta.url)), "out");
 
@@ -57,6 +67,8 @@ const FIXTURE_NO_CRS_NO_ID =
   "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\no-crs-no-id-refused.parquet";
 const FIXTURE_NO_CRS_STRING_ID =
   "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\no-crs-string-id-refused.parquet";
+const FIXTURE_TEXT_ID_NO_INTEGER =
+  "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\text-id-no-integer-refused.parquet";
 const FIXTURE_SLOW = "C:\\dev\\spatial-ide\\target\\fixtures\\manual-walkthrough\\slow-filter-scan.parquet";
 
 const REGEN_DUPKEY =
@@ -65,6 +77,8 @@ const REGEN_BOTHNEEDED =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture generate_the_no_crs_no_id_refusing_fixture generate_the_no_crs_string_id_refusing_fixture";
 const REGEN_MANUAL_WALKTHROUGH =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures -- --ignored --nocapture";
+const REGEN_TEXTID =
+  "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_text_id_no_integer_refusing_fixture -- --ignored --nocapture";
 const REGEN_SLOW =
   "cargo test -p spatial-kernel --test manual_walkthrough_fixtures generate_the_slow_filter_fixture -- --ignored --nocapture";
 
@@ -79,10 +93,15 @@ const CRS_UNDECLARED_MESSAGE =
   "conversion)";
 // Read back from a real run of openPath(string-id-refused.parquet), inserted by script (the same
 // text `regression.mjs`'s C2'/C3' (b) asserts -- duplicated here per the sibling-file convention).
-const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping — it is a synthesized identity, which ADR-016 refuses. Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent";
+const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping: it gives no stable identity";
 // Byte-copied by script from `protocol/skp/tests/data/v0-describe-response-session-ordinal.json`
 // (`identity.session_statement`; the Identity line is `identity.source` + " — " + `identity.uniqueness`).
 const SESSION_IDENTITY_STATEMENT = "this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does.";
+// Byte-copied by script from the words commit's `describeSummaryText.ts` (S-3) and `RowPositionChoice.tsx` (S-1), which copied them from ADV-2026-11-23-36 item 3.
+const SET_ASIDE_CHOICE_LINE = "You chose to open this file by row position: its own id column is not its identity.";
+// R-ENG (`frontends/shell/src/project/reopenNotices.ts`, `ENGINE_REFUSAL_NOTICE`): the owner line beside an `engine.*` refusal at a reopen that carries no choice. A copy, as the suite keeps of the other lines.
+const ENGINE_REFUSAL_NOTICE = "The project was not opened in this window. The open was tried with the claims the project file recorded for the data, if any. None was typed here.";
+const ROW_POSITION_LABEL = "Open for this session by row position";
 const SESSION_IDENTITY_LINE = "session-ordinal:file_row_number — by-construction-within-generation";
 // `dupkey-refused.parquet`'s own `features: 100` (kernel/tests/manual_walkthrough_fixtures.rs) --
 // literal, not computed, per regression.mjs's OVERCEIL' "literal, not variable" convention.
@@ -92,8 +111,7 @@ const DUPKEY_MESSAGE =
   "refused: `id` cannot serve as stable feature identity — " +
   `${DUPKEY_FEATURES} rows carry only 1 distinct values, so at least two features share an ` +
   "identity. ADR-010 rule 2 resolves a pick through this id, and a shared id returns a " +
-  "wrong-but-plausible feature with nothing raised. Synthesizing a row ordinal instead is the " +
-  "hazard ADR-010 rule 2 exists to prevent";
+  "wrong-but-plausible feature with nothing raised";
 // Mirrors `crsAssertionState.ts`'s own `MAX_CRS_DEFINITION_BYTES` (engine::crs::MAX_CRS_DEFINITION_BYTES,
 // checked client- AND host-side, SF4) -- duplicated per this suite's own convention above.
 const MAX_CRS_DEFINITION_BYTES = 65_536;
@@ -178,6 +196,70 @@ async function waitForMountReady(page, timeoutMs = MOUNT_READY_TIMEOUT_MS) {
     `mount-readiness gate: timed out after ${timeoutMs}ms waiting for ${missing.join(" and ")}. page url=${page.url()}` +
       (lastEvalError ? `, last evaluate error=${lastEvalError}` : "")
   );
+}
+
+/** Harness bound on `openAnotherAndWaitForClose`'s poll for the close's row -- a deadline on a real signal, never a duration claim (ADR-018) and never a retry. */
+const CLOSE_ROW_TIMEOUT_MS = 30_000;
+
+/**
+ * The app's Console as the page shows it: every row, in order, with its header, request text and outcome. Expands the Console and its
+ * groups first, as `reopen.mjs`'s `readConsole` does. A reading with no row for a close is a harness finding, not a pass.
+ */
+async function readConsoleRows(page) {
+  await page.evaluate(() => {
+    const panel = document.querySelector(".console-disclosure");
+    if (panel && panel.getAttribute("aria-expanded") !== "true") panel.click();
+  });
+  await page.evaluate(() => document.querySelectorAll('.console-group-header[aria-expanded="false"]').forEach((el) => el.click()));
+  return page.evaluate(() =>
+    [...document.querySelectorAll(".console-entry")].map((el) => ({
+      header: el.querySelector(".console-entry-header")?.textContent ?? el.querySelector(".console-entry-prose")?.textContent ?? null,
+      request: el.querySelector(".console-request-text")?.textContent ?? null,
+      outcome: el.querySelector(".console-outcome")?.textContent ?? null,
+    }))
+  );
+}
+
+/**
+ * Opens `path` -- a file that admits -- to replace the dataset in the window, and waits for the close of the dataset it replaced.
+ * The shell closes a replaced open from an effect and does not wait for it, and a project a first save wrote stays held by the kernel
+ * until that close, so a reopen of the saved folder made before it is refused as `skp.project_open_elsewhere`. The signal is the one
+ * `reopen.mjs` waits for at its R5: a new `close_dataset` row at `ok` in the Console, whose request text is not among those read before the
+ * open (each close names its own handle, so the texts differ). The poll runs to `CLOSE_ROW_TIMEOUT_MS` and then fails the step by name; the
+ * caller's own call that needed the close is never retried. The Console is left as it was found: expanded only for the reads.
+ * Callers: `TEXTID'` (d), and the C1 piece's `TEXTID-C1` (3) and (4) once that branch has this function.
+ */
+async function openAnotherAndWaitForClose(page, stepId, path) {
+  const wasExpanded = await page.evaluate(() => document.querySelector(".console-disclosure")?.getAttribute("aria-expanded") === "true");
+  try {
+    await readConsoleRows(page); // expands the Console; the rows are read again once it has
+    const expanded = await waitForCondition(
+      () => page.evaluate(() => document.querySelector(".console-disclosure")?.getAttribute("aria-expanded") ?? null),
+      (v) => v === "true",
+      10_000
+    );
+    if (!expanded.ok) throw new Error(`${stepId}: the Console never expanded within 10s, so the closes before the open could not be read (last aria-expanded: ${JSON.stringify(expanded.last)})`);
+    const known = (await readConsoleRows(page)).filter((row) => row.header === "close_dataset").map((row) => row.request);
+    const opened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), path);
+    if (opened.kind !== "admitted") throw new Error(`${stepId}: openPath(${path}) returned ${JSON.stringify(opened)}, expected {kind:"admitted"}`);
+    const closed = await waitForCondition(
+      async () => (await readConsoleRows(page)).find((row) => row.header === "close_dataset" && row.outcome === "ok" && !known.includes(row.request)),
+      (row) => row !== undefined,
+      CLOSE_ROW_TIMEOUT_MS,
+      250
+    );
+    if (!closed.ok) {
+      throw new Error(`${stepId}: no new close_dataset row at ok appeared in the Console within ${CLOSE_ROW_TIMEOUT_MS}ms of opening ${path}, its request not among the ${known.length} read before the open`);
+    }
+    return closed.last;
+  } finally {
+    if (!wasExpanded) {
+      await page.evaluate(() => {
+        const panel = document.querySelector(".console-disclosure");
+        if (panel && panel.getAttribute("aria-expanded") === "true") panel.click();
+      });
+    }
+  }
 }
 
 function fractionOf(summary) {
@@ -474,6 +556,266 @@ async function stepMap(page, consoleHandle) {
     throw new Error(`MAP': summary missing "${expected}". Actual: ${summaryText}`);
   }
   return `(a) no-id-column.parquet admitted on the session tier, statement shown; (b) refused with exactly "parcel_key" in the candidate list; declared -> admitted; summary reads "${expected}" verbatim (never bare "unique")`;
+}
+
+/**
+ * `DECLARE-SESSION'` (E-1 of `IDENTITY-DECLARATION-ROUTE-FOR-SESSION-TIER-PREREGISTRATION.md`): the route the panel offers for a file that opened on
+ * the session tier, through the real DOM and not `openPath`. `no-id-column.parquet` opens on the session tier; the declaration control
+ * (`.admission-declare-identity`) is opened with a click on its summary; the candidates are exactly `parcel_key`, with none checked; the radio is
+ * clicked and then "Declare this column". The Identity row then reads `mapped:parcel_key — verified-at-open-full-file` and no "Session identity" row
+ * is left. The 120 s bound is a declared bound for the poll, not a duration.
+ */
+async function stepDeclareSession(page, consoleHandle) {
+  await assertSessionTier(page, consoleHandle, "DECLARE-SESSION'", FIXTURE_NO_ID_COLUMN);
+
+  const opened = await page.evaluate(() => {
+    const summary = document.querySelector(".admission-declare-identity summary");
+    if (summary === null) return false;
+    summary.click();
+    return true;
+  });
+  if (!opened) throw new Error("DECLARE-SESSION': .admission-declare-identity summary not present after the session-tier admission");
+
+  const form = await waitForCondition(
+    () =>
+      page.evaluate(() => ({
+        candidates: Array.from(document.querySelectorAll(".admission-declare-identity .identity-declaration-candidate")).map((el) => el.textContent?.trim()),
+        checked: document.querySelectorAll(".admission-declare-identity .identity-declaration-candidate input:checked").length,
+      })),
+    (v) => v.candidates.length > 0,
+    10_000
+  );
+  if (!form.ok) throw new Error(`DECLARE-SESSION': the declaration form listed no candidates within 10s (last: ${JSON.stringify(form.last)})`);
+  if (JSON.stringify(form.last.candidates) !== JSON.stringify(["parcel_key"])) {
+    throw new Error(`DECLARE-SESSION': candidate list was not exactly ["parcel_key"]. Actual: ${JSON.stringify(form.last.candidates)}`);
+  }
+  if (form.last.checked !== 0) throw new Error(`DECLARE-SESSION': ${form.last.checked} candidate(s) were checked before any pick; none may be preselected`);
+
+  const submitted = await page.evaluate(() => {
+    const radio = document.querySelector(".admission-declare-identity .identity-declaration-candidate input");
+    if (radio === null) return "no radio";
+    radio.click();
+    return "picked";
+  });
+  if (submitted !== "picked") throw new Error(`DECLARE-SESSION': could not pick the candidate (${submitted})`);
+  const clicked = await waitForCondition(
+    () =>
+      page.evaluate(() => {
+        const button = Array.from(document.querySelectorAll(".admission-declare-identity button[type=submit]")).find((b) => b.textContent?.trim() === "Declare this column");
+        if (button === undefined || button.disabled) return false;
+        button.click();
+        return true;
+      }),
+    (v) => v === true,
+    10_000
+  );
+  if (!clicked.ok) throw new Error("DECLARE-SESSION': the Declare this column button never became enabled after the pick");
+
+  const expected = "mapped:parcel_key — verified-at-open-full-file";
+  const settled = await waitForCondition(
+    () =>
+      page.evaluate(() => {
+        const rows = Object.fromEntries(
+          Array.from(document.querySelectorAll(".describe-summary dt")).map((dt) => [dt.textContent, dt.nextElementSibling?.textContent ?? null])
+        );
+        return { identity: rows["Identity"] ?? null, hasSessionRow: "Session identity" in rows };
+      }),
+    (v) => v.identity !== null && v.identity.includes(expected) && !v.hasSessionRow,
+    120_000
+  );
+  if (!settled.ok) throw new Error(`DECLARE-SESSION': the summary never read "${expected}" with no "Session identity" row within 120s (last: ${JSON.stringify(settled.last)})`);
+  return `no-id-column.parquet: session tier, the control opened, exactly "parcel_key" listed with none checked; declared from the panel -> the Identity row reads "${expected}", no "Session identity" row`;
+}
+
+/**
+ * `TEXTID'` (E-1 of `text-id-opens-for-the-session-by-row-position`): the choice to open a file whose own `id` column cannot serve by row position, through the real DOM.
+ * (a) `text-id-no-integer-refused.parquet` (a text `id` and no other integer column) refuses as `engine.identity_unusable` with no candidate to declare; the choice (S-1)
+ * is offered; a click opens the file on the session tier, the summary shows S-3 beside the engine's statement, features draw, and the filter `id = 'key-1'` is refused as
+ * `skp.filter_identity_alias_ambiguous`. (d) The project is saved to a scratch folder: `project.spatial` on disk holds `"identity": null` and no `set_aside` member. The saved
+ * open of (a) is still in the window and the kernel holds the project it wrote, so before the reopen the step opens `no-id-column.parquet` (it admits) and waits, through
+ * `openAnotherAndWaitForClose`, for the close of (a)'s open; the reopen is made once and is not retried. It is then refused for the same `id`, only the choice is offered, and a click opens it with S-3. (b) `dupkey-refused.parquet` (a repeated `id`) is offered the choice and,
+ * chosen, opens. (c) `no-id-column.parquet` opens with no choice offered and no S-3. Every button is the page's own and is clicked, never `openPath` with an option, so the
+ * click that sets the choice is the one the user makes. This step is written to be run on the packaged build; the 180 s bounds are harness bounds, not durations.
+ */
+async function stepTextid(page, consoleHandle) {
+  const readSummary = () =>
+    page.evaluate(() => ({
+      text: document.querySelector(".describe-summary")?.textContent ?? null,
+      rows: Object.fromEntries(
+        Array.from(document.querySelectorAll(".describe-summary dt")).map((dt) => [dt.textContent, dt.nextElementSibling?.textContent ?? null])
+      ),
+    }));
+  const offered = () =>
+    page.evaluate(() => {
+      const button = document.querySelector(".admission-row-position-choose");
+      return button === null ? null : { label: button.textContent?.trim() ?? null, disabled: button.disabled };
+    });
+  /** The choice is offered with S-1's words; a click on it is the user's act. Waits for the summary to carry S-3 and for the canvas to draw. */
+  async function choose(stepId) {
+    const shown = await waitForCondition(offered, (v) => v !== null && !v.disabled, 10_000);
+    if (!shown.ok) throw new Error(`TEXTID' ${stepId}: the choice was not offered within 10s (last: ${JSON.stringify(shown.last)})`);
+    if (shown.last.label !== ROW_POSITION_LABEL) {
+      throw new Error(`TEXTID' ${stepId}: the choice's label was ${JSON.stringify(shown.last.label)}, expected ${JSON.stringify(ROW_POSITION_LABEL)}`);
+    }
+    await page.evaluate(() => document.querySelector(".admission-row-position-choose").click());
+    const opened = await waitForCondition(readSummary, (v) => v.text !== null && v.text.includes(SET_ASIDE_CHOICE_LINE), 120_000);
+    if (!opened.ok) throw new Error(`TEXTID' ${stepId}: the summary never carried the line "${SET_ASIDE_CHOICE_LINE}" within 120s (last: ${JSON.stringify(opened.last)})`);
+    if (opened.last.rows["Session identity"] !== SESSION_IDENTITY_STATEMENT) {
+      throw new Error(`TEXTID' ${stepId}: no "Session identity" row equal to the engine's statement. Rows: ${JSON.stringify(opened.last.rows)}`);
+    }
+    await waitForSettle(() => consoleHandle.renderTrace(), { quietMs: 3000, timeoutMs: 45_000 });
+    const frac = fractionOf(await page.evaluate(() => window.__SPATIAL_E2E__.capturePixels()));
+    if (frac <= 0.02) throw new Error(`TEXTID' ${stepId}: canvas non-background fraction ${(frac * 100).toFixed(2)}% <= 2% after the choice`);
+  }
+  const noCandidates = () => page.evaluate(() => document.querySelectorAll(".admission-declare-identity .identity-declaration-candidate").length);
+
+  // (a) the refusal, the choice, the open, and the filter naming `id`.
+  const refusal = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_TEXT_ID_NO_INTEGER);
+  if (refusal.kind !== "refused" || refusal.code !== "engine.identity_unusable") {
+    throw new Error(`TEXTID' (a): expected {kind:"refused", code:"engine.identity_unusable"}, got ${JSON.stringify(refusal)}`);
+  }
+  if ((await noCandidates()) !== 0) throw new Error("TEXTID' (a): the refusal listed a candidate column; the file has no other integer column");
+  await choose("(a)");
+  const filtered = await page.evaluate(() => window.__SPATIAL_E2E__.queryWithFilter("id = 'key-1'"));
+  if (filtered.kind !== "refused" || filtered.refusal.code !== "skp.filter_identity_alias_ambiguous") {
+    throw new Error(`TEXTID' (a): the filter naming id was expected refused as skp.filter_identity_alias_ambiguous, got ${JSON.stringify(filtered)}`);
+  }
+
+  // (d) nothing of the choice is saved; the reopen asks again.
+  const folder = mkdtempSync(join(TEMP_BASE, "spatial-textid-"));
+  try {
+    const answer = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eSaveProjectToFolder(f), folder), 60_000, "e2eSaveProjectToFolder");
+    if (answer !== "asked") throw new Error(`TEXTID' (d): e2eSaveProjectToFolder answered ${JSON.stringify(answer)}, expected "asked"`);
+    const file = join(folder, "project.spatial");
+    if (!existsSync(file)) throw new Error(`TEXTID' (d): the folder lists ${JSON.stringify(readdirSync(folder))}, with no project.spatial`);
+    const text = readFileSync(file, "utf8");
+    if (!/"identity":\s*null/.test(text)) throw new Error(`TEXTID' (d): project.spatial holds no "identity": null`);
+    if (text.includes("set_aside")) throw new Error("TEXTID' (d): project.spatial holds a set_aside member");
+    // The saved open of (a) is still in the window and holds the project; another file replaces it, and the reopen waits for the close of (a)'s open.
+    await openAnotherAndWaitForClose(page, "TEXTID' (d)", FIXTURE_NO_ID_COLUMN);
+    const reopened = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), folder), 120_000, "e2eOpenProjectFolder");
+    if (reopened !== "engine.identity_unusable") throw new Error(`TEXTID' (d): the reopen answered ${JSON.stringify(reopened)}, expected "engine.identity_unusable"`);
+    if ((await noCandidates()) !== 0) throw new Error("TEXTID' (d): the reopen's refusal opened a declaration form; only the choice is offered");
+    await choose("(d)");
+  } finally {
+    rmSync(folder, { recursive: true, force: true });
+  }
+
+  // (b) a repeated `id`: the choice is offered, and chosen it opens.
+  const dup = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_DUPKEY);
+  if (dup.kind !== "refused" || dup.code !== "engine.identity_unusable") {
+    throw new Error(`TEXTID' (b): expected {kind:"refused", code:"engine.identity_unusable"}, got ${JSON.stringify(dup)}`);
+  }
+  await choose("(b)");
+
+  // (c) a file with no `id` column is on the session tier with no choice offered and no S-3.
+  const plain = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_NO_ID_COLUMN);
+  if (plain.kind !== "admitted") throw new Error(`TEXTID' (c): openPath(${FIXTURE_NO_ID_COLUMN}) returned ${JSON.stringify(plain)}, expected {kind:"admitted"}`);
+  const summary = await waitForCondition(readSummary, (v) => v.rows["Session identity"] === SESSION_IDENTITY_STATEMENT, 60_000);
+  if (!summary.ok) throw new Error(`TEXTID' (c): no "Session identity" row equal to the engine's statement (last: ${JSON.stringify(summary.last)})`);
+  if (summary.last.text.includes(SET_ASIDE_CHOICE_LINE)) throw new Error("TEXTID' (c): the summary shows S-3 for a file whose choice was never made");
+  if ((await offered()) !== null) throw new Error("TEXTID' (c): the choice was offered beside an admission");
+  return `(a) text-id-no-integer-refused.parquet: refused with no candidate, the choice offered and clicked, opened with S-3, drawn, the filter naming id refused as skp.filter_identity_alias_ambiguous; (d) project.spatial holds "identity": null and no set_aside, another file opened and the close of (a)'s open seen, the reopen refused with only the choice, opened with S-3 on a click; (b) dupkey-refused.parquet opened by the choice; (c) no-id-column.parquet opened with no choice and no S-3`;
+}
+
+/**
+ * `TEXTID-C1` (E-R1 of `text-id-reopen-with-a-recorded-declaration`): a reopen whose project file records a declaration of `id` is refused with no choice to open by row position,
+ * and its refusal block names the declaration as its source, through the real DOM. The unrun step is the tester's at the port.
+ * (1) `text-id-no-integer-refused.parquet` is refused, the choice is clicked, and the open is saved to a scratch folder (P0's shape, `"identity": null`). (2) P2 is a copy of that
+ * folder whose `project.spatial` records the identity `{"column":"id"}`, written in the project reader's own spelling (the line-oriented layout, one LF at the end), which the reader
+ * checks byte for byte. (3) `no-id-column.parquet` is opened first, through `openAnotherAndWaitForClose`, and the step waits for the close of (1)'s open: the project a first save wrote stays
+ * held by the kernel while that open is in the window, and a reopen made before the close is refused as `skp.project_open_elsewhere`. The control then runs as before: the reopen of the first
+ * folder is refused with the choice offered (S-1) and a field row `identity_source` reading `file:id`; the click opens it, as TEXTID' (d) does, and that open is made once and not retried.
+ * (4) `no-id-column.parquet` is opened again, through the same function, to replace the control's open in the window, and the step waits for the close of the control's open; only then the
+ * first folder is removed. A first folder that still holds the project makes the reopen ask, and a project this window holds is refused as `skp.project_open_elsewhere`. (5) Only then P2 is opened through `e2eOpenProjectFolder`, which must answer
+ * `engine.identity_unusable` at its first call: an answer of `question` or `skp.project_open_elsewhere` fails the step by name as not reaching C1. The refusal block shows the field row
+ * `identity_source` reading `mapped:id`, the owner line R-ENG, and no button of the choice. This step is written to be run on the packaged build; its bounds are harness bounds.
+ * Mutation M-RD8: as M-RD5, `rowPositionOffer` no longer checks `identity_source`. Expected failure: step (5) fails at "the choice to open by row position was offered". Observed at the port by the tester, not by the build.
+ */
+async function stepTextidC1(page) {
+  const readSummary = () =>
+    page.evaluate(() => ({
+      text: document.querySelector(".describe-summary")?.textContent ?? null,
+    }));
+  const offered = () =>
+    page.evaluate(() => {
+      const button = document.querySelector(".admission-row-position-choose");
+      return button === null ? null : { label: button.textContent?.trim() ?? null, disabled: button.disabled };
+    });
+  const readRefusal = () =>
+    page.evaluate(() => ({
+      code: document.querySelector(".admission-refusal-code")?.textContent ?? null,
+      owner: document.querySelector(".admission-refusal-owner")?.textContent ?? null,
+      fields: Object.fromEntries(
+        Array.from(document.querySelectorAll(".admission-refusal-fields dt")).map((dt) => [dt.textContent, dt.nextElementSibling?.textContent ?? null])
+      ),
+    }));
+  /** The choice is offered with S-1's label; a click on it is the user's act, and the summary then carries S-3. */
+  async function choose(stepId) {
+    const shown = await waitForCondition(offered, (v) => v !== null && !v.disabled, 10_000);
+    if (!shown.ok) throw new Error(`TEXTID-C1 ${stepId}: the choice was not offered within 10s (last: ${JSON.stringify(shown.last)})`);
+    if (shown.last.label !== ROW_POSITION_LABEL) {
+      throw new Error(`TEXTID-C1 ${stepId}: the choice's label was ${JSON.stringify(shown.last.label)}, expected ${JSON.stringify(ROW_POSITION_LABEL)}`);
+    }
+    await page.evaluate(() => document.querySelector(".admission-row-position-choose").click());
+    const opened = await waitForCondition(readSummary, (v) => v.text !== null && v.text.includes(SET_ASIDE_CHOICE_LINE), 120_000);
+    if (!opened.ok) throw new Error(`TEXTID-C1 ${stepId}: the summary never carried the line "${SET_ASIDE_CHOICE_LINE}" within 120s (last: ${JSON.stringify(opened.last)})`);
+  }
+
+  // (1) the refusal, the choice, and a save: P0's shape.
+  const refusal = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_TEXT_ID_NO_INTEGER);
+  if (refusal.kind !== "refused" || refusal.code !== "engine.identity_unusable") {
+    throw new Error(`TEXTID-C1 (1): expected {kind:"refused", code:"engine.identity_unusable"}, got ${JSON.stringify(refusal)}`);
+  }
+  await choose("(1)");
+  const first = mkdtempSync(join(TEMP_BASE, "spatial-textid-c1-"));
+  const second = mkdtempSync(join(TEMP_BASE, "spatial-textid-c1-p2-"));
+  try {
+    const answer = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eSaveProjectToFolder(f), first), 60_000, "e2eSaveProjectToFolder");
+    if (answer !== "asked") throw new Error(`TEXTID-C1 (1): e2eSaveProjectToFolder answered ${JSON.stringify(answer)}, expected "asked"`);
+
+    // (2) P2: a copy of the saved folder, its identity recorded as a declaration of `id`, in the reader's own spelling.
+    const saved = readFileSync(join(first, "project.spatial"), "utf8");
+    const recorded = saved.match(/^( *)"identity": null(,?)$/gm);
+    if (recorded === null || recorded.length !== 1) {
+      throw new Error(`TEXTID-C1 (2): project.spatial holds ${recorded === null ? 0 : recorded.length} lines of the form "identity": null, expected exactly one`);
+    }
+    const edited = saved.replace(/^( *)"identity": null(,?)$/m, (_line, indent, comma) => `${indent}"identity": {\n${indent}  "column": "id"\n${indent}}${comma}`);
+    cpSync(first, second, { recursive: true });
+    writeFileSync(join(second, "project.spatial"), edited);
+
+    // (3) another file replaces (1)'s open and the step waits for its close, so that the first folder is no longer held; then the control: the first folder's reopen is refused for the file's own `id`, with the choice offered and its source `file:id`.
+    await openAnotherAndWaitForClose(page, "TEXTID-C1 (3)", FIXTURE_NO_ID_COLUMN);
+    const control = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), first), 120_000, "e2eOpenProjectFolder");
+    if (control !== "engine.identity_unusable") throw new Error(`TEXTID-C1 (3): the control's reopen answered ${JSON.stringify(control)}, expected "engine.identity_unusable"`);
+    const controlRefusal = await readRefusal();
+    if (controlRefusal.fields.identity_source !== "file:id") {
+      throw new Error(`TEXTID-C1 (3): the control's refusal shows identity_source ${JSON.stringify(controlRefusal.fields.identity_source)}, expected "file:id" (fields: ${JSON.stringify(controlRefusal.fields)})`);
+    }
+    await choose("(3)");
+
+    // (4) another open replaces the control's open in the window and the step waits for its close; then the first folder goes.
+    await openAnotherAndWaitForClose(page, "TEXTID-C1 (4)", FIXTURE_NO_ID_COLUMN);
+    rmSync(first, { recursive: true, force: true });
+
+    // (5) P2: refused for the recorded declaration, with its source named, R-ENG beside it, and no choice.
+    const reopened = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), second), 120_000, "e2eOpenProjectFolder");
+    if (reopened === "question" || reopened === "skp.project_open_elsewhere") {
+      throw new Error(`TEXTID-C1 (5): the reopen of P2 answered ${JSON.stringify(reopened)} at its first call, so it did not reach C1`);
+    }
+    if (reopened !== "engine.identity_unusable") throw new Error(`TEXTID-C1 (5): the reopen of P2 answered ${JSON.stringify(reopened)}, expected "engine.identity_unusable"`);
+    const shown = await readRefusal();
+    if (shown.fields.column !== "id") throw new Error(`TEXTID-C1 (5): the refusal's column is ${JSON.stringify(shown.fields.column)}, expected "id"`);
+    if (shown.fields.identity_source !== "mapped:id") {
+      throw new Error(`TEXTID-C1 (5): the refusal's identity_source is ${JSON.stringify(shown.fields.identity_source)}, expected "mapped:id" (fields: ${JSON.stringify(shown.fields)})`);
+    }
+    if (shown.owner !== ENGINE_REFUSAL_NOTICE) throw new Error(`TEXTID-C1 (5): the owner line is ${JSON.stringify(shown.owner)}, expected R-ENG ${JSON.stringify(ENGINE_REFUSAL_NOTICE)}`);
+    if ((await offered()) !== null) throw new Error("TEXTID-C1 (5): the choice to open by row position was offered beside a recorded declaration of `id`");
+    return `(1) text-id-no-integer-refused.parquet chosen and saved; (3) another file opened and the close of (1)'s open seen, the control's reopen refused with identity_source file:id and the choice offered, and opened by a click; (4) another file opened and the close of the control's open seen; (5) P2, the same folder with its identity recorded as {"column":"id"}, refused as engine.identity_unusable with identity_source mapped:id, R-ENG beside it and no choice offered`;
+  } finally {
+    rmSync(first, { recursive: true, force: true });
+    rmSync(second, { recursive: true, force: true });
+  }
 }
 
 /**
@@ -804,12 +1146,14 @@ async function main() {
   if (![FIXTURE_NO_CRS_NO_ID, FIXTURE_NO_CRS_STRING_ID].every((f) => existsSync(f))) {
     missingFixtures.push([`${FIXTURE_NO_CRS_NO_ID} / ${FIXTURE_NO_CRS_STRING_ID}`, REGEN_BOTHNEEDED]);
   }
+  if (!existsSync(FIXTURE_TEXT_ID_NO_INTEGER)) missingFixtures.push([FIXTURE_TEXT_ID_NO_INTEGER, REGEN_TEXTID]);
   if (!existsSync(FIXTURE_SLOW)) missingFixtures.push([FIXTURE_SLOW, REGEN_SLOW]);
   if (missingFixtures.length > 0) {
     for (const [path, cmd] of missingFixtures) {
       console.error(`admission-remediation: fixture(s) not found: ${path}`);
       console.error(`Regenerate with:\n  ${cmd}`);
     }
+    rmSync(SCRATCH_STORE, { recursive: true, force: true });
     process.exitCode = 1;
     return;
   }
@@ -819,6 +1163,7 @@ async function main() {
     session = await attachOrLaunch();
   } catch (e) {
     console.error(`admission-remediation: could not attach to or launch the app: ${e.message}`);
+    rmSync(SCRATCH_STORE, { recursive: true, force: true });
     process.exitCode = 1;
     return;
   }
@@ -863,6 +1208,12 @@ async function main() {
     await runStep("NODEF'", 30_000, () => stepNodef(page));
     // MAP' and BOTHNEEDED': 120s as outer bounds, each half adds one settle (45s at most). A bound, not a duration.
     await runStep("MAP'", 120_000, () => stepMap(page, consoleHandle));
+    // DECLARE-SESSION': the declaration route through the real DOM (E-1); its poll bound is 120s, a bound and not a duration.
+    await runStep("DECLARE-SESSION'", 180_000, () => stepDeclareSession(page, consoleHandle));
+    // TEXTID': the choice to open by row position, a save and a reopen, through the real DOM (E-1); its bounds are harness bounds, not durations.
+    await runStep("TEXTID'", 480_000, () => stepTextid(page, consoleHandle));
+    // TEXTID-C1: a reopen whose project file records a declaration of `id` is refused with no choice (E-R1); the same harness bounds.
+    await runStep("TEXTID-C1", 600_000, () => stepTextidC1(page));
     await runStep("DUPKEY'", 30_000, () => stepDupkey(page));
     await runStep("BOTHNEEDED'", 120_000, () => stepBothNeeded(page, consoleHandle));
     await runStep("CONFLICT'", 30_000, () => stepConflict(page));
@@ -901,6 +1252,11 @@ async function main() {
     }
     consoleHandle.dispose();
     await browser.close().catch(() => {});
+    try {
+      rmSync(SCRATCH_STORE, { recursive: true, force: true });
+    } catch (e) {
+      console.error(`admission-remediation: the scratch store ${SCRATCH_STORE} was not removed: ${e.message}`);
+    }
     console.log(
       launched
         ? `This run launched the app; it stays RUNNING on CDP port ${CDP_PORT} for further interactive use.`

@@ -126,3 +126,13 @@ export class ResidentVertexCeilingExceeded extends Error {
     this.name = "ResidentVertexCeilingExceeded";
   }
 }
+
+/** Which declared ceiling an error is, by its class, for the condition store's typed code (milestone 5 section 2.2: `canvas.vertex_ceiling` or `canvas.pick_ceiling`, never read from the message). */
+export type CeilingKind = "vertex-ceiling" | "pick-ceiling";
+
+/** The ceiling kind of `e`, or `null` when `e` is neither declared ceiling. */
+export function ceilingKindOf(e: unknown): CeilingKind | null {
+  if (e instanceof ResidentVertexCeilingExceeded) return "vertex-ceiling";
+  if (e instanceof PickCeilingExceeded) return "pick-ceiling";
+  return null;
+}

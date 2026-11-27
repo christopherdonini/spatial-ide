@@ -301,6 +301,73 @@ fn a_session_tier_dataset_is_refused_before_the_pin_and_at_the_boundary_in_both_
     }
 }
 
+/// FX-S with string ids, opened by the choice to set aside the file's own `id` column.
+fn open_set_aside(dir: &Path) -> std::sync::Arc<Dataset> {
+    let path = dir.join("fx-set-aside.parquet");
+    write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 200,
+            attributes: AttributeMode::CategoricalZone,
+            crs_mode: CrsMode::DeclaredLv95,
+            identity: IdentityMode::StringIds,
+            ..Default::default()
+        },
+    )
+    .unwrap();
+    let catalog = Catalog::new();
+    catalog
+        .open_cancellable_setting_aside_file_id("set_aside", &path, None, None, &CancelToken::new())
+        .expect("the choice opens the file");
+    catalog.get("set_aside").expect("the catalog holds it")
+}
+
+/// **K-U1 for a dataset opened by the choice (R1 in the current-view scope, R2 in both scopes).**
+///
+/// A dataset opened by the choice to set aside its `id` column is on the session tier. R1: the
+/// current-view scope is refused by `preflight_pinless` with the session-tier code before any pin.
+/// R2: pinned, through the real boundary and in both scopes, it returns the same code and creates
+/// no destination, no staging directory and no audit record.
+///
+/// No new mutation: M-15 fails at the first R1 assertion of
+/// `publish_refuses_a_set_aside_open_as_session_tier`.
+#[test]
+fn a_set_aside_open_is_refused_in_the_current_view_scope_and_at_the_boundary_in_both_scopes() {
+    let d = workspace("k-u1-set-aside");
+    let ds = open_set_aside(&d);
+    assert_eq!(ds.identity().set_aside_column(), Some("id"), "set aside");
+    assert!(ds.content_pin().is_none(), "R1 runs before any pin");
+    let v = viewer();
+
+    let [(label, query), _] = scopes();
+    let req = request(&ds, &v, query, d.join(format!("r1-{label}")));
+    match publish::preflight_pinless(&req) {
+        Err(e) => assert_eq!(e.code(), SESSION_REFUSAL_CODE, "R1 {label}: {e}"),
+        Ok(()) => panic!("R1 {label}: preflight_pinless admitted a set-aside open"),
+    }
+    assert!(ds.content_pin().is_none(), "R1 {label}: no pin is taken");
+    assert!(!req.destination.exists(), "R1 {label}: nothing is created");
+
+    ds.pin_content(&CancelToken::new()).unwrap();
+    for (label, query) in scopes() {
+        let dest = d.join(format!("r2-{label}"));
+        let log = d.join(format!("audit-{label}.jsonl"));
+        let req = request(&ds, &v, query, dest.clone());
+        let grants = grant_for(&ds, &dest);
+        match run_attempt(&log, &req, &grants, &format!("r2-{label}")) {
+            Err(BoundaryError::Publish(e)) => assert_eq!(e.code(), SESSION_REFUSAL_CODE, "{e}"),
+            Err(other) => panic!("R2 {label}: expected a publish refusal, got {other:?}"),
+            Ok(outcome) => panic!("R2 {label}: published a set-aside open ({})", outcome.rows),
+        }
+        no_side_effect(&d, &dest);
+        let records = std::fs::read_to_string(&log).unwrap_or_default();
+        assert!(
+            records.trim().is_empty(),
+            "R2 {label}: audit record: {records}"
+        );
+    }
+}
+
 // ---- K-CAV: the manifest's identity caveat states what each tier's check was ----------------------
 
 /// The verified tier's caveat, byte for byte as the publisher wrote it before this piece.

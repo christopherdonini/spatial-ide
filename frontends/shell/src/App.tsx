@@ -8,7 +8,11 @@ import type { AdmissionPanelHandle } from "./admission/AdmissionPanel";
 import { Admitted } from "./admission/admitDataset";
 import DescribeSummary from "./admission/DescribeSummary";
 import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
-import RefusalBlock from "./admission/RefusalBlock";
+import type { CeilingKind } from "./canvas/limits";
+import ConditionView from "./conditions/ConditionView";
+import ProblemsTab from "./conditions/ProblemsTab";
+import { attentionOf, conditionsReducer, initialConditionsState, visibleFor } from "./conditions/conditions";
+import type { Condition, ConditionTarget } from "./conditions/conditions";
 import { projectionFor, projectionSummary } from "./attributes/projection";
 import type { AuthoritativeBbox } from "./canvas/viewportBbox";
 import WorkingCanvas, { WorkingCanvasHandle } from "./canvas/WorkingCanvas";
@@ -669,6 +673,9 @@ export function handleCanvasCeilingRefusal(
   deps.cancelStream(streamHandle);
 }
 
+/** The condition store's typed code for each declared ceiling (section 2.2): read from the kind the canvas passes, never from the message. */
+const CEILING_CODE: Record<CeilingKind, string> = { "vertex-ceiling": "canvas.vertex_ceiling", "pick-ceiling": "canvas.pick_ceiling" };
+
 /**
  * The reason a session ended, from the refusal's code: `"source-changed"` only for exactly `engine.source_changed`, and
  * `"coverage-lost"` for any other code (the routes into `endSession` admit that one and `engine.source_coverage_lost`).
@@ -692,7 +699,7 @@ export function sessionEndReasonOf(code: string): SessionEndReason {
  * publish parser does.
  *
  * **What it sets, and what each is for:**
- * - the typed status (`sessionEnded`), rendered through `RefusalBlock` in the `attention.sessionEnded` slot --
+ * - the typed status (`sessionEnded`), rendered through `RefusalBlock` (`ConditionView`, in the `attention.top` slot) --
  *   which is what makes `refusalGuidance("engine.source_changed")` (`formatRefusal.ts`'s `refusalGuidance`)
  *   actually reach an eye, since `RefusalBlock.tsx`'s `guidance` line is the only product dispatcher of it;
  * - the ref the hover latch reads (`latchedHoverReadout`, `pick.ts`), set synchronously rather than
@@ -869,14 +876,24 @@ export default function App() {
   // session history after it is applied (ADR-022 Amendment 1). The queue sends one step at a time, in commit order, and the
   // canvas never waits for it. A step that was not recorded shows `recordNotice`, for the dataset it was recorded on, until the
   // dataset changes, and is logged too: neither is silent. `lastCommittedStyle` is the baseline `styleTransitions` diffs from.
-  const [recordNotice, setRecordNotice] = useState<{ dataset: string; text: string } | null>(null);
+  const [conditions, dispatchConditions] = useReducer(conditionsReducer, initialConditionsState);
   const [stepQueue] = useState(() =>
     createStepQueue({
       send: (dataset, intent) => recordStep(dataset, intent),
       report: (report) => {
         const text = stepNoticeText(report);
         logSessionEvent(`step-record-${report.kind}`, text);
-        setRecordNotice({ dataset: report.dataset, text });
+        const target = viewTargetNow();
+        if (target !== null) {
+          dispatchConditions({
+            type: "replaceBatch",
+            route: "record-notice",
+            code: `step-record-${report.kind}`,
+            target,
+            generation: report.dataset,
+            displays: [{ kind: "text", text }],
+          });
+        }
       },
     })
   );
@@ -884,9 +901,6 @@ export default function App() {
   // B2 piece 1c (B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md section 2.8): the one save. The bar's `/save` and App's own control both call
   // `handleSaveProject`; the saver (`project/saveProject.ts`) asks for the folder at an open's first save and sends it once. Its notices
   // are for the dataset they were made on and end with it, as `recordNotice` does.
-  const [saveNotices, setSaveNotices] = useState<{ dataset: string; texts: readonly string[] } | null>(null);
-  /** A reopen's places (`project/openProject.ts`'s `reopenApply`), for the open they were made on; they end with it, as the save's do. */
-  const [reopenNotices, setReopenNotices] = useState<{ dataset: string; texts: readonly string[] } | null>(null);
   /** The project identity this window holds and the open it is for (Amendment 54 item 5 (f)), from `SaveProjectResponse.project` and `opened.project`. */
   const heldProjectRef = useRef<{ dataset: string; project: string } | null>(null);
   /** A reopen's saved view (O-17), held for its open's `[admitted]` effect, which writes it to the canvas once. */
@@ -918,9 +932,14 @@ export default function App() {
   const inspected = view === null ? null : viewInspected(view);
   const pinned = view !== null && viewPinned(view);
   const notice = view === null ? null : viewSelectionNotice(view);
-  const shownRecordNotice = admitted !== null && recordNotice?.dataset === admitted.dataset ? recordNotice.text : null;
-  const shownSaveNotices = admitted !== null && saveNotices?.dataset === admitted.dataset ? saveNotices.texts : [];
-  const shownReopenNotices = admitted !== null && reopenNotices?.dataset === admitted.dataset ? reopenNotices.texts : [];
+  /** The conditions of the open on the map for this view (milestone 5 section 2.3): the strip shows the top, and Problems lists every one. */
+  const visibleConditions = visibleFor(conditions, { view: view === null ? null : view.id, resource: admitted === null ? null : admitted.dataset });
+  const attention = attentionOf(visibleConditions);
+  /** Dismiss, as the strip's and Problems' buttons both call it: recorded where the action applies, then the store ends the condition (it never reaches the kernel). */
+  const dismissCondition = (condition: Condition): void => {
+    recordNamed("gui-action", condition.reason.route === "viewport-refusal" ? "canvas.dismissViewportRefusal" : "canvas.dismissCanvasRefusal");
+    dispatchConditions({ type: "dismiss", id: condition.id });
+  };
   // `highlightLayers` caches on the Set's identity, and the reducer keeps the same Map while the selection is unchanged, so the Set
   // is rebuilt only when the selection is. The canvas's effect is keyed on `selected` and `inspected`, not on this wrapper.
   const selectedIds = useMemo(() => new Set(selection.keys()), [selection]);
@@ -929,6 +948,11 @@ export default function App() {
   /** The view's id, readable from the stable callbacks below (`commitActiveFilter`, the effect cleanups). */
   const viewIdRef = useRef<ViewId | null>(null);
   viewIdRef.current = view === null ? null : view.id;
+  /** The target of a condition about the view as of now, or `null` while no view is drawn (nothing is raised then). */
+  function viewTargetNow(): ConditionTarget | null {
+    const id = viewIdRef.current;
+    return id === null ? null : { kind: "view", view: id };
+  }
   /** The workspace as of the latest render, for the export's scope check, which runs from the dialog or a dev hook and not from a render. */
   const workspaceRef = useRef(workspace);
   workspaceRef.current = workspace;
@@ -941,8 +965,6 @@ export default function App() {
   const drawnIds = drawnState !== null && admitted !== null && drawnState.resource === admitted.dataset ? drawnState.ids : NO_IDS;
   /** The view box the Feature tab's counts and the Export panel's Current view are made against (a ref with a listener set: a pan renders nothing here). */
   const [viewBox] = useState(createViewBoxStore);
-  const [canvasRefusal, setCanvasRefusal] = useState<string | null>(null);
-  const [viewportRefusal, setViewportRefusal] = useState<FormattedRefusal | null>(null);
   /**
    * **Brief A boundary 4 (P3b §2a): this dataset's session ended because its source changed, or its watch lost coverage.**
    * `null` until it does. Set once, by `handleSessionEnded`, from whichever of the four routes
@@ -1051,9 +1073,11 @@ export default function App() {
    * `handleApplyFilter` (component-body level, below) can reach the SAME reporting wrapper the
    * effect's initial load and debounced pan/zoom already issue every query through, without itself
    * needing to be defined inside the effect (which reruns per `admitted`, while `handleApplyFilter`
-   * -- passed to `FilterPanel` as a prop -- has no reason to change identity that often). */
+   * -- passed to `FilterPanel` as a prop -- has no reason to change identity that often).
+   * `options` (colour-by-refill-keeps-the-view): `{ keepCamera: true }` asks that the camera stay where it stands across the clear this issue makes; the candidate binding passes it to
+   * `reissueUnrestricted`, the baseline binding ignores it (it resets no fit on this path). Only the Colour-by effect passes it; an Apply, a Clear and the open pass nothing. */
   const issueQueryRef = useRef<
-    ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null) => Promise<RequestOutcome>) | null
+    ((bbox: Bbox | null, bboxCrs: string | null, filter: Filter | null, options?: { keepCamera: true }) => Promise<RequestOutcome>) | null
   >(null);
 
   /** Writes `activeFilterRef.current` (synchronously), dispatches `transition` on the view and records the filter -- the one
@@ -1180,8 +1204,9 @@ export default function App() {
       // diffs from ends it too, so that the next commit records only what it changes. No step is recorded for the open.
       if (lastCommittedStyle.current.fillMatch !== null) lastCommittedStyle.current = { ...lastCommittedStyle.current, fillMatch: null };
       admitAndResetStaleUiState(next, {
-        setCanvasRefusal,
-        setViewportRefusal,
+        // The condition store ends these with the open (`opened`, in `setAdmitted` below): the two states are the store's now.
+        setCanvasRefusal: () => undefined,
+        setViewportRefusal: () => undefined,
         setHover,
         setResidencyStatus,
         setActiveFilter: (value) => {
@@ -1195,7 +1220,10 @@ export default function App() {
           sessionEndedRef.current = value === null ? null : sessionEndReasonOf(value.code);
           setSessionEnded(value);
         },
-        setAdmitted: (value) => dispatch({ type: "resource.admitted", admitted: value }),
+        setAdmitted: (value) => {
+          dispatch({ type: "resource.admitted", admitted: value });
+          dispatchConditions({ type: "opened", resource: value.dataset });
+        },
       });
     },
     // `commitScanState` is `useCallback([])`-stable (see its own doc comment above), so this dependency never
@@ -1235,7 +1263,9 @@ export default function App() {
       projectSaver.adopt(next.dataset);
       heldProjectRef.current = { dataset: next.dataset, project: reopened.project };
       reopenViewRef.current = applied.view === null ? null : { dataset: next.dataset, view: applied.view };
-      setReopenNotices({ dataset: next.dataset, texts: applied.notices });
+      applied.notices.forEach((text, ordinal) =>
+        dispatchConditions({ type: "raise", route: "reopen-notice", code: "project.reopen_notice", ordinal, target: { kind: "resource" }, generation: next.dataset, display: { kind: "text", text } })
+      );
     },
     [handleAdmitted, projectSaver]
   );
@@ -1492,6 +1522,7 @@ export default function App() {
       setSessionEnded: (refusal, reason) => {
         sessionEndedRef.current = reason;
         setSessionEnded(refusal);
+        dispatchConditions({ type: "raise", route: "session-ended", code: refusal.code, ordinal: null, target: { kind: "resource" }, generation: forDataset, display: { kind: "refusal", refusal } });
         // The workspace records that this resource's generation ended, and why (the first call wins, as above).
         dispatch({ type: "resource.generationEnded", resource: forDataset, reason });
       },
@@ -1598,9 +1629,10 @@ export default function App() {
     promise.then(
       () => {
         // N8 correction round 1: a late arrival from a generation `App` has moved past must not
-        // touch the LIVE generation's `viewportRefusal` either -- the same drop-not-act-on guard
-        // `endSessionForDataset` already applies to ending the session (its own doc comment has the
-        // full account), extended here to this arm's write (the rejected arm below carries the same guard).
+        // act for the LIVE generation -- the same drop-not-act-on guard `endSessionForDataset`
+        // already applies to ending the session (its own doc comment has the full account). Since
+        // milestone 5 this arm's only write is the condition store's `ownerClear`, which carries
+        // `forDataset` as its generation (the rejected arm below carries the same guard).
         if (forDataset !== admittedDatasetRef.current) return;
         // **P3b, P3a architect note 6: a resolved outcome does not clear a standing session-ended
         // refusal.** Before this guard, any later resolved outcome cleared `viewportRefusal`
@@ -1610,17 +1642,29 @@ export default function App() {
         // block below is separate state and was never dismissible; this keeps the refusal that
         // named the code from disappearing beside it.
         if (sessionEndedRef.current) return;
-        setViewportRefusal(null);
+        const target = viewTargetNow();
+        if (target !== null) dispatchConditions({ type: "ownerClear", route: "viewport-refusal", target, generation: forDataset });
       },
       (e: unknown) => {
         if (e instanceof SkpCallError) {
           // N8 correction round 1: same drop-not-act-on guard as the resolved arm above -- a late
           // rejection from a superseded generation (e.g. after `manager.stop()` or a rejection
-          // following `closeDataset(old)`) must not write the LIVE generation's `viewportRefusal`.
+          // following `closeDataset(old)`) must not raise a condition for, or end, the LIVE session.
           if (forDataset !== admittedDatasetRef.current) return;
-          // Unchanged: the camera pre-check route still sets `viewportRefusal` exactly as before
-          // (§2b: "It keeps `setViewportRefusal(formatRefusal(...))`").
-          setViewportRefusal(formatRefusal(e.skpError));
+          // The pre-check route raises a viewport-refusal condition, except for a session-ended refusal: that one is only the session's own condition (milestone 5
+          // section 2.2, C-A4), so the identical refusal is never in the list twice.
+          const target = viewTargetNow();
+          if (!isSessionEndedRefusal(e) && target !== null) {
+            dispatchConditions({
+              type: "raise",
+              route: "viewport-refusal",
+              code: e.skpError.code,
+              ordinal: null,
+              target,
+              generation: forDataset,
+              display: { kind: "refusal", refusal: formatRefusal(e.skpError) },
+            });
+          }
           // **P3b §2b: and, for this one code, additionally ends the session.** This is the catch
           // both arms' untiled issues land in -- baseline's `issueViewportQuery`, and the candidate
           // session's `reissueUnrestricted`, which rejects with the real `SkpCallError`
@@ -1798,7 +1842,7 @@ export default function App() {
       candidateManagerRef.current = session.manager;
       candidateSessionRef.current = session;
       viewportDebounceRef.current = makeCandidateViewportDispatcher(session);
-      issueQueryRef.current = (bbox, _bboxCrs, filter) => session.reissueUnrestricted(bbox, filter);
+      issueQueryRef.current = (bbox, _bboxCrs, filter, options) => session.reissueUnrestricted(bbox, filter, options);
 
       if (isInstrumentedBuild()) {
         registerE2eHook("queryWithFilter", (predicate: string) =>
@@ -1889,7 +1933,19 @@ export default function App() {
           // P3a: the detail now opens with its typed code (`kernel/src/skp.rs::terminal_detail_of`),
           // which is for the client to match on and not for the operator to read. `message` is the
           // refusal's own text with that prefix removed; nothing else about this banner changes.
-          setCanvasRefusal(`stream ${terminal.kind}: ${formatTerminalRefusal(terminal.detail).message}`);
+          const refusal = formatTerminalRefusal(terminal.detail);
+          const target = viewTargetNow();
+          if (target !== null) {
+            dispatchConditions({
+              type: "raise",
+              route: "stream-terminal",
+              code: refusal.code,
+              ordinal: null,
+              target,
+              generation: admitted.dataset,
+              display: { kind: "text", text: `stream ${terminal.kind}: ${refusal.message}` },
+            });
+          }
           applyScanEvent({ kind: "failed" });
         },
         onDeliveryCompleted: () => {
@@ -2134,7 +2190,7 @@ export default function App() {
     for (const transition of transitions) stepQueue.enqueue(dataset, transition);
   }
 
-  // Milestone 4 PR B (OPEN-20 (a), the form's Amendment 16): when Colour by changes to a column other than the one the previous render coloured by (when no match is set, as after One colour or an open, that is none), while the status bar says attributes were not held, the first look is issued again under the active filter; `withinAttributeCeiling` then keeps that column. No step is recorded: the filter did not change.
+  // Milestone 4 PR B (OPEN-20 (a), the form's Amendment 16): when Colour by changes to a column other than the one the previous render coloured by (when no match is set, as after One colour or an open, that is none), while the status bar says attributes were not held, the first look is issued again under the active filter; `withinAttributeCeiling` then keeps that column. The camera is kept (`{ keepCamera: true }`): the map is cleared and filled again for the view shown, unless the canvas was still waiting to fit the first batch of an open or of a change of the filter (an Apply, a Clear, a card change or a refused Apply's re-issue), which it then does. This is the candidate arm's: the dev-only baseline arm's binding ignores the option (issueViewportQuery), and nothing here is claimed of its fill. No step is recorded: the filter did not change. Not covered: a Colour by issued inside the mint round trip of an Apply (timing inside one request, AUTONOMY section 31).
   const previousColourColumn = useRef<string | null>(null);
   const colourColumn = view?.style.fillMatch?.column ?? null;
   useEffect(() => {
@@ -2142,7 +2198,7 @@ export default function App() {
     previousColourColumn.current = colourColumn;
     const dataset = admittedDatasetRef.current;
     if (colourColumn === null || colourColumn === previous || dataset === null || attributesNotHeld !== dataset) return;
-    const attempt = () => (dataset === admittedDatasetRef.current && issueQueryRef.current !== null ? issueQueryRef.current(null, null, activeFilterRef.current) : Promise.resolve<RequestOutcome>({ kind: "stopped" }));
+    const attempt = () => (dataset === admittedDatasetRef.current && issueQueryRef.current !== null ? issueQueryRef.current(null, null, activeFilterRef.current, { keepCamera: true }) : Promise.resolve<RequestOutcome>({ kind: "stopped" }));
     reportViewportOutcome(requestViewportWithSingleRetry(attempt), dataset);
   }, [colourColumn]);
 
@@ -2190,12 +2246,22 @@ export default function App() {
       view: canvasRef.current?.currentView?.() ?? null,
       selectionCount: viewSelection(current).size,
     });
-    if (texts !== null) setSaveNotices({ dataset: held.dataset, texts });
+    if (texts !== null) {
+      dispatchConditions({
+        type: "replaceBatch",
+        route: "save-notice",
+        code: "project.save_notice",
+        target: { kind: "resource" },
+        generation: held.dataset,
+        displays: texts.map((text) => ({ kind: "text", text })),
+      });
+    }
   }
 
   return (
     <StudioLayout
       overlays={<ErrorBanner />}
+      attentionOthers={attention === null ? 0 : attention.others}
       layersRow={admitted ? { pathDisplay: admitted.describe.source.path_display } : null}
       onZoomToLayer={() => void canvasRef.current?.fitToBounds()}
       onSelectTool={handleSelectTool}
@@ -2218,7 +2284,7 @@ export default function App() {
       slots={{
         "region.layers": (
           <>
-            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} onReopened={handleReopened} heldProject={heldProject} />
+            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} onReopened={handleReopened} heldProject={heldProject} datasetOnMap={admitted === null ? null : admitted.dataset} />
             {/* B2 piece 1c: App's own control for the one save, with the entry's label; shown only while a dataset is admitted. */}
             {admitted && (
               <button type="button" className="save-project" onClick={() => void handleSaveProject()}>
@@ -2393,20 +2459,33 @@ export default function App() {
                    * wrong answer (ADR-010 rule 5). The ref, not the state, because this fires from
                    * deck.gl's own render path. */
                   onHover={(readout) => setHover(latchedHoverReadout(readout, sessionEndedRef.current))}
-                  onCanvasRefusal={(streamHandle, message) => {
+                  onCanvasRefusal={(streamHandle, message, kind) => {
                     // N8 residual correction round 1: bound to the `admitted` this render built it for --
                     // a call arriving from a superseded instance must not run `handleCanvasCeilingRefusal`
-                    // below. Unguarded, it would set the LIVE generation's `canvasRefusal` banner to A's
-                    // own message and dispatch `{kind:"failed"}` onto the live scan-liveness state -- real
-                    // contamination. Its `cancelStream(streamHandle)` call, by contrast, targets B's own
-                    // manager with A's `streamHandle`, naming none of B's streams -- a no-op, not a
-                    // correctness guarantee this guard relies on.
+                    // below. Unguarded, it would dispatch `{kind:"failed"}` onto the live scan-liveness
+                    // state -- real contamination; its canvas-ceiling raise carries A's generation, which
+                    // the condition store drops (`raise` in conditions/conditions.ts). Its
+                    // `cancelStream(streamHandle)` call, by contrast, targets B's own manager with A's
+                    // `streamHandle`, naming none of B's streams -- a no-op, not a correctness guarantee
+                    // this guard relies on.
                     if (admitted.dataset !== admittedDatasetRef.current) return;
                     // NEXT-CUT.md P6 review, B1 (blocking): `handleCanvasCeilingRefusal`'s own doc
                     // comment above has the full account -- a declared-ceiling refusal must dispatch a
                     // scan event AT the cancel call site, or the liveness indicator lies forever after.
                     handleCanvasCeilingRefusal(streamHandle, message, {
-                      setCanvasRefusal,
+                      setCanvasRefusal: (value) => {
+                        const target = viewTargetNow();
+                        if (value === null || target === null) return;
+                        dispatchConditions({
+                          type: "raise",
+                          route: "canvas-ceiling",
+                          code: CEILING_CODE[kind],
+                          ordinal: null,
+                          target,
+                          generation: admitted.dataset,
+                          display: { kind: "text", text: value },
+                        });
+                      },
                       applyScanEvent,
                       // limits.ts's own declared remedy is "cancel the offending stream", not just "show
                       // a message" -- a batch that already crossed a ceiling must not keep the stream
@@ -2457,79 +2536,9 @@ export default function App() {
             <HoverReadoutView readout={hover} />
           </div>
         ),
-        /* The attention strip, in section 2.5 order. **P3b section 2a(v): the session-ended status is first.**
-         * Rendered through `RefusalBlock`, the shared refusal block and the ONLY product dispatcher of
-         * `refusalGuidance` (`admission/RefusalBlock.tsx`), which is what makes the owner's
-         * `engine.source_changed` sentence reach an operator on this surface; its `code`/`message` come from
-         * `formatTerminalRefusal`, so no machine prefix is rendered as prose (section 8.6). NOT dismissible:
-         * `RefusalBlock` renders no button, and the state ends only when the dataset is reopened -- the actual
-         * clear is `handleAdmitted`'s own `admitAndResetStaleUiState` call (N8 correction, 2026-09-22), not a
-         * remount of the keyed canvas. Every attention and status item binds to `admitted`, the dataset on
-         * the map (section 2.4). */
-        "attention.sessionEnded": admitted && sessionEnded && (
-          <div className="canvas-session-ended">
-            <RefusalBlock refusal={sessionEnded} />
-          </div>
-        ),
-        "attention.canvasRefusal": admitted && (canvasRefusal || shownRecordNotice || shownSaveNotices.length > 0 || shownReopenNotices.length > 0) && (
-          <>
-            {canvasRefusal && (
-              <div className="canvas-refusal" role="alert">
-                {canvasRefusal}
-                <button
-                  type="button"
-                  onClick={() => {
-                    // NEXT-CUT.md P3 item B (class C, `surfaceRegistry.ts`'s own
-                    // "canvas.dismissCanvasRefusal" row): recorded at the point the action
-                    // actually applies -- this click clears local state only, never the kernel.
-                    recordNamed("gui-action", "canvas.dismissCanvasRefusal");
-                    setCanvasRefusal(null);
-                  }}
-                >
-                  Dismiss
-                </button>
-              </div>
-            )}
-            {/* B2 piece 1b: the owner's notice for a filter or style step the session history did not take (section 2.10, O1 to O3).
-              * Not dismissible, like the residency status: it ends with the dataset it names, and it never replaces a refusal above. */}
-            {shownRecordNotice && (
-              <div className="canvas-refusal record-notice" role="alert">
-                {shownRecordNotice}
-              </div>
-            )}
-            {/* B2 piece 1c: the notices of the last save (section 2.8), one line each; they end with the dataset they name. */}
-            {shownSaveNotices.map((text, index) => (
-              <div key={index} className="canvas-refusal save-notice" role="alert">
-                {text}
-              </div>
-            ))}
-            {/* B2 piece 1c: a reopen's places, in `reopenApply`'s order, one line each; they end with the open they name. */}
-            {shownReopenNotices.map((text, index) => (
-              <div key={index} className="canvas-refusal reopen-notice" role="alert">
-                {text}
-              </div>
-            ))}
-          </>
-        ),
-        /* P3b: suppressed once the session-ended block is standing. The pre-check route sets BOTH (section 2b
-         * keeps `setViewportRefusal` exactly as it was), and the block above renders the same code and the
-         * same message plus the guidance this surface has never dispatched -- so showing both would put the
-         * identical refusal in the strip twice. The state is untouched; only whether it renders. */
-        "attention.viewportRefusal": admitted && viewportRefusal && !sessionEnded && (
-          <div className="canvas-refusal" role="alert">
-            <div className="admission-refusal-code">{viewportRefusal.code}</div>
-            {viewportRefusal.message}
-            <button
-              type="button"
-              onClick={() => {
-                recordNamed("gui-action", "canvas.dismissViewportRefusal");
-                setViewportRefusal(null);
-              }}
-            >
-              Dismiss
-            </button>
-          </div>
-        ),
+        /* The attention strip (milestone 5 section 2.3): one place, the top condition of the open on the map, rendered by the one ConditionView. The conditions below it are
+         * rows of the Problems tab, and the layout's S-3 button says how many. Every attention and status item binds to admitted, the dataset on the map (section 2.4). */
+        "attention.top": attention && <ConditionView condition={attention.top} place="strip" onDismiss={dismissCondition} />,
         /* The status bar, in section 2.5 order. Rider 1 (DECISIONS-PENDING.md entry 0, option (a)): the residency
          * status is NOT dismissible -- no close control, deliberately; dismissing a `.canvas-refusal` must never
          * remove it. It only clears via `nextResidencyStatus`'s own "delivery-complete" / "dataset-changed" /
@@ -2662,6 +2671,8 @@ export default function App() {
           * per-dataset panel. */
         "activity.notices": <NoticesPanel />,
         /* Milestone 4 PR C (section 2.4): the table, keyed on the dataset like the panels above so a new open starts on the first scope. */
+        /* Milestone 5 section 2.3: every condition of the open on the map, once; the strip's top is the first row, without its own element. */
+        "activity.problems": <ProblemsTab conditions={visibleConditions} notKept={conditions.notKept} onDismiss={dismissCondition} />,
         "activity.table": admitted && (
           <TableTab
             key={admitted.dataset}

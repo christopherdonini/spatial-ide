@@ -2368,8 +2368,8 @@ fn attr_row_bytes(chunk_attrs: &[ArrayRef], row: usize) -> usize {
         {
             8
         } else {
-            // Unreachable: `attributes::admit_attribute_type` is the gate, and it admits exactly the
-            // types above. Costing an unknown type at 8 B keeps the estimator total rather than
+            // Unreachable: `attributes::admit_attribute_type` is the gate, and it admits only types
+            // above. Costing an unknown type at 8 B keeps the estimator total rather than
             // panicking on a path that would only be reached if the two lists drifted apart.
             8
         };

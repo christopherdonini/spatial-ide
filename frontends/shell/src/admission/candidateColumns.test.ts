@@ -14,7 +14,7 @@ describe("splitCandidateColumns", () => {
     expect(splitCandidateColumns("parcel_key")).toEqual(["parcel_key"]);
   });
 
-  it("an empty string (no 64-bit integer column at all) yields an empty list, not [\"\"]", () => {
+  it("an empty string (no candidate column at all) yields an empty list, not [\"\"]", () => {
     expect(splitCandidateColumns("")).toEqual([]);
   });
 

@@ -69,6 +69,7 @@ fn record(dir: &Path, mode: CrsMode, assertion: Option<&str>) -> (Value, String)
         cancel_key: "k".to_string(),
         crs_assertion,
         identity: None,
+        set_aside_file_id: false,
     };
     let dataset = host.open_dataset(open).expect("open").dataset;
     let describe = DescribeRequest {

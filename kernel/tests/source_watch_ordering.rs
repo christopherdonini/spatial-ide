@@ -51,6 +51,7 @@ fn open_req(path: &std::path::Path, cancel_key: &str) -> OpenDatasetRequest {
         cancel_key: cancel_key.to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     }
 }
 

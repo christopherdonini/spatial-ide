@@ -4,6 +4,7 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { attachCollapsedCountSync, type CountableRecorder } from "./collapsedCountSync";
+import { ConsoleRecorder, MAX_CONSOLE_ENTRIES } from "./recorder";
 
 /** Same fully-controlled fake rAF `coalesceOncePerFrame.test.ts` already establishes -- driven by
  * the test, not a real display's refresh rate. */
@@ -42,9 +43,13 @@ function fakeFrame() {
  * real allocation cost to measure), so the call-count assertion below is the closest a fake CAN
  * prove -- `count()` is called at most once per `onCount`, never once per entry.
  */
-function fakeRecorder(): CountableRecorder & { push(): void; setDropped(n: number): void; countCalls(): number } {
+function fakeRecorder(): CountableRecorder & {
+  push(): void;
+  setDropped(lane: "stream" | "other", n: number): void;
+  countCalls(): number;
+} {
   const entries: { seq: number }[] = [];
-  let dropped = 0;
+  const dropped = { stream: 0, other: 0 };
   let countReadCount = 0;
   const listeners = new Set<() => void>();
   return {
@@ -52,7 +57,7 @@ function fakeRecorder(): CountableRecorder & { push(): void; setDropped(n: numbe
       countReadCount++;
       return entries.length;
     },
-    droppedCount: () => dropped,
+    droppedCount: (lane) => dropped[lane],
     subscribe: (listener) => {
       listeners.add(listener);
       return () => listeners.delete(listener);
@@ -61,8 +66,8 @@ function fakeRecorder(): CountableRecorder & { push(): void; setDropped(n: numbe
       entries.push({ seq: entries.length });
       for (const l of listeners) l();
     },
-    setDropped: (n: number) => {
-      dropped = n;
+    setDropped: (lane: "stream" | "other", n: number) => {
+      dropped[lane] = n;
       for (const l of listeners) l();
     },
     countCalls: () => countReadCount,
@@ -80,7 +85,7 @@ describe("attachCollapsedCountSync (NEXT-CUT.md I9: closed console = zero per-en
     attachCollapsedCountSync(recorder, onCount, requestFrame, cancelFrame);
 
     expect(onCount).toHaveBeenCalledTimes(1);
-    expect(onCount).toHaveBeenCalledWith({ count: 2, dropped: 0 });
+    expect(onCount).toHaveBeenCalledWith({ count: 2, droppedStream: 0, droppedOther: 0 });
   });
 
   it("onCount is the ONLY function this module ever calls in response to recorder activity -- never anything entry-shaped", () => {
@@ -95,13 +100,14 @@ describe("attachCollapsedCountSync (NEXT-CUT.md I9: closed console = zero per-en
     flush();
 
     expect(onCount).toHaveBeenCalledTimes(1);
-    // The ONLY argument shape onCount can ever receive is {count, dropped} -- two numbers. There is
+    // The ONLY argument shape onCount can ever receive is {count, droppedStream, droppedOther} -- three numbers. There is
     // no ConsoleEntry-shaped value it could have been called with; this is the structural guarantee
     // I9 asks for, not merely an assertion that nothing else happened to run in this test.
     const [snapshot] = onCount.mock.calls[0]!;
-    expect(Object.keys(snapshot).sort()).toEqual(["count", "dropped"]);
+    expect(Object.keys(snapshot).sort()).toEqual(["count", "droppedOther", "droppedStream"]);
     expect(typeof snapshot.count).toBe("number");
-    expect(typeof snapshot.dropped).toBe("number");
+    expect(typeof snapshot.droppedStream).toBe("number");
+    expect(typeof snapshot.droppedOther).toBe("number");
   });
 
   it("a burst of recorder notifications within one frame collapses to exactly one onCount call (coalesced, I9)", () => {
@@ -117,7 +123,7 @@ describe("attachCollapsedCountSync (NEXT-CUT.md I9: closed console = zero per-en
 
     flush();
     expect(onCount).toHaveBeenCalledTimes(1);
-    expect(onCount).toHaveBeenCalledWith({ count: 20, dropped: 0 });
+    expect(onCount).toHaveBeenCalledWith({ count: 20, droppedStream: 0, droppedOther: 0 });
   });
 
   it("count() is read at most once per onCount call, never once per entry (S6: no full-ring copy per frame while collapsed)", () => {
@@ -135,7 +141,7 @@ describe("attachCollapsedCountSync (NEXT-CUT.md I9: closed console = zero per-en
 
     // Exactly one MORE read for the whole 50-entry burst, coalesced to one frame (I9) -- never 50.
     expect(recorder.countCalls()).toBe(callsAfterAttach + 1);
-    expect(onCount).toHaveBeenLastCalledWith({ count: 50, dropped: 0 });
+    expect(onCount).toHaveBeenLastCalledWith({ count: 50, droppedStream: 0, droppedOther: 0 });
   });
 
   it("reflects droppedCount() in the snapshot", () => {
@@ -146,10 +152,44 @@ describe("attachCollapsedCountSync (NEXT-CUT.md I9: closed console = zero per-en
     attachCollapsedCountSync(recorder, onCount, requestFrame, cancelFrame);
     onCount.mockClear();
 
-    recorder.setDropped(3);
+    recorder.setDropped("other", 3);
     flush();
 
-    expect(onCount).toHaveBeenCalledWith({ count: 0, dropped: 3 });
+    expect(onCount).toHaveBeenCalledWith({ count: 0, droppedStream: 0, droppedOther: 3 });
+  });
+
+  it("CC1: a fake with 3 dropped of the stream kind and 2 of the other reads as {0, 3, 2}", () => {
+    const recorder = fakeRecorder();
+    const onCount = vi.fn();
+    const { requestFrame, cancelFrame, flush } = fakeFrame();
+
+    attachCollapsedCountSync(recorder, onCount, requestFrame, cancelFrame);
+    onCount.mockClear();
+
+    recorder.setDropped("stream", 3);
+    recorder.setDropped("other", 2);
+    flush();
+
+    expect(onCount).toHaveBeenCalledWith({ count: 0, droppedStream: 3, droppedOther: 2 });
+  });
+
+  it("CC2: against a real recorder, one record_step and a burst of stream entries read as one held lane and the stream's drops", () => {
+    const recorder = new ConsoleRecorder();
+    const onCount = vi.fn();
+    const { requestFrame, cancelFrame, flush } = fakeFrame();
+
+    attachCollapsedCountSync(recorder, onCount, requestFrame, cancelFrame);
+    onCount.mockClear();
+
+    recorder.record({ step: 1 }, "record_step");
+    for (let i = 0; i < 300; i++) recorder.record({ i }, "viewport_query");
+    flush();
+
+    expect(onCount).toHaveBeenLastCalledWith({
+      count: MAX_CONSOLE_ENTRIES + 1,
+      droppedStream: 300 - MAX_CONSOLE_ENTRIES,
+      droppedOther: 0,
+    });
   });
 
   it("the returned detach function unsubscribes and cancels a still-pending coalesced frame", () => {

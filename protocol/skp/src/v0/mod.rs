@@ -133,4 +133,25 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// `open_dataset` can return `cancel_key_in_use`'s; `protocol/data-plane/` has an empty diff. Same
 /// discipline again: `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in
 /// the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.14` entry).
-pub const SKP_VERSION: &str = "skp/0.14";
+///
+/// `skp/0.15` (identity-declaration-route-for-session-tier, ADR-016 Amendment 2 and the Note
+/// 2026-11-26): `describe`'s `identity` gains `candidate_columns: Option<Vec<String>>`, the engine's
+/// candidate list on the session tier and `null`, still present, on a native or a mapped identity
+/// (`SKP-V0.md` §1 and §8's `skp/0.15` entry). No command, request member, code or message is
+/// added, removed or changed, and `protocol/data-plane/` has an empty diff; the partitioned refusal's fixture message is brought to the engine's Display; the engine message itself is unchanged. Same discipline again:
+/// `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in the same commit as
+/// the literal bump.
+///
+/// `skp/0.16` (text-id-opens-for-the-session-by-row-position, ADR-016 Amendment 3): `open_dataset`
+/// and `open_project` gain the request member `set_aside_file_id: bool`, always present and `false`
+/// for no choice, `describe`'s `identity` gains `set_aside_column: Option<String>`, `null` except on
+/// an open made by that choice, and a new code, `engine.identity_set_aside_refused` (`detail`)
+/// (`SKP-V0.md` §1, §5 and §8's `skp/0.16` entry). `protocol/data-plane/` has an empty diff. Same
+/// discipline again: `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in
+/// the same commit as the literal bump.
+/// `skp/0.17` (text-id-reopen-with-a-recorded-declaration, ADR-016 Amendment 3, Decision 1): `engine.identity_unusable`
+/// gains the field `identity_source`, the source the engine checked, `file:id` or `mapped:<column>`. One field on one
+/// code: no command, request member, reply member, code or message is added, removed or changed
+/// (`SKP-V0.md` §8's `skp/0.17` entry). `protocol/data-plane/` has an empty diff. Same discipline again:
+/// `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in the same commit as the literal bump.
+pub const SKP_VERSION: &str = "skp/0.17";

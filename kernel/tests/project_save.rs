@@ -156,6 +156,7 @@ impl Rig {
             cancel_key: "k".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         let handle = self.host.open_dataset(req).expect("open").dataset;
         let ds = self.host.catalog().get(handle.as_str()).expect("catalog");

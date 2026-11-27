@@ -1,7 +1,8 @@
 {
-  "skp": "skp/0.14",
+  "skp": "skp/0.17",
   "path": "C:/data/parcels.parquet",
   "cancel_key": "open-1",
   "crs_assertion": null,
-  "identity": null
+  "identity": null,
+  "set_aside_file_id": false
 }

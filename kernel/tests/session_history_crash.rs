@@ -45,6 +45,7 @@ fn child(store: PathBuf, fixture: &Path) -> ! {
         cancel_key: "k".to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     };
     let dataset = host.open_dataset(open).expect("open").dataset;
     let recorder = StepRecorder::new(store, host);
