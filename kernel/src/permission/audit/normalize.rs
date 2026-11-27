@@ -380,6 +380,11 @@ mod tests {
 
     /// NTFS compares names by their upper case, non-ASCII letters included, so a root, a username
     /// and a destination that differ only in such a letter's case are one name.
+    ///
+    /// RECORDED MUTATION M1 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): `fold` is `c.to_ascii_uppercase()`. OBSERVED FAILURE: (a), left "C:/Users/JOSÉ/out", right "<user-home>/out".
+    /// RECORDED MUTATION M2 (same date, commit and way): the root strip splits `s` at `root.len()` bytes behind an `is_char_boundary` guard. OBSERVED FAILURE: (c), left "<user-home>/Ⱥtlas/out", right "<user-local-appdata>/out".
+    /// RECORDED MUTATION M3 (same date, commit and way): the BMP condition is dropped from `fold`. OBSERVED FAILURE: (d), left "<temp>/out", right "D:/𐐀-maps/out".
+    /// RECORDED MUTATION M5 (same date, commit and way): the split index is `s.char_indices().nth(..)` with no `s.len()` after it. OBSERVED FAILURE: (e), left "C:/Users/<user>", right "<user-home>"; (a) to (d) pass.
     #[cfg_attr(
         not(windows),
         ignore = "boundary: filesystem case policy (kernel/src/permission/audit/normalize.rs); the case fold is Windows-only"
@@ -404,6 +409,8 @@ mod tests {
 
     /// The resolved parent carries the directory's on-disk case and the typed final component
     /// keeps its own, so a username in the other case must still collapse.
+    ///
+    /// RECORDED MUTATION M1 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): `fold` is `c.to_ascii_uppercase()`. OBSERVED FAILURE: the second assertion, "a username in another case leaked: …/JOSÉ/out"; the first assertion passed.
     #[cfg_attr(
         not(windows),
         ignore = "boundary: filesystem case policy (kernel/src/permission/audit/normalize.rs); the case fold is Windows-only"
@@ -429,6 +436,7 @@ mod tests {
     }
 
     /// A destination that is exactly a root becomes the root's token, on every platform.
+    /// RECORDED MUTATION M5 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): see T1's record. OBSERVED FAILURE: left "C:/Users/<user>", right "<user-home>".
     #[test]
     fn a_destination_that_is_exactly_a_root_becomes_the_roots_token() {
         let n = normalize_with(&PathBuf::from("C:/Users/someone"), &roots(), &users());

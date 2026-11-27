@@ -459,6 +459,8 @@ mod tests {
 
     /// NTFS compares names by their upper case, so a log under a non-ASCII case variant of the
     /// destination is inside it.
+    ///
+    /// RECORDED MUTATION M4 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): `is_inside`'s Windows line is `to_ascii_lowercase` again. OBSERVED FAILURE: the first assertion, `assertion failed: is_inside(Path::new("D:/maps/été/audit.jsonl"), Path::new("D:/maps/ÉTÉ"))`.
     #[cfg_attr(
         not(windows),
         ignore = "boundary: filesystem case policy (kernel/src/permission/audit/log.rs); the case fold is Windows-only"
