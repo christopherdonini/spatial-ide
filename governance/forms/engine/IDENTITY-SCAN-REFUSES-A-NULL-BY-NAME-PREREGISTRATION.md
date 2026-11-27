@@ -446,3 +446,12 @@ The advisor ruled every item below in ADV-2026-11-26-05, and the custodian folde
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 2 — 2026-11-27 — the custodian's: ADV-2026-11-27-24 item 7, this piece after text-id's C1 follow-up piece
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-24, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-24-text-ids-c1-follow-up-way-a-identity-source-carried-by-the-engine-skp-0-17-on-one-protocol-line-the-recovery-offer-behind-it.md`. By its item 7, this piece merges after `text-id-reopen-with-a-recorded-declaration`, and its code is built on that piece's head.
+2. **If this piece's code starts earlier,** that piece's head comes in by a merge commit before this piece's gates.
+3. **The form gates of `text-id-reopen-with-a-recorded-declaration`** read this form's §2 against item 2 of that form's §2. Both edit `admit_identity`'s scan arms.
+4. **The PLAN node** gains `text-id-reopen-with-a-recorded-declaration` in its `depends_on`.

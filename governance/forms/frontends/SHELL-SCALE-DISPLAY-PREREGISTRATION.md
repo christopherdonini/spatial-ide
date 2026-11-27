@@ -1153,3 +1153,22 @@ A code or test comment that names one gives this form's name with the id (`SHELL
    - the gates in two parts;
    - E-SCALE, last at the port;
    - the merge only after PR 365, PR A and the identity route.
+
+## Amendment 12 — 2026-11-27 — the custodian's: the head's suites at 9f8b67cd, one shell test red (U4), held for the advisor
+
+*References only. Nothing above is edited.*
+
+1. **The suites at the head** 9f8b67cdab999426691b53fa452a9526833cf909, which the custodian ran in D:/wt/scale in a shared hold (Amendment 11 item 4):
+   - the shell's typecheck printed no error;
+   - CI's `node --test`: 623 tests, 623 passed, 0 failed;
+   - the shell's tests: 1 failed and 1687 passed of 1688, in 1 of 134 files.
+2. **The red test** is U4 of milestone 1's form, in `frontends/shell/src/layout/layoutBoundary.test.ts`. It refuses a direct import from `skp/`, `streaming/`, `residency/` or `canvas/` in any source file under `src/layout/`. At the head it finds three imports, each of a type only:
+   - `regionParts.tsx` imports from `../canvas/viewportBbox` and from `../skp/types`;
+   - `scaleBar.ts` imports from `../skp/types`.
+3. **Where they come from:**
+   - §2 item 1 has `scaleReading` take a `CrsUnit`, the type in `frontends/shell/src/skp/types.ts`.
+   - §2 item 2 gives `ScaleItem` the props `unit` and `getBox`.
+   - The form names no import, and it does not name U4.
+   - The worker's light run at the disk floor read three test files only (its report's CHECKS), so U4 did not run before the head.
+4. **A fix changes this form's words, these imports, or a test of another form,** so it goes to the advisor before any commit. No draft PR is opened until it is ruled.
+5. **Amendment 11 item 5's four places** went to the advisor at commit 27ca47cd3ed00f485d815949942bba2ea3a44d46.

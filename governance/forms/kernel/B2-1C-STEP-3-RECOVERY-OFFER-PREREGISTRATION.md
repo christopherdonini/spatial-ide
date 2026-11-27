@@ -2502,3 +2502,13 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 14 — 2026-11-27 — the custodian's: ADV-2026-11-27-24 item 3, this piece behind text-id's C1 follow-up piece
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-24, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-24-text-ids-c1-follow-up-way-a-identity-source-carried-by-the-engine-skp-0-17-on-one-protocol-line-the-recovery-offer-behind-it.md`. Its item 3 replaces ADV-2026-11-23-35 item 2 for this piece's base:
+   - this piece is built on the head of `text-id-reopen-with-a-recorded-declaration`;
+   - it takes the next unused literal after that piece's `skp/0.17`.
+2. **Its build is held** at least until that piece's build has a pushed head with its suites green. This replaces the reading of ADV-2026-11-23-35 item 3 that Amendment 12 item 12 and Amendment 13 item 6 record.
+3. **No figure is corrected.** No tracked record of this piece names `skp/0.17` or a later literal as its own. Amendment 12 item 11 already gives it the next unused literal.
