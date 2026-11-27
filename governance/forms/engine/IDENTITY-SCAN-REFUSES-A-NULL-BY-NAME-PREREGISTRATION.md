@@ -489,3 +489,9 @@ Nothing above is edited.
 6. **If the C1 piece's head moves,** it comes in by a merge commit: before this piece's gates if they have not run, and with the reviewer's narrow read if they have.
 7. **The pull request** stays a draft until its base is on main (§8).
 8. **The verify scripts** run in the same hold as the suites (the ruling's item 7).
+
+## Amendment 5 — 2026-11-27 — the custodian's: one line under ADV-2026-11-27-36
+
+*References only. Nothing above is edited.*
+
+1. Amendment 4 item 3 states the test of ADV-2026-11-27-34 item 5. That item is replaced by `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-36-the-merge-530d7b0e-read-right-the-dispatch-stands-the-test-for-a-shared-path-held-by-the-base-with-merges.md`, which reads the merge 530d7b0e as Amendment 4 records it, and the dispatch stands.
