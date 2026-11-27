@@ -92,7 +92,9 @@ static IDENTITY_VERIFICATION_SCANS: AtomicU64 = AtomicU64::new(0);
 /// `a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan` (N-11);
 /// `text_id_set_aside_scan_counts.rs`'s `the_set_aside_scan_counts_are_exact` (N-S), the one test
 /// of its file, which proves that a set-aside open of a refused integer `id` scans again exactly
-/// once and that the two refusals by name scan nothing.
+/// once and that the two refusals by name scan nothing;
+/// `identity_null_refusal_scan_count.rs`'s `a_null_refusal_issues_exactly_one_verification_scan`
+/// (T7), the one test of its file, which proves that a null refusal issues exactly one guarded scan.
 pub fn identity_verification_scans() -> u64 {
     IDENTITY_VERIFICATION_SCANS.load(Ordering::SeqCst)
 }
@@ -2118,12 +2120,14 @@ fn admit_identity(
         ));
     }
 
-    // **One pass, three questions.** Row count, distinct count and the extreme values come from a
-    // single scan because each extra pass over a 5 GB column is another cold-open cost. `MIN` is
-    // here because a signed source column widens into u64 exactly only if it holds no negative
-    // value — §4 admits the *type* and this refuses the *values*.
+    // **One pass, four questions.** Row count, distinct count, the extreme values and the count of
+    // non-null values come from a single scan because each extra pass over a 5 GB column is another
+    // cold-open cost. `MIN` is here because a signed source column widens into u64 exactly only if
+    // it holds no negative value — §4 admits the *type* and this refuses the *values*. `count(c)`
+    // is here because `count(*)` counts every row while `count(DISTINCT c)`, `MIN` and `MAX` skip
+    // nulls: the two counts differ by the nulls, which are refused by name below.
     let sql = format!(
-        "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\") \
+        "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\"), count(\"{c}\") \
          FROM read_parquet('{p}')",
         c = column.replace('"', "\"\""),
         p = duckdb_literal_path(path).replace('\'', "''")
@@ -2133,10 +2137,10 @@ fn admit_identity(
     // issue a whole-column read: the session-ordinal arm above (no native or mapped column) and the
     // `skip` arm above (a declared, explicitly-unverified mapping) both return before the guarded
     // scan below, so neither ever bumps the counter. Counting the call rather than its outcome is
-    // deliberate — a scan that goes on to refuse (a duplicate or negative value) still read the
-    // column, and the property under test is "a read happened", not "identity was admitted". The
-    // increment is inside the guarded closure below, so a scan the guard refuses before it starts
-    // is not counted.
+    // deliberate — a scan that goes on to refuse (a duplicate, negative or null value) still read
+    // the column, and the property under test is "a read happened", not "identity was admitted".
+    // The increment is inside the guarded closure below, so a scan the guard refuses before it
+    // starts is not counted.
 
     // Bound to the caller's token before the scan starts, so a cancel arriving mid-scan reaches
     // DuckDB's interrupt rather than waiting for a whole column to be read (principle 7).
@@ -2151,7 +2155,7 @@ fn admit_identity(
     if cancel.is_cancelled() {
         return Err(EngineError::Cancelled);
     }
-    let (rows, distinct, min, max) = scan?;
+    let (rows, distinct, min, max, present) = scan?;
 
     if let Some(m) = min {
         if m < 0 {
@@ -2165,6 +2169,25 @@ fn admit_identity(
                 identity_source: source.as_envelope_value(),
             });
         }
+    }
+    // **A null, refused by name** (after the negative check, before the repeat check). Without it a
+    // null in an otherwise unique column would be refused below as a repeat, with a detail that is
+    // false. The detail adds the repeat when the non-null values repeat too. With no null, `present`
+    // equals `rows` and the repeat check below is reached unchanged.
+    let nulls = rows - present;
+    if nulls > 0 {
+        let w1 = format!("the column is null in {nulls} of {rows} rows, so not every feature carries an identity");
+        let detail = if distinct == present {
+            w1
+        } else {
+            format!("{w1}; the other {present} rows carry only {distinct} distinct values, so at least two of those features share an identity")
+        };
+        return Err(EngineError::IdentityUnusable {
+            column: column.clone(),
+            detail,
+            candidate_columns: identity::candidate_identity_columns(schema),
+            identity_source: source.as_envelope_value(),
+        });
     }
     if distinct != rows {
         return Err(EngineError::IdentityUnusable {
@@ -2221,7 +2244,7 @@ fn set_aside_outcome(
 fn run_identity_scan(
     conn: &Connection,
     sql: &str,
-) -> Result<(u64, u64, Option<i128>, Option<i128>)> {
+) -> Result<(u64, u64, Option<i128>, Option<i128>, u64)> {
     let mut stmt = conn
         .prepare(sql)
         .map_err(|e| EngineError::Query(format!("identity scan prepare: {e}")))?;
@@ -2238,6 +2261,9 @@ fn run_identity_scan(
     let distinct: i64 = row
         .get(1)
         .map_err(|e| EngineError::Query(format!("distinct: {e}")))?;
+    let present: i64 = row
+        .get(4)
+        .map_err(|e| EngineError::Query(format!("present: {e}")))?;
     // **NULL and "did not convert" are different answers and must not share a branch.**
     //
     // `Option<i64>` distinguishes them: MIN/MAX are NULL for an empty file, which is zero features
@@ -2258,7 +2284,7 @@ fn run_identity_scan(
             (lo.map(i128::from), hi.map(i128::from))
         }
     };
-    Ok((count as u64, distinct as u64, min, max))
+    Ok((count as u64, distinct as u64, min, max, present as u64))
 }
 
 /// The geometry column, checked at open so a stream cannot fail halfway for a reason that was

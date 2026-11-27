@@ -150,10 +150,11 @@ pub enum EngineError {
 
     /// The declared or native identity column cannot serve as stable feature identity.
     ///
-    /// ADR-016. Covers a missing column, a type that cannot widen into `u64` without a transform,
-    /// a negative value, and a column that is not unique. All four are the same failure from a
-    /// consumer's side — the id it is handed does not identify one feature — so they share a
-    /// variant and are distinguished by `detail`.
+    /// ADR-016. Covers a missing column, a column whose name cannot be addressed, a type that
+    /// cannot widen into `u64` without a transform, a negative value, a null in the column and a
+    /// column that is not unique. All six are the same failure from a consumer's side — the id it
+    /// is handed does not identify one feature — so they share a variant and are distinguished by
+    /// `detail`.
     ///
     /// `candidate_columns` (NEXT-CUT.md P0): the file's integer columns of every width admission
     /// takes (`Int8` to `Int64` and `UInt8` to `UInt64`, ADR-016's Note 2026-11-26), in schema
