@@ -729,3 +729,46 @@ A data file that you choose after a refusal for a missing file (item 73) is open
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — 2026-11-23 — the code starts now, on a base that holds the heads of PR 353, PR 358 and PR 359 (the human's message of 2026-11-23 item 3 (a); ADV-2026-11-23-15 items 4 and 7 (a))
+
+*Written by the custodian, 2026-11-23, before any of the piece's code. References and hashes only. Nothing below is a quotation.*
+
+1. **Authority.** The human's message of 2026-11-23, item 3 (a), filed at `state/directives/2026-11-23-the-humans-message-never-idle-product-first-what-to-build-now-the-pauses-lifted-for-product-pieces-what-does-not-change.md`; and the advisor's ruling ADV-2026-11-23-15, items 3, 4 and 7 (a), under the delegation of 2026-11-13, filed at `state/directives/2026-11-23-advisor-ruling-adv-2026-11-23-15-the-humans-message-filed-the-relink-built-now-on-three-held-heads-two-forms-now-the-gap-pieces-the-sitting-hour.md`. By that ruling's item 3, ADV-2026-11-22-44 item 8 is overturned by the human: the code no longer waits for the tag. Amendment 1 item 4's OPEN-6 sentence and Amendment 2's opening sentence on when the code starts are read with this amendment. The merge still waits for the tag, and for PR 353, PR 358 and PR 359 on main (ADV-2026-11-23-15 item 5).
+2. **The base.** Branch `cut/relink-after-refusal`. Its base is 0f02c164e070960c326573560815f2eb0a880684: main at 0bcf543452af79df6251cc7d86ab9f2cf644fcc2, then three merge commits, in the merge order, taking in the head of PR 353 (09ce1dfe8d6b05f2910ec9278c08a6839f55da36, by 083858308b99a807741751cbd2815305e85703a0), of PR 358 (7a3fd37b22bd43ab48fba8aa465fc7bf1b1cb2fd, by 61b35603a33d31b7aae95f8e77c23ad50a50e04d) and of PR 359 (8b8c38815a5fbc1e41e392366784a7c1c51a5783, by 0f02c164e070960c326573560815f2eb0a880684). Each merge was clean. The base differs from main by the union of the three PRs' files and nothing else (24 files, compared by script). PR 353 counts by rule (00), since both touch `protocol/`; PR 358 by `KNOWN-LIMITATIONS.md`; PR 359 by `frontends/shell/e2e/reopen.mjs` and `frontends/shell/e2e/README.md`.
+3. **The piece's range.** The piece's own diff is 0f02c164e070960c326573560815f2eb0a880684...head. Section 7's size and file list, section 4's mutations, and both gates are read on that range; section 7's counting command is read with that range in place of the merge base. Section 7 is not edited.
+4. **Block-on-sight item 13** (Amendment 1, D-2) is read as: a base that does not hold the heads of PR 353, PR 358 and PR 359 (ADV-2026-11-23-15 item 7 (a)).
+5. **A held head that moves.** If a base PR's head moves (PR 359's commit 4 is due after the sitting), the branch takes the new head in by a merge commit, and the reviewer reads once, narrowly, whether the piece's own lines or tests are affected (ADV-2026-11-23-15 item 4). If the human drops or changes a base PR, the piece goes to the advisor.
+6. **No run from 05:00Z on 2026-11-24** until the human says the sitting is over (ADV-2026-11-23-15 item 9). A run still going then is stopped by its own agent and recorded as not finished.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 4 — 2026-11-23 — the closing amendment, after both build gates (PASS WITH NOTES): references and hashes only (the architect's D-7, the reviewer's D-6)
+
+Written after both build gates' outcomes were seen. References and hashes only, under the record cap; nothing in §1 to §9 changes.
+
+1. **The commits** on `cut/relink-after-refusal`, over the base `0f02c164e070960c326573560815f2eb0a880684` (Amendment 3):
+   - P0, `3885d02bc4dbb4e02a15ca208b5a0f41085766eb`;
+   - the code, `32342fd4e9579381121b0925f27d5c1287b1133c`;
+   - the words, `d03eaae777b34304daeb1b1d40043cdb4016f72f`;
+   - commit 4, `06a2825a1dd9e55649605487f1065810905dad58`, which the brief did not name and which changed test text only: comments and one assertion message;
+   - the gates' words, `e4e6493d92ec941425dd6566c0a4ec154c7eb633`: comments and docs only, so no narrow read (ADV-2026-11-22-05).
+2. **Each mutation and the commit it was observed at:**
+   - M-S1 to M-S3, M-K1, M-K2 and M-K2b: by the worker at `32342fd4`, and again by the reviewer's build gate at `06a2825a`;
+   - M-E1: by the tester at `06a2825a`;
+   - P0: observed at `3885d02b`. The code's RECORDED MUTATIONS lines do not carry it.
+3. **M-K2 as §4 words it** fails K-F1 at the first save's `at` check, not at F-4's `at` check. Its prediction is missed in its place only. **M-K2b**, the same mutation at a later save only, was added after the result, and it fails at F-4's `at` check.
+4. **No `verify-mutation` run** is an observation here. `frontends/shell/e2e/reopen.mjs` records M-E1 after its RECORDED MUTATIONS line from `e4e6493d`.
+5. **The evidence**, each by its path, the commit that filed it, and the sha256 of its bytes as filed:
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-worker-report.md`, filed at `a21d5de7d44035339e2cce56112c54178932afb2`, sha256 `0a56ccb9b70be32c2954a95604fb84fa129f988ac07838b5dd9fa573328d26e6`;
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-e2e-tester-report.md`, filed at `a846072d4be622ade7356d36bccd13c346ffa34a`, sha256 `71a55bbfc4cf3dc1f1870aa7cb2a7c52246661c43ddd2f6f1355d8dbec721f94`;
+   - `state/consults/gates/2026-11-23-relink-after-refusal-at-the-recorded-place-build-gate-architect.md`, filed at `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`, sha256 `a29778fc2839c78e37e28de676f2833fd467054ab5d21f3c2e8e56dcece1cf49`;
+   - `state/consults/gates/2026-11-23-relink-after-refusal-at-the-recorded-place-build-gate-reviewer.md`, filed at `6cf6140cd8dfcc6fc52b82011e5dae5799edf300`, sha256 `23620871e1b6c26cb0c2f4ffb66fad632c08fb9efecdeb7fcf9880ee26c26f2a`;
+   - `state/consults/2026-11-23-relink-after-refusal-at-the-recorded-place-fix-worker-report.md`, filed by this amendment's commit, sha256 `53ac1cf80b8d460d8a3bf8952db03e1d2da71036936f82344454cfcf24125d7e`.
+6. **The architect's D-8**, the words of `client.ts`'s doc, lies outside §7. It goes to the docs lane.
+
+Read the last amendment first.
+
+Nothing above is edited.
