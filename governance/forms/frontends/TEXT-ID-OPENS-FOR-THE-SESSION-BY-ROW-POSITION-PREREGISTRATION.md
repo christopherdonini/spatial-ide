@@ -1087,3 +1087,11 @@ Nothing above is edited.
 5. **C1's follow-up piece** (ADV-2026-11-27-22 item 4) is PLAN node `text-id-reopen-with-a-recorded-declaration`, proposed, with no gate yet.
    - Its full form is drafted now by this form's drafter, the architect, on 2df8b4ae.
    - At this piece's merge check, either that piece is ready to merge directly behind it, or a KNOWN-LIMITATIONS sentence is ruled first.
+
+## Amendment 17 — 2026-11-27 — the custodian's: a shared path with A, under ADV-2026-11-27-27 (class 2)
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-27, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-27-the-c1-pieces-shared-path-with-a-in-saveproject-test-ts-counts-met-by-the-order-route-text-id-c1-then-a-the-form-commits-now.md`.
+2. **Class 2.** This form's base comparison under ADV-2026-11-23-15 item 4 named `frontends/shell/src/project/saveProject.test.ts` against the identity route only. Piece A (`a-second-save-is-announced`, in progress) changes that file too, so it is a shared path under rule (00) (the ruling's items 1 and 3).
+3. **It is met by the order** (its item 2): the identity route, this piece, the C1 follow-up piece `text-id-reopen-with-a-recorded-declaration`, then A. A takes main in by a merge commit, with the reviewer's narrow read of that file. No head is merged into A now, and A's runs at the port are not moved.

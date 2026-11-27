@@ -1195,3 +1195,18 @@ A code or test comment that names one gives this form's name with the id (`SHELL
    - (ii) and (iii) go with the advisor's wording, which comes as its own ruling. The words commit waits for it, and until then none of those words changes;
    - (iv) stands, and the tester's record of the device pixel ratio decides at the run part.
 6. **For the gates** (its item 6): the worker's §8 item 9, `SCALE_BAR_MAX_PX` with no product caller.
+
+## Amendment 14 — 2026-11-27 — the custodian's: the words, under ADV-2026-11-27-28
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-28, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-28-shell-scale-displays-words-s-1-to-s-4-without-the-mark-known-limitations-item-80-and-part-ai.md`. It settles places (ii) and (iii) of Amendment 11 item 5 (Amendment 13 item 5).
+2. **The words** are the ruling's, byte for byte from its fences:
+   - S-1 to S-4 without the mark, with the `MARK` constant and its four uses removed (its item 1);
+   - KNOWN-LIMITATIONS item 80, with the two spans of its comment (its item 2);
+   - Part AI below its heading (its item 3).
+3. **Class 5:** row AI3 narrows the form's sketch (its item 3).
+4. **The e2e README's entry** for E-SCALE stays as written. The reviewer's read part reads it against the step (its item 4).
+5. **The order** (its item 5): one words commit, holding the ruling's items 1 to 3 and nothing else, after the U4 correction commit of Amendment 13 and before the gates' read parts.
+6. **For the reviewer's read part:** that `filter-zoned.parquet` is a dataset in metres, from the fixture's generator (its item 3). If it is not, AI1 opens `100k-happy-path.parquet` in its place, and the advisor is told.
+7. **At the merge check** the advisor compares the words with the ruling byte for byte (its item 6).
