@@ -562,3 +562,24 @@ New:
    - The report says they need no re-gate (its preamble to the findings).
 3. **A departure, disclosed.** The brief said to write no file. The report says it wrote its check scripts and one scope list in the session's scratch folder, and nothing elsewhere. No file of the repository changed.
 4. **Next:** the build, on text-id's head 2df8b4aeeba1d3820ec0ba9e9f2bcd4ee7338a3e, under Amendment 1 items 5 to 7.
+
+## Amendment 4 — 2026-11-27 — the custodian's: the build, at 1a4b5bbe
+
+*References only. Nothing above is edited.*
+
+1. **The build** is two commits on text-id's head 2df8b4ae: 2f44cb9e (the field, the literal `skp/0.17`, the shell's check and the tests) and 1a4b5bbe (E-R1, written and checked by `node --check`, not run). Its report is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-build-worker-report.md`. No pull request is open yet; it opens as a draft and stays one until text-id is on main.
+2. **The suites that start no app,** by the report: green at the base and at the head. The head's cargo tests of the three crates gave 1122 passed (the base's 1117 plus 5). The shell gave 1699 tests (the base's 1697 plus 2). The four verify scripts and CI's `node --test` passed. M-RD1 to M-RD7 each fail at their own test's assertion, and M-RD8 is the tester's at the port.
+3. **Class 8, recorded and not met.** By §7's counting command the head has 903 changed lines against §7's 900, over 37 files. The words of item 4 would add about 15 more. §7 is not edited, and the overrun goes to the advisor.
+4. **The words, not committed** (Amendment 1 item 5): the walkthrough row AH8 with its result-log line, and the e2e README section for E-R1, both drafted in the report's section 5. They go to the advisor before any commit.
+   - By the custodian's check at 2026-11-27T16:49Z, the ids are unused elsewhere. Of the 50 branches on origin not merged into main d0602902, none but this piece's adds a row `AH8`, the step `TEXTID-C1` or the README heading. Main holds no row `AH8`.
+5. **A sentence named for the advisor, with no words proposed.** The report names KNOWN-LIMITATIONS item 3 as the sentence a reopen with a recorded declaration of `id` may make untrue: that reopen now offers nothing. The report gives that path from memory and did not re-read the file.
+6. **Departures, by the report.** None touches a result:
+   - one hold's command stood in parentheses;
+   - engine edits made early were set aside and re-applied after the base's run;
+   - the TMP folder was moved to D:;
+   - one test was renamed to `skp_version_is_skp_0_17`, with its mutation observed (M-RD6).
+7. **Next:**
+   - the draft pull request;
+   - one advisor message, carrying items 3 to 5;
+   - the build gates' read parts, the architect's and the reviewer's;
+   - E-R1 at the port.
