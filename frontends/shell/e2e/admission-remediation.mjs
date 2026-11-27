@@ -6,6 +6,7 @@
 // CONFLICT'/CANCELOPEN'/NOPERSIST'/OVERBOUND' for NEXT-CUT.md's admission-remediation cut, phase P5, and
 // DECLARE-SESSION' for the identity-declaration-route-for-session-tier piece (E-1).
 // TEXTID' for the text-id-opens-for-the-session-by-row-position piece (E-1): the choice to open a file whose own `id` column cannot serve by row position.
+// TEXTID-C1 for the text-id-reopen-with-a-recorded-declaration piece (E-R1): a reopen whose project file records a declaration of `id` is refused with no choice offered.
 // Sibling to regression.mjs/filter-panel.mjs/style.mjs/publish.mjs -- same attach-or-launch path
 // (lib.mjs's attachOrLaunch), same in-page hooks (src/e2e-test-surface.ts: openPath, crsCatalog,
 // capturePixels), same E2E-verified evidence-class limit (e2e/README.md). Every step below drives
@@ -43,7 +44,7 @@
 // (`kernel/tests/skp_admission_remediation.rs`'s own P1 test: "declaring `id` explicitly still runs
 // the mapped path rather than silently reusing the native one").
 
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, realpathSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -98,6 +99,8 @@ const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity
 const SESSION_IDENTITY_STATEMENT = "this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does.";
 // Byte-copied by script from the words commit's `describeSummaryText.ts` (S-3) and `RowPositionChoice.tsx` (S-1), which copied them from ADV-2026-11-23-36 item 3.
 const SET_ASIDE_CHOICE_LINE = "You chose to open this file by row position: its own id column is not its identity.";
+// R-ENG (`frontends/shell/src/project/reopenNotices.ts`, `ENGINE_REFUSAL_NOTICE`): the owner line beside an `engine.*` refusal at a reopen that carries no choice. A copy, as the suite keeps of the other lines.
+const ENGINE_REFUSAL_NOTICE = "The project was not opened in this window. The open was tried with the claims the project file recorded for the data, if any. None was typed here.";
 const ROW_POSITION_LABEL = "Open for this session by row position";
 const SESSION_IDENTITY_LINE = "session-ordinal:file_row_number — by-construction-within-generation";
 // `dupkey-refused.parquet`'s own `features: 100` (kernel/tests/manual_walkthrough_fixtures.rs) --
@@ -649,6 +652,104 @@ async function stepTextid(page, consoleHandle) {
 }
 
 /**
+ * `TEXTID-C1` (E-R1 of `text-id-reopen-with-a-recorded-declaration`): a reopen whose project file records a declaration of `id` is refused with no choice to open by row position,
+ * and its refusal block names the declaration as its source, through the real DOM. The unrun step is the tester's at the port.
+ * (1) `text-id-no-integer-refused.parquet` is refused, the choice is clicked, and the open is saved to a scratch folder (P0's shape, `"identity": null`). (2) P2 is a copy of that
+ * folder whose `project.spatial` records the identity `{"column":"id"}`, written in the project reader's own spelling (the line-oriented layout, one LF at the end), which the reader
+ * checks byte for byte. (3) The control: the reopen of the first folder is refused with the choice offered (S-1) and a field row `identity_source` reading `file:id`; the click opens it,
+ * as TEXTID' (d) does. (4) Another open (`no-id-column.parquet`) replaces that project in the window, and the first folder is removed: a first folder that still holds the project
+ * makes the reopen ask, and a project this window holds is refused as `skp.project_open_elsewhere`. (5) Only then P2 is opened through `e2eOpenProjectFolder`, which must answer
+ * `engine.identity_unusable` at its first call: an answer of `question` or `skp.project_open_elsewhere` fails the step by name as not reaching C1. The refusal block shows the field row
+ * `identity_source` reading `mapped:id`, the owner line R-ENG, and no button of the choice. This step is written to be run on the packaged build; its bounds are harness bounds.
+ * Mutation M-RD8: as M-RD5, `rowPositionOffer` no longer checks `identity_source`. Expected failure: step (5) fails at "the choice to open by row position was offered". Observed at the port by the tester, not by the build.
+ */
+async function stepTextidC1(page) {
+  const readSummary = () =>
+    page.evaluate(() => ({
+      text: document.querySelector(".describe-summary")?.textContent ?? null,
+    }));
+  const offered = () =>
+    page.evaluate(() => {
+      const button = document.querySelector(".admission-row-position-choose");
+      return button === null ? null : { label: button.textContent?.trim() ?? null, disabled: button.disabled };
+    });
+  const readRefusal = () =>
+    page.evaluate(() => ({
+      code: document.querySelector(".admission-refusal-code")?.textContent ?? null,
+      owner: document.querySelector(".admission-refusal-owner")?.textContent ?? null,
+      fields: Object.fromEntries(
+        Array.from(document.querySelectorAll(".admission-refusal-fields dt")).map((dt) => [dt.textContent, dt.nextElementSibling?.textContent ?? null])
+      ),
+    }));
+  /** The choice is offered with S-1's label; a click on it is the user's act, and the summary then carries S-3. */
+  async function choose(stepId) {
+    const shown = await waitForCondition(offered, (v) => v !== null && !v.disabled, 10_000);
+    if (!shown.ok) throw new Error(`TEXTID-C1 ${stepId}: the choice was not offered within 10s (last: ${JSON.stringify(shown.last)})`);
+    if (shown.last.label !== ROW_POSITION_LABEL) {
+      throw new Error(`TEXTID-C1 ${stepId}: the choice's label was ${JSON.stringify(shown.last.label)}, expected ${JSON.stringify(ROW_POSITION_LABEL)}`);
+    }
+    await page.evaluate(() => document.querySelector(".admission-row-position-choose").click());
+    const opened = await waitForCondition(readSummary, (v) => v.text !== null && v.text.includes(SET_ASIDE_CHOICE_LINE), 120_000);
+    if (!opened.ok) throw new Error(`TEXTID-C1 ${stepId}: the summary never carried the line "${SET_ASIDE_CHOICE_LINE}" within 120s (last: ${JSON.stringify(opened.last)})`);
+  }
+
+  // (1) the refusal, the choice, and a save: P0's shape.
+  const refusal = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_TEXT_ID_NO_INTEGER);
+  if (refusal.kind !== "refused" || refusal.code !== "engine.identity_unusable") {
+    throw new Error(`TEXTID-C1 (1): expected {kind:"refused", code:"engine.identity_unusable"}, got ${JSON.stringify(refusal)}`);
+  }
+  await choose("(1)");
+  const first = mkdtempSync(join(TEMP_BASE, "spatial-textid-c1-"));
+  const second = mkdtempSync(join(TEMP_BASE, "spatial-textid-c1-p2-"));
+  try {
+    const answer = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eSaveProjectToFolder(f), first), 60_000, "e2eSaveProjectToFolder");
+    if (answer !== "asked") throw new Error(`TEXTID-C1 (1): e2eSaveProjectToFolder answered ${JSON.stringify(answer)}, expected "asked"`);
+
+    // (2) P2: a copy of the saved folder, its identity recorded as a declaration of `id`, in the reader's own spelling.
+    const saved = readFileSync(join(first, "project.spatial"), "utf8");
+    const recorded = saved.match(/^( *)"identity": null(,?)$/gm);
+    if (recorded === null || recorded.length !== 1) {
+      throw new Error(`TEXTID-C1 (2): project.spatial holds ${recorded === null ? 0 : recorded.length} lines of the form "identity": null, expected exactly one`);
+    }
+    const edited = saved.replace(/^( *)"identity": null(,?)$/m, (_line, indent, comma) => `${indent}"identity": {\n${indent}  "column": "id"\n${indent}}${comma}`);
+    cpSync(first, second, { recursive: true });
+    writeFileSync(join(second, "project.spatial"), edited);
+
+    // (3) the control: the first folder's reopen is refused for the file's own `id`, with the choice offered and its source `file:id`.
+    const control = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), first), 120_000, "e2eOpenProjectFolder");
+    if (control !== "engine.identity_unusable") throw new Error(`TEXTID-C1 (3): the control's reopen answered ${JSON.stringify(control)}, expected "engine.identity_unusable"`);
+    const controlRefusal = await readRefusal();
+    if (controlRefusal.fields.identity_source !== "file:id") {
+      throw new Error(`TEXTID-C1 (3): the control's refusal shows identity_source ${JSON.stringify(controlRefusal.fields.identity_source)}, expected "file:id" (fields: ${JSON.stringify(controlRefusal.fields)})`);
+    }
+    await choose("(3)");
+
+    // (4) another open replaces the project in the window, and the first folder goes.
+    const other = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_NO_ID_COLUMN);
+    if (other.kind !== "admitted") throw new Error(`TEXTID-C1 (4): openPath(${FIXTURE_NO_ID_COLUMN}) returned ${JSON.stringify(other)}, expected {kind:"admitted"}`);
+    rmSync(first, { recursive: true, force: true });
+
+    // (5) P2: refused for the recorded declaration, with its source named, R-ENG beside it, and no choice.
+    const reopened = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), second), 120_000, "e2eOpenProjectFolder");
+    if (reopened === "question" || reopened === "skp.project_open_elsewhere") {
+      throw new Error(`TEXTID-C1 (5): the reopen of P2 answered ${JSON.stringify(reopened)} at its first call, so it did not reach C1`);
+    }
+    if (reopened !== "engine.identity_unusable") throw new Error(`TEXTID-C1 (5): the reopen of P2 answered ${JSON.stringify(reopened)}, expected "engine.identity_unusable"`);
+    const shown = await readRefusal();
+    if (shown.fields.column !== "id") throw new Error(`TEXTID-C1 (5): the refusal's column is ${JSON.stringify(shown.fields.column)}, expected "id"`);
+    if (shown.fields.identity_source !== "mapped:id") {
+      throw new Error(`TEXTID-C1 (5): the refusal's identity_source is ${JSON.stringify(shown.fields.identity_source)}, expected "mapped:id" (fields: ${JSON.stringify(shown.fields)})`);
+    }
+    if (shown.owner !== ENGINE_REFUSAL_NOTICE) throw new Error(`TEXTID-C1 (5): the owner line is ${JSON.stringify(shown.owner)}, expected R-ENG ${JSON.stringify(ENGINE_REFUSAL_NOTICE)}`);
+    if ((await offered()) !== null) throw new Error("TEXTID-C1 (5): the choice to open by row position was offered beside a recorded declaration of `id`");
+    return `(1) text-id-no-integer-refused.parquet chosen and saved; (3) the control's reopen refused with identity_source file:id and the choice offered, and opened by a click; (5) P2, the same folder with its identity recorded as {"column":"id"}, refused as engine.identity_unusable with identity_source mapped:id, R-ENG beside it and no choice offered`;
+  } finally {
+    rmSync(first, { recursive: true, force: true });
+    rmSync(second, { recursive: true, force: true });
+  }
+}
+
+/**
  * `DUPKEY'`: `dupkey-refused.parquet` has a native `id` column holding a constant value -- ADR-016's
  * own uniqueness scan runs for a native column too, so a PLAIN open already refuses (a genuine
  * uniqueness refusal, not a missing-column one). Declaring the SAME `id` column again re-runs the
@@ -1042,6 +1143,8 @@ async function main() {
     await runStep("DECLARE-SESSION'", 180_000, () => stepDeclareSession(page, consoleHandle));
     // TEXTID': the choice to open by row position, a save and a reopen, through the real DOM (E-1); its bounds are harness bounds, not durations.
     await runStep("TEXTID'", 480_000, () => stepTextid(page, consoleHandle));
+    // TEXTID-C1: a reopen whose project file records a declaration of `id` is refused with no choice (E-R1); the same harness bounds.
+    await runStep("TEXTID-C1", 600_000, () => stepTextidC1(page));
     await runStep("DUPKEY'", 30_000, () => stepDupkey(page));
     await runStep("BOTHNEEDED'", 120_000, () => stepBothNeeded(page, consoleHandle));
     await runStep("CONFLICT'", 30_000, () => stepConflict(page));
