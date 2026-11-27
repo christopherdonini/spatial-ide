@@ -146,7 +146,7 @@ export interface WorkingCanvasHandle {
   /** The camera the canvas last wrote, as a project file's `view` holds it (B2 piece 1c, Save project): `centre` is the camera's local
    * target plus the offset frame's origin it was written against, member by member -- the dataset-space point, the only form of it that
    * leaves this module (ADR-010 rule 1) -- and `zoom` is the held zoom unchanged, the base-2 log of the CSS pixels one unit spans. `null`
-   * before the canvas's first camera write. It changes nothing. Its product caller is `App.tsx`'s save. Optional in the type only, as
+   * before the canvas's first camera write. It changes nothing. Its product callers are `App.tsx`'s save and `App.tsx`'s `readZoom`, which the status bar's scale item (`layout/regionParts.tsx`) calls. Optional in the type only, as
    * `fitToBbox` is; the component always provides it. */
   currentView?(): { centre: [number, number]; zoom: number } | null;
   /** The box the canvas shows now, in the authoritative CRS (ADR-010 rule 1): the camera last written, its target plus the offset

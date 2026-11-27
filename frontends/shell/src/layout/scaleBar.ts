@@ -43,16 +43,28 @@ export const SCALE_NOT_METRE_TEXT = `${MARK}No scale bar: this dataset's coordin
 export const SCALE_OUT_OF_RANGE_TEXT = `${MARK}No scale bar at this zoom.`;
 
 /** The length m x 10^k as its exact decimal in groups of three joined by ",", never the locale's (KNOWN-LIMITATIONS item 51), built from digits. */
-export function scaleLabel(_mantissa: ScaleMantissa, _exponent: number): string {
-  return "";
+export function scaleLabel(mantissa: ScaleMantissa, exponent: number): string {
+  if (exponent < 0) return `0.${"0".repeat(-exponent - 1)}${mantissa}`;
+  return `${mantissa}${"0".repeat(exponent)}`.replace(/\B(?=(\d{3})+$)/g, ",");
 }
 
 /** The reading for `pxPerUnit` CSS pixels per unit of a metre dataset: the smallest m x 10^k whose width m x 10^k x pxPerUnit is at least SCALE_BAR_MIN_PX. */
-export function readingAtPxPerUnit(_pxPerUnit: number): ScaleReading {
-  return { kind: "none" };
+export function readingAtPxPerUnit(pxPerUnit: number): ScaleReading {
+  if (!(pxPerUnit > 0) || !Number.isFinite(pxPerUnit)) return { kind: "out-of-range" };
+  // The search starts one exponent below the range, so a smaller length that is also long enough is found and refused, not skipped; it ends at the top of the range.
+  for (let exponent = SCALE_EXPONENT_MIN - 1; exponent <= SCALE_EXPONENT_MAX; exponent += 1) {
+    for (const mantissa of SCALE_MANTISSAS) {
+      // The product m x 10^k x pxPerUnit, with a negative k as a division by the exact power 10^-k.
+      const widthPx = exponent < 0 ? (mantissa * pxPerUnit) / 10 ** -exponent : mantissa * 10 ** exponent * pxPerUnit;
+      if (widthPx >= SCALE_BAR_MIN_PX) return exponent < SCALE_EXPONENT_MIN ? { kind: "out-of-range" } : { kind: "bar", mantissa, exponent, widthPx };
+    }
+  }
+  return { kind: "out-of-range" };
 }
 
 /** What the item shows for `unit` at `zoom`, the base-2 log of the CSS pixels one unit spans (`WorkingCanvasHandle.currentView`), or null when none is known. */
-export function scaleReading(_unit: CrsUnit, _zoom: number | null): ScaleReading {
-  return { kind: "none" };
+export function scaleReading(unit: CrsUnit, zoom: number | null): ScaleReading {
+  if (zoom === null || !Number.isFinite(zoom)) return { kind: "none" };
+  if (unit !== "metre") return { kind: "not-metre" };
+  return readingAtPxPerUnit(2 ** zoom);
 }

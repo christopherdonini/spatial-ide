@@ -2131,3 +2131,32 @@ Fill in after running the rows above (the identity-declaration-route-for-session
 - **AG4 (what Cancel returned to, or that Cancel was not reached):**
 - **AG5 (the Identity line after the reopen; whether a disclosure showed):**
 - **AG6 (for each string: the wording you want in its place, or "keep"):**
+
+## Part AI — the scale in the status bar: the length the bar spans in the dataset's own metres at each zoom, no bar for a dataset in degrees, and the bar against a sheet of paper at your own display scaling (shell-scale-display)
+
+This Part is the Operator gate of `governance/forms/frontends/SHELL-SCALE-DISPLAY-PREREGISTRATION.md` §9, run only on a build with that piece merged, with a blank result log. Its rows are the form's sketch (§9, "Operator", and Amendment 4 item 3), one row to a line of it. **No duration appears in any row or expected outcome** (`docs/08_Testing.md`; ADR-018). Every sentence in it is a draft for the human's sight (P6) and none is the human's wording; the advisor words them from the form's text. This Part is run on Windows.
+
+**Before AI1 to AI5:** a dev build started with `npm run tauri dev` (the Prerequisites), with no dataset open; the fixtures `filter-zoned.parquet` and `100k-happy-path.parquet` (Part A) and compat-corpus file #8 (Part P's table).
+
+| # | Step | Expected outcome |
+|---|---|---|
+| AI0 | Read the form's §10, the last amendment first. | Record the number of the last amendment you read. |
+| AI1 | Open `filter-zoned.parquet` and zoom with the wheel. | The length steps 1, 2, 5, and the bar stays about 60 to 150 px. **Felt:** is it clear that this is the CRS's metres, not the ground? |
+| AI2 | Open compat-corpus file #8 (`C:\dev\spatial-ide\target\fixtures\compat-corpus\gdal\ogr2ogr-epsg4326-default.parquet`). | S-3 shows, and no bar. |
+| AI3 | At 1366 × 768, with every status item showing. | The scale stays visible. |
+| AI4 | The P6 sight of S-1 to S-4. | For each string, the log records either the wording you want in its place, or "keep". None of them is the human's wording. |
+| AI5 | At your own display scaling (record the percentage Windows shows for Scale), open `100k-happy-path.parquet` (`frontends/shell/MANUAL-WALKTHROUGH.md:146`) and zoom with the wheel until the label reads 200 m. Mark the bar's two ends on the edge of a sheet of paper held to the screen, lay the marks across the map, and count the parcels between them. The parcels are 40 m apart (`frontends/shell/e2e/pan-anchor.mjs:47-50`; `engine/src/fixture.rs:93`), so the marks are five parcels apart, within half a parcel. | Record the percentage and the count. Red: fewer than four and a half or more than five and a half (I7). |
+
+## Result log
+
+Fill in after running the rows above (the shell-scale-display Part AI).
+
+- **Date run:**
+- **Run by:**
+- **Build/commit:**
+- **Last amendment read (its number):**
+- **AI1 (the lengths the steps showed; felt):**
+- **AI2 (what showed, and whether a bar did):**
+- **AI3 (whether the scale stayed visible):**
+- **AI4 (for each string: the wording you want in its place, or "keep"):**
+- **AI5 (the display scaling percentage; the count of parcels between the marks):**
