@@ -961,3 +961,17 @@ npm run e2e:admission
 It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
 
 **What it proves not.** The words of the choice and its lines (they are the advisor's words as the words commit set them; the step compares the two it needs with copies of them), any timing, macOS or Linux, the native folder picker (the operator's Part), or that no step defaults the choice (the unit tests S-T1 and S-T2 and the code do that). The unrun step is not an observation: M-25, the choice not rendered, is the step's own mutation and was not observed by the build.
+
+## Recorded-declaration spec (text-id-reopen-with-a-recorded-declaration)
+
+```
+npm run e2e:admission
+```
+
+<!-- Drafted by the build worker of text-id-reopen-with-a-recorded-declaration and corrected by the advisor (ADV-2026-11-27-30 item 3); not the human's words. The step was not run by the build that added it: the run is the tester's. -->
+
+`e2e/admission-remediation.mjs` gains the step `TEXTID-C1` (E-R1), after `TEXTID'` and before `DUPKEY'`. Its opens and its save go through the suite's hooks (`openPath`, `e2eSaveProjectToFolder`, `e2eOpenProjectFolder`), and the refusals' codes are the hooks' answers; each choice is a click on the page's own button, and the field rows and the owner line are read from the page's own refusal block. (1) `text-id-no-integer-refused.parquet` is refused as `engine.identity_unusable`, the choice is clicked, and the open is saved to a scratch folder. (2) That folder is copied, and in the copy's `project.spatial` the one line `"identity": null` is replaced by the three lines that record `{"column": "id"}`, in the layout the project file's writer gives them; the reader refuses a file whose bytes are not that layout. (3) The control: the reopen of the first folder is refused as `engine.identity_unusable` with a field row `identity_source` reading `file:id` and the choice offered, and a click on the choice opens it with the choice's line. (4) `no-id-column.parquet` is opened to replace the project in the window, and the first folder is removed, so that step (5) reaches the engine: a reopen of a project that another open holds is refused as `skp.project_open_elsewhere`, and the kernel asks about a folder while the project's first folder still holds the project. (5) The copy is opened through `e2eOpenProjectFolder`, which must answer `engine.identity_unusable` at its first call; an answer of `question` or `skp.project_open_elsewhere` fails the step by name. The refusal block must show the field row `column` reading `id`, the field row `identity_source` reading `mapped:id` and the owner line R-ENG, and the page must hold no button of the choice.
+
+It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
+
+**What it proves not.** The words of R-ENG (the step compares the line with a copy of it), any timing, macOS or Linux, the native folder picker or a project file edited in place (row AH8 of the operator's Part AH), a project that a save wrote with a declaration of `id` (the kernel test K-R1 does that), that no form shows beside the refusal, or a recorded declaration of a column other than `id`. The unrun step is not an observation: M-RD8, `rowPositionOffer` without its check of `identity_source`, is the step's own mutation and was not observed by the build.
