@@ -1214,3 +1214,20 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 6 — 2026-11-27 — the order of the runs on the port (ADV-2026-11-27-05 item 2): references only
+
+1. ADV-2026-11-27-05 item 2 replaces ADV-2026-11-27-03 item 3's list, and with it Amendment 5 item 4 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-05-pr-360s-merge-verdict-bs-red-run-second-on-the-port-after-the-testers-start.md`).
+2. The runs on port 5180 go one at a time, in this order:
+   - the tester's start in the sitting's checkout;
+   - B's red run at f73dfed3;
+   - PR 359's measurement;
+   - PR 365's series;
+   - PR A's two e2e rows;
+   - the identity route's E-1.
+3. Builds and unit tests go on in holds beside them.
+4. Amendment 5's other items stand.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -15,3 +15,22 @@ Change: the two helpers that make a test's folder under std::env::temp_dir(), se
 Tests+mutation: one new test in each of the two modules, each named for the rule (for example, a_session_log_folder_is_the_test_runs_own and a_publish_workspace_is_the_test_runs_own): each calls its helper and checks that the folder it gives lies under std::env::temp_dir(), the fixed folder and a component equal to std::process::id(). Red then green: each new test is run with the helper unchanged and fails by name, recorded byte for byte from the run's output; with the change it passes. M1: the process-id component removed from one helper, its new test fails by name, recorded, then restored and compared with the head by cmp. The runs, in one shared hold: cargo test -p spatial-ide-shell --locked --lib (its dev-dependency enables spatial-engine's fixture feature), with cargo fmt --all -- --check and cargo clippy -p spatial-ide-shell --tests, each exit 0.
 Out-of-scope: ADR none; security none -- test code under #[cfg(test)] only, the standard library, no dependency, no workflow; wire none; guarantee none touched -- no product line changes, and commands.rs's own scan test reads only the lines above its test module.
 ```
+
+## Closing amendment — 2026-11-27 — references and hashes only
+
+1. **The commits:**
+   - 6342c895a118289e524d4e732d0841dd573eeff2: the helpers' change and the two folder tests.
+   - 88ce3c6575a81f248bcc0a203355c3a49a86ca30: the two tests made smaller, within the form's budget.
+   - Then main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at 44fe6e789347d7a1cc583620706b78ae52642cf8 (ADV-2026-11-26-15 item 4).
+2. **The gate:** the reviewer alone, PASS WITH NOTES at 88ce3c6575a81f248bcc0a203355c3a49a86ca30 (`state/consults/gates/2026-11-22-shell-tests-temp-folder-gate-reviewer.md`, gate-log row 832). It has no Correctness, Evidence or Documentation finding.
+3. **ADV-2026-11-22-18** ruled on the Merge line above (`state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-18-pr-356-not-merged-now-it-waits-for-the-tag-a-tests-piece-in-a-shipped-crates-file-merges-after-the-tag.md`). PR 356 was not merged then and waited for the tag, as a tests piece in a shipped crate's file.
+4. **The reading under the human's message of 2026-11-26.** That message approved ADV-2026-11-26-01. Read with ADV-2026-11-27-02 item 1, no merge into main waits for the tag, so ADV-2026-11-22-18's wait for the tag ends. Nothing else of it changes.
+5. **The merge-in.**
+   - The custodian's session (Opus 5.5) made the merge commit 44fe6e78 in the worktree C:/dev/wt/stmp. The branch was checked out there, so the merge-in worker skipped it.
+   - Its trailer names that model and that session, which the narrow read observed.
+   - The narrow read passed: equal patch-ids, and no overlap with the two files (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`, row 922).
+6. **The verdict.** The advisor's MERGE verdict for 44fe6e78, written ahead of the merge, is filed at `state/consults/merge-checks/PR-356-44fe6e789347.md`.
+7. **The merge.**
+   - It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed (ADV-2026-11-27-02 item 1).
+   - It also waits for the pieces before it in the merge order (ADV-2026-11-27-04 item 6).
+   - It does not go into `release/v0.2`. B is built on this head, so this piece merges before B.

@@ -661,3 +661,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 6 — 2026-11-27 — the merge no longer waits for the tag (ADV-2026-11-27-04 item 4): references only
+
+1. **The rulings.** The human's message of 2026-11-26 approved ADV-2026-11-26-01 (`state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`). Read with ADV-2026-11-27-02 item 1, no merge into main waits for the v0.2 tag. ADV-2026-11-27-04 item 4 asks this form to record it.
+2. **What changes, with no line edited:**
+   - §8 item 12: a merge before the v0.2 tag is no longer a block. A merge without the check for changes on main still is.
+   - Amendment 4 item 9: the merge request no longer waits for the tag. The rest of the item stands: the check of the eleven paths for changes on main since 069b91e0, and CI read again.
+   - The opening Merge line is read the same way (the custodian's reading).
+3. **The merge-in and the verdict.**
+   - Main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at f7da17385558166e2210f129fcf611bf3cbe9431 (ADV-2026-11-26-15 item 4). Its narrow read passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`, gate-log row 920).
+   - The advisor's MERGE verdict for that head, written ahead of the merge, is filed at `state/consults/merge-checks/PR-350-f7da17385558.md`.
+4. **The merge** waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed (ADV-2026-11-27-02 item 1). It does not go into `release/v0.2`.
+
+Read the last amendment first.
+
+Nothing above is edited.

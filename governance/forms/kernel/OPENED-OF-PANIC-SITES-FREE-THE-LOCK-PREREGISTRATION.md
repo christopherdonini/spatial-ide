@@ -557,3 +557,23 @@ M5 sentence: At 0922c90a38ad91bf7922cf9a6baf0f8ed1344397 with M5 applied, `cargo
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 4 — 2026-11-27 — the merge no longer waits for the tag (ADV-2026-11-27-04 item 4): references only
+
+1. **The rulings.** The human's message of 2026-11-26 approved ADV-2026-11-26-01 (`state/directives/2026-11-26-the-humans-message-adv-2026-11-23-34-and-adv-2026-11-26-01-approved-two-additions-release-v0-2-into-main-once-the-architect-reads-what-assumes-main-two-text-id-lab-facts.md`). Read with ADV-2026-11-27-02 item 1, no merge into main waits for the v0.2 tag. ADV-2026-11-27-04 item 4 asks this form to record it.
+2. **What changes, with no line edited:**
+   - §8 item 12: a merge before the tag without the human's word is no longer a block. A squash or rebase merge still is.
+   - Amendment 3 item 5: PR 361 no longer merges after the tag.
+   - The opening Merge line is read the same way (the custodian's reading).
+3. **The body** is brought to the head (ADV-2026-11-27-04 item 3). It names the commits through 0922c90a38ad91bf7922cf9a6baf0f8ed1344397, the gates (rows 855, 856 and 860) and the merge-in.
+4. **The merge-in and the verdict.**
+   - Main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at 5eebf80f75d6be4844ac017bc639f0ad2e018528 (ADV-2026-11-26-15 item 4). Its narrow read passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`, row 926).
+   - The advisor's MERGE verdict for that head, written ahead of the merge, is filed at `state/consults/merge-checks/PR-361-5eebf80f75d6.md`.
+5. **The merge.**
+   - It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed (ADV-2026-11-27-02 item 1).
+   - It also waits for PRs 358, 359 and 360, which come before it in the merge order (ADV-2026-11-27-04 item 6).
+   - It does not go into `release/v0.2`.
+
+Read the last amendment first.
+
+Nothing above is edited.
