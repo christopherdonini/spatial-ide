@@ -29,7 +29,7 @@ export type ScaleReading =
 
 /**
  * The strings the item shows (§2 item 7). All four are drafts under the P6 placeholder mark: none is the human's wording and none is
- * the advisor's yet. S-1 and S-2 take the length's decimal from `scaleLabel`.
+ * the advisor's yet. SHELL-SCALE-DISPLAY S-1 and SHELL-SCALE-DISPLAY S-2 take the length's decimal from `scaleLabel`.
  */
 const MARK = "[P6 placeholder] ";
 /** SHELL-SCALE-DISPLAY S-1: the label beside the bar. */
