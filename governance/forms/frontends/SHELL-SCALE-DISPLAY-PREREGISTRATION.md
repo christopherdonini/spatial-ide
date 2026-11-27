@@ -1120,3 +1120,36 @@ A code or test comment that names one gives this form's name with the id (`SHELL
 4. **The moved lines** are class 3, as the read has them (its item 4; Amendment 9 item 3).
 5. **The worker starts** now that this amendment and the read are on main (its item 4).
 6. **The merge** is never before the identity route either (its item 5; ADV-2026-11-27-21 item 6).
+
+## Amendment 11 — 2026-11-27 — the custodian's: the build at 9f8b67cd, the suites held at the disk floor, and four places for the advisor
+
+*References only. Nothing above is edited.*
+
+1. **The build** is four commits on `cut/shell-scale-display` from 530d7b0e, pushed. Each is listed with its subject in the worker's report, filed at `state/consults/gates/2026-11-27-shell-scale-display-build-worker-report.md`:
+   - f9604f29505105b36b563ae435456cf035b36e04
+   - 0fd5b1bb4ee0e10a7deb4e47619cc3f16b5de0e8
+   - 1d613b045aee86b089fc83004d582357b3b134cb
+   - 9f8b67cdab999426691b53fa452a9526833cf909
+2. **§7, by git** (530d7b0e...9f8b67cd):
+   - 487 insertions and 4 deletions, 491 changed lines over 10 files. The ceiling is 760 lines over 10 files.
+   - Outside the count: KNOWN-LIMITATIONS 4, the walkthrough 29, the e2e README 2.
+   - No path is outside the form's list.
+3. **Reds and mutations,** by the worker's report:
+   - Commit 1's reds are read at assertions.
+   - M1 to M5 were observed at 1d613b04.
+   - E-SCALE is written and checked by `node --check` only. Its red and M6 are the tester's, at the port.
+4. **The suites:**
+   - Those that start no app were green at the base before the code (Amendment 8 item 7).
+   - At the head, the worker held the shell's typecheck and tests and CI's `node --test`, because C: was under the 40960 MB floor.
+   - The custodian freed C: by removing four read worktrees, and runs those suites at the head in a shared hold. Their results come in the next amendment.
+5. **For the advisor** (ADV-2026-11-27-21 item 8; the worker's §8 item 8 and its notes):
+   - (i) S-1 to S-4 and KNOWN-LIMITATIONS item 80 carry the placeholder mark, where §3's table gives S-1 without it.
+   - (ii) Part AI's lead-in, its Before line and the wording of rows AI0 and AI2 go beyond the form's sketch, and the instruction of Amendment 4 item 3's row 5 is left out.
+   - (iii) Row AI5 cites line 146 of the same walkthrough file (its §8 item 13).
+   - (iv) Item 80's sentence on a device pixel ratio of 1 holds only if E-SCALE records it.
+6. **Next:**
+   - the suites' results;
+   - a draft PR naming its bases;
+   - the gates in two parts;
+   - E-SCALE, last at the port;
+   - the merge only after PR 365, PR A and the identity route.
