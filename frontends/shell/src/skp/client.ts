@@ -78,12 +78,16 @@ async function call<Res>(command: string, request: Record<string, unknown>): Pro
  * value; only the kernel does, and it may refuse it (NEXT-CUT.md P0: protocol only, no logic
  * here). The wire carries no attribution -- no `by`, no `at` -- the host mints both (ADR-004
  * Amendment 4; ADR-024 F-5).
+ *
+ * `setAsideFileId` (`skp/0.16`, ADR-016 Amendment 3) is the user's choice to open a file whose own `id` column cannot serve by row position, for this session only. It is `false`
+ * unless the caller says otherwise, and is sent as the member `set_aside_file_id`, always present, never beside `identity`.
  */
 export function openDataset(
   path: string,
   cancelKey: string,
   crsAssertion: CrsAssertion | null = null,
-  identity: IdentityDeclaration | null = null
+  identity: IdentityDeclaration | null = null,
+  setAsideFileId = false
 ): Promise<OpenDatasetResponse> {
   return call("open_dataset", {
     skp: SKP_VERSION,
@@ -91,6 +95,7 @@ export function openDataset(
     cancel_key: cancelKey,
     crs_assertion: crsAssertion,
     identity,
+    set_aside_file_id: setAsideFileId,
   });
 }
 
@@ -160,13 +165,22 @@ export function saveProject(dataset: string, folder: string | null, workspace: P
  * `skp/0.14`: reopens a saved project (SKP-V0.md section 12). Client only: this function checks nothing; the kernel does, and may refuse
  * the reopen. `answer` is `null` at the first call and the client's answer to a `question` reply at the second; `relink` is `null`, or the
  * absolute path of the data file the client chose after a `not_found` reply. Both are sent as `null`, never omitted (`key_present` on the
- * Rust side). The call keeps no state between its two calls: the reply names the next one.
+ * Rust side). The call keeps no state between its two calls: the reply names the next one. `setAsideFileId` (`skp/0.16`) is the user's choice at this call alone,
+ * `false` unless the caller says otherwise: the project file records nothing of it.
  */
 export function openProject(
   folder: string,
   cancelKey: string,
   answer: ReopenAnswer | null,
-  relink: string | null
+  relink: string | null,
+  setAsideFileId = false
 ): Promise<OpenProjectResponse> {
-  return call("open_project", { skp: SKP_VERSION, folder, cancel_key: cancelKey, answer, relink });
+  return call("open_project", {
+    skp: SKP_VERSION,
+    folder,
+    cancel_key: cancelKey,
+    answer,
+    relink,
+    set_aside_file_id: setAsideFileId,
+  });
 }

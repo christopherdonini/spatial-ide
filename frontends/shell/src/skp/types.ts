@@ -49,6 +49,9 @@ export interface OpenDatasetRequest {
   crs_assertion: CrsAssertion | null;
   /** `skp/0.2`. `null` declares "no declaration" -- same discipline as `crs_assertion`. */
   identity: IdentityDeclaration | null;
+  /** `skp/0.16` (ADR-016, Amendment 3): the user's choice to open a file whose own `id` column cannot serve by row position, for this session only. Always present, `false` for no choice,
+   * never beside an `identity`. */
+  set_aside_file_id: boolean;
 }
 export interface OpenDatasetResponse {
   dataset: string;
@@ -148,6 +151,10 @@ export interface IdentityInfo {
    * identity the wire carries the key as `null`. Declared optional here so that a describe from before `skp/0.15` still types; the wire always carries the key, and
    * `__tests__/fixtures.test.ts` pins it on the real fixture. Never a declaration and never a recommendation. */
   candidate_columns?: string[] | null;
+  /** `skp/0.16` (ADR-016, Amendment 3): `"id"` exactly when the dataset is on the session tier by the user's choice to set aside the file's own `id` column, and `null` on
+   * every other open. Declared optional here so that a describe from before `skp/0.16` still types; the wire always carries the key, and `__tests__/fixtures.test.ts` pins
+   * it on the real fixtures. */
+  set_aside_column?: string | null;
 }
 
 /** `skp/0.3` (Brief A boundary 9): what the range check was decided from at this open.
@@ -395,6 +402,8 @@ export interface OpenProjectRequest {
   cancel_key: string;
   answer: ReopenAnswer | null;
   relink: string | null;
+  /** `skp/0.16`: the user's choice to open the data by row position at this call alone (SKP-V0.md section 12.3), always present, `false` for none. The project file records nothing of it. */
+  set_aside_file_id: boolean;
 }
 
 /** Whether the saved view applies to the reopened data. `basis` names both spaces by identifiers, each cut by the kernel at 262 bytes, and holds no path. */

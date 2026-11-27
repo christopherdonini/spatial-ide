@@ -12,8 +12,10 @@
  *   `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed, whichever is first (`admission/admitDataset.ts`'s `describeOpened`).
  * - **Text from a file is bounded** (item 5 (j)) by `project/shownText.ts` here, before it reaches a place or the log: every refusal's message and
  *   fields, `file_name`, `basis` and O-18's column. The workspace's own text is not (item 5 (k)): it applies whole, and W-TEXT names the member.
- * - **The refusal's owner place** (item 5 (g); ADV-2026-11-20-05 item 4) is chosen here from the code alone, and S9's two places from the
- *   refusal's `project` against the identity this window holds. The refusal itself shows in the existing block, with no remediation form.
+ * - **The refusal's owner place** (item 5 (g); ADV-2026-11-20-05 item 4) is chosen here from the code, and S9's two places from the
+ *   refusal's `project` against the identity this window holds; for an `engine.*` refusal it also reads the attempt, which tells S-8 (an attempt that
+ *   carried the user's choice to open the file by row position) from R-ENG (one that carried none). The refusal itself shows in the existing block, with
+ *   no remediation form.
  * - **One log line per refusal** (item 5 (l)), the code and the bounded message, beside `admitDataset`'s `admission-refused` line.
  */
 
@@ -39,6 +41,7 @@ import {
   relinkedFileNotice,
   REOPEN_LOCATOR_REFUSAL_NOTICE,
   REOPEN_REFUSAL_NOTICE,
+  SET_ASIDE_REFUSAL_NOTICE,
   STYLE_NOT_APPLIED_NOTICE,
   viewNotAppliedNotice,
   workspaceTextNotice,
@@ -67,7 +70,7 @@ export async function admitProject(folder: string, cancelKey: string, options: A
   const answer = options.reopen?.answer ?? null;
   const relink = options.reopen?.relink ?? null;
   try {
-    const reply = await openProject(folder, cancelKey, answer, relink);
+    const reply = await openProject(folder, cancelKey, answer, relink, options.setAsideFileId === true);
     if ("question" in reply) return { kind: "question" };
     if ("not_found" in reply) return { kind: "not_found", fileName: reply.not_found.file_name === null ? null : shownText(reply.not_found.file_name) };
     const { project, dataset, session, workspace, view, check, lineage } = reply.opened;
@@ -77,12 +80,14 @@ export async function admitProject(folder: string, cancelKey: string, options: A
     if (!(e instanceof SkpCallError)) throw e;
     const refusal = shownRefusal(formatRefusal(e.skpError));
     logSessionEvent("reopen-refused", `${refusal.code}: ${refusal.message}`);
-    return { kind: "refused", refusal, owner: reopenRefusalPlace(refusal, heldProject) };
+    const place = reopenRefusalPlace(refusal, heldProject);
+    // S-8: an `engine.*` refusal of an attempt that carried the user's choice names that choice as well as the project file's claims.
+    return { kind: "refused", refusal, owner: place === ENGINE_REFUSAL_NOTICE && options.setAsideFileId === true ? SET_ASIDE_REFUSAL_NOTICE : place };
   }
 }
 
 /**
- * The owner's place beside a reopen refusal (ADV-2026-11-20-05 item 4), one at most. `engine.cancelled` has none: it is the cancelled note
+ * The place a reopen refusal's code gives (ADV-2026-11-20-05 item 4), one at most; `admitProject` alone turns R-ENG into S-8 when its attempt carried the choice to open by row position. `engine.cancelled` has none: it is the cancelled note
  * (`CANCELLED_REFUSAL_CODE` in `admission/AdmissionPanel.tsx`). Every code without a line of its own takes R-CODE.
  */
 export function reopenRefusalPlace(refusal: FormattedRefusal, heldProject: string | null): string | null {

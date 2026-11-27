@@ -17,6 +17,7 @@ import CrsAssertionForm from "./CrsAssertionForm";
 import { fieldValue, FormattedRefusal } from "./formatRefusal";
 import IdentityDeclarationForm from "./IdentityDeclarationForm";
 import RefusalBlock from "./RefusalBlock";
+import RowPositionChoice, { ROW_POSITION_CARRIED_LINE } from "./RowPositionChoice";
 
 /** Which remediation form, if any, stays reachable for the CURRENT refusal (NEXT-CUT.md P3 item
  * D: "the form still reachable — no dead end"). `null` means no form renders. */
@@ -104,7 +105,8 @@ export type State =
        * RENDERED refusal until the resubmit itself resolves (P4 item A: `openLivenessText` needs
        * to know whether the identity form's own submit, specifically, is the one in flight). */
       pendingOptions: AdmitOptions | null;
-      /** A reopen refusal's owner place (B2 piece 1c, `project/openProject.ts`'s `reopenRefusalPlace`), shown inside the block. Absent for a dataset open. */
+      /** A reopen refusal's owner place (B2 piece 1c), chosen by `admitProject` in `project/openProject.ts` from the refusal's code, through `reopenRefusalPlace`, and from the attempt's own options (S-8, an
+       * attempt that carried the choice to open by row position), and shown inside the block. Absent for a dataset open. */
       owner?: string | null;
     }
   | {
@@ -193,9 +195,59 @@ export function identityDeclarationOffer(state: State, datasetOnMap: string | nu
 }
 
 /** The options a declaration submits (section 2 item 4 (c)): the offer's own, with the declaration over them. A CRS assertion the session open was admitted under is carried, as a
- * remediation submit carries it (`IdentityDeclarationForm`'s refused-state submit merges the same way); nothing else of the run is. */
+ * remediation submit carries it (`IdentityDeclarationForm`'s refused-state submit merges the same way); nothing else of the run is, and in particular never the choice to open by row position
+ * (`setAsideFileId`): a declaration is sent beside no choice (ADR-016 Amendment 3). */
 export function declarationOptions(offer: IdentityDeclarationOffer, identity: IdentityDeclaration): AdmitOptions {
-  return { ...offer.options, identity };
+  const { setAsideFileId: _choice, ...rest } = offer.options;
+  return { ...rest, identity };
+}
+
+/** The options a declaration submits from a refused state: the run's own, with the declaration over them and without the choice to open by row position. A file refused after the choice
+ * and then declared is sent as a declaration alone, so the shell never sends `identity` and `setAsideFileId` together. */
+export function refusedDeclarationOptions(options: AdmitOptions, identity: IdentityDeclaration): AdmitOptions {
+  const { setAsideFileId: _choice, ...rest } = options;
+  return { ...rest, identity };
+}
+
+/** The choice to open by row position that a refused state offers: the file's path (a reopen's folder) and the options of the run it would re-run. */
+export interface RowPositionOffer {
+  path: string;
+  options: AdmitOptions;
+}
+
+/** The choice to open the file by row position (`RowPositionChoice`), or `null`. It is offered for a refused state only when every one of these holds:
+ * - the refusal is `engine.identity_unusable` and names the column `id` (`fieldValue(refusal, "column")`): the file's own `id` is what cannot serve;
+ * - the run declared no identity (`options.identity` is unset): a declaration that was refused is not the file's own `id`, and the two are never sent together;
+ * - the run carries no choice already (`options.setAsideFileId` is unset).
+ * It is offered for a reopen's refusal as for a direct open's (ADR-016 Amendment 3, C2): the project file records nothing of the choice, so a reopen asks again. The one decision site for the
+ * panel's render; it makes no choice and sets nothing. */
+export function rowPositionOffer(state: State): RowPositionOffer | null {
+  if (state.kind !== "refused") return null;
+  if (state.refusal.code !== "engine.identity_unusable") return null;
+  if (fieldValue(state.refusal, "column") !== "id") return null;
+  if (state.options.identity) return null;
+  if (state.options.setAsideFileId !== undefined) return null;
+  return { path: state.path, options: state.options };
+}
+
+/** The options the choice runs with: the offer's own, without any `identity`, with `setAsideFileId`. A reopen keeps its answer and its re-link (`options.reopen`). The click of the choice is the only caller. */
+export function rowPositionOptions(offer: RowPositionOffer): AdmitOptions {
+  const { identity: _identity, ...rest } = offer.options;
+  return { ...rest, setAsideFileId: true };
+}
+
+/** S-5's line for a remediation attempt whose options carry the choice, or `null`. */
+export function carriedChoiceLine(options: AdmitOptions): string | null {
+  return options.setAsideFileId === true ? ROW_POSITION_CARRIED_LINE : null;
+}
+
+/** A reopen's retry after a `question` or a `not_found` reply (ADR-016 Amendment 3, C2; ADV-2026-11-24-12 item 1): the run's answer and re-link with the one the retry gives, and nothing else of the
+ * run. In particular a retry never carries the choice to open by row position: if the retry is refused for the file's `id` column again, the choice is offered again. Its product callers are the
+ * question block's two answers and `handleRelink`, each through `reopenPath`. */
+export function reopenRetryOptions(options: AdmitOptions, retry: { answer: ReopenAnswer } | { relink: string }): AdmitOptions {
+  const answer = options.reopen?.answer ?? null;
+  const relink = options.reopen?.relink ?? null;
+  return { reopen: "answer" in retry ? { answer: retry.answer, relink } : { answer, relink: retry.relink } };
 }
 
 /** The `AdmitOptions` the in-flight open (if any) is actually running with -- see the `State`
@@ -266,7 +318,7 @@ export interface AdmitPathDeps {
  *
  * **A reopen's run** (B2 piece 1c, Amendment 54 item 5 (b) to (e)) is this same function, with `options.reopen` set and `admitProject` as its
  * `admit`, so the liveness line, Cancel and the refusal block are the ones above. Its refusal opens no form (the claims are the project file's,
- * not the user's), a `question` or a `not_found` ends the run, and one that arrives after Cancel for its key asks nothing and ends at the
+ * not the user's; the one choice a reopen's refusal can offer, to open by row position, is the user's and is offered again each time, `rowPositionOffer`), a `question` or a `not_found` ends the run, and one that arrives after Cancel for its key asks nothing and ends at the
  * cancelled note. An admission after a Cancel is applied, as any late admission is.
  */
 export async function runAdmitPath(
@@ -427,10 +479,10 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
     [onAdmitted, confirmOpen]
   );
 
-  // A reopen's run (B2 piece 1c): the same transition with the reopen's `admit`, which never reaches `admitDataset`.
+  // A reopen's run (B2 piece 1c): the same transition with the reopen's `admit`, which never reaches `admitDataset`. `options` are the run's: a first call's, a retry's (`reopenRetryOptions`), or the choice's (`rowPositionOptions`).
   const reopenPath = useCallback(
-    (folder: string, reopen: { answer: ReopenAnswer | null; relink: string | null }): Promise<AdmissionOutcome | null> =>
-      runAdmitPath(folder, { reopen }, {
+    (folder: string, options: AdmitOptions): Promise<AdmissionOutcome | null> =>
+      runAdmitPath(folder, options, {
         admit: (path, cancelKey, options) => admitProject(path, cancelKey, options, heldProject()),
         setState,
         onAdmitted,
@@ -453,7 +505,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   // O-19a: the folder picker (S2's title, shared with the save), then the reopen's first call. A dismissed picker starts nothing.
   const handleProjectPick = useCallback(async (): Promise<AdmissionOutcome | null> => {
     const folder = await takeSlot(e2eFolderRef, pickProjectFolder);
-    return folder === null ? null : reopenPath(folder, { answer: null, relink: null });
+    return folder === null ? null : reopenPath(folder, { reopen: { answer: null, relink: null } });
   }, [reopenPath]);
 
   // S11's choice, and item 73's after a refusal at the recorded place (`relinkOffer`): the file picker, then the re-link call with the answer the run already gave
@@ -462,7 +514,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
     async (folder: string, options: AdmitOptions): Promise<AdmissionOutcome | null> => {
       const file = await takeSlot(e2eFileRef, pickFile);
       if (file === null) setState({ kind: "idle", note: "Open cancelled" });
-      else return reopenPath(folder, { answer: options.reopen?.answer ?? null, relink: file });
+      else return reopenPath(folder, reopenRetryOptions(options, { relink: file }));
       return null;
     },
     [reopenPath]
@@ -549,6 +601,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   const openLivenessMessage = showOpenLiveness ? openLivenessText(state) : null;
   const offer = state.kind === "refused" ? relinkOffer(state) : null;
   const declareOffer = identityDeclarationOffer(state, datasetOnMap);
+  const rowOffer = rowPositionOffer(state);
 
   return (
     <div className="admission-panel">
@@ -604,10 +657,10 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       {state.kind === "question" && (
         <div className="admission-reopen-question" role="group">
           <p>{QUESTION_TEXT}</p>
-          <button type="button" className="admission-reopen-copy" onClick={() => void reopenPath(state.folder, { answer: "copy", relink: state.options.reopen?.relink ?? null })}>
+          <button type="button" className="admission-reopen-copy" onClick={() => void reopenPath(state.folder, reopenRetryOptions(state.options, { answer: "copy" }))}>
             {QUESTION_COPY}
           </button>
-          <button type="button" className="admission-reopen-same" onClick={() => void reopenPath(state.folder, { answer: "same", relink: state.options.reopen?.relink ?? null })}>
+          <button type="button" className="admission-reopen-same" onClick={() => void reopenPath(state.folder, reopenRetryOptions(state.options, { answer: "same" }))}>
             {QUESTION_SAME}
           </button>
           <button type="button" className="admission-reopen-cancel" onClick={() => setState({ kind: "idle", note: null })}>
@@ -645,6 +698,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
                   {state.options.identity.column}).
                 </p>
               )}
+              {carriedChoiceLine(state.options) !== null && <p className="admission-carried-option">{carriedChoiceLine(state.options)}</p>}
               <CrsAssertionForm
                 disabled={state.inFlight}
                 onSubmit={(crsAssertion) => void admitPath(state.path, { ...state.options, crsAssertion })}
@@ -662,9 +716,17 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
               <IdentityDeclarationForm
                 candidateColumns={splitCandidateColumns(fieldValue(state.refusal, "candidate_columns"))}
                 disabled={state.inFlight}
-                onSubmit={(identity) => void admitPath(state.path, { ...state.options, identity })}
+                onSubmit={(identity) => void admitPath(state.path, refusedDeclarationOptions(state.options, identity))}
               />
             </>
+          )}
+          {/* ADR-016 Amendment 3: the choice to open the file by row position, for a refusal of the file's own `id` column. It is offered beside the identity form on a direct open and alone on a reopen
+              (whose refusal opens no form). Its click is the one act that sets the choice. */}
+          {rowOffer !== null && (
+            <RowPositionChoice
+              disabled={state.inFlight}
+              onChoose={() => void (rowOffer.options.reopen !== undefined ? reopenPath(rowOffer.path, rowPositionOptions(rowOffer)) : admitPath(rowOffer.path, rowPositionOptions(rowOffer)))}
+            />
           )}
         </>
       )}

@@ -8,6 +8,7 @@ import { AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import {
   AdmitPathDeps,
   CANCELLED_REFUSAL_CODE,
+  carriedChoiceLine,
   declarationOptions,
   formFamilyForCode,
   identityDeclarationOffer,
@@ -17,12 +18,17 @@ import {
   openLivenessText,
   openLivenessTextShouldShow,
   OPEN_LIVENESS_DELAY_MS,
+  refusedDeclarationOptions,
   relinkOffer,
+  reopenRetryOptions,
   requestOpenCancel,
+  rowPositionOffer,
+  rowPositionOptions,
   runAdmitPath,
   State,
 } from "./AdmissionPanel";
 import { FormattedRefusal } from "./formatRefusal";
+import { ROW_POSITION_CARRIED_LINE } from "./RowPositionChoice";
 import {
   ENGINE_REFUSAL_NOTICE,
   OPEN_ELSEWHERE_OTHER_NOTICE,
@@ -772,4 +778,130 @@ it("a declaration from a session-tier admission under a CRS assertion carries th
     expect(harness.state.formFamily).toBe("identity");
     expect(harness.state.options).toEqual({ crsAssertion: assertion, identity });
   }
+});
+
+// text-id-opens-for-the-session-by-row-position, section 4 and Amendments 4 to 6. The refused states below are what `runAdmitPath` leaves for a refusal of the file's own `id`.
+const T1_PATH = "C:/data/text-id-no-integer-refused.parquet";
+const T1_OPTIONS: AdmitOptions = {};
+
+/** A dataset open's refused state for the given refusal; `over` replaces members of it. */
+function refusedOpen(code: string, fields: Array<[string, string]>, options: AdmitOptions = T1_OPTIONS, over: Partial<Extract<State, { kind: "refused" }>> = {}): Extract<State, { kind: "refused" }> {
+  return {
+    kind: "refused",
+    path: T1_PATH,
+    refusal: refusal(code, fields),
+    formFamily: code === "engine.identity_unusable" ? "identity" : null,
+    options,
+    inFlight: false,
+    cancelKey: null,
+    pendingOptions: null,
+    ...over,
+  };
+}
+
+const ID_REFUSAL: Array<[string, string]> = [["column", "id"], ["candidate_columns", ""]];
+
+// RECORDED MUTATION for S-T1 (M-18): `rowPositionOffer` ignores `options.identity` (the test for it removed). Expected failure: the declared-identity case below is offered.
+it("an_identity_refusal_naming_id_with_no_declaration_offers_row_position", () => {
+  // (i) a refusal of `id` with nothing declared is offered, with the run's own path and options.
+  expect(rowPositionOffer(refusedOpen("engine.identity_unusable", ID_REFUSAL)), "(i)").toEqual({ path: T1_PATH, options: T1_OPTIONS });
+
+  // (ii) not when the run declared a column: that refusal is the declared column's, and the two are never sent together.
+  const declared: AdmitOptions = { identity: { column: "id" } };
+  expect(rowPositionOffer(refusedOpen("engine.identity_unusable", ID_REFUSAL, declared)), "(ii)").toBeNull();
+
+  // (iii) not when the column the refusal names is not `id`.
+  expect(rowPositionOffer(refusedOpen("engine.identity_unusable", [["column", "parcel_key"]])), "(iii)").toBeNull();
+
+  // (iv) not on the partitioned refusal, nor on any other code, even when a column named `id` is in its fields.
+  expect(rowPositionOffer(refusedOpen("engine.identity_ordinal_partitioned_unsupported", [["detail", "x"]])), "(iv) partitioned").toBeNull();
+  expect(rowPositionOffer(refusedOpen("engine.crs_undeclared", ID_REFUSAL)), "(iv) crs").toBeNull();
+
+  // (v) not once the run carries the choice, and not for a state that is not refused.
+  expect(rowPositionOffer(refusedOpen("engine.identity_unusable", ID_REFUSAL, { setAsideFileId: true })), "(v) chosen").toBeNull();
+  expect(rowPositionOffer({ kind: "idle", note: null }), "(v) idle").toBeNull();
+  expect(rowPositionOffer(admittedState(sessionDescribe())), "(v) admitted").toBeNull();
+});
+
+// RECORDED MUTATION for S-T2 (M-19): `rowPositionOptions` also sends `identity: { column: "id" }`. Expected failure: the options below hold an identity, and the call carries one.
+it("choosing_row_position_sends_set_aside_true_and_no_identity", async () => {
+  const refused = refusedOpen("engine.identity_unusable", ID_REFUSAL, { crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" } });
+  const offer = rowPositionOffer(refused);
+  expect(offer, "the offer").not.toBeNull();
+  if (offer === null) return;
+
+  // The choice's options: the run's CRS assertion, the choice, and no identity at all.
+  const chosen = rowPositionOptions(offer);
+  expect(chosen).toEqual({ crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" }, setAsideFileId: true });
+  expect("identity" in chosen).toBe(false);
+
+  // Through the real transition: the call carries exactly those options and the file's path.
+  const admit = vi.fn().mockResolvedValueOnce({ kind: "admitted", admitted: { ...admittedFixture(), describe: sessionDescribe({ set_aside_column: "id" }) } });
+  const { harness, deps } = depsFor(admit);
+  harness.setState(() => refused);
+  await runAdmitPath(offer.path, chosen, deps);
+  expect(admit.mock.calls[0][0]).toBe(T1_PATH);
+  expect(admit.mock.calls[0][2]).toEqual(chosen);
+  expect(harness.state.kind).toBe("admitted");
+});
+
+// RECORDED MUTATION for S-T4 (M-21): the reopen's re-run drops `relink` (`rowPositionOptions` builds `{ reopen: { answer, relink: null } }`). Expected failure: the relink below is lost.
+it("a_reopen_refused_for_its_own_id_offers_only_row_position", async () => {
+  const reopen = { answer: "same" as const, relink: "C:/moved/parcels.parquet" };
+  const refused = refusedOpen("engine.identity_unusable", ID_REFUSAL, { reopen }, { path: RELINK_FOLDER, formFamily: null });
+  const offer = rowPositionOffer(refused);
+  expect(offer, "a reopen's refusal of its own id is offered the choice").toEqual({ path: RELINK_FOLDER, options: { reopen } });
+  if (offer === null) return;
+
+  // No declaration form: the family stays null, and a reopen's re-run keeps its answer and its re-link.
+  expect(refused.formFamily).toBeNull();
+  expect(rowPositionOptions(offer)).toEqual({ reopen, setAsideFileId: true });
+
+  // The reopen's own refusal, through `runAdmitPath`, still opens no form (the offer is the choice alone).
+  const admit = vi.fn().mockResolvedValueOnce({ kind: "refused", refusal: refusal("engine.identity_unusable", ID_REFUSAL), owner: ENGINE_REFUSAL_NOTICE });
+  const { harness, deps } = depsFor(admit);
+  await runAdmitPath(RELINK_FOLDER, { reopen }, deps);
+  expect(harness.state.kind).toBe("refused");
+  if (harness.state.kind === "refused") expect(harness.state.formFamily).toBeNull();
+  expect(rowPositionOffer(harness.state)).toEqual({ path: RELINK_FOLDER, options: { reopen } });
+});
+
+// RECORDED MUTATION for S-T5 (M-22): `carriedChoiceLine` returns null. Expected failure: the first assertion below.
+it("a_carried_choice_is_shown_in_the_crs_block", () => {
+  expect(carriedChoiceLine({ setAsideFileId: true, crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" } })).toBe(ROW_POSITION_CARRIED_LINE);
+  expect(carriedChoiceLine({ crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" } })).toBeNull();
+  expect(carriedChoiceLine({})).toBeNull();
+});
+
+// RECORDED MUTATION for S-T6 (M-23): `declarationOptions` keeps the flag (`{ ...offer.options, identity }`). Expected failure: the options below hold `setAsideFileId`.
+it("declaring_from_a_row_position_open_carries_no_set_aside", async () => {
+  // A file opened by the choice is on the session tier and offered the declaration as any session-tier open is.
+  const state = admittedState(sessionDescribe({ set_aside_column: "id" }), { setAsideFileId: true, crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" } });
+  const offer = identityDeclarationOffer(state, U1_HANDLE);
+  expect(offer, "the offer").not.toBeNull();
+  if (offer === null) return;
+
+  const declared = declarationOptions(offer, { column: "parcel_key" });
+  expect(declared).toEqual({ crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" }, identity: { column: "parcel_key" } });
+  expect("setAsideFileId" in declared).toBe(false);
+});
+
+// RECORDED MUTATION for S-T6b (M-23b): `refusedDeclarationOptions` keeps the flag (`{ ...options, identity }`). Expected failure: the options below hold `setAsideFileId`.
+it("a_declaration_after_a_refused_set_aside_carries_no_set_aside", () => {
+  const options: AdmitOptions = { setAsideFileId: true, crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" } };
+  const declared = refusedDeclarationOptions(options, { column: "parcel_key" });
+  expect(declared).toEqual({ crsAssertion: { identifier: "EPSG:2056", definition_json: "{}" }, identity: { column: "parcel_key" } });
+  expect("setAsideFileId" in declared).toBe(false);
+});
+
+// RECORDED MUTATION for S-T9 (A) (M-27): `reopenRetryOptions` spreads the run's options (`{ ...options, reopen }`). Expected failure: the retry carries `setAsideFileId`. A guard: green before the mutation, as `reopenPath` built a retry's options from the reopen alone.
+it("a_retry_after_a_question_or_a_not_found_reply_does_not_carry_the_choice", () => {
+  const run: AdmitOptions = { reopen: { answer: "copy", relink: "C:/moved/parcels.parquet" }, setAsideFileId: true };
+
+  expect(reopenRetryOptions(run, { answer: "same" })).toStrictEqual({ reopen: { answer: "same", relink: "C:/moved/parcels.parquet" } });
+  expect(reopenRetryOptions(run, { answer: "copy" })).toStrictEqual({ reopen: { answer: "copy", relink: "C:/moved/parcels.parquet" } });
+  expect(reopenRetryOptions(run, { relink: "C:/other/parcels.parquet" })).toStrictEqual({ reopen: { answer: "copy", relink: "C:/other/parcels.parquet" } });
+
+  // A first call's options (nothing given yet) read as nulls.
+  expect(reopenRetryOptions({}, { answer: "copy" })).toStrictEqual({ reopen: { answer: "copy", relink: null } });
 });

@@ -87,6 +87,7 @@ describe("admitDataset", () => {
         cancel_key: "open-1",
         crs_assertion: null,
         identity: null,
+        set_aside_file_id: false,
       },
     });
     expect(invokeMock).toHaveBeenNthCalledWith(2, "describe", {
@@ -147,6 +148,7 @@ describe("admitDataset", () => {
         cancel_key: "open-crs",
         crs_assertion: { identifier: "EPSG:2056", definition_json: "{\"type\":\"ProjectedCRS\"}" },
         identity: null,
+        set_aside_file_id: false,
       },
     });
   });
@@ -169,8 +171,25 @@ describe("admitDataset", () => {
         cancel_key: "open-identity",
         crs_assertion: null,
         identity: { column: "parcel_key" },
+        set_aside_file_id: false,
       },
     });
+  });
+
+  // RECORDED MUTATION for T-1 (M-24): `admitDataset` passes `true` to `openDataset` whatever the option. Expected failure: the plain open below sends `set_aside_file_id: true`.
+  it("the setAsideFileId option is forwarded as set_aside_file_id, and its absence is false", async () => {
+    invokeMock.mockImplementation(async (cmd: string) => {
+      if (cmd === "open_dataset") return { dataset: "ds_1" };
+      if (cmd === "describe") return describeFixture();
+      throw new Error(`unexpected command ${cmd}`);
+    });
+    await admitDataset("C:/data/a.parquet", "open-plain");
+    await admitDataset("C:/data/a.parquet", "open-chosen", { setAsideFileId: true });
+    const sent = (n: number) => (invokeMock.mock.calls[n][1] as { request: Record<string, unknown> }).request;
+    expect(sent(0).set_aside_file_id).toBe(false);
+    expect(sent(0).identity).toBeNull();
+    expect(sent(2).set_aside_file_id).toBe(true);
+    expect(sent(2).identity).toBeNull();
   });
 
   /** `open_dataset` opens `dataset` and `describe` fails with `failure`; `close_dataset` and the log binding answer. */

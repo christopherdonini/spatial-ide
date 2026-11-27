@@ -48,7 +48,7 @@ function loadFixture(name: string): unknown {
  * `types.ts` declares. Comparing against an independent, hand-maintained list can.
  */
 const REQUEST_KEY_SETS: Readonly<Record<string, readonly string[]>> = {
-  open_dataset: ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+  open_dataset: ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
   describe: ["skp", "dataset"],
   viewport_query: ["skp", "dataset", "bbox", "bbox_crs", "limit", "filter", "columns"],
   cancel: ["skp", "handle"],

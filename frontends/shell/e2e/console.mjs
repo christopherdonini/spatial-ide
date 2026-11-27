@@ -350,8 +350,8 @@ async function stepHeader(page) {
 /**
  * `ECHO'`: openPath(filter-zoned.parquet, no opts) -> the console gains class-A entries. The
  * open_dataset entry's `.console-request-text` parses as JSON; deep-key-check against exactly
- * {skp, path, cancel_key, crs_assertion, identity} (the fixture-derived key set: `OpenDatasetRequest`,
- * `skp/types.ts`); `crs_assertion`/`identity` are explicit `null` for a plain open (never omitted --
+ * {skp, path, cancel_key, crs_assertion, identity, set_aside_file_id} (the fixture-derived key set: `OpenDatasetRequest`,
+ * `skp/types.ts`); `crs_assertion`/`identity` are explicit `null` and `set_aside_file_id` is explicit `false` for a plain open (never omitted --
  * `skp/client.ts::openDataset`'s own discipline). Self-consistency, no hard-coded version: the
  * entry's OWN label version token must equal the parsed request's OWN `skp` field.
  */
@@ -376,12 +376,13 @@ async function stepEcho(page, ctx) {
     throw new Error(`ECHO': .console-request-text did not parse as JSON: ${e.message}\nText: ${last.requestText}`);
   }
   const actualKeys = Object.keys(parsed).sort();
-  const expectedKeys = ["cancel_key", "crs_assertion", "identity", "path", "skp"].sort();
+  const expectedKeys = ["cancel_key", "crs_assertion", "identity", "path", "set_aside_file_id", "skp"].sort();
   if (JSON.stringify(actualKeys) !== JSON.stringify(expectedKeys)) {
     throw new Error(`ECHO': key set mismatch. Expected ${JSON.stringify(expectedKeys)}, got ${JSON.stringify(actualKeys)}`);
   }
   if (parsed.crs_assertion !== null) throw new Error(`ECHO': crs_assertion was not explicit null: ${JSON.stringify(parsed.crs_assertion)}`);
   if (parsed.identity !== null) throw new Error(`ECHO': identity was not explicit null: ${JSON.stringify(parsed.identity)}`);
+  if (parsed.set_aside_file_id !== false) throw new Error(`ECHO': set_aside_file_id was not explicit false: ${JSON.stringify(parsed.set_aside_file_id)}`);
 
   const labelMatch = /^SKP (\S+) · control plane$/.exec(last.label ?? "");
   if (!labelMatch) throw new Error(`ECHO': .console-entry-label did not match the expected shape. Actual: ${JSON.stringify(last.label)}`);

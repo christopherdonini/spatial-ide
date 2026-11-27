@@ -30,11 +30,16 @@ export type AdmissionOutcome =
  * these set is the ONLY way the shell ever asserts a CRS or declares an identity column -- there
  * is no parallel admission path. Both default to unset, matching a plain re-open.
  *
+ * `setAsideFileId` (`skp/0.16`, ADR-016 Amendment 3) is the user's choice to open a file whose own `id` column cannot serve by row position, for this session. It is `true` or absent, never `false`:
+ * the only place that sets it is the button's click (`RowPositionChoice`), no default and no inference sets it, and a declaration's options drop it (`declarationOptions`,
+ * `refusedDeclarationOptions`). It travels beside no `identity`.
+ *
  * `reopen` (B2 piece 1c) marks a reopen's run: its answer to a `question` and its re-link, each `null` for none. It is read by `admitProject`
  * alone, and a run that carries it never reaches this function or a remediation form. */
 export interface AdmitOptions {
   crsAssertion?: CrsAssertion | null;
   identity?: IdentityDeclaration | null;
+  setAsideFileId?: true;
   reopen?: { answer: ReopenAnswer | null; relink: string | null };
 }
 
@@ -56,7 +61,7 @@ export async function admitDataset(
   const identity = options.identity ?? null;
   begin("open_dataset");
   try {
-    const { dataset, session } = await openDataset(path, cancelKey, crsAssertion, identity);
+    const { dataset, session } = await openDataset(path, cancelKey, crsAssertion, identity, options.setAsideFileId === true);
     end("open_dataset");
 
     begin("describe");

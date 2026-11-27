@@ -112,7 +112,7 @@ const FORMAT_DEFAULT_CONTRADICTED_MESSAGE =
   "coordinate outside ±180/±90 is not longitude/latitude on WGS84. Assert the CRS this file is " +
   "actually in to open it";
 // C2'/C3' (b): read back from a real run of openPath(string-id-refused.parquet), inserted by script.
-const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping — it is a synthesized identity, which ADR-016 refuses. Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent";
+const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping: it gives no stable identity";
 // C2'/C3' (a): byte-copied by script from `protocol/skp/tests/data/v0-describe-response-session-ordinal.json`
 // (`identity.session_statement`; the Identity line is `identity.source` + " — " + `identity.uniqueness`).
 const SESSION_IDENTITY_STATEMENT = "this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does.";

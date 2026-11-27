@@ -102,8 +102,10 @@ export function viewNotAppliedNotice(basis: string): string {
 export const KNOWN_FOLDERS_FULL_NOTICE = "The project was not opened in this window. The folders this machine remembers for it are unchanged.";
 /** S21: shown with `skp.project_machine_record_refused`; its fields show as the refusal block shows them. */
 export const MACHINE_RECORD_REFUSED_NOTICE = "The project was not opened in this window. The record was left as it is.";
-/** R-ENG: beside every `engine.*` refusal at a reopen but `engine.cancelled`. */
+/** R-ENG: beside every `engine.*` refusal at a reopen but `engine.cancelled`, for a reopen attempt that carries no choice to open the file by row position. An attempt that carries it takes `SET_ASIDE_REFUSAL_NOTICE` (S-8) instead (`admitProject` in `project/openProject.ts`). */
 export const ENGINE_REFUSAL_NOTICE = "The project was not opened in this window. The claims this refusal names are the ones the project file recorded for the data. None was typed here.";
+/** S-8 (`text-id-opens-for-the-session-by-row-position`, ADV-2026-11-24-05 item 2 (b)): beside an `engine.*` refusal at a reopen attempt that carried the user's choice to open the file by row position, in place of R-ENG, whose "None was typed here" would be untrue of it. Its one product caller is `admitProject` in `project/openProject.ts`. */
+export const SET_ASIDE_REFUSAL_NOTICE = "The project was not opened in this window. The claims this refusal names are the ones the project file recorded for the data, and the choice you made here to open it by row position.";
 /** R-CODE: beside a reopen refusal that has no line of its own. */
 export const REOPEN_REFUSAL_NOTICE = "The project was not opened in this window.";
 /** R-CODE, the data's locator: replaces R-CODE for `skp.project_target_unresolvable` when the refusal carries a `locator` field. Its words are the advisor's under the human's delegation of 2026-11-13, approved in ADV-2026-11-22-44 item 3 as RELINK-AFTER-REFUSAL-AT-THE-RECORDED-PLACE-PREREGISTRATION.md section 2 item 5 drafts them, and not the human's. It is also the owner place that `relinkOffer` in `admission/AdmissionPanel.tsx` reads to offer `RELINK_CHOICE` beside the refusal. */

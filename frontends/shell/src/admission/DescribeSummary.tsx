@@ -11,6 +11,7 @@ import {
   displayConventionLine,
   identitySummaryLine,
   sessionStatementLine,
+  setAsideChoiceLine,
 } from "./describeSummaryText";
 
 /** Success shows schema, identity, row count and license as `describe` actually established them
@@ -66,6 +67,7 @@ export default function DescribeSummary({ describe }: { describe: DescribeRespon
           <>
             <dt>Session identity</dt>
             <dd>{sessionStatementLine(describe.identity)}</dd>
+            {setAsideChoiceLine(describe.identity) !== null && <dd>{setAsideChoiceLine(describe.identity)}</dd>}
           </>
         )}
 

@@ -80,7 +80,7 @@ const CRS_UNDECLARED_MESSAGE =
   "conversion)";
 // Read back from a real run of openPath(string-id-refused.parquet), inserted by script (the same
 // text `regression.mjs`'s C2'/C3' (b) asserts -- duplicated here per the sibling-file convention).
-const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping — it is a synthesized identity, which ADR-016 refuses. Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent";
+const STRING_ID_MESSAGE = "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping: it gives no stable identity";
 // Byte-copied by script from `protocol/skp/tests/data/v0-describe-response-session-ordinal.json`
 // (`identity.session_statement`; the Identity line is `identity.source` + " — " + `identity.uniqueness`).
 const SESSION_IDENTITY_STATEMENT = "this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does.";
@@ -93,8 +93,7 @@ const DUPKEY_MESSAGE =
   "refused: `id` cannot serve as stable feature identity — " +
   `${DUPKEY_FEATURES} rows carry only 1 distinct values, so at least two features share an ` +
   "identity. ADR-010 rule 2 resolves a pick through this id, and a shared id returns a " +
-  "wrong-but-plausible feature with nothing raised. Synthesizing a row ordinal instead is the " +
-  "hazard ADR-010 rule 2 exists to prevent";
+  "wrong-but-plausible feature with nothing raised";
 // Mirrors `crsAssertionState.ts`'s own `MAX_CRS_DEFINITION_BYTES` (engine::crs::MAX_CRS_DEFINITION_BYTES,
 // checked client- AND host-side, SF4) -- duplicated per this suite's own convention above.
 const MAX_CRS_DEFINITION_BYTES = 65_536;

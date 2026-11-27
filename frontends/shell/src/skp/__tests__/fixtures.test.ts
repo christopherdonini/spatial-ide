@@ -23,7 +23,7 @@ import type {
 } from "../types";
 import { DATASET_SESSION_ENDED_EVENT, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
-import { crsProvenanceLine, displayConventionLine, sessionStatementLine } from "../../admission/describeSummaryText";
+import { crsProvenanceLine, displayConventionLine, sessionStatementLine, setAsideChoiceLine } from "../../admission/describeSummaryText";
 import { identityDeclarationOffer, type State } from "../../admission/AdmissionPanel";
 
 /**
@@ -57,7 +57,7 @@ describe("SKP v0 shared fixtures", () => {
     const req = loadFixture<OpenDatasetRequest>("v0-open_dataset-request");
     assertExactKeys(
       req,
-      ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+      ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
       "open_dataset request"
     );
     expect(req.skp).toBe(SKP_VERSION);
@@ -65,6 +65,7 @@ describe("SKP v0 shared fixtures", () => {
     expect(typeof req.cancel_key).toBe("string");
     expect(req.crs_assertion).toBeNull(); // skp/0.2: absent assertion is `null`, never omitted
     expect(req.identity).toBeNull(); // skp/0.2: absent declaration is `null`, never omitted
+    expect(req.set_aside_file_id).toBe(false); // skp/0.16: no choice is `false`, never omitted
 
     const res = loadFixture<OpenDatasetResponse>("v0-open_dataset-response");
     assertExactKeys(res, ["dataset", "session"], "open_dataset response");
@@ -79,7 +80,7 @@ describe("SKP v0 shared fixtures", () => {
     );
     assertExactKeys(
       req,
-      ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+      ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
       "open_dataset request (with crs_assertion and identity)"
     );
     expect(req.skp).toBe(SKP_VERSION);
@@ -93,6 +94,27 @@ describe("SKP v0 shared fixtures", () => {
     expect(req.identity).not.toBeNull();
     assertExactKeys(req.identity, ["column"], "open_dataset request .identity");
     expect(req.identity!.column).toBe("parcel_key");
+  });
+
+  it("the set-aside fixtures carry the choice and the column it set aside (skp/0.16)", () => {
+    const req = loadFixture<OpenDatasetRequest>("v0-open_dataset-request-set-aside");
+    assertExactKeys(
+      req,
+      ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
+      "open_dataset request (set aside)"
+    );
+    expect(req.set_aside_file_id).toBe(true);
+    expect(req.identity).toBeNull(); // the choice travels beside no declaration
+
+    const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal-set-aside");
+    expect(res.identity.class).toBe("session-ordinal");
+    expect(res.identity.set_aside_column).toBe("id");
+    expect(res.identity.candidate_columns).toEqual(["parcel_key"]);
+    expect(setAsideChoiceLine(res.identity)).not.toBeNull();
+    // the other session-tier fixture is a file with no `id` column: no choice, so no line.
+    const plain = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    expect(plain.identity.set_aside_column).toBeNull();
+    expect(setAsideChoiceLine(plain.identity)).toBeNull();
   });
 
   it("describe request/response, including the two brief corrections (extent, row_count)", () => {
@@ -141,8 +163,8 @@ describe("SKP v0 shared fixtures", () => {
     );
     assertExactKeys(
       res.identity,
-      // skp/0.15, ADR-016 Amendment 2: `candidate_columns`, always present (null off the session tier)
-      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement", "candidate_columns"],
+      // skp/0.15, ADR-016 Amendment 2: `candidate_columns`, always present (null off the session tier); skp/0.16, Amendment 3: `set_aside_column`, always present (null unless the user's choice)
+      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement", "candidate_columns", "set_aside_column"],
       "describe response .identity"
     );
     for (const [i, field] of res.schema.entries()) {

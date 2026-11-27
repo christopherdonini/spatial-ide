@@ -11,7 +11,9 @@ import {
   degradedChecksLine,
   displayConventionLine,
   identitySummaryLine,
+  SET_ASIDE_CHOICE_LINE,
   sessionStatementLine,
+  setAsideChoiceLine,
 } from "./describeSummaryText";
 
 function fileCrs(overrides: Partial<CrsInfo> = {}): CrsInfo {
@@ -190,5 +192,43 @@ describe("degradedChecksLine (engine/SOURCE-WATCHER-PREREGISTRATION.md §4, SH2)
 
     const full: SourceChecks = { state: "full", components: [] };
     expect(degradedChecksLine(full)).toBeNull();
+  });
+});
+
+// RECORDED MUTATION for S-T3 (M-20): `setAsideChoiceLine` returns S-3 for any session tier (`identity.class === "session-ordinal" ? S-3 : null`). Expected failure: the session tier with no choice below is given the line.
+describe("setAsideChoiceLine (text-id-opens-for-the-session-by-row-position, S-3)", () => {
+  it("the_summary_says_the_user_chose_row_position", () => {
+    const sessionTier = (set_aside_column: string | null | undefined): IdentityInfo => {
+      const identity: IdentityInfo = {
+        source: "session-ordinal:file_row_number",
+        uniqueness: "by-construction-within-generation",
+        verified_rows: null,
+        max_value: null,
+        js_exact: null,
+        class: "session-ordinal",
+        session_statement: "<session statement placeholder>",
+        candidate_columns: ["parcel_key"],
+        set_aside_column: set_aside_column as string | null,
+      };
+      if (set_aside_column === undefined) delete (identity as { set_aside_column?: unknown }).set_aside_column;
+      return identity;
+    };
+    // The line is S-3's constant, and only when the wire names the column the user set aside.
+    expect(setAsideChoiceLine(sessionTier("id"))).toBe(SET_ASIDE_CHOICE_LINE);
+    // A session tier that is not the user's choice (a file with no `id` column) is given none, and so is a describe from before the member.
+    expect(setAsideChoiceLine(sessionTier(null))).toBeNull();
+    expect(setAsideChoiceLine(sessionTier(undefined))).toBeNull();
+    // Nor is a native identity.
+    const native: IdentityInfo = {
+      source: "file:id",
+      uniqueness: "verified-at-open-full-file",
+      verified_rows: "100000",
+      max_value: "99999",
+      js_exact: true,
+      class: "native",
+      session_statement: null,
+      set_aside_column: null,
+    };
+    expect(setAsideChoiceLine(native)).toBeNull();
   });
 });
