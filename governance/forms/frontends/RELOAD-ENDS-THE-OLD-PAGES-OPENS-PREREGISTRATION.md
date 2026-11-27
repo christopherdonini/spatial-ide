@@ -874,3 +874,26 @@ Read the last amendment first.
 3. **F-2** (item 2). The reviewer's read part runs clippy at the base ca576852 and at the head. If the head fails only where the base fails, B adds no fix in `publish.rs`, and the closing amendment says so. A failure in B's own files is corrected in B.
 4. **ADR-037** (items 3 and 4). The ruling's three Old/New pairs wait for the reviewer's read part; a further clause goes to the advisor first. Then one script applies the pairs to the text of ADV-2026-11-26-27 item 1, and one commit replaces the ADR on the branch. The corrected text is filed under state/drafts/ with how it was made, and the advisor gives the hash that replaces ADV-2026-11-26-27 item 1's.
 5. **Next:** the reviewer's read part; then the words and the ADR commit, in one correction before the series.
+
+## Amendment 6 — 2026-11-27 — the custodian's: the reviewer's read part and ADV-2026-11-27-16, before the correction
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The reviewer's read part** at 7bd3bf2269d058bf454d936ae06d4a8e08d88ec4 is filed at `state/consults/gates/2026-11-27-reload-ends-the-old-pages-opens-build-gate-reviewer-read-part.md`, with no gate-log row. The ruling is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-16-b-after-its-reviewers-read-part-adr-037s-hash-stands-the-reviewers-f3-the-architects-f-4-and-f-6-whole-f-5-the-architects-no-publish-rs-line.md`.
+2. **ADR-037** (its item 1). The commit ae4b673fc3d783514b13a4e823f5a432e43aeb91 replaces the ADR on the branch with the text filed at `state/drafts/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.corrected.md`.
+   - That text is 193 lines, 22141 bytes, sha256 459ad46285647b105a2537ecd8d229741f980c1a411d5cababebe82a7ab58be4.
+   - At the merge check, that hash replaces ADV-2026-11-26-27 item 1's. No further clause changes.
+3. **Whose words each place takes** (its items 2 to 5):
+   - (b), `settle`'s doc on the case with no `Projects`: the reviewer's F3, whole. Its one line is broken into doc lines, with no word changed. The architect's F-3 is not applied.
+   - (c), `start_page_end`'s doc on its early return: the architect's F-4, whole. The reviewer's F4 is not applied. ADV-2026-11-27-07 item 3 (c) is settled: the return is not reachable.
+   - (h), the handle's doc: the architect's F-6, whole. The reviewer's F5 is not applied.
+   - F-5: the architect's words.
+4. **The correction commit** holds those four and nothing else (its item 6).
+5. **Clippy** (its item 7). The head fails where the base fails and nowhere else, so B adds no failure, and no line of `publish.rs` changes. The reviewer's copy of two build outputs into its base checkout is accepted.
+6. **For the closing amendment** (its items 3, 6, 7 and 8):
+   - one line saying that F-4's clause rests on the hook running on the event loop's thread;
+   - the count at the corrected head, under the class 8 already recorded;
+   - the reviewer's copy of the two build outputs, as it disclosed it;
+   - the reviewer's two notes on cases outside ordinary use, and its statement on the security posture, in its own words;
+   - both gates' posture statements, which stand with their verdicts after the run part.
+7. **Next:** the correction worker; then B red at f73dfed3 and green at the head in the port order; then the run parts.

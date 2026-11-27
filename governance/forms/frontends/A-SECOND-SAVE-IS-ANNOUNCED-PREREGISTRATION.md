@@ -498,3 +498,25 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
    - `cargo clippy --workspace --locked --all-targets`, which exited 0 with warnings and no `-D`.
    No app, dev server or e2e suite was started.
 3. **Next.** A's code, commit T first, in its turn (Amendment 2 item 5, Amendment 3 item 5). Only record commits stand between the base and commit T (§9a).
+
+## Amendment 5 — 2026-11-27 — the custodian's: A's code, built with no app
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The build.** The worker's report is filed at `state/consults/2026-11-27-a-second-save-is-announced-build-worker-report.md`. The branch cut/a-second-save-is-announced is at dab4e9d3b45f487d9e0af2531030104a6dd5b761. Its four commits from f64fac32f3c75da5b4ea57e5b38eee89b92ec22a, in order:
+   - T, 6ccd00d011b9765504c9e088c1354f530827491f: the tests alone;
+   - P, 4184d0850b059d38cca5b0a40f2308004b624bdb: the code;
+   - 65981cb71d28694c04d260ab7ff912595185edac: the seven walkthrough spans and the e2e README sentence;
+   - dab4e9d3b45f487d9e0af2531030104a6dd5b761: the mutations recorded beside their tests.
+2. **T's reds** (the worker's account). CV-K1, SP-T1, SP-T2 and A-A1 each failed at an assertion before T was committed, not at an import, type or reference error. E-A1 was not run, because it starts the app; `node --check` passed on it. Its step 1b's text is the same at T and at the head.
+3. **The mutations** M-A1, M-A2, M-A3, M-A5, M-A6 and M-A7 were observed at 65981cb71d28694c04d260ab7ff912595185edac. Each failed where §4 predicts (the worker's account). M-A3 and M-A5 failed further tests too, recorded beside them as "Also failed".
+4. **§7.** `git diff --numstat f64fac32...dab4e9d3` gives 267 changed lines over the seven code and test paths, under the ceiling of 280, with no class 8. The other two paths are the records of §4, `frontends/shell/MANUAL-WALKTHROUGH.md` and `frontends/shell/e2e/README.md`. Nothing else is changed, so there is no class 9.
+5. **The suites at the head** that start no app all exited 0: the shell's typecheck and tests (132 files, 1673 tests), the `node --test` scripts suite, `verify-cites` and `verify-quotes`.
+6. **Departures** (the worker's account):
+   - One push ran inside a compound call, after T.
+   - Several hold lines began with a read before the `cd`.
+   - One mutation's apply ran once outside its run, while the records were being edited. It was reverted, and the product files were clean at every commit.
+7. **At the advisor:**
+   - whether `KNOWN-LIMITATIONS.md` line 511 at the base is a reader under I3. The worker judged it not one, and said a ruling that it is one is a stop;
+   - whether A's build gates take two parts, as ADV-2026-11-27-08 item 3 holds those of the identity route and B.
+8. **Next:** E-A1 at T and at P in A's port turn (ADV-2026-11-27-11 item 4), and the build gates as the advisor rules.
