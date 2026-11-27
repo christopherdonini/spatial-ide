@@ -2026,7 +2026,8 @@ fn admit_identity(
         // one question, and the engine picks neither.
         if declared.is_some() {
             return Err(EngineError::IdentitySetAsideRefused {
-                detail: "setting aside the file's `id` column cannot be combined with a declared                          identity column"
+                detail: "setting aside the file's `id` column cannot be combined with a declared \
+                         identity column"
                     .to_string(),
             });
         }
@@ -2542,5 +2543,28 @@ mod tests {
                 assert_eq!(got, expected, "{row}: the error is DuckDB's no-match error");
             }
         }
+    }
+
+    /// **A guard**: `set_aside_outcome`'s arm (d) admits a refusal of the `id` column and nothing
+    /// else. `Cancelled` and `Query` say nothing about the column, so a cancelled re-scan ends
+    /// `Cancelled` and an engine failure stays a failure; neither opens a dataset. It is green
+    /// before the arm's guard exists as much as after, and its proof is its mutation: an arm (d)
+    /// that admits on any `Err` turns it red.
+    #[test]
+    fn a_set_aside_passes_cancelled_and_query_through_unchanged() {
+        let schema: SchemaRef =
+            std::sync::Arc::new(Schema::new(vec![Field::new("id", DataType::Utf8, false)]));
+
+        let cancelled = set_aside_outcome(&schema, Err(EngineError::Cancelled));
+        assert!(
+            matches!(cancelled, Err(EngineError::Cancelled)),
+            "a cancel is not a refusal of the column: {cancelled:?}"
+        );
+
+        let failed = set_aside_outcome(&schema, Err(EngineError::Query("scan failed".into())));
+        assert!(
+            matches!(&failed, Err(EngineError::Query(m)) if m == "scan failed"),
+            "an engine failure is not a refusal of the column: {failed:?}"
+        );
     }
 }
