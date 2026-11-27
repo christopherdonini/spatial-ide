@@ -722,11 +722,22 @@ mod tests {
     fn session_log(name: &str) -> (Session, SessionLog) {
         let dir = std::env::temp_dir()
             .join("spatial-ide-shell-session-log-tests")
+            .join(std::process::id().to_string())
             .join(name);
         let _ = std::fs::remove_dir_all(&dir);
         let log = SessionLog::open(&dir).unwrap();
         let session = Session::with_origin("http://tauri.localhost".to_string()).unwrap();
         (session, log)
+    }
+
+    #[test]
+    fn a_session_log_folder_is_the_test_runs_own() {
+        let (_session, log) = session_log("own");
+        let want = std::env::temp_dir()
+            .join("spatial-ide-shell-session-log-tests")
+            .join(std::process::id().to_string())
+            .join("own");
+        assert_eq!(log.path.parent(), Some(want.as_path()), "not the run's own");
     }
 
     /// A line after its `<unix-ms>` stamp and the space, its LF kept.
