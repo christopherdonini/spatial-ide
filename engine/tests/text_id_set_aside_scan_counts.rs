@@ -78,10 +78,11 @@ fn the_set_aside_scan_counts_are_exact() {
         "nothing is scanned for a file with no `id`"
     );
 
-    // N-7's input: a declared column beside the choice. Refused before any scan.
-    let beside = write("declared", IdentityMode::StringIdsBesideParcelKey);
-    let declaration =
-        IdentityDeclaration::new("parcel_key", "integration-test", "2026-11-27T00:00:00Z");
+    // N-7's input: a declared column beside the choice, on a file whose `id` the native path would
+    // scan (a repeating integer), so that a refusal that came after the native call would show as a
+    // delta of one and not of none.
+    let beside = write("declared", IdentityMode::DuplicateIds);
+    let declaration = IdentityDeclaration::new("id", "integration-test", "2026-11-27T00:00:00Z");
     let before = identity_verification_scans();
     let result = open_setting_aside(&beside, Some(declaration));
     let after = identity_verification_scans();
