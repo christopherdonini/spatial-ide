@@ -864,3 +864,13 @@ Read the last amendment first.
 7. **The head** the read parts read is 7bd3bf2269d058bf454d936ae06d4a8e08d88ec4 (Amendment 3), or a later head recorded by amendment.
 
 Read the last amendment first.
+
+## Amendment 5 — 2026-11-27 — the custodian's: the architect's read part and ADV-2026-11-27-14, before any correction
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The read part** is filed at `state/consults/gates/2026-11-27-reload-ends-the-old-pages-opens-build-gate-architect-read-part.md`, and the ruling at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-14-bs-architect-read-part-the-thread-handle-inside-2-item-3-no-publish-rs-fix-adr-037-three-clauses-reworded.md`.
+2. **F-1** (item 1 of the ruling). The thread handle in `Settled::Ended` is inside §2 item 3, the same means §2 item 4 grants `page_started`. No code changes. Amendment 3's account of the means §2 does not name gains this one. F-6's doc words come with F-3 to F-5.
+3. **F-2** (item 2). The reviewer's read part runs clippy at the base ca576852 and at the head. If the head fails only where the base fails, B adds no fix in `publish.rs`, and the closing amendment says so. A failure in B's own files is corrected in B.
+4. **ADR-037** (items 3 and 4). The ruling's three Old/New pairs wait for the reviewer's read part; a further clause goes to the advisor first. Then one script applies the pairs to the text of ADV-2026-11-26-27 item 1, and one commit replaces the ADR on the branch. The corrected text is filed under state/drafts/ with how it was made, and the advisor gives the hash that replaces ADV-2026-11-26-27 item 1's.
+5. **Next:** the reviewer's read part; then the words and the ADR commit, in one correction before the series.
