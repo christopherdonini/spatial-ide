@@ -366,11 +366,11 @@ const OPEN_PROJECT_IDLE = "Open project…";
 const OPEN_PROJECT_OPENING = "Opening project…";
 
 /** D1 and D2 (identity-declaration-route-for-session-tier): the offer's label and its first line. The advisor's words under the human's delegation of 2026-11-13 (ADV-2026-11-23-26 item 2), not
- * the human's; each is built under the placeholder mark until the words commit. D2 is true of the code as follows: "opens this file again" is `runAdmitPath` called with the same path; "checks that column
+ * the human's; each is shown as the words commit set it. D2 is true of the code as follows: "opens this file again" is `runAdmitPath` called with the same path; "checks that column
  * across the whole file" is the engine's full-file check of a declared column; "the filter and the selection are cleared and Colour by ends; the rest of the style is kept" is what an admission of
  * another dataset does to the workspace (`workspaceState.ts`); "stays open as it is now" is that a refusal leaves App's `admitted` as it was. */
-const DECLARE_IDENTITY_LABEL = "[P6 placeholder] Declare an identity column…";
-const DECLARE_IDENTITY_FIRST_LINE = "[P6 placeholder] Declaring opens this file again with the column you choose and checks that column across the whole file. The filter and the selection are cleared and Colour by ends; the rest of the style is kept. If the column is refused, the file stays open as it is now.";
+const DECLARE_IDENTITY_LABEL = "Declare an identity column…";
+const DECLARE_IDENTITY_FIRST_LINE = "Declaring opens this file again with the column you choose and checks that column across the whole file. The filter and the selection are cleared and Colour by ends; the rest of the style is kept. If the column is refused, the file stays open as it is now.";
 
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
