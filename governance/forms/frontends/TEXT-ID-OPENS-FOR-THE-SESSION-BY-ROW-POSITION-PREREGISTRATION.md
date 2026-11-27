@@ -853,3 +853,39 @@ Nothing above is edited.
    - In the order of builds it stands ahead of `reload-ends-the-old-pages-opens` (B).
    - Its e2e runs wait under ADV-2026-11-26-19.
 7. **Nothing else changes.** No ceiling is restated: the file ceiling stays 84, and the line ceiling stays 2,150 (Amendment 6 item 4). By ADV-2026-11-26-20 item 8, nothing in that ruling is reserved.
+
+## Amendment 8 — 2026-11-27 — the custodian's: the recorded base, the heads it takes in, and the reads made at it
+
+*Pre-code amendment, written by the custodian. References and hashes only. Every hash and ancestry check below was taken by script (git rev-parse, git merge-base --is-ancestor, gh pr view) when this amendment was filed. The reads in item 4 are the base worker's, made at 2ed0af4e123263b6b3df5615c71cdf2a1309013e and reported in its hand-back; the custodian checked the parts that the last merge could move. Nothing above is edited.*
+
+1. **The recorded base** (§8; Amendment 2 item 2) is 83812fd5ee7e211ea6c241321981132117851f0f on `cut/text-id-opens-for-the-session-by-row-position`, pushed. It is the identity route's built head 767033a25b0d2f231e91966378d874c58f56787f with three merge commits, each made with no conflict:
+   - PR 364's head 50c7c3314fe9d9b5afe7fd78417c5afd0c7992ba, merged as 6d22355bcf42656fb7b26e93f23937ffa3f56302 by the base worker;
+   - PR 361's head 0922c90a38ad91bf7922cf9a6baf0f8ed1344397, merged as 2ed0af4e123263b6b3df5615c71cdf2a1309013e by the base worker;
+   - the identity route's words commit 912b3a2c204ac6613c10e75f09c39fb29663671c (ADV-2026-11-26-28), now that route's head, merged as 83812fd5ee7e211ea6c241321981132117851f0f by the custodian. Its diff from 2ed0af4e123263b6b3df5615c71cdf2a1309013e equals the words commit's diff from 767033a25b0d2f231e91966378d874c58f56787f, index lines aside, and touches four files.
+   - The base is therefore the identity route's head as it now stands. The strings this piece's tests meet carry no placeholder mark.
+2. **PR 360** is already in the identity route's line: its head 8d1f2f4ee6cef58ef5975ebfc6c2d8790d2fbcfb is an ancestor of 767033a25b0d2f231e91966378d874c58f56787f. It is not merged again (Amendment 2 item 2).
+3. **Rule (00a) at the base.**
+   - Of the twelve open PRs 350, 353, 356 and 358 to 366, every head is an ancestor of the base except PR 356 (88ce3c6575a81f248bcc0a203355c3a49a86ca30) and PR 362 (3469e439159372f0d435262a2d9265ce2af824b5).
+   - PR 356 changes the shell's `src-tauri` commands and publish files. PR 362 changes the command bar and its test. Neither path is in §7's Scope or any amendment's class-9 additions, so neither is taken in.
+   - PR 350 is in the base through PR 364's head, not through the identity route's.
+   - **A correction to the custodian's own record.** The base worker's first read of the heads compared them with main, not with the base. PR 359 (the e2e console script and the e2e README) and PR 358 (KNOWN-LIMITATIONS item 68) then showed as sharing paths. The custodian took PR 359 in and left PR 358 out under rule (00a). At the base, both heads are already ancestors of 767033a25b0d2f231e91966378d874c58f56787f, as is PR 353. The merge of PR 359 found nothing to merge and made no commit, so that decision changes nothing.
+4. **The reads at the base**, which are the worker's and fit the form:
+   - **The Scope.** It has 84 paths. 78 are present, and the 6 that are absent are the new files §7 names.
+   - **The literal.** `SKP_VERSION` is `skp/0.15`, the identity route's. `skp/0.16` is held only by the future-version fixture's three places, all in the Scope, and no code holds `skp/0.17`. This piece's literal `skp/0.16` and its future-version fixture `skp/0.17` stand (Amendment 2 item 2).
+   - **The conformance set.** Under `protocol/skp/tests/conformance/` there are 68 occurrences of `skp/0.15` and 2 of `skp/0.16`.
+   - **The sentence.** Amendment 2 item 3's sentence is held by the six paths that item names and by no other path, so there is no stop.
+   - **`OpenDatasetRequest`.** Every file holding `OpenDatasetRequest {` is in the Scope. `declarationOptions` is in a Scope file, and `refusedDeclarationOptions` does not exist yet, so no class-9 addition is needed.
+   - **The D-1 ranges and §10's seams** have moved by lines only, and their shapes are as the form describes. The words commit changes `AdmissionPanel.tsx` in one hunk of 11 lines for 11, so no seam there moves.
+   - **The invalidators.** Nothing in §5 or §9 that can be read before code fires. There is no recovery-offer code, and there is no text-id e2e file.
+5. **Suites at 2ed0af4e123263b6b3df5615c71cdf2a1309013e.** Each started nothing and ran in a shared hold:
+   - shell: typecheck exit 0, then 1681 tests passed;
+   - kernel: 527 passed, 48 ignored;
+   - skp: 63 passed, with conformance 1;
+   - engine: 508 passed, 20 ignored;
+   - fmt clean in both workspaces;
+   - clippy at exit 0 with 19 warning lines, for information only.
+
+   The words commit's shell suites passed at 912b3a2c204ac6613c10e75f09c39fb29663671c (typecheck exit 0, 1681 tests). The build's first run of its suites is at the base.
+6. **Counting** (§7). `<base>` is 83812fd5ee7e211ea6c241321981132117851f0f. The file ceiling stays 84 and the line ceiling stays 2,150.
+7. **The node** goes in progress with its branch as evidence.
+8. **Next:** the build, phase 2 (the code), on the recorded base. Its e2e runs wait under ADV-2026-11-26-19.
