@@ -2041,3 +2041,14 @@ Each exits 0 when all checks pass, 1 when one fails (step 4's wait for the old c
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 13 — 2026-11-27 — the custodian's: Amendment 12's unit-test parts built at d6c2daf6, no e2e run (ADV-2026-11-26-19 item 3; ADV-2026-11-27-02 item 3 (b))
+
+*References and hashes only. Nothing above is edited. Every run of C-E1 and C-E2 still waits for port 5180.*
+
+1. **The head** is d6c2daf69eb500027197945f5a4302f0508e0f69 on `cut/shell-migration-milestone-5-pr-a`, five commits on 806ad30843269f8012ec1d89f0224703a8078ad7 by a worker (Sonnet): items 2 to 4 in one commit (D-4's pairs copied by script, each Old found once), C-U6b, its mutations' record, N8-G, its mutations' record.
+2. **The mutations,** each observed red where Amendment 12 predicts and recorded beside its test: M12-1 and M12-4 (C-U6b, its new-id and dismissal assertions), M12-2 and M12-3 (N8-G, assertions T and C).
+3. **The suites at the head:** the shell's typecheck exit 0 and npm test exit 0, 1669 tests passed.
+4. **What is owed:** the runs of C-E1 and C-E2 after port 5180 is free, then the reviewer's second attempt (ADV-2026-11-24-14 item 7), then piece A's code (ADV-2026-11-26-08 item 3). The identity route took this head in (its Amendment 10).
+
+Read the last amendment first.

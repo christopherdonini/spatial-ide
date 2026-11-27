@@ -7895,17 +7895,17 @@ nodes:
     kind: task
     lane: shell
     phase: prototype
-    status: proposed
+    status: in-progress
     order: null
     depends_on: []
     needs_human: {kind: none, minutes: 0}
     gate: governance/forms/frontends/RELOAD-ENDS-THE-OLD-PAGES-OPENS-PREREGISTRATION.md
-    evidence: null
+    evidence: {branch: cut/reload-ends-the-old-pages-opens}
     budget_minutes: 120
     generation: 1
     felt_verdict: false
     entries: []
-    summary: "FORM GATES CLOSED 2026-11-26: architect BLOCK then PASS WITH NOTES (gate-log 911, 912), reviewer BLOCK, BLOCK, then PASS (915 to 917); round 5 sha256 71a7cd3f is the form as it will be filed; the form and its Amendment 1 (span hashes) come in the next records commit. ADR-037 accepted by ADV-2026-11-26-16; its final text at B base, with ADV-2026-11-26-26 applied (the five clauses the architect found untrue), is filed at state/drafts/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.final.md for the advisor to compare with the draft before B documents commit (item 8). NEXT: the form commit; the code in its turn, after the identity route and text-id (ADV-2026-11-26-20; ADV-2026-11-26-24 items 1 to 5, the red commit first); no e2e run while port 5180 is the human (ADV-2026-11-26-19). Placed by ADV-2026-11-26-08 items 1, 2 and 6."
+    summary: "CODE UNDER WAY 2026-11-27 on base ca576852 (Amendment 2: main e9b61547 into PR 356 head 44fe6e78), the red commit first (ADV-2026-11-26-24); no e2e run while port 5180 is the human's. FORM GATES CLOSED 2026-11-26: architect BLOCK then PASS WITH NOTES (gate-log 911, 912), reviewer BLOCK, BLOCK, then PASS (915 to 917); round 5 sha256 71a7cd3f is the form as it will be filed; the form and its Amendment 1 (span hashes) come in the next records commit. ADR-037 accepted by ADV-2026-11-26-16; its final text at B base, with ADV-2026-11-26-26 applied (the five clauses the architect found untrue), is filed at state/drafts/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.final.md for the advisor to compare with the draft before B documents commit (item 8). NEXT: the form commit; the code in its turn, after the identity route and text-id (ADV-2026-11-26-20; ADV-2026-11-26-24 items 1 to 5, the red commit first); no e2e run while port 5180 is the human (ADV-2026-11-26-19). Placed by ADV-2026-11-26-08 items 1, 2 and 6."
     dates: {opened: 2026-11-26, done: null}
   - id: a-second-save-is-announced
     title: "A second save of the project is announced: its notice is a new element and carries the save time, and something true on the screen differs from the last save (finding A of Part AD)"

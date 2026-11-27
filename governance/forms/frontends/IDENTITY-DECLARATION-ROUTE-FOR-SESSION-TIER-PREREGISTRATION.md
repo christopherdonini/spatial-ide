@@ -1438,3 +1438,14 @@ Nothing above is edited.
    - Part AG with its items 4 and 5.
    - The build gates read each clause of the five strings, row I8 and Part AG against the head with the words commit in. A clause found untrue goes to the advisor unreworded.
 6. **The class 8 record** (its item 6). The closing amendment names, file by file, where the lines above Amendment 5 item 12's prediction sit, against §7's count at the head with the words commit in.
+
+## Amendment 10 — 2026-11-27 — the custodian's: PR A's new head taken in (ADV-2026-11-27-02 item 4; ADV-2026-11-23-15 item 4), before any gate
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The merge.** PR A's head moved from 806ad30843269f8012ec1d89f0224703a8078ad7 to d6c2daf69eb500027197945f5a4302f0508e0f69 (its Amendment 12's unit-test parts; PR A's form, Amendment 13). The custodian merged d6c2daf69eb500027197945f5a4302f0508e0f69 into this branch at 912b3a2c204ac6613c10e75f09c39fb29663671c, with no conflict, giving 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9 on origin.
+2. **What it brought.** By git, the patch-id of `git diff 912b3a2c204ac6613c10e75f09c39fb29663671c 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9` equals that of `git diff 806ad30843269f8012ec1d89f0224703a8078ad7 d6c2daf69eb500027197945f5a4302f0508e0f69`: the merge brought PR A's change unchanged (5 files changed, 131 insertions(+), 13 deletions(-)), and no line of this piece's own.
+3. **§7's count** is read as before, at e9bd2483 and this branch's head, less the lines of `git diff 912b3a2c204ac6613c10e75f09c39fb29663671c 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9`, which are PR A's. This piece's own count stays as Amendment 8 records it. This is a reading, class 1; §7 is not edited.
+4. **E-1 and both gates** read this head or a later one. Text-id takes 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9 in before its own gates (ADV-2026-11-27-01 item 7; ADV-2026-11-27-02 item 4).
+
+Read the last amendment first.

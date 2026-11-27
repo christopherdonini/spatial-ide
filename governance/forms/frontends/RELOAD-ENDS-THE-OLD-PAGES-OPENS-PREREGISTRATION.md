@@ -729,3 +729,14 @@ The check covers each of ADV-2026-11-26-18 item 2's six things, with its proof:
 - form line 105: `:150-158` (bare; file `dirs-sys-0.5.0/src/lib.rs`)
 - form line 107: `tauri-2.11.5/src/manager/webview.rs:534-545`
 - form line 492: `tauri-2.11.5/src/app.rs:1781-1789`
+
+## Amendment 2 — 2026-11-27 — the base the code is built on (ADV-2026-11-26-14; ADV-2026-11-27-02 item 3 (d)), before any code
+
+*Written by the custodian before any code of this piece. References and hashes only. Nothing above is edited.*
+
+1. **The base** is ca57685263df8628e1b6d452e1423319a30b6596, the first commit of `cut/reload-ends-the-old-pages-opens` on origin. It is a merge made by the custodian: main e9b61547b64f42fd957f710bdce01bfa6f448e1d merged into PR 356's head 44fe6e789347d7a1cc583620706b78ae52642cf8. That head is PR 356's preparation merge of main 4b9fd558d0437b3249e1bba58334a6d55074c199 (ADV-2026-11-26-15 item 4), whose narrow read is filed at `state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`.
+2. **The spans hold.** By git, `git diff --name-only 77662d1ac837c56d4691b6821ffd1ece049f9da4 ca57685263df8628e1b6d452e1423319a30b6596 -- . ':!state/' ':!governance/' ':!site/'` prints nothing. Outside those three folders, the base's tree equals that of Amendment 1's base, so the spans of Amendment 1 item 5 read the same at this base.
+3. **§7's count** is read against this base: `<merge-base>` in §7's command is ca57685263df8628e1b6d452e1423319a30b6596, so that PR 356's own lines are not counted. Once PR 356 is on main, the two readings agree. This is a reading, class 1, and §7 is not edited.
+4. **ADV-2026-11-26-24 item 2 applies from this base.** The red commit is the branch's first commit after ca57685263df8628e1b6d452e1423319a30b6596. The code worker (worker-high) was dispatched on this base on 2026-11-27, with no e2e run.
+
+Read the last amendment first.
