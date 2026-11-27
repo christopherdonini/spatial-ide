@@ -2284,7 +2284,7 @@ export default function App() {
       slots={{
         "region.layers": (
           <>
-            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} onReopened={handleReopened} heldProject={heldProject} />
+            <AdmissionPanel ref={admissionRef} onAdmitted={handleAdmitted} confirmOpen={confirmOpen} onReopened={handleReopened} heldProject={heldProject} datasetOnMap={admitted === null ? null : admitted.dataset} />
             {/* B2 piece 1c: App's own control for the one save, with the entry's label; shown only while a dataset is admitted. */}
             {admitted && (
               <button type="button" className="save-project" onClick={() => void handleSaveProject()}>

@@ -244,3 +244,50 @@ tests stay green unmodified.
 *Appended on the human's typed words (`state/directives/2026-11-07-8g-open-1-b-adr-016-note-open-6-a-294-not-held-index-sites-narrowed-entry-13-x2-into-item-20.md`, line 8; received 2026-11-07T20:25Z, in a message headed 2026-11-09); the note below is theirs, byte for byte. Nothing above this heading is changed.*
 
 Note 2026-11-09 — §2's 'a 64-bit integer column named id' also counts an 8-, 16- or 32-bit integer column named id: its values widen to the 64-bit integer the stream carries without change, signed to signed and unsigned to unsigned, so the identity is the same number. Before narrow-integer-id-unstreamable such a file opened and no stream carried it; from that piece every width streams. Nothing else changes.
+
+## Amendment 2 — the session tier's candidate list, carried on `describe.identity` (2026-11-23, appended — Accepted)
+
+*Appended under the human's delegation of 2026-11-13, by the advisor's ruling named in the acceptance line below. The words are the architect's draft as that ruling changed it; they are not the human's. Nothing above this heading is changed.*
+
+**Context.** The settled envelope places the candidate list in the refusal and not in the record, the record being `describe.identity` (the SETTLED block, its fourth bullet). Amendment 1 (items 1 and 5) then admitted a single file with no admissible identity column on the session tier, so on that path the refusal that carried the list no longer fires. The engine still records the list on the session tier, for the reason the admission preregistration gives (`governance/forms/engine/ADMISSION-PREREGISTRATION.md`, R-I3), but no client receives it, so an operator offered a declaration has no list to choose from.
+
+**Decision.**
+1. On the session tier alone, `describe.identity` carries `candidate_columns`: the same list the refusal carries elsewhere, from the same engine function, in schema order, unranked, unpreselected and with no confidence. It may be empty.
+2. On a native or a mapped identity the member is present and null. There the refusal carries the list, as the settled envelope says.
+3. The list names what a caller may declare; it is never a declaration and never a recommendation. Nothing is inferred from it (§3), and no client ranks it or preselects an entry.
+4. Which columns are candidates is not changed by this amendment, including the columns the engine already leaves out of the list.
+5. A column declared from the list is a declared mapping under §3 to §7 and Amendment 1 item 6, verified over the whole file at open.
+
+**Consequences.**
+- One member on `describe`, a control-plane reply, and a new SKP literal.
+- The engine's accessor for the list gains `describe` as its product caller and is no longer an instrument.
+- A column the engine leaves out of the list for the refusal's sake (a name that holds a comma) stays out of it here, so both carriers carry the same list; such a column remains declarable by name.
+- Nothing is added to what a project saves.
+
+**Not decided here.** Composite and non-integer keys; the data doctor's proposal; a declaration route for a dataset that a project reopened.
+
+**Acceptance (2026-11-23).** Amendment 2 is accepted by the advisor's ruling ADV-2026-11-23-26, item 1, under the human's delegation of 2026-11-13 (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 2, which names ADR amendments). Its text is the Proposed draft of `governance/forms/frontends/IDENTITY-DECLARATION-ROUTE-FOR-SESSION-TIER-PREREGISTRATION.md`, Amendment 2 item 2, read by the architect's form gate (gate-log row 878), with two changes that ruling makes: the italic line, and "(items 1 and 5)" in the Context. The human can overturn the ruling, and their own message wins.
+
+## Note 2026-11-23
+
+*Appended under the human's delegation of 2026-11-13, by the advisor's ruling ADV-2026-11-23-27, item 4. The words are the architect's draft with one locator added; they are not the human's. Nothing above this heading is changed.*
+
+Note 2026-11-23 — Amendment 1 item 5's "existing declared-mapping route" is the route for a single file. A partitioned source is refused by name before any identity is read, with or without a declared column; no route admits it.
+
+## Note 2026-11-26 — the candidate list holds every integer width that admission takes (identity-declaration-route-for-session-tier)
+
+*The advisor's words under the human's delegation of 2026-11-13, ruled in ADV-2026-11-26-04 and ADV-2026-11-26-12; they are not the human's. Nothing above this heading is changed.*
+
+**Context.** The settled envelope's fourth bullet names 64-bit integer columns only. The Note 2026-11-09 widened §2 alone. Admission takes an integer column of 8, 16, 32 or 64 bits (§4), so a file whose only usable key is narrower than 64 bits was offered nothing, and that column could be declared only by typing its name.
+
+**Decision.**
+1. The candidate list holds every column whose type §4 admits: an integer of 8, 16, 32 or 64 bits, signed or unsigned.
+2. It stays in schema order across all widths, unranked, with nothing preselected and no confidence.
+3. The columns the engine already leaves out of the list stay out of it. A column left out because its name holds a comma stays declarable by name; a column left out because nothing can address its name is refused if it is declared, as it is now.
+4. The refusal and, on the session tier, `describe.identity` (Amendment 2) carry the same list, from the same function.
+5. This supersedes the words "64-bit integer columns" in the settled envelope's fourth bullet. Nothing else of that bullet changes.
+
+**Consequences.**
+- A column taken from the list is checked at open exactly as one typed by name, and every width streams (Note 2026-11-09).
+- The list may hold more names for a file than it did before.
+- The change is recorded in the SKP entry of the version that carries it.

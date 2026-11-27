@@ -8,7 +8,9 @@ import { AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import {
   AdmitPathDeps,
   CANCELLED_REFUSAL_CODE,
+  declarationOptions,
   formFamilyForCode,
+  identityDeclarationOffer,
   isOpenInFlight,
   nextFormFamily,
   openCancelKey,
@@ -440,7 +442,7 @@ describe("openCancelKey / requestOpenCancel (P4 item B)", () => {
 
   it("openCancelKey is null for idle, admitted, and a refused state that is NOT in flight", () => {
     expect(openCancelKey({ kind: "idle", note: null })).toBeNull();
-    expect(openCancelKey({ kind: "admitted", admitted: admittedFixture() })).toBeNull();
+    expect(openCancelKey({ kind: "admitted", admitted: admittedFixture(), path: "C:/f.parquet", options: {} })).toBeNull();
     expect(
       openCancelKey({
         kind: "refused",
@@ -493,7 +495,7 @@ describe("isOpenInFlight (P4 item C: the top-level Open button's own disabled co
 
   it("false for idle, admitted, and a refused state that is not in flight", () => {
     expect(isOpenInFlight({ kind: "idle", note: null })).toBe(false);
-    expect(isOpenInFlight({ kind: "admitted", admitted: admittedFixture() })).toBe(false);
+    expect(isOpenInFlight({ kind: "admitted", admitted: admittedFixture(), path: "C:/f.parquet", options: {} })).toBe(false);
     expect(
       isOpenInFlight({
         kind: "refused",
@@ -649,4 +651,125 @@ it("relinkOffer offers the re-link after a refused locator and nowhere else", ()
   // (v) case (ii) with `inFlight: true` gives null.
   const inFlight = refusedReopen(REOPEN_LOCATOR_REFUSAL_NOTICE, { inFlight: true, cancelKey: "k1", pendingOptions: RELINK_OPTIONS });
   expect(relinkOffer(inFlight), "(v)").toBeNull();
+});
+
+// identity-declaration-route-for-session-tier, section 4 and Amendment 2 item 5. U-1 is an `admitted` state for a plain open of `no-id-column.parquet`: session-ordinal, with the engine's list `["parcel_key"]`.
+const U1_PATH = "C:/data/no-id-column.parquet";
+const U1_LIST = ["parcel_key"];
+
+/** A session-tier describe. `candidate_columns` is a member of `identity` as the wire sends it (`skp/0.15`); `over` replaces members of that identity. */
+function sessionDescribe(over: Record<string, unknown> = {}): DescribeResponse {
+  const base = describeFixture();
+  return {
+    ...base,
+    identity: {
+      source: "session-ordinal:file_row_number",
+      uniqueness: "by-construction-within-generation",
+      verified_rows: null,
+      max_value: null,
+      js_exact: null,
+      class: "session-ordinal",
+      session_statement: "this dataset has no admissible identity column",
+      candidate_columns: U1_LIST,
+      ...over,
+    } as DescribeResponse["identity"],
+  };
+}
+
+/** An `admitted` state: `describe` is the dataset's own, `options` the run's, `path` the file's. */
+function admittedState(describe: DescribeResponse, options: AdmitOptions = {}, path: string = U1_PATH): Extract<State, { kind: "admitted" }> {
+  return { kind: "admitted", admitted: { ...admittedFixture(), describe }, path, options };
+}
+
+const U1_HANDLE = admittedFixture().dataset;
+
+// RECORDED MUTATION for "identityDeclarationOffer offers the declaration for a directly opened session-tier dataset and nowhere else": M-S1, the `class` test removed from `identityDeclarationOffer`. Expected failure: (ii).
+it("identityDeclarationOffer offers the declaration for a directly opened session-tier dataset and nowhere else", () => {
+  const u1 = admittedState(sessionDescribe());
+
+  // (i) U-1 gives the offer, with the engine's list as it came and the run's own path and options.
+  expect(identityDeclarationOffer(u1, U1_HANDLE), "(i)").toEqual({ path: U1_PATH, options: {}, candidateColumns: U1_LIST });
+
+  // (ii) a native identity gives null, though its `candidate_columns` is set to a shape the wire never sends, so that only the class test refuses it.
+  const native = admittedState(sessionDescribe({ source: "file:id", uniqueness: "verified-at-open-full-file", class: "native", session_statement: null }));
+  expect(identityDeclarationOffer(native, U1_HANDLE), "(ii)").toBeNull();
+
+  // (iii) a mapped identity gives null, built the same way.
+  const mapped = admittedState(sessionDescribe({ source: "mapped:parcel_key", uniqueness: "verified-at-open-full-file", class: "mapped", session_statement: null }));
+  expect(identityDeclarationOffer(mapped, U1_HANDLE), "(iii)").toBeNull();
+
+  // (iv) a reopen's admission gives null.
+  const reopened = admittedState(sessionDescribe(), { reopen: { answer: null, relink: null } });
+  expect(identityDeclarationOffer(reopened, U1_HANDLE), "(iv)").toBeNull();
+
+  // (v) idle, opening and refused give null.
+  expect(identityDeclarationOffer({ kind: "idle", note: null }, U1_HANDLE), "(v) idle").toBeNull();
+  expect(identityDeclarationOffer({ kind: "opening", cancelKey: "k1", options: {} }, U1_HANDLE), "(v) opening").toBeNull();
+  expect(identityDeclarationOffer(refusedReopen(null, { options: {} }), U1_HANDLE), "(v) refused").toBeNull();
+
+  // (vi) U-1 opened under a CRS assertion carries it in `options`.
+  const assertion = { identifier: "EPSG:2056", definition_json: "{}" };
+  const asserted = admittedState(sessionDescribe(), { crsAssertion: assertion });
+  expect(identityDeclarationOffer(asserted, U1_HANDLE), "(vi)").toEqual({ path: U1_PATH, options: { crsAssertion: assertion }, candidateColumns: U1_LIST });
+});
+
+// RECORDED MUTATION for "identityDeclarationOffer is made only while the dataset the panel admitted is the dataset on the map": M-S4, the handle condition removed. Expected failure: (ii).
+it("identityDeclarationOffer is made only while the dataset the panel admitted is the dataset on the map", () => {
+  const u1 = admittedState(sessionDescribe());
+  expect(identityDeclarationOffer(u1, U1_HANDLE), "(i) its own handle").not.toBeNull();
+  expect(identityDeclarationOffer(u1, "ds_11111111111111111111111111111111"), "(ii) another handle").toBeNull();
+  expect(identityDeclarationOffer(u1, null), "(iii) no dataset on the map").toBeNull();
+});
+
+// RECORDED MUTATION for "a cancelled declaration from a session-tier admission returns to that admission with its offer": M-S2, the `resume` return removed from the cancelled arm. Expected failure: the idle state.
+it("a cancelled declaration from a session-tier admission returns to that admission with its offer", async () => {
+  const admit = vi
+    .fn()
+    .mockResolvedValueOnce({ kind: "admitted", admitted: { ...admittedFixture(), describe: sessionDescribe() } })
+    .mockResolvedValueOnce({ kind: "refused", refusal: refusal(CANCELLED_REFUSAL_CODE) });
+  const { harness, deps } = depsFor(admit);
+
+  await runAdmitPath(U1_PATH, {}, deps);
+  const before = harness.state;
+  const offer = identityDeclarationOffer(before, U1_HANDLE);
+  expect(offer, "U-1's offer").not.toBeNull();
+  if (offer === null) return;
+
+  // The declaration starts: the panel is `opening`, and the admission it started from is held.
+  const pending = runAdmitPath(offer.path, declarationOptions(offer, { column: "parcel_key" }), deps);
+  expect(harness.state.kind, "in flight").toBe("opening");
+  await pending;
+
+  // Cancelled: back to U-1's admitted state, with its offer, and not to idle.
+  expect(harness.state).toEqual(before);
+  expect(identityDeclarationOffer(harness.state, U1_HANDLE)).toEqual(offer);
+});
+
+// RECORDED MUTATION for "a declaration from a session-tier admission under a CRS assertion carries that assertion and is refused into the identity form with both": M-S3, `declarationOptions` returns `{ identity }` alone. Expected failure: the merged `crsAssertion`.
+it("a declaration from a session-tier admission under a CRS assertion carries that assertion and is refused into the identity form with both", async () => {
+  const assertion = { identifier: "EPSG:2056", definition_json: "{}" };
+  const identity = { column: "parcel_key" };
+  const refused = { kind: "refused", refusal: refusal("engine.identity_unusable", [["candidate_columns", "parcel_key"]]) };
+  const admit = vi
+    .fn()
+    .mockResolvedValueOnce({ kind: "admitted", admitted: { ...admittedFixture(), describe: sessionDescribe() } })
+    .mockResolvedValueOnce(refused);
+  const { harness, deps } = depsFor(admit);
+
+  // U-1 is admitted under the assertion.
+  await runAdmitPath(U1_PATH, { crsAssertion: assertion }, deps);
+  const offer = identityDeclarationOffer(harness.state, U1_HANDLE);
+  expect(offer, "the offer").not.toBeNull();
+  if (offer === null) return;
+
+  await runAdmitPath(offer.path, declarationOptions(offer, identity), deps);
+
+  // The call carried both the assertion the session open was admitted under and the declaration.
+  expect(admit.mock.calls[1][2]).toEqual({ crsAssertion: assertion, identity });
+  // The refusal is the identity family's, and its options are the merged ones.
+  expect(harness.state.kind).toBe("refused");
+  if (harness.state.kind === "refused") {
+    expect(harness.state.formFamily).toBe("identity");
+    expect(harness.state.options).toEqual({ crsAssertion: assertion, identity });
+  }
 });

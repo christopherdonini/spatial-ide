@@ -2049,6 +2049,13 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
                 .source()
                 .is_session_ordinal()
                 .then(|| spatial_engine::SESSION_IDENTITY_STATEMENT.to_string()),
+            // `skp/0.15`: the engine's candidate list, for the session tier only, as the engine
+            // gives it (ADR-016 Amendment 2). A native or a mapped identity carries `None`, which
+            // serializes as a present `null`; the refusal carries the list there.
+            candidate_columns: identity
+                .source()
+                .is_session_ordinal()
+                .then(|| identity.candidate_columns().to_vec()),
         },
         schema: ds
             .file_schema()
@@ -2231,7 +2238,7 @@ pub fn error_of(e: &EngineError) -> SkpError {
                 ("detail", detail.clone()),
                 // `SkpError::fields` is `BTreeMap<String, String>` (SKP-V0.md §5) — no list shape
                 // on the wire, so the schema-ordered, unranked candidate list is comma-joined into
-                // one string field. Empty when the file carries no 64-bit integer column at all.
+                // one string field. Empty when the file has no column the engine lists.
                 ("candidate_columns", candidate_columns.join(",")),
             ],
         ),

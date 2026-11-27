@@ -17,7 +17,8 @@ use std::sync::Arc;
 mod watch_support;
 
 use spatial_engine::fixture::{
-    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, LV95_PROJJSON,
+    write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, NarrowColumn,
+    NarrowValues, NarrowWidth, LV95_PROJJSON,
 };
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
@@ -344,4 +345,174 @@ async fn a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_
 
     // (iv) the refusal came before any ticket was minted.
     assert_eq!(tickets.cancel_all_for_dataset(resp.dataset.as_str()), 0);
+}
+
+/// **K-1** (`identity-declaration-route-for-session-tier`, F-1 to F-3). The real `describe` of a real
+/// open carries the engine's candidate list on the session tier alone: a file with no `id` column and
+/// one `UInt64` `parcel_key` lists `["parcel_key"]`; the same file opened with that column declared
+/// (a mapped identity) and a native file both carry `candidate_columns` present and null. Asserted on
+/// `serde_json::to_value(&describe.identity)`, the real wire shape, whose key set is also the
+/// `identity` key set of the shared fixture `v0-describe-response-session-ordinal.json`.
+///
+/// Mutation M-K1: `candidate_columns: None` always in `describe_dataset`. Expected failure: this
+/// test fails at F-1.
+#[test]
+fn a_session_tier_describe_carries_the_engines_candidate_list_and_native_and_mapped_carry_null() {
+    let keyless = fixture(
+        "session-keyless",
+        &FixtureSpec {
+            identity: IdentityMode::ForeignKeyColumn,
+            ..small_spec()
+        },
+    );
+    let native = fixture("session-native", &small_spec());
+    let host = host();
+    let describe_of = |path: &std::path::Path, key: &str, identity: Option<IdentityDeclaration>| {
+        let resp = host
+            .open_dataset(open_req(path, key, None, identity))
+            .expect("open");
+        let describe = host
+            .describe(DescribeRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset: resp.dataset,
+            })
+            .expect("describe");
+        serde_json::to_value(&describe.identity).expect("identity as JSON")
+    };
+
+    // F-1: the session tier carries the list, and nothing about it is ranked or chosen.
+    let session = describe_of(&keyless, "session-list", None);
+    assert_eq!(session["class"], "session-ordinal");
+    assert_eq!(
+        session["candidate_columns"],
+        serde_json::json!(["parcel_key"])
+    );
+
+    // F-2: the same file with that column declared is a mapped identity, whose member is null.
+    let mapped = describe_of(
+        &keyless,
+        "session-declared",
+        Some(IdentityDeclaration {
+            column: "parcel_key".to_string(),
+        }),
+    );
+    assert_eq!(mapped["source"], "mapped:parcel_key");
+    assert!(
+        mapped.get("candidate_columns").is_some_and(|v| v.is_null()),
+        "mapped: the key is present and null: {mapped}"
+    );
+
+    // F-3: a native file has the key present and null as well.
+    let native = describe_of(&native, "session-native-open", None);
+    assert_eq!(native["class"], "native");
+    assert!(
+        native.get("candidate_columns").is_some_and(|v| v.is_null()),
+        "native: the key is present and null: {native}"
+    );
+
+    // The real response has no member the shared fixture lacks, and lacks none it has.
+    let fixture_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+        .join("../protocol/skp/tests/data/v0-describe-response-session-ordinal.json");
+    let fixture_json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&fixture_path).expect("read fixture"))
+            .expect("fixture is JSON");
+    let keys = |v: &serde_json::Value| -> std::collections::BTreeSet<String> {
+        v.as_object().expect("object").keys().cloned().collect()
+    };
+    assert_eq!(keys(&session), keys(&fixture_json["identity"]));
+    assert_eq!(keys(&mapped), keys(&session));
+    assert_eq!(keys(&native), keys(&session));
+}
+
+/// **K-2** (`identity-declaration-route-for-session-tier`, Amendment 5 item 9; F-4 to F-6). The list
+/// reaches both carriers for a column narrower than 64 bits, through `SkpHost::open_dataset` and
+/// `SkpHost::describe` with no stub. (a) An `Int32` `parcel_key` and no `id`: a plain open is
+/// admitted on the session tier and `describe.identity.candidate_columns` is `["parcel_key"]`. (b)
+/// The column is taken from that JSON list and declared through the wire's `IdentityDeclaration`:
+/// the open is mapped, verified over the whole file, and the member is null. (c) A `Utf8` `id` beside
+/// the eight widths: a plain open is refused `engine.identity_unusable` and the refusal's
+/// `candidate_columns` field names all eight widths in schema order.
+///
+/// Mutation M-K2: in `describe_dataset`, the member is computed from `ds.file_schema()`'s `Int64` and
+/// `UInt64` fields in place of `identity.candidate_columns()`, under the same session-tier guard.
+/// Expected failure: this test fails at (a) with `[]`.
+#[test]
+fn a_narrow_integer_key_is_offered_on_both_carriers_and_declaring_it_from_the_list_opens_mapped() {
+    let host = host();
+
+    // (a) an `Int32` key and no `id`: admitted on the session tier, the list names the key.
+    let narrow = fixture(
+        "narrow-parcel-key",
+        &FixtureSpec {
+            identity: IdentityMode::NarrowInteger {
+                width: NarrowWidth::Int32,
+                column: NarrowColumn::ParcelKey,
+                values: NarrowValues::TopOfRange,
+            },
+            ..small_spec()
+        },
+    );
+    let resp = host
+        .open_dataset(open_req(&narrow, "narrow-plain", None, None))
+        .expect("a plain open of a file with no id is admitted on the session tier");
+    let describe = host
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
+        .expect("describe");
+    let identity = serde_json::to_value(&describe.identity).expect("identity as JSON");
+    assert_eq!(identity["class"], "session-ordinal");
+    assert_eq!(
+        identity["candidate_columns"],
+        serde_json::json!(["parcel_key"])
+    );
+
+    // (b) the column is taken from the list, never typed here, and declared through the wire.
+    let column = identity["candidate_columns"][0]
+        .as_str()
+        .expect("a candidate name")
+        .to_string();
+    let resp = host
+        .open_dataset(open_req(
+            &narrow,
+            "narrow-declared",
+            None,
+            Some(IdentityDeclaration { column }),
+        ))
+        .expect("declaring a column taken from the list opens it mapped");
+    let describe = host
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
+        .expect("describe");
+    assert_eq!(describe.identity.source, "mapped:parcel_key");
+    assert_eq!(describe.identity.uniqueness, "verified-at-open-full-file");
+    let mapped = serde_json::to_value(&describe.identity).expect("identity as JSON");
+    assert!(
+        mapped.get("candidate_columns").is_some_and(|v| v.is_null()),
+        "mapped: the key is present and null: {mapped}"
+    );
+
+    // (c) the refusal's field lists every width, in schema order.
+    let every_width = fixture(
+        "every-width-refused",
+        &FixtureSpec {
+            identity: IdentityMode::StringIds,
+            attributes: AttributeMode::FilterWitness,
+            features: 2,
+            avg_vertices: 6,
+            hole_every: 0,
+            ..Default::default()
+        },
+    );
+    let err = host
+        .open_dataset(open_req(&every_width, "every-width-plain", None, None))
+        .expect_err("a Utf8 `id` is not a usable identity");
+    assert_eq!(err.code, "engine.identity_unusable");
+    assert_eq!(
+        err.fields.get("candidate_columns").map(String::as_str),
+        Some("i8,i16,i32,i64,u8,u16,u32,u64")
+    );
 }

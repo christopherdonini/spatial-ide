@@ -65,9 +65,10 @@ no performance claim at all (`docs/08_Testing.md`).*
    refused — *"refused: `<column>` cannot serve as stable feature identity — type is `<type>`;
    identity must be an integer that widens into u64 without transformation. …"*. Composite keys are
    not supported, and no hash, dictionary index or row ordinal is ever synthesized in their place.
-   <!-- engine/src/identity.rs:196-217 (admit_column_type: the admitted integer types and the refusal detail); engine/src/error.rs:234-238 (IdentityUnusable Display); ADR-016; ADR-010 rule 2; MANUAL-WALKTHROUGH.md A3 (`file:id — verified-at-open-full-file`), M4 (the same summary on the packaged build) -->
+   <!-- engine/src/identity.rs `admit_column_type` (the admitted integer types and the refusal detail); engine/src/error.rs `EngineError::IdentityUnusable`'s `Display` arm; ADR-016; ADR-010 rule 2; MANUAL-WALKTHROUGH.md A3 (`file:id — verified-at-open-full-file`), M4 (the same summary on the packaged build) -->
 
-   **On `main` (not the v0.1.0 artifact above).** A single file that has no `id` column and no declared mapping opens instead of being refused. Its features are identified for that session only, by their position in the file, and the summary says so. That identity does not survive a reopen or a change to the source, and it is never saved or published. This is the one case in which a row position stands in for identity. The app does not yet offer a way to declare an identity column for a file that opened this way: the declaration form appears only when a file's identity is refused. A file whose `id` column cannot serve is still refused.
+   **On `main` (not the v0.1.0 artifact above).** A single file that has no `id` column and no declared mapping opens instead of being refused. Its features are identified for that session only, by their position in the file, and the summary says so. That identity does not survive a reopen or a change to the source, and it is never saved or published. This is the one case in which a row position stands in for identity. For a file that opened this way with Open GeoParquet, the app offers to declare an identity column beside the Open buttons. Declaring opens the file again: the filter and the selection are cleared and Colour by ends. A project saved before the declaration is not carried over: the next save asks for a folder. A file that a project reopened on this tier is not offered the declaration. A file whose `id` column cannot serve is still refused.
+   <!-- The sentences of the "On `main`" paragraph from "For a file that opened this way with Open GeoParquet" to "is not offered the declaration." are the advisor's words under item 2 of the human's delegation of 2026-11-13 (ADV-2026-11-23-26 item 2, D4), not the human's; every other sentence of the paragraph is the human's and is untouched. The offer is `identityDeclarationOffer` in frontends/shell/src/admission/AdmissionPanel.tsx; the list it offers is carried by `describe_dataset` in kernel/src/skp.rs as the member `candidate_columns` of `describe.identity` (skp/0.15). -->
 
 4. **Styling is by literal only.** The shell's style document has no categorical form at all — its
    type carries no `match` variant, so there is no control and no code path that could produce one.
@@ -280,18 +281,19 @@ header above describes. They move into the next release's list when that release
 20. **A partitioned source is refused; only a single file is admitted — including a single file whose
     own path contains `[`, `]`, `{` or `}`, but not one whose path contains `*` or `?`.** A
     directory of Parquet parts is a real dataset this engine will not admit, refused by name before
-    anything is read (code `engine.identity_ordinal_partitioned_unsupported`): *"refused: this source
-    is partitioned across more than one file (`<detail>`), and session identity is a row's position
-    within one file. Open a single file, or declare an identity column that is carried in the
-    data"*. The same code and message are reached by a path that contains `*` or `?`, whether or not
-    a file exists at it, and by a path that contains `[`, `]`, `{` or `}` at which no file exists —
-    read as naming a pattern rather than one file — with `<detail>` naming the metacharacter found.
+    anything is read (code `engine.identity_ordinal_partitioned_unsupported`): *"refused: this path is read as a folder or a pattern, not as one file (`<detail>`). This engine
+    opens a single file only, and it refuses such a path before reading it, whether or not an
+    identity column is declared"*. Declaring an identity column does not change this: the refusal
+    comes before any identity is read. The same code and message are reached by a path that contains
+    `*` or `?`, whether or not a file exists at it, and by a path that contains `[`, `]`, `{` or `}`
+    at which no file exists — read as naming a pattern rather than one file — with `<detail>`
+    naming the metacharacter found.
     A path that contains `[`, `]`, `{` or `}` and is an existing file is opened as that one file.
     This was observed on Windows, with the DuckDB the build bundles; it is not claimed for a
     bracket in the first component of an absolute path on Linux, for a path whose letter case
     differs from the directory listing's in a component that holds a bracket on Windows, or for
     what is read if the file is removed between the existence check and DuckDB's read.
-    <!-- engine/src/dataset.rs, `open_inner`'s gate and `partitioned_source_detail`'s doc (the five steps and what step 0 observed), and `duckdb_literal_path`; governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md Amendment 1 (what step 0 observed and the bounds); engine/src/error.rs:383-388 @ 4fd3259a3e274dbc1f0a9c3ad72d168096a20e23 sha256:26ebfe880888e518236a7338f573806b639a7a585a25aa1612b4217c48fdf6d4 (the Display); kernel/src/skp.rs:2092-2095 @ 4fd3259a3e274dbc1f0a9c3ad72d168096a20e23 sha256:071d32c0539426e6222c45f08077e7ac1745f9c7c439809e419b72cea51c5beb (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9 -->
+    <!-- engine/src/dataset.rs, `open_inner`'s gate and `partitioned_source_detail`'s doc (the five steps and what step 0 observed), and `duckdb_literal_path`; governance/forms/engine/SINGLE-FILE-BRACKET-NAME-REFUSED-AS-PARTITIONED-PREREGISTRATION.md Amendment 1 (what step 0 observed and the bounds); engine/src/error.rs, the IdentityOrdinalPartitionedUnsupported arm of the Display (by path and symbol, unpinned: the build base holds the old text); kernel/src/skp.rs:2092-2095 @ 4fd3259a3e274dbc1f0a9c3ad72d168096a20e23 sha256:071d32c0539426e6222c45f08077e7ac1745f9c7c439809e419b72cea51c5beb (the wire code); engine/ADMISSION-PREREGISTRATION.md §2d, R-I4; MANUAL-WALKTHROUGH.md Part N row N9. Whose words: the advisor's, under the human's delegation of 2026-11-13 (ADV-2026-11-23-27 item 5): item 6 for the quoted message and item 8 for the sentence after it -->
 
 21. **A dataset in degrees cannot be published.** The bundled viewer has no degrees path — it renders
     in the dataset's own CRS, and this shell's degrees display is a view-time convention a static

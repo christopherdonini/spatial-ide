@@ -6,10 +6,14 @@
  * refusal routing, and the places of an opened reply, as pure functions over the mocked client. No test here asserts a place's words.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const mocks = vi.hoisted(() => ({
   reply: null as null | (() => Promise<unknown>),
+  describe: null as null | (() => Promise<unknown>),
+  close: null as null | (() => Promise<unknown>),
+  closes: [] as string[],
+  events: [] as string[],
   logs: [] as { level: string; message: string }[],
 }));
 
@@ -24,11 +28,20 @@ vi.mock("../skp/client", () => {
   return {
     SkpCallError,
     openProject: async () => mocks.reply!(),
-    describe: async () => ({ schema: [] }),
+    describe: async () => {
+      mocks.events.push("describe");
+      return mocks.describe === null ? { schema: [] } : mocks.describe();
+    },
+    closeDataset: (dataset: string) => {
+      mocks.closes.push(dataset);
+      mocks.events.push("close");
+      return mocks.close === null ? Promise.resolve({ cancelled_streams: 0 }) : mocks.close();
+    },
   };
 });
 vi.mock("../diagnostics/log", () => ({ logSessionEvent: (level: string, message: string) => mocks.logs.push({ level, message }) }));
 
+import * as admission from "../admission/admitDataset";
 import { SkpCallError } from "../skp/client";
 import type { ReopenLineage } from "../skp/types";
 import { DEFAULT_STYLE_STATE, toStyleDocument } from "../style/document";
@@ -56,7 +69,15 @@ const PROJECT = "spatial://project/0000000000000000000000000000000a";
 
 beforeEach(() => {
   mocks.reply = null;
+  mocks.describe = null;
+  mocks.close = null;
+  mocks.closes = [];
+  mocks.events = [];
   mocks.logs = [];
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("the lineage facts' places (Amendment 55, T-14)", () => {
@@ -145,5 +166,94 @@ describe("the bound at a reopen's run (Amendment 54 item 5 (j) and (l), T-12)", 
     expect(applied.notices).toEqual([viewNotAppliedNotice(shownText(basis)), workspaceTextNotice(["style"]), colourByNotRestoredNotice(shownText(column))]);
     expect(applied.style.fillMatch).toBeNull();
     expect(applied.view, "not applied").toBeNull();
+  });
+});
+
+/** `skp.unknown_dataset`'s envelope (`protocol/skp/src/v0/error.rs`'s `unknown_dataset`), as the client throws it. */
+const unknownDataset = (handle: string) =>
+  new SkpCallError({ code: "skp.unknown_dataset", message: `no open dataset with handle \`${handle}\` (closed, or never opened this session)`, fields: { handle } });
+const opened = (dataset: string) => async () => ({ opened: { project: PROJECT, dataset, session: `session_${dataset}` } });
+const REOPEN = { reopen: { answer: null, relink: null } };
+
+describe("a describe that fails after the handle is returned (node (g)'s form, section 4.1 and Amendment 1)", () => {
+  it("a describe refused after opened closes the opened handle before the refusal returns", async () => {
+    mocks.reply = opened("ds_s1");
+    mocks.describe = async () => {
+      throw unknownDataset("ds_s1");
+    };
+    const outcome = await admitProject("C:/p", "k-s1", REOPEN);
+    mocks.events.push("outcome");
+    expect(outcome.kind).toBe("refused");
+    if (outcome.kind !== "refused") return;
+    expect(outcome.refusal.code).toBe("skp.unknown_dataset");
+    expect(mocks.closes).toEqual(["ds_s1"]);
+    expect(mocks.events).toEqual(["describe", "close", "outcome"]);
+  });
+
+  it("a describe that fails untyped after opened closes the handle and rethrows the same error", async () => {
+    mocks.reply = opened("ds_s2");
+    const err = new TypeError("the transport failed");
+    mocks.describe = async () => {
+      throw err;
+    };
+    await expect(admitProject("C:/p", "k-s2", REOPEN)).rejects.toBe(err);
+    expect(mocks.closes).toEqual(["ds_s2"]);
+  });
+
+  it("a close that fails after a refused describe still returns the describe's refusal", async () => {
+    mocks.reply = opened("ds_s3");
+    const refused = unknownDataset("ds_s3");
+    mocks.describe = async () => {
+      throw refused;
+    };
+    mocks.close = async () => {
+      throw new Error("the close's own failure");
+    };
+    const outcome = await admitProject("C:/p", "k-s3", REOPEN);
+    expect(mocks.closes).toHaveLength(1);
+    expect(outcome.kind).toBe("refused");
+    if (outcome.kind !== "refused") return;
+    expect([outcome.refusal.code, outcome.refusal.message]).toEqual([refused.skpError.code, refused.skpError.message]);
+    expect(mocks.logs).toEqual([{ level: "reopen-refused", message: `${refused.skpError.code}: ${refused.skpError.message}` }]);
+  });
+
+  it("an opened reopen whose describe succeeds closes nothing", async () => {
+    mocks.reply = opened("ds_s4");
+    const outcome = await admitProject("C:/p", "k-s4", REOPEN);
+    expect(outcome.kind).toBe("admitted");
+    expect(mocks.closes).toEqual([]);
+  });
+
+  it("a describe failure whose close never settles rethrows the same error once the bound has passed", async () => {
+    vi.useFakeTimers();
+    const err = unknownDataset("ds_s5");
+    mocks.describe = async () => {
+      throw err;
+    };
+    mocks.close = () => new Promise(() => {});
+    const settled: { done: boolean; error?: unknown } = { done: false };
+    void admission.describeOpened("ds_s5").then(
+      () => (settled.done = true),
+      (e: unknown) => Object.assign(settled, { done: true, error: e })
+    );
+    await vi.advanceTimersByTimeAsync(0);
+    expect(mocks.closes, "the close is sent before the clock moves").toEqual(["ds_s5"]);
+    await vi.advanceTimersByTimeAsync(admission.DESCRIBE_FAILED_CLOSE_WAIT_MS - 1);
+    expect(settled.done, "not settled before the bound").toBe(false);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(settled.done, "settled once the bound has passed").toBe(true);
+    expect(settled.error).toBe(err);
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
+  it("a describe failure whose close settles leaves no timer armed", async () => {
+    vi.useFakeTimers();
+    const err = unknownDataset("ds_s6");
+    mocks.describe = async () => {
+      throw err;
+    };
+    await expect(admission.describeOpened("ds_s6")).rejects.toBe(err);
+    expect(mocks.closes).toEqual(["ds_s6"]);
+    expect(vi.getTimerCount()).toBe(0);
   });
 });

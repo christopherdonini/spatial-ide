@@ -933,3 +933,17 @@ node e2e/conditions-baseline.mjs [--fixture <path>]
 Each exits 0 when all checks pass, 1 when one fails (step 4's wait for the old conditions to go included), and 2 when the run is VOID (the arm, the fixture, or any other wait that timed out). Neither is in CI or in `npm run verify`.
 
 **What they prove not.** Any docs/08 figure, macOS or Linux, another file, a timing, or a viewport refusal that is not a session-ended refusal on the shipped arm (no step or hook produces one on demand; the real App unit tests C-A1 and C-A3 prove its raise).
+
+## Declare-session spec (identity-declaration-route-for-session-tier)
+
+```
+npm run e2e:admission
+```
+
+<!-- Drafted by the build worker of identity-declaration-route-for-session-tier, not the advisor's or the human's words. The step was not run by the build that added it: the run is the tester's. -->
+
+`e2e/admission-remediation.mjs` gains the step `DECLARE-SESSION'` (E-1), after `MAP'`. It opens `no-id-column.parquet` (the manual-walkthrough fixture the suite already uses) through `window.__SPATIAL_E2E__.openPath` and checks that the open is on the session tier, as `MAP'` does. It then drives the real DOM and not `openPath`: it clicks the summary of `.admission-declare-identity`, checks that the candidates are exactly `parcel_key` with none checked, clicks that radio and then "Declare this column", and polls, with a declared bound of 120 s, for the summary's Identity row reading `mapped:parcel_key — verified-at-open-full-file` with no "Session identity" row left.
+
+It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
+
+**What it proves not.** The words of the control (they are the advisor's words as the words commit set them), any timing, macOS or Linux, a project saved and reopened after the declaration (the operator Part's rows do that), or a file whose key is narrower than 64 bits (the kernel test K-2 does that, and no walkthrough fixture holds one).

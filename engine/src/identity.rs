@@ -198,9 +198,10 @@ pub struct DatasetIdentity {
     /// consumer see, from the envelope, whether narrowing would have been lossy — instead of
     /// finding out per value.
     max_value: Option<u64>,
-    /// The file's 64-bit integer columns, reported on the **session tier** so an operator can still
-    /// declare a mapping (R-I3's own sentence). Empty on the native and mapped paths, where the
-    /// list is carried by the refusal instead. Unranked and unpreselected, as it is there.
+    /// The file's integer columns of every width [`admit_column_type`] takes, reported on the
+    /// **session tier** so an operator can still declare a mapping (R-I3's own sentence). Empty on
+    /// the native and mapped paths, where the list is carried by the refusal instead. Unranked and
+    /// unpreselected, as it is there.
     candidate_columns: Vec<String>,
 }
 
@@ -241,16 +242,14 @@ impl DatasetIdentity {
 
     /// Columns an operator could declare a mapping to, on the session tier. Empty elsewhere.
     ///
-    /// **An instrument: its only caller is the test suite**, and not `cfg(test)`-gated, for the
-    /// reason [`crate::descriptor::SourceDescriptor::footer_bytes_read`] is not — R-I3 requires the
-    /// ADR-016 candidate list to still be *recorded* on a session-tier open, and that has to be
-    /// true of the shipped build rather than of a test build. **No surface carries it to an
-    /// operator in P3a**: the refusal that used to carry it no longer fires on this path, and
-    /// `describe` may not gain a field for it (boundary 9's list is closed). Where it is owed is
-    /// recorded in `engine/ADMISSION-PREREGISTRATION.md`'s Amendment 4.
+    /// R-I3 requires the ADR-016 candidate list to be *recorded* on a session-tier open, and that
+    /// has to be true of the shipped build rather than of a test build, so it is not
+    /// `cfg(test)`-gated. Since `skp/0.15` it has a product caller: the kernel's
+    /// `describe_dataset` carries it as `describe.identity.candidate_columns` on the session tier
+    /// (ADR-016, Amendment 2), from this accessor and no other function, in the order recorded
+    /// here. The refusal carries the same list on the native and mapped paths.
     ///
-    /// **Its callers, named so the caller-grep can verify this exemption** (the human's ruling of
-    /// 2026-09-16, round 5 item 4):
+    /// **Its other callers**, named so the caller-grep can verify them:
     /// `engine/tests/session_identity.rs::a_single_file_keyless_source_admits_on_the_session_tier_and_records_its_basis`,
     /// `engine/tests/identity.rs::a_file_whose_key_is_not_called_id_admits_on_the_session_tier_until_a_mapping_is_declared`,
     /// and `engine/tests/b1_projection_hostile_names.rs::a_native_id_with_u0000_opens_on_the_session_tier_with_no_nul_candidate`.
@@ -278,9 +277,11 @@ impl DatasetIdentity {
     }
 }
 
-/// The file's 64-bit integer columns — `Int64` and `UInt64` only, narrower than the widths
-/// [`admit_column_type`] below still accepts — in schema order (NEXT-CUT.md P0, the
-/// admission-remediation cut's declare-identity flow).
+/// The file's integer columns of every width [`admit_column_type`] below admits — `Int8`, `Int16`,
+/// `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32` and `UInt64`, all read from one predicate,
+/// [`is_admitted_integer_type`] — in schema order (NEXT-CUT.md P0, the admission-remediation cut's
+/// declare-identity flow; ADR-016, Note 2026-11-26, widened it from the two 64-bit types from
+/// `skp/0.15`).
 ///
 /// Unranked and unpreselected: ADR-016 §3's "declared, never inferred" extends to this list
 /// itself. It names candidates a remediation UI may offer a caller to choose among; it is never a
@@ -297,11 +298,10 @@ impl DatasetIdentity {
 /// from this list) — see `admit_column_type` and `dataset::admit_identity`, neither of which
 /// consults this function to decide whether a *declared* column is usable.
 pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -> Vec<String> {
-    use arrow::datatypes::DataType as D;
     schema
         .fields()
         .iter()
-        .filter(|f| matches!(f.data_type(), D::Int64 | D::UInt64))
+        .filter(|f| is_admitted_integer_type(f.data_type()))
         // **§10 Amendment 12, 12.1(d); test N-9.** A column that is not addressable — checked
         // through `addressability::not_addressable_for_field`, the one classifying function
         // (12.4 item 25), never a second U+0000 test of its own — is omitted for the same reason a
@@ -312,6 +312,22 @@ pub(crate) fn candidate_identity_columns(schema: &arrow::datatypes::SchemaRef) -
         .map(|f| f.name().clone())
         .filter(|name| !name.contains(','))
         .collect()
+}
+
+/// Whether `ty` is an integer width that identity admission takes: `UInt64`, `UInt32`, `UInt16`,
+/// `UInt8`, `Int64`, `Int32`, `Int16` or `Int8`. Widening any of them into `u64` is exact; a signed
+/// column's *values* are checked when they are read.
+///
+/// **The one list of admitted types.** Its two callers are [`candidate_identity_columns`], which
+/// offers a column, and the admitting arm of [`admit_column_type`], which accepts one, so that
+/// what is offered and what is accepted cannot drift apart again (ADR-016 §4 with the Note 2026-11-26). It is
+/// private to this module on purpose: nothing outside it asks what types are admitted.
+fn is_admitted_integer_type(ty: &arrow::datatypes::DataType) -> bool {
+    use arrow::datatypes::DataType as D;
+    matches!(
+        ty,
+        D::UInt64 | D::UInt32 | D::UInt16 | D::UInt8 | D::Int64 | D::Int32 | D::Int16 | D::Int8
+    )
 }
 
 /// The SQL type of a candidate identity column, classified by whether reading it into `u64`
@@ -326,13 +342,11 @@ pub(crate) fn admit_column_type(
     ty: &arrow::datatypes::DataType,
     schema: &arrow::datatypes::SchemaRef,
 ) -> Result<()> {
-    use arrow::datatypes::DataType as D;
     match ty {
         // Widening into u64 is exact. A signed type is admitted here and its *values* are checked
-        // when they are read — a negative id is refused there, not assumed absent here.
-        D::UInt64 | D::UInt32 | D::UInt16 | D::UInt8 | D::Int64 | D::Int32 | D::Int16 | D::Int8 => {
-            Ok(())
-        }
+        // when they are read — a negative id is refused there, not assumed absent here. The set is
+        // `is_admitted_integer_type`'s, the list `candidate_identity_columns` offers from.
+        ty if is_admitted_integer_type(ty) => Ok(()),
         other => Err(EngineError::IdentityUnusable {
             column: column.to_string(),
             detail: format!(
@@ -391,8 +405,9 @@ mod tests {
         }
     }
 
+    // Mutation M-W1: the candidate filter back to Int64|UInt64. Expected failure: the list assertion, ["big_signed","big_unsigned"].
     #[test]
-    fn candidate_columns_are_the_64_bit_integer_columns_in_schema_order_unranked() {
+    fn the_candidate_list_is_every_admitted_integer_column_in_schema_order_unranked() {
         use arrow::datatypes::Field;
         let schema = std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
             Field::new("name", D::Utf8, true),
@@ -403,8 +418,73 @@ mod tests {
         ]));
         assert_eq!(
             candidate_identity_columns(&schema),
-            vec!["big_signed".to_string(), "big_unsigned".to_string()],
-            "schema order, Int64 and UInt64 only — no Int32, no ranking"
+            vec![
+                "big_signed".to_string(),
+                "small_signed".to_string(),
+                "big_unsigned".to_string()
+            ],
+            "schema order across all widths — no grouping by width, no alphabetical order, no ranking"
+        );
+    }
+
+    /// The candidate list and the type check admit exactly the same types, and the list keeps
+    /// schema order across all eight widths. (i) One-field schemas: the list names `k` exactly when
+    /// `admit_column_type` accepts its type, and that holds for exactly eight types. (ii) One schema
+    /// in a deliberately scrambled order.
+    // Mutation M-W1 fails it at (i); Mutation M-W2: the candidate filter without UInt8. Expected failure: (i).
+    #[test]
+    fn the_candidate_list_and_the_type_check_admit_exactly_the_same_types() {
+        use arrow::datatypes::Field;
+        let integers = [
+            D::UInt64,
+            D::UInt32,
+            D::UInt16,
+            D::UInt8,
+            D::Int64,
+            D::Int32,
+            D::Int16,
+            D::Int8,
+        ];
+        let others = [
+            D::Utf8,
+            D::Float64,
+            D::Binary,
+            D::Boolean,
+            D::Date32,
+            D::Decimal128(38, 0),
+        ];
+        let mut admitted = 0;
+        for ty in integers.iter().chain(others.iter()) {
+            let schema = schema_with("k", ty.clone());
+            let listed = candidate_identity_columns(&schema) == vec!["k".to_string()];
+            let checked = admit_column_type("k", ty, &schema).is_ok();
+            assert_eq!(
+                listed, checked,
+                "{ty}: the list and the type check must agree (listed {listed}, admitted {checked})"
+            );
+            if checked {
+                admitted += 1;
+            }
+        }
+        assert_eq!(admitted, 8, "exactly the eight integer widths are admitted");
+
+        let schema = std::sync::Arc::new(arrow::datatypes::Schema::new(vec![
+            Field::new("u8", D::UInt8, false),
+            Field::new("i64", D::Int64, false),
+            Field::new("i16", D::Int16, false),
+            Field::new("u32", D::UInt32, false),
+            Field::new("name", D::Utf8, true),
+            Field::new("i8", D::Int8, false),
+            Field::new("u64", D::UInt64, false),
+            Field::new("i32", D::Int32, false),
+            Field::new("u16", D::UInt16, false),
+        ]));
+        assert_eq!(
+            candidate_identity_columns(&schema),
+            ["u8", "i64", "i16", "u32", "i8", "u64", "i32", "u16"]
+                .map(String::from)
+                .to_vec(),
+            "every admitted width, in schema order"
         );
     }
 

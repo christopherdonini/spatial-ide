@@ -28,7 +28,8 @@
     "max_value": null,
     "js_exact": null,
     "class": "session-ordinal",
-    "session_statement": "this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does."
+    "session_statement": "this dataset has no admissible identity column, so features are identified for this session only, by their position in the file. The identity does not survive this open, a reopen, or a change to the source, and it is never saved or published. Declare an identity column to get an identity that does.",
+    "candidate_columns": ["parcel_id"]
   },
   "schema": [
     { "name": "parcel_id", "arrow_type": "Int64", "nullable": false, "projectable": true },

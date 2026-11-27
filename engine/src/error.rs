@@ -155,8 +155,9 @@ pub enum EngineError {
     /// consumer's side — the id it is handed does not identify one feature — so they share a
     /// variant and are distinguished by `detail`.
     ///
-    /// `candidate_columns` (NEXT-CUT.md P0): the file's 64-bit integer columns (`Int64` and
-    /// `UInt64`), in schema order, unranked and unpreselected — no scoring, no "looks like an id"
+    /// `candidate_columns` (NEXT-CUT.md P0): the file's integer columns of every width admission
+    /// takes (`Int8` to `Int64` and `UInt8` to `UInt64`, ADR-016's Note 2026-11-26), in schema
+    /// order, unranked and unpreselected — no scoring, no "looks like an id"
     /// guess (that is Alpha data-doctor territory, `docs/05`). A remediation UI lists them; it does
     /// not recommend one. Carried only in this structured field — `Display` below does not mention
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
@@ -179,13 +180,17 @@ pub enum EngineError {
     /// is not a check that passed.
     SourceChanged { detail: String },
 
-    /// A **partitioned** source reached the session-ordinal path — R-I4 (§2d; boundary 7).
+    /// A path read as a **partitioned** source, a folder or a pattern — R-I4 (§2d; boundary 7).
     ///
     /// The session tier's identity is (dataset-session generation, physical file-row ordinal), and
     /// a file-row ordinal is a position **within one file**. Across a partition set there is no
     /// such position without a declared file order, and declaring one would be a packing contract
     /// this cut does not introduce (A5). Refused by name rather than admitted with an ordinal that
     /// would silently mean a different row per scan.
+    ///
+    /// The refusal comes on every open path, before any identity is read, with or without a
+    /// declared identity column: a declaration does not change it, so the message offers none. The
+    /// session tier's reasoning above is why the ordinal path cannot admit a partitioned source.
     IdentityOrdinalPartitionedUnsupported { detail: String },
 
     /// This engine's own record of an admission contradicts itself.
@@ -385,9 +390,10 @@ impl fmt::Display for EngineError {
             ),
             Self::IdentityOrdinalPartitionedUnsupported { detail } => write!(
                 f,
-                "refused: this source is partitioned across more than one file ({detail}), and \
-                 session identity is a row's position within one file. Open a single file, or \
-                 declare an identity column that is carried in the data"
+                "refused: this path is read as a folder or a pattern, not \
+                 as one file ({detail}). This engine opens a single file only, and it \
+                 refuses such a path before reading it, whether or not an identity column is \
+                 declared"
             ),
             Self::InternalInconsistency { detail } => {
                 write!(f, "internal inconsistency: {detail}")

@@ -81,3 +81,9 @@ the version-refusal fixture that named `skp/0.14` as an unsupported future versi
 name `skp/0.15` instead. The same update adds `open_project`'s accept and refuse rows, and `main.rs`
 maps its two wire types. The existing rows' `spec` citations name the literal they were written
 under and are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.15` literal of PLAN node
+`identity-declaration-route-for-session-tier` (its form's Amendment 2 item 1); the version-refusal
+fixture that named `skp/0.15` as an unsupported future version was renumbered to name `skp/0.16`
+instead. No row is added: the version adds one member to `describe`'s `identity`, and this directory
+holds no `describe` response. The existing rows' `spec` citations are not rewritten.
