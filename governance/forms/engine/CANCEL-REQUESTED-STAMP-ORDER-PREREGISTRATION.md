@@ -653,3 +653,11 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — 2026-11-22 — the stray file was removed
+
+1. **Amendment 4 item 7 is incomplete.** The build worker's 180-byte C4 output was removed by the custodian's own call at 2026-11-22T10:02:49Z, by the main session's transcript: the call read the file, removed it and printed REMOVED, and a listing of its folder then counted no such file. That is why the search at 14:02:38Z found none. The removal is what ADV-2026-11-22-10 item 6 allows ("remove it if your own rules let you").
+
+Read the last amendment first.
+
+Nothing above is edited.

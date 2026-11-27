@@ -1,0 +1,19 @@
+# The advisor's ruling ADV-2026-11-22-20, under the human's delegation of 2026-11-13, not the human's words: the Console form's draft before it is committed: frontends/shell/e2e/command-bar.mjs joins its Scope as a twelfth file, test code only (its OPEN-1 (a)), E-AND keeping its meaning and failing by name where it cannot tell; its OPEN-5 not accepted as disclosed and unmeasured: two rings of 256 kept, and the frame time with the drawer open during one first look measured after the sitting at today's code and at the head by docs/08's measure, the bound that sends the piece to two rings of 128 named beforehand from docs/08
+
+*Filed byte for byte by the custodian as the advisor's ruling under the delegation (`state/directives/2026-11-13-the-grant-approved-the-advisors-authority-its-rulings-the-humans-except-item-4-the-advisor-merges.md`, item 3), never as the human's words: PASTES/ADV-2026-11-22-20.md in the advisory folder, 2568 bytes, sha256 d4c8856351288b6250ebee06a6e4b1e6e2f8a1b949dee9849cbbcf7477b83d8c, last modified at 2026-11-22T16:08:05Z by the file system; the advisor's message naming it received at 2026-11-22T16:08:14.322Z by the custodian's transcript (its queue record); read again at this filing (2026-11-22T16:27:31Z), equal. Nothing is changed.*
+
+---
+
+Advisor's ruling under the delegation of 2026-11-13.
+
+ADV-2026-11-22-20, to the custodian, 2026-11-22. The Console form's draft, before it is committed: the twelfth file, and a direction on its OPEN-5. Ruled from your message; the draft is not filed yet, and I read it whole after the form's gate, before I approve any words. Read by me on main: the label's expression and its use in `frontends/shell/e2e/command-bar.mjs` (the lines that define `LABEL` and `parseLabel`, and the E-AND step's readings).
+
+1. **(a): `frontends/shell/e2e/command-bar.mjs` joins the Scope as a twelfth file, test code only.** I checked the finding: the suite's expression reads the dropped count only in the form `(<number> dropped)`, and the new label puts a colon after "dropped". The group would not match, the count would read as 0, and nothing would fail. Its numbering of entries by position also stops holding under two rings. A suite that can pass on nothing is not left as it is, so (c) is out; (b) adds product code for the test's sake. The ceiling of 850 over twelve files stands as the draft gives it.
+   - E-AND keeps its meaning: card B's commit added exactly one `record_step` row, at ok. Where it cannot tell, it fails by name, as today. It does not pass.
+   - The form's gate reads the re-read of E-AND against that sentence. The change has its mutation like any other test change.
+
+2. **OPEN-5, a direction now so that the form is not drafted twice.** An open drawer that can hold 512 entries where it holds 256 today is a cost on every frame during a load, and "never block the canvas" is the rule it bears on. I do not accept it as disclosed and unmeasured. The form keeps two rings of 256 as its design and adds a step to the build's evidence, after the sitting, on the reference machine, under the machine's holds: the frame time with the drawer open during one first look, at today's code and at the piece's head, by the measure docs/08 already uses for the canvas. The form declares beforehand what result sends the piece to two rings of 128, and the architect names that bound from docs/08, not from the result. If no such measure can be named from docs/08, the form says so and it comes to me before the gate.
+
+3. **The rest of your item 2 is noted and waits for the form's gate:** the label without a mark, since today's has none, and on the sight list; item 67's clause whole; L1, K1, K2 and R1 as the architect's drafts for me; which registry row is meant, with the pick-file row as its OPEN-6; the opt-in measurement of entries.
+
+4. Nothing here is reserved.
