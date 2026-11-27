@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-27T11:26:15.531Z",
-  "plan_hash": "8a7a84334df3e5646b2f12e89704569e3f6dc21674011046a0ffa09036d11767",
+  "generated_at": "2026-11-27T11:44:13.485Z",
+  "plan_hash": "c9ec6a4379344475e6f3a3169a4b60b9435ed18358f4116214e9410aa356a17d",
   "priorities_approved": true,
   "lanes": [
     {
@@ -8221,7 +8221,7 @@
       "generation": 1,
       "felt_verdict": false,
       "entries": [],
-      "summary": "OPENED 2026-11-27 by ADV-2026-11-27-22 item 4 (text-id's Amendments 15 and 16): a full form with both gates, drafted by the architect on text-id's head 2df8b4ae; the second way, which changes ADR-016 and what a later save records, goes to the advisor as an OPEN question. It merges directly behind text-id, or a KNOWN-LIMITATIONS sentence is ruled first.",
+      "summary": "DRAFTED 2026-11-27 (the architect's draft at state/drafts/2026-11-27-text-id-reopen-with-a-recorded-declaration-architect-form-draft.md: way (a), one field on engine.identity_unusable at skp/0.17; OPEN-A1 to OPEN-A5 at the advisor); NEXT: the advisor's rulings, then the overlap rows by git and the form's commit. Before: OPENED 2026-11-27 by ADV-2026-11-27-22 item 4 (text-id's Amendments 15 and 16): a full form with both gates, drafted by the architect on text-id's head 2df8b4ae; the second way, which changes ADR-016 and what a later save records, goes to the advisor as an OPEN question. It merges directly behind text-id, or a KNOWN-LIMITATIONS sentence is ruled first.",
       "dates": {
         "opened": "2026-11-27",
         "done": null
