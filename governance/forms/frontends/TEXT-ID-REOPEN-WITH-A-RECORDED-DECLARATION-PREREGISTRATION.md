@@ -583,3 +583,20 @@ New:
    - one advisor message, carrying items 3 to 5;
    - the build gates' read parts, the architect's and the reviewer's;
    - E-R1 at the port.
+
+## Amendment 5 — 2026-11-27 — the custodian's: ADV-2026-11-27-30, before the words commit
+
+*References only. Nothing above is edited. Written before the words commit.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-30-the-c1-pieces-overrun-recorded-the-words-of-ah8-and-the-readme-section-known-limitations-item-3-unchanged.md`. It answers the three questions of Amendment 4 items 3 to 5.
+2. **Class 8, recorded, and the piece goes on** (the ruling's item 1). The count at 1a4b5bbe is 903 against §7's 900, over 37 files, as Amendment 4 item 3 has it. No line is cut. The final figure is taken at the words commit's head by §7's own command. The amendment that records it carries the template's words `budget overrun, §7 not edited`, §7's estimate table with the count beside each row, and the reason in one sentence the gates can check. §7 is not edited.
+   - Both gates' read parts say in so many words whether every changed file is inside §7's scope, as its "each" lines resolve at the base, and whether every change is inside §2 and §4 as gated. A file or an item outside them is not class 8. It goes to the advisor before anything else.
+3. **The words** (the ruling's items 2 and 3) are the advisor's: row AH8 directly after row AH7, its result-log line directly after AH7's, and the e2e README section appended at the file's end after one blank line. Row AH8's expected outcome rests on E-R1's step (5), which has not run. If the port shows otherwise, the row goes back to the advisor before the run part's verdict.
+4. **KNOWN-LIMITATIONS item 3 does not change** (the ruling's item 4), and no sentence is added. `KNOWN-LIMITATIONS.md` stays outside the piece.
+5. **Class 2, under the ruling's item 6.** As read in place with Amendment 3's V2, §3's Project P2 is still a copy of E-1 (d)'s saved project. The step `TEXTID-C1` at 1a4b5bbe makes its own save in its step (1) and copies that folder. The step's own save is recorded here, and the gates' read parts read it.
+   - Noted for the same reads, unruled: §3 sets P2's identity "by JSON parse and write". The step replaces one line with three in the writer's layout.
+6. **The order** (the ruling's item 5):
+   1. one words commit, which holds items 2 and 3 and nothing else, in `frontends/shell/MANUAL-WALKTHROUGH.md` and `frontends/shell/e2e/README.md`;
+   2. the suites that start no app, green at the new head;
+   3. the amendment with the final count;
+   4. the build gates' read parts, which are not yet dispatched, at the words commit's head.
