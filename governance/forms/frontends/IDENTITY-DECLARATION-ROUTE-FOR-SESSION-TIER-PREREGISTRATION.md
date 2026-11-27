@@ -1482,3 +1482,25 @@ Read the last amendment first.
 8. **What the read parts did not run at the head:** conformance on its own, clippy, the shell's `npm run verify` and CI's `node --test`. These run in the run part at the corrected head, with E-1 and M-E1, after the port series.
 
 Read the last amendment first.
+
+## Amendment 13 — 2026-11-27 — the custodian's: the correction, at 7fa66a68
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The correction** is one commit, 7fa66a68a811cc20e09bf3251d0cb34d422fc81e, over 09dfe6b1de7b8b602ef4d67efa41a7d8e36ddcf9.
+   - It holds Amendment 12's items 2 to 5 and nothing else: 20 lines added and 19 deleted, over 8 files.
+   - The worker's report is filed at `state/consults/2026-11-27-identity-declaration-route-for-session-tier-correction-worker-report.md`.
+2. **For the run part to read** (the worker's account):
+   - Item 1's comment above the two constants is the worker's words. The report gives them verbatim.
+   - D-j names ADR-016 §4 by a short edit of the predicate doc's existing parenthesis, not by a gate's verbatim words.
+   - D-h's sentence is joined to the sentence before it by a semicolon, in SKP-V0.md and in mod.rs. Its own words are copied unchanged.
+   - Row AG4 keeps the capital of the word after D-b's inserted text.
+   - D-d's lines are not broken anew.
+3. **The checks at the head:**
+   - The shell's typecheck and tests exited 0 (1683 passed).
+   - cargo fmt, verify-cites and verify-quotes exited 0.
+   - verify-mutation exits 1: W-1 and W-2 now show their mutations, and 38 tests still show none, item 6's three among them. At the run part a gate says, per ADV-2026-11-27-15 item 6, which of those three are this piece's to record.
+4. **Not run at the head,** and run in the run part (Amendment 12 item 8): the cargo suites, conformance, clippy, the shell's `npm run verify` and CI's `node --test`.
+5. **Next:** text-id's merge-in of this head, with its narrow read (ADV-2026-11-27-15 item 7). Then the run part, after the port series.
+
+Read the last amendment first.

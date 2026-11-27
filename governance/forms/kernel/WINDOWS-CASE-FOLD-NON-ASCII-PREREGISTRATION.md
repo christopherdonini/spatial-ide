@@ -363,3 +363,15 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 3 — 2026-11-27 — the advisor's merge check at 74178ea9: MERGE, written ahead of the merge; references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The verdict.** MERGE at 74178ea95741985c604c552174d42dcf63e374fc (`state/consults/merge-checks/PR-367-74178ea95741.md`, sha256 4c0050ceb89237681e022d4fe621a4ee8624ded89602aa7f16ec9ff875dd5a49 of the advisor's file). It is written ahead of the merge, and no merge has run.
+2. **Its place** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-17-pr-367-merge-after-350-353-356-and-358-not-waiting-for-359-the-place-of-a-piece-never-held-built-on-main-alone.md`, item 2). After PRs 350, 353, 356 and 358, and not waiting for PR 359 or any later piece.
+3. **The overlap** (item 2). The custodian's git found no other open pull request and no other branch in progress that touches `kernel/src/permission/audit/normalize.rs` or `kernel/src/permission/audit/log.rs` (2026-11-27T07:18:38Z, date -u).
+   - Checked: every remote branch after a prune, from its merge-base with main, and every worktree head.
+   - The only hits are this piece's branch, its worktree and its gates' read checkout at f9496e56.
+4. **The conditions** (item 3). The tester's start in the sitting's checkout is filed, and the human's app is closed. It does not go into `release/v0.2` (item 4).
+5. **The advisor's reading** of the words-only close (item 5) is in the advisor's digest to the human.

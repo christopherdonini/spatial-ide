@@ -520,3 +520,19 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
    - whether `KNOWN-LIMITATIONS.md` line 511 at the base is a reader under I3. The worker judged it not one, and said a ruling that it is one is a stop;
    - whether A's build gates take two parts, as ADV-2026-11-27-08 item 3 holds those of the identity route and B.
 8. **Next:** E-A1 at T and at P in A's port turn (ADV-2026-11-27-11 item 4), and the build gates as the advisor rules.
+
+## Amendment 6 — 2026-11-27 — the custodian's: ADV-2026-11-27-18, before either build gate
+
+*References and hashes only. Nothing above is edited.*
+
+1. **I3's search** (the worker's report, filed under Amendment 5). The four lines' words have readers only inside §0.2 and §4's list. One prose mention stands outside both: `KNOWN-LIMITATIONS.md` line 511 at f64fac32f3c75da5b4ea57e5b38eee89b92ec22a, in item 62's paragraph. The worker judged it not a reader and edited nothing.
+2. **The ruling** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-18-as-two-questions-known-limitations-line-511-not-a-reader-under-i3-as-build-gates-in-two-parts.md`, item 1). Line 511 is not a reader under I3, and nothing stops. `KNOWN-LIMITATIONS.md` stays untouched by this piece. The reviewer's read part says, in one line, whether the sentence holds against the built line.
+3. **The build gates run in two parts** (item 2), as ADV-2026-11-27-08 item 3 has them for the identity route and B:
+   - **The read part, now:** the reads and runs that item 2 names, none of which starts the app.
+   - **The run part, after the port:** E-A1 at T, red at E-A1 alone, and E-A1 at P, green. A's runs are last in ADV-2026-11-27-11 item 4's order.
+   - **No verdict** and no gate-log row is given before the run part.
+   - **Corrections:** a finding of the read part is corrected before the run at P. The run at T is made at T as it stands.
+   - **The stop** of ADV-2026-11-26-24 item 2 stands for the run at T.
+   - **Differing words:** where the gates give different words for one place, both go to the advisor before the words commit.
+   - §9's suites line for `node e2e/conditions.mjs` changes in time only, as the run part's, as ADV-2026-11-27-08 item 3 has it for the other two forms. Every other suite stays green before the read part, as Amendment 5 item 5 records.
+4. **Next:** the two read parts, then E-A1 at T and at P in A's port turn, then the run parts.
