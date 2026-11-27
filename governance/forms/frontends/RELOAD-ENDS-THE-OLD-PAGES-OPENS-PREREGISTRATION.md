@@ -897,3 +897,18 @@ Read the last amendment first.
    - the reviewer's two notes on cases outside ordinary use, and its statement on the security posture, in its own words;
    - both gates' posture statements, which stand with their verdicts after the run part.
 7. **Next:** the correction worker; then B red at f73dfed3 and green at the head in the port order; then the run parts.
+
+## Amendment 7 — 2026-11-27 — the custodian's: the correction, at 5ce0525a
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The correction** is one commit, 5ce0525aa0c5a1bb5e3c240aadf4456764e9c645, over ae4b673fc3d783514b13a4e823f5a432e43aeb91.
+   - It holds Amendment 6 item 3's four places and nothing else: 15 lines added and 4 deleted, in `page.rs`, `lib.rs` and `commands.rs` under `frontends/shell/src-tauri/src/`. No line of `publish.rs` changes.
+   - The worker's report is filed at `state/consults/2026-11-27-reload-ends-the-old-pages-opens-correction-worker-report.md`.
+2. **The worker's account,** for the run part to read:
+   - Each Old and New was read from the two filed read parts on main, and each Old stood once in its file.
+   - Place (b)'s new doc lines hold the words of the reviewer's F3 and no others, by the worker's word check.
+   - cargo fmt, verify-cites and verify-quotes passed. verify-quotes' exit is read from the end of the worker's chain, as its report says.
+   - No cargo build, test or clippy ran. They are the run part's.
+3. **The count at the corrected head,** for the closing amendment (Amendment 6 item 6): `git diff --numstat ca57685263df8628e1b6d452e1423319a30b6596...5ce0525aa0c5a1bb5e3c240aadf4456764e9c645` gives 1681 added and 17 deleted, 1698 changed lines over 8 files, by the custodian's git.
+4. **Next:** B red at f73dfed3 and green at 5ce0525a, in the port order; then the run parts.
