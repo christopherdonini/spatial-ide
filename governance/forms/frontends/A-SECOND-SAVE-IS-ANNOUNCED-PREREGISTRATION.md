@@ -473,3 +473,15 @@ Ordinary use reaches a state this piece leaves: while an older notice holds the 
    - The reviewer's narrow read of this merge (ADV-2026-11-23-15 item 4) comes before A's build gates, in a reviewer's place.
 5. **The order.** A's code comes in the places' order (ADV-2026-11-27-08 item 5): after B's read parts, or earlier in a place that the cap on the strongest model keeps free, if its worker's class allows it. Only record commits stand between the base and commit T (§9a).
 6. **What stands.** No app start before the port is free and the tester's start is filed; E-A1's run at T as soon as it is; and the stop if that run ends green, or red for another reason (§9a's Runs; ADV-2026-11-26-24 item 2).
+
+## Amendment 3 — 2026-11-27 — the custodian's: ADV-2026-11-27-09, before any code
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The ruling.** ADV-2026-11-27-09 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-09-as-base-is-the-custodians-merge-f64fac32-no-narrow-read-before-as-code-the-suites-at-the-base-first.md`), items 1 and 2: the merge f64fac32f3c75da5b4ea57e5b38eee89b92ec22a stands as A's base, and Amendment 2 item 4's reading of §9a is right.
+2. **Replaced, with no line edited** (its item 1). §9a's first bullet, and §8 item 12's clause on PR A's reviewer's second attempt, are replaced by ADV-2026-11-27-08 item 4 (Amendment 2 items 1 and 2). `<base>` in §7's counting command is f64fac32f3c75da5b4ea57e5b38eee89b92ec22a.
+3. **No narrow read of the merge is owed** (its item 2). Amendment 2 item 4's third bullet is replaced by these:
+   - Before A's first code commit, the suites that start no app run green at f64fac32f3c75da5b4ea57e5b38eee89b92ec22a, and an amendment records them.
+   - A's build gates read A's own diff from f64fac32f3c75da5b4ea57e5b38eee89b92ec22a. The reviewer's gate also says whether any of A's lines meets one of the eight files that PR 365's commits since 2095a7ac471d2441fd8e054a448d334c7bcde455 change: `KNOWN-LIMITATIONS.md`, `frontends/shell/MANUAL-WALKTHROUGH.md`, `frontends/shell/e2e/README.md`, `frontends/shell/e2e/colour-refill.mjs`, `frontends/shell/src/App.tsx`, `frontends/shell/src/canvas/WorkingCanvas.test.ts`, `frontends/shell/src/canvas/WorkingCanvas.tsx`, `frontends/shell/src/residency/candidateArmSession.ts`.
+4. **PR 365's head into PR A** is PR A's own merge, on PR A's branch, once PR 365's series has settled that head (ADV-2026-11-27-08 item 2). PR A's reviewer reads it. A then takes PR A's head in by a merge commit.
+5. **A's code is not held.** It starts in its turn, commit T first (ADV-2026-11-26-25; ADV-2026-11-26-24).

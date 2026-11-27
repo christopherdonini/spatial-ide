@@ -794,3 +794,18 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 6 — 2026-11-27 — the custodian's: the words of e4e6493d where the two build gates differed, and the HOLD at bf11959d (ADV-2026-11-27-10 items 2 and 3): references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The ruling.** ADV-2026-11-27-10 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-10-pr-364-merge-pr-363-hold-the-words-of-e4e6493d-stand-two-gates-different-words-come-to-the-advisor.md`), item 2: the applied text of e4e6493d92ec941425dd6566c0a4ec154c7eb633 stands in all four places where the two build gates gave different words.
+2. **Whose words stand, place by place:**
+   - the `handleRelink` comment, the README's sentence on the hook, and the note in the spec's section 8: both gates gave words, and the architect's were applied;
+   - the provenance in item 73's comment: the reviewer's D-5, with three changes the custodian's brief made. A colon stands for a semicolon; the words naming the delegation of 2026-11-13 are added; and the reviewer's clause on a refused save is left out, because the architect's D-5 sentence in the same comment says it.
+3. **From now** (its item 2): when two gates give different words for one place, both go to the advisor before the words commit. The custodian does not join them.
+4. **The verdict.** HOLD for bf11959dc4f4a83bd3ce10de73d8b35062ed7b16 (`state/consults/merge-checks/PR-363-bf11959dc4f4.md`; its item 3), with nothing in the piece wrong: PR 359's head will move with its measurement and its commit 4. When PR 359's final head is in this branch, with the reviewer's narrow read, the new head goes to the advisor. The advisor then reads that merge, the checks and this amendment.
+
+Read the last amendment first.
+
+Nothing above is edited.
