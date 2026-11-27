@@ -6,8 +6,6 @@ import type { KeyboardEvent, PointerEvent } from "react";
 
 import { SCAN_LIVENESS_DELAY_MS, isScanInFlight } from "../App";
 import type { ScanState } from "../App";
-import type { AuthoritativeBbox } from "../canvas/viewportBbox";
-import type { CrsUnit } from "../skp/types";
 import { scaleBarLabel, scaleBarTitle, scaleLabel, scaleReading, SCALE_NOT_METRE_TEXT, SCALE_OUT_OF_RANGE_TEXT } from "./scaleBar";
 import { scanMirrorText, watcherStatusText } from "./statusItems";
 import type { WatcherFacts } from "./statusItems";
@@ -232,6 +230,7 @@ export function WatcherStatusItem({ facts, sessionEnded }: { facts: WatcherFacts
  * there is none. It subscribes to the view-box store, as `FeaturePanel` does, so a pan or zoom renders this item and not `App`. Its snapshot is the
  * canvas's zoom, or `null` while the store holds no box: until the dataset's own canvas has reported, the unit and a zoom are not known to belong together.
  * No `role="status"`, no timer and no await: it changes at every zoom, and a live region would announce each change.
+ * `unit` is a `string` and `getBox` returns `object | null`, which the item only compares with `null`, so that no file under `layout/` imports from `skp/` or `canvas/` (layoutBoundary.test.ts U4).
  */
 export function ScaleItem({
   unit,
@@ -239,9 +238,9 @@ export function ScaleItem({
   getBox,
   readZoom,
 }: {
-  unit: CrsUnit;
+  unit: string;
   subscribe: (listener: () => void) => () => void;
-  getBox: () => AuthoritativeBbox | null;
+  getBox: () => object | null;
   readZoom: () => number | null;
 }) {
   const zoom = useSyncExternalStore(subscribe, () => (getBox() === null ? null : readZoom()));

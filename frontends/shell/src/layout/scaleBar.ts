@@ -1,8 +1,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import type { CrsUnit } from "../skp/types";
-
 /**
  * The status bar's scale (governance/forms/frontends/SHELL-SCALE-DISPLAY-PREREGISTRATION.md §2 item 1 and §7): a bar of a length
  * L = m x 10^k, m in {1, 2, 5}, in the dataset's own CRS metres, whose CSS width is L x 2^zoom, kept in [SCALE_BAR_MIN_PX, SCALE_BAR_MAX_PX).
@@ -62,8 +60,11 @@ export function readingAtPxPerUnit(pxPerUnit: number): ScaleReading {
   return { kind: "out-of-range" };
 }
 
-/** What the item shows for `unit` at `zoom`, the base-2 log of the CSS pixels one unit spans (`WorkingCanvasHandle.currentView`), or null when none is known. */
-export function scaleReading(unit: CrsUnit, zoom: number | null): ScaleReading {
+/**
+ * What the item shows for `unit` at `zoom`, the base-2 log of the CSS pixels one unit spans (`WorkingCanvasHandle.currentView`), or null when none is known.
+ * `unit` is a plain `string` (a `CrsUnit` is assignable to it) so that no file under `layout/` imports from `skp/` (layoutBoundary.test.ts U4).
+ */
+export function scaleReading(unit: string, zoom: number | null): ScaleReading {
   if (zoom === null || !Number.isFinite(zoom)) return { kind: "none" };
   if (unit !== "metre") return { kind: "not-metre" };
   return readingAtPxPerUnit(2 ** zoom);
