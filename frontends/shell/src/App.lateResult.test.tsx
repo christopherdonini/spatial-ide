@@ -872,6 +872,8 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // N8-G (Amendment 12, item 6; ADV-2026-11-24-09 item 4): A's late failure terminal and A's late canvas refusal, after a reopen while B's OWN Apply (the real Filter panel button) is in flight with Cancel shown, leave B's Cancel shown.
   // RECORDED MUTATION M12-2: G-1's guard alone removed (App.tsx, `onFailureTerminal`'s `if (admitted.dataset !== admittedDatasetRef.current) return;`). Expected failure: this test, at assertion T (the `.filter-cancel` check after A's late terminal).
   // RECORDED MUTATION M12-3: G-2's guard alone removed (App.tsx, `onCanvasRefusal`'s `if (admitted.dataset !== admittedDatasetRef.current) return;`). Expected failure: this test, at assertion C (the `.filter-cancel` check after A's late canvas refusal).
+  // OBSERVED 2026-11-27 at deda98ff (M12-2, G-1's guard alone, App.tsx line 1932 removed): FAILED -- this test, at assertion T: AssertionError: assertion T: A's late failure terminal leaves B's Cancel shown: expected null not to be null. Reverted after observing.
+  // OBSERVED 2026-11-27 at deda98ff (M12-3, G-2's guard alone, App.tsx line 2471 removed): FAILED -- this test, at assertion C: AssertionError: assertion C: A's late canvas refusal leaves B's Cancel shown: expected null not to be null. Reverted after observing.
   it("A's late failure terminal and canvas refusal, after a reopen while B's own Apply is in flight with Cancel shown, leave B's Cancel shown (baseline arm)", async () => {
     function typeAndApply(predicate: string): void {
       const input = container.querySelector(".filter-predicate") as HTMLInputElement;
