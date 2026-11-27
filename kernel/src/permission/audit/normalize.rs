@@ -164,21 +164,20 @@ fn usernames_from_environment() -> Vec<String> {
 /// The boundary condition is what stops `C:/Users/someone2` becoming `<user-home>2`: a prefix
 /// match alone is not a path-prefix match.
 ///
-/// **`is_char_boundary` before `split_at`, and it is a correctness guard rather than a nicety.**
-/// `str::split_at` **panics** on an index that is not a UTF-8 code-point boundary, and `root` (an
-/// environment variable) and `s` (a resolved destination) are unrelated strings — nothing makes
-/// `root.len()` land on a boundary of `s`. A `USERPROFILE` ending in a non-ASCII name and a
-/// destination on another drive is enough: the loop tries every root, so one badly-sized root
-/// aborted the process even when a different root would have matched. A panic here would take out
-/// the intent record, the "unauditable operations refuse" path, and `PublishGrant`'s hand-written
-/// `Debug` — which exists precisely so that formatting a grant inside a panic handler is safe.
-///
-/// `is_char_boundary` also subsumes the length check: it is false for any index past the end.
+/// **The split is measured in characters of `s`, not in bytes of `root`, and that is a correctness
+/// guard rather than a nicety.** `str::split_at` **panics** off a code-point boundary, `root` (an
+/// environment variable) and `s` (a resolved destination) are unrelated strings, and a panic here
+/// would take out the intent record and `PublishGrant`'s panic-safe `Debug`. Under `fold` a match
+/// can also differ in byte length from `root` (`ⱥ` is 3 bytes, `Ⱥ` is 2). The index is the start of
+/// the character after the match, or `s.len()` when `s` has exactly as many characters as `root`,
+/// so a destination that is exactly the root matches with an empty rest; a shorter `s` gives `None`.
 fn strip_component_prefix(s: &str, root: &str) -> Option<String> {
-    if !s.is_char_boundary(root.len()) {
-        return None;
-    }
-    let (head, rest) = s.split_at(root.len());
+    let at = s
+        .char_indices()
+        .map(|(i, _)| i)
+        .chain(std::iter::once(s.len()))
+        .nth(root.chars().count())?;
+    let (head, rest) = s.split_at(at);
     if !component_eq(head, root) {
         return None;
     }
@@ -189,7 +188,8 @@ fn strip_component_prefix(s: &str, root: &str) -> Option<String> {
     }
 }
 
-/// Path-component comparison: case-insensitive on Windows, case-sensitive elsewhere.
+/// Path-component comparison: case-insensitive on Windows as [`fold`] folds, letters outside ASCII
+/// included and with the departures from NTFS its doc declares; case-sensitive elsewhere.
 ///
 /// **Platform-specific by construction**, the same reason `publish::error::classify_io` keeps its
 /// code tables separate: NTFS is case-insensitive and ext4 is not, and a single rule would be wrong
@@ -197,13 +197,34 @@ fn strip_component_prefix(s: &str, root: &str) -> Option<String> {
 /// `C:/Users/...`; on Linux those are two different directories and collapsing them would rewrite a
 /// path into one that does not exist.
 fn component_eq(a: &str, b: &str) -> bool {
+    a.chars().map(fold).eq(b.chars().map(fold))
+}
+
+/// One character of a name, folded for the platform's name comparison: the identity off Windows,
+/// where names compare exactly, and on Windows NTFS's rule as closely as `std` allows.
+///
+/// NTFS upcases each UTF-16 unit through the volume's one-to-one table. This takes
+/// `char::to_uppercase` where it gives exactly one character and `c` lies in the BMP, else `c`.
+/// **It departs from NTFS in three declared classes.** (i) `std`'s Unicode version can fold letters
+/// an older volume table does not (Georgian Mkhedruli, Cherokee): over-normalization, a false
+/// refusal in `is_inside`. (ii) 27 Greek lowercase letters with iota subscript (U+1F80-U+1F87,
+/// U+1F90-U+1F97, U+1FA0-U+1FA7, U+1FB3, U+1FC3, U+1FF3) have a two-character full uppercase and
+/// stay unfolded, where NTFS folds them: a narrow residual in the leak direction. (iii) A letter
+/// whose uppercase is another letter's capital folds to it (`ı`, `ſ`, `µ`, `ς`, the Greek symbol
+/// letters such as `ϐ`, the titlecase digraphs such as `ǅ`), which the NTFS volume observed for
+/// this piece (2026-11-27, Windows 10) does not do: over-normalization, as (i).
+pub(crate) fn fold(c: char) -> char {
     #[cfg(windows)]
     {
-        a.eq_ignore_ascii_case(b)
+        let mut upper = c.to_uppercase();
+        match (upper.next(), upper.next()) {
+            (Some(u), None) if c.len_utf16() == 1 => u,
+            _ => c,
+        }
     }
     #[cfg(not(windows))]
     {
-        a == b
+        c
     }
 }
 
@@ -358,5 +379,70 @@ mod tests {
     #[test]
     fn case_differences_collapse_on_windows() {
         assert_eq!(norm(r"c:\users\SOMEONE\out"), "<user-home>/out");
+    }
+
+    /// NTFS compares names by their upper case, non-ASCII letters included, so a root, a username
+    /// and a destination that differ only in such a letter's case are one name.
+    ///
+    /// RECORDED MUTATION M1 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): `fold` is `c.to_ascii_uppercase()`. OBSERVED FAILURE: (a), left "C:/Users/JOSÉ/out", right "<user-home>/out".
+    /// RECORDED MUTATION M2 (same date, commit and way): the root strip splits `s` at `root.len()` bytes behind an `is_char_boundary` guard. OBSERVED FAILURE: (c), left "<user-home>/Ⱥtlas/out", right "<user-local-appdata>/out".
+    /// RECORDED MUTATION M3 (same date, commit and way): the BMP condition is dropped from `fold`. OBSERVED FAILURE: (d), left "<temp>/out", right "D:/𐐀-maps/out".
+    /// RECORDED MUTATION M5 (same date, commit and way): the split index is `s.char_indices().nth(..)` with no `s.len()` after it. OBSERVED FAILURE: (e), left "C:/Users/<user>", right "<user-home>"; (a) to (d) pass.
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: filesystem case policy (kernel/src/permission/audit/normalize.rs); the case fold is Windows-only"
+    )]
+    #[test]
+    fn non_ascii_case_differences_collapse_as_ntfs_compares_names_on_windows() {
+        let roots = vec![
+            ("C:/Users/josé".to_string(), HOME),
+            ("C:/Users/josé/ⱥtlas".to_string(), LOCAL_APPDATA),
+            ("D:/𐐨-maps".to_string(), TEMP),
+        ];
+        let users = vec!["josé".to_string()];
+        let n = |p: &str| normalize_with(&PathBuf::from(p), &roots, &users);
+        assert_eq!(n(r"C:\Users\JOSÉ\out"), "<user-home>/out");
+        assert_eq!(n(r"D:\archive\JOSÉ\out"), "D:/archive/<user>/out");
+        assert_eq!(n(r"C:\Users\JOSÉ\Ⱥtlas\out"), "<user-local-appdata>/out");
+        // A supplementary-plane letter is two UTF-16 units, which NTFS leaves as typed.
+        assert_eq!(n(r"D:\𐐀-maps\out"), "D:/𐐀-maps/out");
+        // The destination is exactly the root, typed in another case.
+        assert_eq!(n(r"C:\Users\JOSÉ"), "<user-home>");
+    }
+
+    /// The resolved parent carries the directory's on-disk case and the typed final component
+    /// keeps its own, so a username in the other case must still collapse.
+    ///
+    /// RECORDED MUTATION M1 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): `fold` is `c.to_ascii_uppercase()`. OBSERVED FAILURE: the second assertion, "a username in another case leaked: …/JOSÉ/out"; the first assertion passed.
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: filesystem case policy (kernel/src/permission/audit/normalize.rs); the case fold is Windows-only"
+    )]
+    #[test]
+    fn the_resolved_parent_keeps_its_on_disk_case_and_a_username_in_another_case_still_collapses_on_windows(
+    ) {
+        let base =
+            std::env::temp_dir().join(format!("spatial-kernel-case-fold-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&base);
+        std::fs::create_dir_all(base.join("JOSÉ")).expect("create the probe directory");
+        let resolved =
+            crate::permission::grant::resolve_destination(&base.join("josé").join("out"));
+        let _ = std::fs::remove_dir_all(&base);
+        let resolved = resolved.expect("the typed destination resolves");
+        let parent = resolved.parent().and_then(Path::file_name);
+        assert_eq!(parent, Some(std::ffi::OsStr::new("JOSÉ")), "{resolved:?}");
+        let n = normalize_with(&resolved, &[], &["josé".to_string()]);
+        assert!(
+            n.ends_with("/<user>/out"),
+            "a username in another case leaked: {n}"
+        );
+    }
+
+    /// A destination that is exactly a root becomes the root's token, on every platform.
+    /// RECORDED MUTATION M5 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): see T1's record. OBSERVED FAILURE: left "C:/Users/<user>", right "<user-home>".
+    #[test]
+    fn a_destination_that_is_exactly_a_root_becomes_the_roots_token() {
+        let n = normalize_with(&PathBuf::from("C:/Users/someone"), &roots(), &users());
+        assert_eq!(n, "<user-home>");
     }
 }

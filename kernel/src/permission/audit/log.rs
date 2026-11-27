@@ -384,7 +384,8 @@ pub(crate) fn data_dir() -> Option<PathBuf> {
 /// cannot be canonicalized. That is a weaker test than a filesystem one — a symlink pointing into
 /// the destination would defeat it — and the weakness is stated rather than implied. What it does
 /// catch is the case that actually occurs: an operator pointing `SPATIAL_IDE_AUDIT_LOG` somewhere
-/// under `--out`.
+/// under `--out`. On Windows the comparison folds case as `normalize::fold` does, non-ASCII letters
+/// included.
 pub(crate) fn is_inside(path: &Path, root: &Path) -> bool {
     let norm = |p: &Path| {
         p.to_string_lossy()
@@ -394,7 +395,10 @@ pub(crate) fn is_inside(path: &Path, root: &Path) -> bool {
     };
     let (p, r) = (norm(path), norm(root));
     #[cfg(windows)]
-    let (p, r) = (p.to_ascii_lowercase(), r.to_ascii_lowercase());
+    let (p, r): (String, String) = (
+        p.chars().map(super::normalize::fold).collect(),
+        r.chars().map(super::normalize::fold).collect(),
+    );
     p == r || p.starts_with(&format!("{r}/"))
 }
 
@@ -450,6 +454,26 @@ mod tests {
         assert!(!is_inside(
             Path::new("/a/b/audit.jsonl"),
             Path::new("/a/b/out")
+        ));
+    }
+
+    /// NTFS compares names by their upper case, so a log under a non-ASCII case variant of the
+    /// destination is inside it.
+    ///
+    /// RECORDED MUTATION M4 (2026-11-27, observed at f13dbd8722cece19ec1011c19b6564b8f99ba716 on Windows, applied alone, the `permission::audit` tests run, reverted): `is_inside`'s Windows line is `to_ascii_lowercase` again. OBSERVED FAILURE: the first assertion, `assertion failed: is_inside(Path::new("D:/maps/été/audit.jsonl"), Path::new("D:/maps/ÉTÉ"))`.
+    #[cfg_attr(
+        not(windows),
+        ignore = "boundary: filesystem case policy (kernel/src/permission/audit/log.rs); the case fold is Windows-only"
+    )]
+    #[test]
+    fn a_log_under_a_non_ascii_case_variant_of_the_destination_is_refused_on_windows() {
+        assert!(is_inside(
+            Path::new("D:/maps/été/audit.jsonl"),
+            Path::new("D:/maps/ÉTÉ")
+        ));
+        assert!(!is_inside(
+            Path::new("D:/maps/étés/audit.jsonl"),
+            Path::new("D:/maps/ÉTÉ")
         ));
     }
 
