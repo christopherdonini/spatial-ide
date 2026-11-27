@@ -815,3 +815,52 @@ New:
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-27 — the closing amendment: references and hashes only
+
+1. **The commits**, each by its full id (§10):
+   - e888831fc98b820a05d55e0862109cf695b50a7f: the tests, red at the base.
+   - a5ec38452138d78dab68097ef11c28a916bb3313: the change.
+   - 17845a0cac37d5f6e4745e108a67197621308f8b: KNOWN-LIMITATIONS item 68 (ADV-2026-11-22-27 item 6).
+   - b119889b2d6c90707cdd45635868a83377f8d051: item 68's exception for a session's end (ADV-2026-11-22-29 item 2), and the architect's D1 and D2.
+   - 55a6be7966051a2c8d96c85bb8b78157a2c04509: item 68's comment and the S-b comment, in the architect's words (ADV-2026-11-22-29 items 4 and 5).
+   - 7a3fd37b22bd43ab48fba8aa465fc7bf1b1cb2fd: the S-b clause on the last tracked tile, in the reviewer's words (its N-1).
+   - Then main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at 13271dc70d784866d48fc8b8c3876b5c728426fe (ADV-2026-11-26-15 item 4).
+   - The three corrections after 17845a0c change words and comments only. In `frontends/shell/src/residency/candidateArmSession.ts`, every changed line is a comment line.
+2. **The form gates:** the architect's attempt 1 (gate-log row 833) and attempt 2 (row 836), both PASS WITH NOTES. Their words are Amendments 1 and 2.
+3. **The build gates.**
+   - The architect at 17845a0c: FAIL on one clause of item 68 (`state/consults/gates/2026-11-22-untiled-reissue-mint-window-build-gate-architect.md`, row 838). ADV-2026-11-22-29 ruled the clause, and its new words are in b119889b.
+   - The reviewer at 17845a0c: PASS WITH NOTES (`state/consults/gates/2026-11-22-untiled-reissue-mint-window-build-gate-reviewer.md`, row 839). The corrections removed its D-1, D-2 and D-3, as the narrow read below found.
+   - The architect's attempt 2, on the correction alone, at b119889b: PASS WITH NOTES (`state/consults/gates/2026-11-22-untiled-reissue-mint-window-build-gate-architect-attempt-2.md`, row 840). Its N1 words were applied in 55a6be79.
+   - The reviewer's narrow read of b119889b and 55a6be79, as a note to its gate: PASS WITH NOTES (`state/consults/gates/2026-11-22-untiled-reissue-mint-window-narrow-read-reviewer.md`, row 841). Its N-1 was applied, in its words, in 7a3fd37b.
+4. **The mutations' failing sets, as results** (the architect's D3 and N2; the reviewer's check 3). §4 and R12 are not edited.
+   - The reviewer made each mutation again at 17845a0c. Its results equal the worker's table row for row.
+   - The lines below are in `candidateArmSession.mintWindow.test.ts` as it stands at 17845a0c, from the tests' commit e888831f. No test text is hash-pinned at a branch commit (round 25), and no verify-mutation run is called an observation.
+   - **M-3 and M-4** each fail MW6 (a) and MW6 (b) at `:342:58`, MW7 at `:382:49` and FE2 at `:454:53`. FE2 fails under both by construction: its first assertion, the `superseded` outcome, exists only through the mint-time check, which M-3 removes and M-4 defeats. P2 holds.
+   - **M-FE3b** (M-2 and M-5 together) fails FE3 (b) at `:489:68`, and also MW4, FE1 (a) and FE1 (b). Those extra failures come from its two terms taken one at a time: M-2 alone fails MW4 at `:299:98`, and M-5 alone fails FE1 (a) at `:401:76` and FE1 (b) at `:429:94`.
+5. **The class 9 line** (ADV-2026-11-22-29 item 5; the architect's attempt 2, its section 3 and N1).
+   - The S-b comment in `frontends/shell/src/residency/candidateArmSession.ts` dates from the residency-debt cut 1b. It said that the status emit of that route never runs.
+   - It is corrected in the architect's words in 55a6be79. Its clause on the last tracked tile is corrected in the reviewer's words in 7a3fd37b.
+   - Both are comment lines only.
+6. **The e2e suites (§9.3)**, at 7a3fd37b. The Sonnet tester ran them through the suites' own launch. The reports are filed at `state/consults/2026-11-22-untiled-reissue-mint-window-e2e-tester-reports.md`.
+   - Series 1 stopped before any assertion ran: the warm-up and run 1 each met the 300 s attach wait on a fresh target.
+   - Series 2 passed, each suite with exit 0:
+     - `e2e:regression`;
+     - `e2e:open-fills-fit-view` (run 2b, with `--measure-build`; the first run 2 is void, because it stopped at the suite's argument check before any step);
+     - `e2e:command-bar`;
+     - `e2e:project`;
+     - `e2e:filter-panel`.
+   - The merge-in changes no tracked file outside `governance/`, `state/`, `site/` and `docs/`. By git, the diff from 7a3fd37b22bd43ab48fba8aa465fc7bf1b1cb2fd to 13271dc70d784866d48fc8b8c3876b5c728426fe, with those four folders excluded, is empty. So by R7′ the suites do not run again at the final head.
+7. **The merge-in's narrow read** passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`, row 923).
+8. **D4** (the architect's attempt 1, which still stands by attempt 2's N2): ADV-2026-11-22-27 and ADV-2026-11-22-29 are on main:
+   - `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-27-the-mint-window-after-fe1-as-red-run-a-v0-2-line-owed-in-item-68-item-68s-words-after-the-fix-approved.md`;
+   - `state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-29-pr-358-item-68s-clause-untrue-as-approved-its-new-words-an-exception-for-a-sessions-end-the-architects-attempt-2-checks-them.md`.
+9. **The merge.**
+   - It no longer waits for the tag (ADV-2026-11-27-02 item 1).
+   - By the human's approved message of 2026-11-26, read with ADV-2026-11-27-03 item 1, PR 358 merges into main in its turn and owes no decision of the human before it does.
+   - Whether it also goes into `release/v0.2` is the human's decision at the sitting. Until they say so, it does not, and item 68 gets the approved v0.2 sentences (ADV-2026-11-22-37).
+   - The merge waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed.
+
+Read the last amendment first.
+
+Nothing above is edited.

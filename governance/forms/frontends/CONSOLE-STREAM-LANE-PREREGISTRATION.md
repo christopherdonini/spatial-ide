@@ -1189,3 +1189,28 @@ So, as Amendment 3 asks the closing to say: no run shows GROUP' in the ordinary 
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 5 — 2026-11-27 — when MEASURE' and commit 4 run (ADV-2026-11-27-03 item 2): references only
+
+1. **The ruling.** ADV-2026-11-27-03 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-03-pr-358-owes-no-decision-of-the-human-before-main-pr-359s-measurement-and-commit-4-no-longer-wait-for-the-sitting.md`), item 2, replaces the words "after the sitting" in:
+   - ADV-2026-11-22-22 item 4, ADV-2026-11-22-28 item 6 and ADV-2026-11-22-45 item 9;
+   - this form's §6 and §10, and "The merge" of Amendment 3.
+
+   No filed line is edited.
+2. **From now** (item 2):
+   - MEASURE' runs once port 5180 is free and the tester's start in the sitting's checkout is filed (ADV-2026-11-26-19 item 5), and never while the human sits a part.
+   - Then commit 4: item 67's words by rule W, by the custodian's script (§10 item 4). The reviewer reads it narrowly against the rule.
+   - Then PR 359's body is brought to the head (Amendment 4), and the pull request leaves draft.
+3. **The fixtures** (item 2; §3). The walkthrough fixtures under `target/fixtures/manual-walkthrough/` are hashed before and after MEASURE'. The sitting uses them too. A hash that differs afterwards is a stop to the advisor before anything else runs.
+4. **The order when the port is free** (item 3):
+   - first, the tester's start in the sitting's checkout;
+   - then, in this order: PR 359's measurement, PR 365's series, PR A's two e2e rows and the identity route's E-1;
+   - B's red run goes with the first hold that is free beside them.
+5. **The merge** no longer waits for the tag (ADV-2026-11-27-02 item 1). It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed. It does not go into `release/v0.2`.
+6. **The custodian's reading:** two more lines repeat the words of §6 and of Amendment 3's "The merge", and are read with items 2 and 5:
+   - §9's entry for `e2e/console.mjs` with `CONSOLE_MEASURE=1`;
+   - Amendment 4's item 6 (What is left).
+
+Read the last amendment first.
+
+Nothing above is edited.
