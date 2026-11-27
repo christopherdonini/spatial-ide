@@ -580,3 +580,15 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 5 — 2026-11-27 — out of draft for the advisor's reading (ADV-2026-11-27-10 item 4): references only
+
+*Written by the custodian. References and hashes only. Nothing above is edited.*
+
+1. **The ruling.** ADV-2026-11-27-10 item 4 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-10-pr-364-merge-pr-363-hold-the-words-of-e4e6493d-stand-two-gates-different-words-come-to-the-advisor.md`) lets a piece built on held branches leave draft for the advisor's reading once its gates are closed. Its verdict is MERGE only when every base has its final head. The item names this PR.
+2. **What changes, with no line edited.** Amendment 4 item 4 kept this PR in draft until PR 365's settled head was merged in and read. It now leaves draft at 79f4380badd71679a0d28318b2f8514c7ab59bae, with its gates closed: rows 888, 890 and 891 (Amendment 3), and the merge-in's narrow read at row 930 (Amendment 4 item 3).
+3. **What stays.** PR 365's settled head comes in by a merge commit, with the reviewer's narrow read (Amendment 4 item 4). The verdict waits for that head, and the merge waits as Amendment 4 item 5 says.
+
+Read the last amendment first.
+
+Nothing above is edited.
