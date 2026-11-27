@@ -920,3 +920,15 @@ Read the last amendment first.
 1. **The shared file.** ADV-2026-11-27-29, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-29-shell-scale-displays-five-questions-scale-bar-max-px-to-its-test-a-form-amendment-then-one-correction-commit.md`, puts `frontends/shell/src/e2e-test-surface.ts` into `shell-scale-display` (PR 368) for one comment, the doc of `e2eReadWorkspace`. This piece's commit 2962d546 changes two other caller lines of that file.
 2. **The rule.** It counts under rule (00), and it is met as ADV-2026-11-27-27 item 2 has it: nothing is held. Whichever of the two pieces merges second takes main in by a merge commit, with the reviewer's narrow read of that file and the suites that start no app green, before the advisor's merge check.
 3. **The other record.** Shell-scale-display's form records the same row, in its Amendment 17. Nothing of this piece changes.
+
+## Amendment 9 — 2026-11-27 — the custodian's: ADV-2026-11-27-32, before the doc commit it names
+
+*References only. Nothing above is edited. Written before the commit.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-32-the-two-hooks-caller-lines-b-alone-brings-both-current-after-it-takes-main-in.md`.
+2. **Class 9, on the ruling's items 2 to 4.** This piece alone brings the caller lines of `e2eSaveProjectToFolder` and `e2eOpenProjectFolder` in `frontends/shell/src/e2e-test-surface.ts` current. Those are the two lines its commit 2962d546 already rewrites.
+   - The piece takes main in by a merge commit once the pieces before it in the merge order are on main.
+   - Then one doc commit changes the two lists and nothing else. Each list then equals the search the ruling's item 3 defines, at that head.
+   - In the ruled order, the two spans are the ruling's item 4 Old/New pairs, read in place. If the search gives other files, the lists follow it, and the advisor is told before the commit.
+3. **The reads:** the reviewer's narrow read of that file covers the merge and this commit. The suites that start no app are green at the new head, before the advisor's merge check.
+4. **At the merge check** (the ruling's item 8), the advisor runs the search at this piece's head.

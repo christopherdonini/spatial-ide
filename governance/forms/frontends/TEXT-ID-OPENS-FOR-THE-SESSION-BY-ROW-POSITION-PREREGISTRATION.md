@@ -1116,3 +1116,9 @@ Nothing above is edited.
    - Its lines count in this piece's closing count.
 6. **Unchanged** (the ruling's items 2 and 10): M-25, rows AH5 and AH6, and the port order.
 7. **At the merge check** (the ruling's item 11): that (d)'s wait is the ruling's item 2's, and that no assertion of the step went.
+
+## Amendment 19 — 2026-11-27 — the custodian's: one line under ADV-2026-11-27-32
+
+*References only. Nothing above is edited.*
+
+1. **Class 2** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-32-the-two-hooks-caller-lines-b-alone-brings-both-current-after-it-takes-main-in.md`, item 5): `e2e/admission-remediation.mjs` calls both hooks `e2eSaveProjectToFolder` and `e2eOpenProjectFolder`, and neither declaration at this piece's head names it. The piece B (`reload-ends-the-old-pages-opens`) names the file under that ruling, and this piece does not edit the lines.

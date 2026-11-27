@@ -2052,3 +2052,9 @@ Nothing above is edited.
 4. **What is owed:** the runs of C-E1 and C-E2 after port 5180 is free, then the reviewer's second attempt (ADV-2026-11-24-14 item 7), then piece A's code (ADV-2026-11-26-08 item 3). The identity route took this head in (its Amendment 10).
 
 Read the last amendment first.
+
+## Amendment 14 — 2026-11-27 — the custodian's: one line under ADV-2026-11-27-32
+
+*References only. Nothing above is edited.*
+
+1. **Class 2** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-32-the-two-hooks-caller-lines-b-alone-brings-both-current-after-it-takes-main-in.md`, item 5): `e2e/conditions.mjs` calls the save hook `e2eSaveProjectToFolder`, and the declaration at this piece's head does not name it. The piece B (`reload-ends-the-old-pages-opens`) names the file under that ruling, and this piece does not edit the line.
