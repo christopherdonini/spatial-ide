@@ -495,3 +495,14 @@ Nothing above is edited.
 *References only. Nothing above is edited.*
 
 1. Amendment 4 item 3 states the test of ADV-2026-11-27-34 item 5. That item is replaced by `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-36-the-merge-530d7b0e-read-right-the-dispatch-stands-the-test-for-a-shared-path-held-by-the-base-with-merges.md`, which reads the merge 530d7b0e as Amendment 4 records it, and the dispatch stands.
+
+## Amendment 6 — 2026-11-27 — the custodian's: the build at f6614e15, its report, and the gates next
+
+*References only. Nothing above is edited.*
+
+1. **The build** is pushed at f6614e15043056e058c18c422aa5282f18b0c8c0 on `cut/identity-scan-refuses-a-null-by-name`, on the base f7770e1aa225b7902ea56a77c0d0dbd8321fb942 (Amendment 4 item 1), in three commits: d48e3235 (the fixture mode and the tests, red before the fix), 69e36325 (the fix) and f6614e15 (mutations M-1 to M-9 recorded). The worker's report is filed at `state/consults/gates/2026-11-27-identity-scan-refuses-a-null-by-name-build-worker-report.md`; its hand-back's sha256 is 7e6eaf3f5b8a8a06e07211de723e3904c07b2184d17e43dc5ab16940ce0870df.
+2. **§8's re-read** is in that report. The moved lines are class-3 rows, listed there. The scan's shape is unchanged, so §5's invalidator did not fire.
+3. **§7's count,** by the worker at f6614e15, is 541 changed lines over 6 files, under the ceilings of 650 and 7. `engine/README.md` is untouched, since §2.7 gives its pointers to lead-data at the merge. The gates recompute the count.
+4. **Named by the build where the form left it open:** §2.6's two new enums are `NullBearingWidth` and `NullBearingValues`.
+5. **The pull request** is PR 371, opened as a draft at f6614e15 (§8, Amendment 4 item 7).
+6. **The gates** come next, the architect and the reviewer, one part each (Amendment 4 item 5), as places are free.
