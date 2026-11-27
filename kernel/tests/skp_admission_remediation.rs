@@ -18,7 +18,7 @@ mod watch_support;
 
 use spatial_engine::fixture::{
     write_geoparquet, AttributeMode, CrsMode, FixtureSpec, IdentityMode, NarrowColumn,
-    NarrowValues, NarrowWidth, LV95_PROJJSON,
+    NarrowValues, NarrowWidth, NullBearingValues, NullBearingWidth, LV95_PROJJSON,
 };
 use spatial_kernel::skp::{session_end_channel, SkpHost, StreamRegistry};
 use spatial_kernel::Catalog;
@@ -705,4 +705,62 @@ fn a_filter_naming_id_on_a_set_aside_open_is_refused_as_ambiguous_through_skp() 
          which one it means"
     );
     assert_eq!(tickets.cancel_all_for_dataset(resp.dataset.as_str()), 0);
+}
+
+/// F-1 of `identity-scan-refuses-a-null-by-name`: 100 features, `id` a nullable `UInt64` holding
+/// one null in row 0.
+fn null_in_id_fixture(name: &str) -> PathBuf {
+    let identity = IdentityMode::NullBearing {
+        width: NullBearingWidth::UInt64,
+        column: NarrowColumn::Id,
+        values: NullBearingValues::OneNull,
+    };
+    fixture(
+        name,
+        &FixtureSpec {
+            features: 100,
+            identity,
+            ..small_spec()
+        },
+    )
+}
+
+/// **K1** (`identity-scan-refuses-a-null-by-name`, OPEN-A5). Through `SkpHost::open_dataset`, a null
+/// in the file's own `id` reaches the wire as `engine.identity_unusable` naming `id`, with the
+/// engine's detail for a null and the message that holds it.
+#[test]
+fn a_null_in_the_files_own_id_reaches_the_wire_as_identity_unusable_naming_the_null() {
+    let path = null_in_id_fixture("null-in-id-refused");
+    let err = host()
+        .open_dataset(open_req(&path, "open-null-in-id", None, None))
+        .expect_err("a null in the file's own `id` must be refused");
+    assert_eq!(err.code, "engine.identity_unusable");
+    assert_eq!(err.fields.get("column").map(String::as_str), Some("id"));
+    let (nulls, rows) = (1, 100);
+    let detail = format!(
+        "the column is null in {nulls} of {rows} rows, so not every feature carries an identity"
+    );
+    assert_eq!(err.fields.get("detail"), Some(&detail));
+    assert!(err.message.contains(&detail), "{}", err.message);
+}
+
+/// **K2** (text-id's head). The same file opened with the choice to set the file's `id` aside
+/// opens on the session tier by row position, naming `id` as the column set aside: a null refusal
+/// is a refusal of the `id` column itself, which that choice answers.
+#[test]
+fn a_null_in_the_files_own_id_opens_by_row_position_when_set_aside() {
+    let path = null_in_id_fixture("null-in-id-set-aside");
+    let host = host();
+    let resp = host
+        .open_dataset(set_aside_req(&path, "set-aside-null-in-id"))
+        .expect("the choice opens the file");
+    let described = host
+        .describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
+        .expect("describe");
+    let identity = serde_json::to_value(&described.identity).expect("identity as JSON");
+    assert_eq!(identity["source"], "session-ordinal:file_row_number");
+    assert_eq!(identity["set_aside_column"], "id", "{identity}");
 }

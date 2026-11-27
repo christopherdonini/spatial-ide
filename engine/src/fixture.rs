@@ -566,6 +566,20 @@ pub enum IdentityMode {
         column: NarrowColumn,
         values: NarrowValues,
     },
+    /// A **nullable** identity column written at any of the eight integer widths admission takes,
+    /// through the same writer as every other mode. `column` is `id`, or `parcel_key` with no `id`
+    /// column in the file (as [`Self::NarrowInteger`]). Row `r` holds `r`, except as `values`
+    /// says ([`NullBearingValues`]); the field is declared nullable whatever the values, so a file
+    /// holding no null is still a nullable column.
+    ///
+    /// **It refuses, and never wraps**, before the first row, as [`Self::NarrowInteger`] does: when
+    /// the row count exceeds what `width` holds, and for [`NullBearingValues::OneNullAndANegative`]
+    /// on an unsigned width.
+    NullBearing {
+        width: NullBearingWidth,
+        column: NarrowColumn,
+        values: NullBearingValues,
+    },
 }
 
 /// The Arrow type of an [`IdentityMode::NarrowInteger`] column: the three signed and the three
@@ -678,6 +692,143 @@ fn narrow_array(width: NarrowWidth, values: &[i64]) -> Result<ArrayRef> {
     })
 }
 
+/// The Arrow type of an [`IdentityMode::NullBearing`] column: the eight integer widths admission
+/// takes, the six of [`NarrowWidth`] and the two 64-bit ones.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NullBearingWidth {
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+}
+
+/// What an [`IdentityMode::NullBearing`] column holds. Row `r` holds `r` unless stated.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum NullBearingValues {
+    /// Every row holds its own index; the column is nullable and holds no null.
+    NoNull,
+    /// Row 0 is null.
+    OneNull,
+    /// Row 0 is null and row 2 holds row 1's value.
+    OneNullAndARepeat,
+    /// Row 0 is null and row 1 holds -1. A signed width only.
+    OneNullAndANegative,
+    /// Every row is null.
+    AllNull,
+}
+
+impl NullBearingWidth {
+    fn data_type(self) -> DataType {
+        match self {
+            Self::Int8 => DataType::Int8,
+            Self::Int16 => DataType::Int16,
+            Self::Int32 => DataType::Int32,
+            Self::Int64 => DataType::Int64,
+            Self::UInt8 => DataType::UInt8,
+            Self::UInt16 => DataType::UInt16,
+            Self::UInt32 => DataType::UInt32,
+            Self::UInt64 => DataType::UInt64,
+        }
+    }
+
+    /// The largest value a row can hold at this width, as an `i64`: rows are held as `i64`, so
+    /// `UInt64` stops at `i64::MAX` here.
+    fn max(self) -> i64 {
+        match self {
+            Self::Int8 => i64::from(i8::MAX),
+            Self::Int16 => i64::from(i16::MAX),
+            Self::Int32 => i64::from(i32::MAX),
+            Self::UInt8 => i64::from(u8::MAX),
+            Self::UInt16 => i64::from(u16::MAX),
+            Self::UInt32 => i64::from(u32::MAX),
+            Self::Int64 | Self::UInt64 => i64::MAX,
+        }
+    }
+
+    fn is_signed(self) -> bool {
+        matches!(self, Self::Int8 | Self::Int16 | Self::Int32 | Self::Int64)
+    }
+}
+
+impl NarrowColumn {
+    fn field_name(self) -> &'static str {
+        match self {
+            Self::Id => "id",
+            Self::ParcelKey => "parcel_key",
+        }
+    }
+}
+
+/// The value row `row` holds under `values`; `None` is a null.
+fn null_bearing_value(values: NullBearingValues, row: u64) -> Option<i64> {
+    let own = row as i64;
+    match (values, row) {
+        (NullBearingValues::NoNull, _) => Some(own),
+        (NullBearingValues::AllNull, _) => None,
+        (_, 0) => None,
+        (NullBearingValues::OneNullAndARepeat, 2) => Some(1),
+        (NullBearingValues::OneNullAndANegative, 1) => Some(-1),
+        _ => Some(own),
+    }
+}
+
+/// The refusals made before a null-bearing identity is written, as [`narrow_refusal`] makes its own.
+fn null_bearing_refusal(
+    width: NullBearingWidth,
+    values: NullBearingValues,
+    features: usize,
+) -> Result<()> {
+    if values == NullBearingValues::OneNullAndANegative && !width.is_signed() {
+        return Err(EngineError::Source(format!(
+            "a null-bearing identity holding a negative value needs a signed width; {width:?} is \
+             unsigned"
+        )));
+    }
+    let capacity = width.max() as u64 + 1;
+    if features as u64 > capacity {
+        return Err(EngineError::Source(format!(
+            "{features} features do not fit {width:?} identity values ({capacity} at most)"
+        )));
+    }
+    Ok(())
+}
+
+/// The nullable column's array at `width`. A value that does not fit the width is an error here too,
+/// never a wrapped value.
+fn null_bearing_array(width: NullBearingWidth, values: &[Option<i64>]) -> Result<ArrayRef> {
+    fn narrowed<T: TryFrom<i64>>(values: &[Option<i64>]) -> Result<Vec<Option<T>>> {
+        values
+            .iter()
+            .map(|v| {
+                v.map(|v| {
+                    T::try_from(v).map_err(|_| {
+                        EngineError::Source(format!("identity value {v} does not fit its width"))
+                    })
+                })
+                .transpose()
+            })
+            .collect()
+    }
+    Ok(match width {
+        NullBearingWidth::Int8 => Arc::new(Int8Array::from(narrowed::<i8>(values)?)) as ArrayRef,
+        NullBearingWidth::Int16 => Arc::new(Int16Array::from(narrowed::<i16>(values)?)),
+        NullBearingWidth::Int32 => Arc::new(Int32Array::from(narrowed::<i32>(values)?)),
+        NullBearingWidth::Int64 => {
+            Arc::new(arrow::array::Int64Array::from(narrowed::<i64>(values)?))
+        }
+        NullBearingWidth::UInt8 => Arc::new(UInt8Array::from(narrowed::<u8>(values)?)),
+        NullBearingWidth::UInt16 => Arc::new(UInt16Array::from(narrowed::<u16>(values)?)),
+        NullBearingWidth::UInt32 => Arc::new(UInt32Array::from(narrowed::<u32>(values)?)),
+        NullBearingWidth::UInt64 => {
+            Arc::new(arrow::array::UInt64Array::from(narrowed::<u64>(values)?))
+        }
+    })
+}
+
 impl Default for FixtureSpec {
     fn default() -> Self {
         Self {
@@ -766,6 +917,9 @@ fn schema(with_bbox: bool, identity: IdentityMode, attributes: AttributeMode) ->
             width.data_type(),
             false,
         ),
+        IdentityMode::NullBearing { width, column, .. } => {
+            Field::new(column.field_name(), width.data_type(), true)
+        }
         _ => Field::new("id", DataType::UInt64, false),
     };
     let mut fields = vec![Arc::new(id_field)];
@@ -1151,6 +1305,9 @@ fn generate(
     if let IdentityMode::NarrowInteger { width, values, .. } = spec.identity {
         narrow_refusal(width, values, total)?;
     }
+    if let IdentityMode::NullBearing { width, values, .. } = spec.identity {
+        null_bearing_refusal(width, values, total)?;
+    }
     let mut written = 0usize;
     let mut chunk_index = 0usize;
     while written < total {
@@ -1164,6 +1321,7 @@ fn generate(
         let mut signed_ids = arrow::array::Int64Builder::with_capacity(n);
         let mut string_ids = arrow::array::StringBuilder::new();
         let mut narrow_ids: Vec<i64> = Vec::with_capacity(n);
+        let mut null_bearing_ids: Vec<Option<i64>> = Vec::with_capacity(n);
         let mut geoms = BinaryBuilder::new();
         let mut zones = arrow::array::StringBuilder::new();
         let mut areas = Float64Builder::with_capacity(n);
@@ -1247,6 +1405,9 @@ fn generate(
                 IdentityMode::NarrowInteger { width, values, .. } => {
                     narrow_ids.push(narrow_value(width, values, id))
                 }
+                IdentityMode::NullBearing { values, .. } => {
+                    null_bearing_ids.push(null_bearing_value(values, id))
+                }
                 _ => ids.append_value(id),
             }
             if spec.attributes == AttributeMode::CategoricalZone
@@ -1315,6 +1476,9 @@ fn generate(
                 Arc::new(string_ids.finish()) as ArrayRef
             }
             IdentityMode::NarrowInteger { width, .. } => narrow_array(width, &narrow_ids)?,
+            IdentityMode::NullBearing { width, .. } => {
+                null_bearing_array(width, &null_bearing_ids)?
+            }
             _ => Arc::new(ids.finish()) as ArrayRef,
         }];
         if spec.identity == IdentityMode::StringIdsBesideParcelKey {
