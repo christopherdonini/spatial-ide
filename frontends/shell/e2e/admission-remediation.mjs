@@ -723,9 +723,11 @@ async function stepTextid(page, consoleHandle) {
  * and its refusal block names the declaration as its source, through the real DOM. The unrun step is the tester's at the port.
  * (1) `text-id-no-integer-refused.parquet` is refused, the choice is clicked, and the open is saved to a scratch folder (P0's shape, `"identity": null`). (2) P2 is a copy of that
  * folder whose `project.spatial` records the identity `{"column":"id"}`, written in the project reader's own spelling (the line-oriented layout, one LF at the end), which the reader
- * checks byte for byte. (3) The control: the reopen of the first folder is refused with the choice offered (S-1) and a field row `identity_source` reading `file:id`; the click opens it,
- * as TEXTID' (d) does. (4) Another open (`no-id-column.parquet`) replaces that project in the window, and the first folder is removed: a first folder that still holds the project
- * makes the reopen ask, and a project this window holds is refused as `skp.project_open_elsewhere`. (5) Only then P2 is opened through `e2eOpenProjectFolder`, which must answer
+ * checks byte for byte. (3) `no-id-column.parquet` is opened first, through `openAnotherAndWaitForClose`, and the step waits for the close of (1)'s open: the project a first save wrote stays
+ * held by the kernel while that open is in the window, and a reopen made before the close is refused as `skp.project_open_elsewhere`. The control then runs as before: the reopen of the first
+ * folder is refused with the choice offered (S-1) and a field row `identity_source` reading `file:id`; the click opens it, as TEXTID' (d) does, and that open is made once and not retried.
+ * (4) `no-id-column.parquet` is opened again, through the same function, to replace the control's open in the window, and the step waits for the close of the control's open; only then the
+ * first folder is removed. A first folder that still holds the project makes the reopen ask, and a project this window holds is refused as `skp.project_open_elsewhere`. (5) Only then P2 is opened through `e2eOpenProjectFolder`, which must answer
  * `engine.identity_unusable` at its first call: an answer of `question` or `skp.project_open_elsewhere` fails the step by name as not reaching C1. The refusal block shows the field row
  * `identity_source` reading `mapped:id`, the owner line R-ENG, and no button of the choice. This step is written to be run on the packaged build; its bounds are harness bounds.
  * Mutation M-RD8: as M-RD5, `rowPositionOffer` no longer checks `identity_source`. Expected failure: step (5) fails at "the choice to open by row position was offered". Observed at the port by the tester, not by the build.
@@ -782,7 +784,8 @@ async function stepTextidC1(page) {
     cpSync(first, second, { recursive: true });
     writeFileSync(join(second, "project.spatial"), edited);
 
-    // (3) the control: the first folder's reopen is refused for the file's own `id`, with the choice offered and its source `file:id`.
+    // (3) another file replaces (1)'s open and the step waits for its close, so that the first folder is no longer held; then the control: the first folder's reopen is refused for the file's own `id`, with the choice offered and its source `file:id`.
+    await openAnotherAndWaitForClose(page, "TEXTID-C1 (3)", FIXTURE_NO_ID_COLUMN);
     const control = await withTimeout(page.evaluate((f) => window.__SPATIAL_E2E__.e2eOpenProjectFolder(f), first), 120_000, "e2eOpenProjectFolder");
     if (control !== "engine.identity_unusable") throw new Error(`TEXTID-C1 (3): the control's reopen answered ${JSON.stringify(control)}, expected "engine.identity_unusable"`);
     const controlRefusal = await readRefusal();
@@ -791,9 +794,8 @@ async function stepTextidC1(page) {
     }
     await choose("(3)");
 
-    // (4) another open replaces the project in the window, and the first folder goes.
-    const other = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_NO_ID_COLUMN);
-    if (other.kind !== "admitted") throw new Error(`TEXTID-C1 (4): openPath(${FIXTURE_NO_ID_COLUMN}) returned ${JSON.stringify(other)}, expected {kind:"admitted"}`);
+    // (4) another open replaces the control's open in the window and the step waits for its close; then the first folder goes.
+    await openAnotherAndWaitForClose(page, "TEXTID-C1 (4)", FIXTURE_NO_ID_COLUMN);
     rmSync(first, { recursive: true, force: true });
 
     // (5) P2: refused for the recorded declaration, with its source named, R-ENG beside it, and no choice.
@@ -809,7 +811,7 @@ async function stepTextidC1(page) {
     }
     if (shown.owner !== ENGINE_REFUSAL_NOTICE) throw new Error(`TEXTID-C1 (5): the owner line is ${JSON.stringify(shown.owner)}, expected R-ENG ${JSON.stringify(ENGINE_REFUSAL_NOTICE)}`);
     if ((await offered()) !== null) throw new Error("TEXTID-C1 (5): the choice to open by row position was offered beside a recorded declaration of `id`");
-    return `(1) text-id-no-integer-refused.parquet chosen and saved; (3) the control's reopen refused with identity_source file:id and the choice offered, and opened by a click; (5) P2, the same folder with its identity recorded as {"column":"id"}, refused as engine.identity_unusable with identity_source mapped:id, R-ENG beside it and no choice offered`;
+    return `(1) text-id-no-integer-refused.parquet chosen and saved; (3) another file opened and the close of (1)'s open seen, the control's reopen refused with identity_source file:id and the choice offered, and opened by a click; (4) another file opened and the close of the control's open seen; (5) P2, the same folder with its identity recorded as {"column":"id"}, refused as engine.identity_unusable with identity_source mapped:id, R-ENG beside it and no choice offered`;
   } finally {
     rmSync(first, { recursive: true, force: true });
     rmSync(second, { recursive: true, force: true });

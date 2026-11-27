@@ -525,8 +525,9 @@ describe("SKP v0 shared fixtures", () => {
     expect(err.fields.candidate_columns).toBe("parcel_key,tax_lot_number");
   });
 
-  // S-R2 (text-id-reopen-with-a-recorded-declaration): the two real `engine.identity_unusable` fixture files, the one a file gives and the one a declaration gives, each through
+  // S-R2 (text-id-reopen-with-a-recorded-declaration): the two `engine.identity_unusable` fixture files under `protocol/skp/tests/data/`, the one that carries `file:id` and the one that carries `mapped:id`, each through
   // `formatRefusal` and `rowPositionOffer`. Both name the column `id`, so only `identity_source` tells them apart.
+  // The `file:id` file's message and detail are ones the engine does not write; the offer reads neither. K-R1 (ii) in `kernel/tests/text_id_reopen_recorded_declaration.rs` asserts the code, the column and `file:id` from the engine, through the kernel.
   // Mutation M-RD7: `rowPositionOffer` reads the key `source` in place of `identity_source`. Expected failure: the `file:id` fixture below is not offered.
   it("the_real_identity_unusable_fixtures_drive_the_offer", () => {
     const offerFor = (name: string) => {
