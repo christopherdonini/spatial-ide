@@ -143,3 +143,24 @@ ISO-OK
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 3 — 2026-11-27 — the closing amendment: references and hashes only
+
+1. **The code gates**, both PASS WITH NOTES at 8fd35b28573d33f0b56455264c948a4f72f1e1f9: the reviewer (`state/consults/gates/2026-11-22-property-testing-trial-code-gate-reviewer.md`, gate-log row 827) and the architect (`state/consults/gates/2026-11-22-property-testing-trial-code-gate-architect.md`, row 828). Neither has a Correctness finding, or an Evidence finding that blocks.
+2. **The architect's D1**, appended here in its words, as that gate asks (the wording is the custodian's, not the human's; AUTONOMY.md §31, no re-gate):
+
+> P1 passes the generated W to `frame.maybeRecenter` and `frame.toLocal`, as section 3's Steps say. It does not form world = t1 + origin, so section 3's sentence that the handler's composition is reproduced in the test does not hold of the test as built (`frontends/shell/src/canvas/recentreBudget.property.test.ts`, the comment above the second `setThreshold`). With break (a) in place, t1 + origin differs from W by the f32 rounding of W and of the origin, so the drift can fall to the bound and the check that the origin moves fails before (a) is reached. With the shipped `toLocal`, t1 + origin differs from W by f64 rounding only. `WorkingCanvas.recentre.test.tsx` U1 stays the test of the real handler's world point across the change.
+
+3. **The CI-timings commit** of section 5 is 09ce1dfe8d6b05f2910ec9278c08a6839f55da36. It is empty, and its message is the record, since section 6 names no timings file (Amendment 2 item 4).
+4. **The reviewer's N1.** `cargo test --workspace (windows-latest)` passes at 20a1610476819b9a13452ab0aa70f12d2afae7f6, with all 14 checks passing, read by the custodian at 2026-11-27T01:44:32Z.
+5. **The Merge line's checks before the merge** (the reviewer's N5), by git at main 767329ba622dc50e50a9ae2708dc619a3224e793:
+   - main changed none of the eight Scope paths after 90bdeab78ea3dadd238d5dfe428e50b0df3840c6, the gated head's base;
+   - the lockfile delta against main has the same patch-id (5cac6026fb3cad8f22e03d4166f0388d086a6453) as at 8fd35b28573d33f0b56455264c948a4f72f1e1f9. So it equals the draft's item 3 entry by entry, as the reviewer's section 2 showed by script;
+   - the whole diff against main has the patch-id of 09ce1dfe8d6b05f2910ec9278c08a6839f55da36's diff from that base.
+   The advisor's merge check reads them again at the merge.
+6. **Main merged in.** Main 4b9fd558d0437b3249e1bba58334a6d55074c199 was merged in at 20a1610476819b9a13452ab0aa70f12d2afae7f6 (ADV-2026-11-26-15 item 4). Its narrow read passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`, row 921).
+7. **The merge** no longer waits for the tag. By the human's message of 2026-11-26, read with ADV-2026-11-27-02 item 1, it does not go into `release/v0.2`. It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed. The one-month consult counts from the merge (section 7).
+
+Read the last amendment first.
+
+Nothing above is edited.

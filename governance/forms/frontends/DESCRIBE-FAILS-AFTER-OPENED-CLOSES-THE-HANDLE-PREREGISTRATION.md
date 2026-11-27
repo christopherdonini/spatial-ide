@@ -593,3 +593,21 @@ By the custodian's summary, not the rulings' words: attempt 2 starts when a plac
 Read the last amendment first.
 
 Nothing above is edited.
+
+### Amendment 2 — 2026-11-27 — the closing amendment: references and hashes only
+
+1. **The commits**, each by its full id (§10): C1 59c0788758bbb0f4e8d2eb4115449b6ac8ff8e83 (the tests, red at the base); C2 b3dbbdff3862449696d07f4b6aea26bdee8623e2 (the change); C3 3755df8132e3a4c83814451ecab1eda9f0172cc5 (the doc clauses); C4 8d1f2f4ee6cef58ef5975ebfc6c2d8790d2fbcfb (the reviewer's R1 to R4); then main 4b9fd558d0437b3249e1bba58334a6d55074c199 merged in at 2d0c6d36fedaf49fba1a638c690bd9a0d6499f29 (ADV-2026-11-26-15 item 4).
+2. **The build gates.**
+   - The reviewer at 3755df8132e3a4c83814451ecab1eda9f0172cc5: FAIL on words only (`state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-build-gate-reviewer.md`, gate-log row 851). It was closed by C4 under AUTONOMY.md §31 item d, with no re-gate.
+   - The architect at 8d1f2f4ee6cef58ef5975ebfc6c2d8790d2fbcfb: FAIL on words only (`state/consults/gates/2026-11-22-describe-fails-after-opened-closes-the-handle-build-gate-architect.md`, row 852). It finds the code and the tests sound.
+3. **C1's and C2's subjects are superseded** (the architect's E-1 and C-1). The words that replace them are in the PR body, under §31 item d. A pushed commit is not reworded. C2's subject is not repeated here (the reviewer's D-3).
+4. **KM1** (the architect's D-1). The run that records HEAD 8d1f2f4ee6cef58ef5975ebfc6c2d8790d2fbcfb and the applied diff is filed at `state/consults/2026-11-27-describe-fails-after-opened-closes-the-handle-km1-run-worker-report.md`. K1 failed at step 6 with step 6's own message, as Amendment 1's KM1 entry predicts, so the outcome matches the prediction.
+5. **The reviewer's D-1 and D-2**, by reference:
+   - The form's "(two calls)" for A1 and A2 is read as a count over `skpCommands()`, the helper beside `describeFailsWith` in `frontends/shell/src/admission/admitDataset.test.ts`, not over raw `invoke` calls.
+   - The doc of `DESCRIBE_FAILED_CLOSE_WAIT_MS` now carries the late-timer qualifier (R4, in C4), as the watchdog note in Amendment 1 item 4 has it. Amendment 1's §2.1 text 1 is not edited.
+6. **The merge-in's narrow read** passed (`state/consults/gates/2026-11-27-held-prs-preparation-merge-in-narrow-read-reviewer.md`, row 925).
+7. **The merge** no longer waits for the tag. By the human's message of 2026-11-26, read with ADV-2026-11-27-02 item 1, it does not go into `release/v0.2`. It waits for the advisor's merge check, the sitting's checkout with its filed start, and the human's app to be closed.
+
+Read the last amendment first.
+
+Nothing above is edited.
