@@ -1223,3 +1223,14 @@ A code or test comment that names one gives this form's name with the id (`SHELL
 4. **F7** is the reviewer's read part's to answer: the mutations observed again at this head, and the second cases of M1, M3 and M4. Its brief asks it.
 5. **F8** is a note. Nothing changes for it.
 6. **Next:** the reviewer's read part, which is running, then one correction commit.
+
+## Amendment 16 — 2026-11-27 — the custodian's: the reviewer's read part at cbea7d4e
+
+*References only. Nothing above is edited.*
+
+1. **The read part** is filed at `state/consults/gates/2026-11-27-shell-scale-display-build-gate-reviewer-read-part.md`: the form at main f39536be767cedc2f6637e3d0d48d286e2bc2688, the code run at cbea7d4e06622e5b1debc058ba2a23ea696df761. It gives no verdict.
+2. **`SCALE_BAR_MAX_PX`.** Both read parts find §8 item 9 true against it, and they differ on the way out: the architect's F1 keeps it with one doc line; the reviewer's C1 finds that the exemption the architect reads does not cover a constant, and names two other ways, one of which moves a §7 constant. So the way out goes to the advisor, and Amendment 15 item 2's worker step waits for that ruling.
+3. **To the advisor, in the same message as Amendment 15 item 3:** the reviewer's E1 (three named cases unobserved, reaching them changes test code) and D1 (two clauses of the e2e README's E-SCALE entry, unreworded).
+4. **D2** is a reference owed at the closing amendment. **D3**, the PR body, is the custodian's and is edited at the PR. **D4** is recorded here: §9's format check has no script in the shell, and none is counted green.
+5. **ADV-2026-11-27-28's AI1 check:** the reviewer confirms `filter-zoned.parquet` is a dataset in metres, from its generator. AI1 does not change.
+6. **Next:** the advisor's ruling, then one correction commit; the run part at the port.
