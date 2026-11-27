@@ -946,3 +946,27 @@ Nothing above is edited.
    - The string is not changed until the advisor rules. If item 3 (c) of that ruling is yes, the new words land in this piece as class 9, recorded before their code and before the run part.
 6. **The port.** This piece's series is seventh in ADV-2026-11-27-11 item 4's order.
 7. **Next:** the route's read parts and their corrections; the merge of the route's head; then both read parts, at that merge.
+
+## Amendment 11 — 2026-11-27 — the custodian's: the route's corrected head comes in, its one conflict and ADV-2026-11-27-19, before the merge commit
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The merge** takes the identity route's corrected head 7fa66a68a811cc20e09bf3251d0cb34d422fc81e (that form's Amendment 13) into this branch's ebf961d31fe959fc4dc42cef6827f78152aca0db, as Amendment 10 item 3 has it.
+   - From their merge-base 912b3a2c204ac6613c10e75f09c39fb29663671c, the route brings 13 files, 151 lines added and 32 deleted.
+2. **The trial,** by `git merge-tree --write-tree`, in memory; nothing was written in the worktree. It was noted before 2026-11-27T07:49:39Z (date -u).
+   - One conflict, in `KNOWN-LIMITATIONS.md`: item 3's "On `main`" paragraph and the comment under it, one hunk.
+   - Seven files that both sides change merge cleanly: `engine/src/identity.rs`, `frontends/shell/MANUAL-WALKTHROUGH.md`, `frontends/shell/e2e/README.md`, `frontends/shell/src/admission/AdmissionPanel.tsx`, `frontends/shell/src/skp/types.ts`, `protocol/skp/SKP-V0.md`, `protocol/skp/src/v0/mod.rs`.
+3. **Both sides' lines,** each with its newline:
+   - this branch at ebf961d3: the paragraph at line 70, 1342 bytes, sha256 3886afa613504631b768948cdd83ebd92cfc173ff74e9cdbf1f4dc98084d297e; the comment at line 71, 1105 bytes, sha256 4f689ba764303fe4503a4d5bd007a23c953f5d981172aa6765212f9535689d75;
+   - the route at 7fa66a68: the paragraph at line 70, 865 bytes, sha256 98daa021c2e13ae7369883665edcef3c8b3c8bd2fe7c63c90a34cf5e2310aee9, which is the merge-base's line 70; the comment at line 71, 584 bytes, sha256 ae5a2417f31f232aba85ac67d233de26183c8179814db4305d950e9a2188bf74, which carries ADV-2026-11-27-15 item 3's span.
+4. **The ruling** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-19-text-ids-merge-of-the-routes-corrected-head-the-paragraph-text-ids-the-comment-by-three-spans-the-reviewers-read-part-reads-the-merge.md`):
+   - The paragraph is this branch's, unchanged (item 1).
+   - The comment is this branch's line with item 2's three spans, each Old standing once in it, and nothing else of the line changed. Composed by script, the resolved line is 1207 bytes with its newline, sha256 ae4194485b13a1609d12c817c9536cb4a9f680701e68db674434ae4ae1a3252c.
+   - The merge commit holds that resolution and nothing else beyond the merge (item 3).
+5. **The reviewer's read part reads the merge** (item 4), and no separate narrow read is made:
+   - the two parents, and that the merge brings the route's corrections and nothing else;
+   - the resolution against items 1 and 2, byte for byte;
+   - the three places of ADV-2026-11-27-15 item 7: D2 in `AdmissionPanel.tsx` and in row AG2, and row I8's note. In the trial they hold items 1 and 2 of that ruling.
+   - If the route's head moves again at its run part, another merge commit takes it in, with its narrow read then.
+6. **At the merge check** (item 5): the advisor compares the comment's three New texts with item 2. The route's comment stays as ADV-2026-11-27-15 item 3 has it.
+7. **Next:** the merge worker; then both read parts at the merge commit, when the Opus places allow.
