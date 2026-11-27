@@ -266,3 +266,11 @@ Appended, as §8 appends: nothing above is edited. It covers §6 items 1 and 2 o
    `docs/08`'s cancellation row takes its definition of *acknowledged* from ADR-018.
 
 Items 3 and 4 of §6 are not addressed here.
+
+---
+
+## 10. Amendment — §2's `cancel_requested` row, as of 2026-11-22
+
+Appended, as §8 and §9 append: nothing above is edited. It covers the `cancel_requested` row of §2's table only.
+
+The row says `CancelToken::cancel()` returns to its caller. It is read as ADR-018's note of 2026-11-22 reads item 1's row: the instant is stamped inside `CancelToken::cancel`, when a trace is running and at most once per token, before the cancelled flag is published (`engine/src/cancel.rs`, `cancel_inner`). Under the clock assumption that note states, it is no later than every `cancel_observed` stamped after a load of that flag. A `cancel()` that finds the flag already set, by an earlier call or by `cancel_for_drop`, stamps nothing, and a segment opening on `cancel_requested` (`Trace::segment_ms`, `engine/src/trace.rs`) is then `None`, never zero. §2's scoring sentence, that `docs/08`'s budget is scored on `cancel_requested → cancel_observed`, is unchanged.
