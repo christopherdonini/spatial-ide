@@ -276,3 +276,29 @@ describe("conditions: a notice batch is replaced whole (C-U8)", () => {
     expect(all(state).map((condition) => [condition.reason.code, condition.reason.ordinal, condition.first])).toEqual([["step-record-style", null, text("two")]]);
   });
 });
+
+describe("conditions: a dismissed condition raised again is a new one (C-U6b)", () => {
+  // RECORDED MUTATION for C-U6b (M12-1): in `dismiss`, return `{ ...without(state, (c) => c.id === event.id), nextId: state.nextId - 1 }`, so the next mint reuses the dismissed id. Expected failure: this test, at its new-id assertion.
+  // RECORDED MUTATION for C-U6b (M12-4): in `dismiss`, end nothing when the condition was raised more than once. Expected failure: this test, at its dismissal assertion.
+  // OBSERVED 2026-11-27 at d3876534 (M12-1, the `nextId: state.nextId - 1` return in `dismiss` alone): FAILED -- this test, at its new-id assertion: AssertionError: a condition's id is never reused in a session: expected 'condition-1' not to be 'condition-1'. Reverted after observing.
+  // OBSERVED 2026-11-27 at d3876534 (M12-4, `dismiss` ending nothing when `condition.occurrences > 1`, alone): FAILED -- this test, at its dismissal assertion (line of the expect after the first dismiss): AssertionError: the dismissal ends the twice-raised condition: expected [ { id: 'condition-1', …(9) } ] to deeply equal []. Reverted after observing.
+  it("C-U6b: a condition raised twice, dismissed, then raised again: a new id, one occurrence, and no count carried over", () => {
+    const route = "canvas-ceiling";
+    const key = { code: "canvas.vertex_ceiling", target: VIEW_1, generation: R };
+    const twice = fold([opened(R), raise(route, key.code, { display: text("one") }), raise(route, key.code, { display: text("two") })]);
+    expect(all(twice)).toHaveLength(1);
+    const dismissedOne = all(twice)[0];
+    expect(dismissedOne.occurrences).toBe(2);
+
+    const dismissed = conditionsReducer(twice, { type: "dismiss", id: dismissedOne.id });
+    expect(all(dismissed), "the dismissal ends the twice-raised condition").toEqual([]);
+
+    const third = conditionsReducer(dismissed, raise(route, key.code, { display: text("three") }));
+    expect(all(third)).toHaveLength(1);
+    const raisedAgain = all(third)[0];
+    expect(raisedAgain.id, "a condition's id is never reused in a session").not.toBe(dismissedOne.id);
+    expect(raisedAgain.occurrences, "no count is carried over").toBe(1);
+    expect(raisedAgain.first).toEqual(text("three"));
+    expect(raisedAgain.latest).toEqual(text("three"));
+  });
+});

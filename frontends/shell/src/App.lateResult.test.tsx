@@ -869,6 +869,49 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
   });
 
+  // N8-G (Amendment 12, item 6; ADV-2026-11-24-09 item 4): A's late failure terminal and A's late canvas refusal, after a reopen while B's OWN Apply (the real Filter panel button) is in flight with Cancel shown, leave B's Cancel shown.
+  // RECORDED MUTATION M12-2: G-1's guard alone removed (App.tsx, `onFailureTerminal`'s `if (admitted.dataset !== admittedDatasetRef.current) return;`). Expected failure: this test, at assertion T (the `.filter-cancel` check after A's late terminal).
+  // RECORDED MUTATION M12-3: G-2's guard alone removed (App.tsx, `onCanvasRefusal`'s `if (admitted.dataset !== admittedDatasetRef.current) return;`). Expected failure: this test, at assertion C (the `.filter-cancel` check after A's late canvas refusal).
+  // OBSERVED 2026-11-27 at deda98ff (M12-2, G-1's guard alone, App.tsx line 1932 removed): FAILED -- this test, at assertion T: AssertionError: assertion T: A's late failure terminal leaves B's Cancel shown: expected null not to be null. Reverted after observing.
+  // OBSERVED 2026-11-27 at deda98ff (M12-3, G-2's guard alone, App.tsx line 2471 removed): FAILED -- this test, at assertion C: AssertionError: assertion C: A's late canvas refusal leaves B's Cancel shown: expected null not to be null. Reverted after observing.
+  it("A's late failure terminal and canvas refusal, after a reopen while B's own Apply is in flight with Cancel shown, leave B's Cancel shown (baseline arm)", async () => {
+    function typeAndApply(predicate: string): void {
+      const input = container.querySelector(".filter-predicate") as HTMLInputElement;
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!;
+      act(() => {
+        setter.call(input, predicate);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      act(() => {
+        (container.querySelector(".filter-apply") as HTMLButtonElement).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    const handleA = await openPathAndCaptureHandle();
+    const canvasA = workingCanvasMockState.propsByDataset.get(handleA);
+    if (!canvasA) throw new Error(`no captured WorkingCanvas props for dataset ${handleA}`);
+    const onTerminalA = viewportMockState.onTerminalByDataset.get(handleA);
+    if (!onTerminalA) throw new Error(`no captured onTerminal for dataset ${handleA}`);
+
+    const handleB = await openPathAndCaptureHandle();
+    expect(handleB).not.toBe(handleA);
+
+    // B's own Apply through the Filter panel's button, its second request resolved issued: Cancel is shown.
+    typeAndApply("zone = 'commercial'");
+    const deferredB = viewportMockState.secondRequestDeferreds.get(handleB);
+    if (!deferredB) throw new Error(`no second-request deferred recorded for dataset ${handleB}`);
+    await act(async () => {
+      deferredB.resolve({ kind: "issued", streamHandle: "b-apply" });
+      await deferredB.promise;
+    });
+    expect(container.querySelector(".filter-cancel")).not.toBeNull();
+
+    act(() => onTerminalA("a-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: A's own stream" }));
+    expect(container.querySelector(".filter-cancel"), "assertion T: A's late failure terminal leaves B's Cancel shown").not.toBeNull();
+    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal", "vertex-ceiling"));
+    expect(container.querySelector(".filter-cancel"), "assertion C: A's late canvas refusal leaves B's Cancel shown").not.toBeNull();
+  });
+
   // N8 residual correction: `handleApplyFilter` (App.tsx) is what `FilterPanel`'s own `onApply` prop
   // binds to for a real Apply click -- the dev-only `queryWithFilter` hook exercised above
   // constructs its OWN, separate `applyFilter` deps, so this drives the real

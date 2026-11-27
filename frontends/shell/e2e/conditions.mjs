@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// E2E (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 4, C-E2 as Amendments 2 and 4 leave it): the shipped candidate arm's real-app proof of seam 8, on real WebView2,
+// E2E (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 4, C-E2 as Amendments 2, 4 and 12 leave it): the shipped candidate arm's real-app proof of seam 8, on real WebView2,
 // run as `node e2e/conditions.mjs` from frontends/shell. WRITTEN, NOT RUN, by the build that added it: the run is the tester's.
 // The fixture is a scratch copy of `100k-happy-path.parquet`, made by the manual-walkthrough fixture generator into this checkout's target/fixtures/manual-walkthrough;
 // `--fixture <path>` names another copy of the same file. The copy is hashed before and after the run (a write here is an mtime touch only). The app's store is a scratch LOCALAPPDATA.
@@ -14,8 +14,9 @@
 //   2. write to the copy (an mtime touch with its sha256 unchanged, as `source-watch-idle.mjs:446-458`) and pan (H7): the top is session ended with S-3 at 1;
 //   3. S-3 opens Problems, which lists the top row and the `.save-notice` row; `.canvas-session-ended` and each `.save-notice` are each once in the DOM;
 //      no `.canvas-refusal` holds an `.admission-refusal-code` and none stands that is not a notice (no viewport-refusal and no stream-terminal condition: H7);
-//   4. reopen the copy, and S-4 shows.
-// Exit 0 all PASS; 1 a check failed; 2 VOID (a precondition failed: the arm, the fixture, a wait that timed out).
+//   4. reopen the copy. Once the reopen is admitted, wait within WAIT_TIMEOUT_MS for session ended and the save notice to go; if either still stands at that bound the step FAILS.
+//      Then PASS on S-4; any other reading FAILS.
+// Exit 0 all PASS; 1 a check failed (step 4's wait for the old conditions included); 2 VOID (a precondition failed: the arm, the fixture, any other wait that timed out).
 // What this does not prove: any docs/08 figure, macOS or Linux, the baseline arm (that is `conditions-baseline.mjs`), or a timing. Waits are harness bounds on readiness (ADR-018).
 import { createHash } from "node:crypto";
 import { copyFileSync, existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync, utimesSync } from "node:fs";
@@ -155,8 +156,27 @@ async function run(page, consoleHandle, copy) {
   // 4. The reopen: a successful open of the copy, and S-4 shows.
   const reopened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), copy);
   if (reopened?.kind !== "admitted") throw new Void(`the second openPath did not admit the copy: ${JSON.stringify(reopened)}`);
-  const empty = await waitFor("S-4 in Problems", () => read(page), (r) => r.emptyText.includes(NO_PROBLEMS));
-  record("a reopen empties Problems: S-4 shows, and the strip is hidden", empty.rows.length === 0 && !empty.stripShown && empty.sessionEnded === 0 && empty.saveNotices.length === 0, `rows ${empty.rows.length}, the strip shown ${empty.stripShown}, ended ${empty.sessionEnded}, save notices ${empty.saveNotices.length}`);
+  // The wait throws no Void: session ended or the save notice still standing at the bound is a FAIL (Amendment 12, item 3).
+  const waitStart = Date.now();
+  let reading;
+  let gone = false;
+  while (Date.now() - waitStart < WAIT_TIMEOUT_MS) {
+    try {
+      reading = await read(page);
+      if (reading.sessionEnded === 0 && reading.saveNotices.length === 0) {
+        gone = true;
+        break;
+      }
+    } catch (e) {
+      reading = { readFailed: e.message };
+    }
+    await sleep(200);
+  }
+  if (!gone) {
+    record("the reopen ends session ended and the save notice within the bound", false, `one of them still stood after ${WAIT_TIMEOUT_MS}ms; the last reading was ${JSON.stringify(reading)}`);
+  } else {
+    record("a reopen empties Problems: S-4 shows, and the strip is hidden", reading.emptyText.includes(NO_PROBLEMS) && reading.rows.length === 0 && !reading.stripShown && reading.sessionEnded === 0 && reading.saveNotices.length === 0, `rows ${reading.rows.length}, the strip shown ${reading.stripShown}, ended ${reading.sessionEnded}, save notices ${reading.saveNotices.length}`);
+  }
 
   const hashAfter = sha256(copy);
   if (hashAfter !== hashBefore) throw new Void(`the copy's sha256 changed during the run: ${hashBefore} -> ${hashAfter}`);
