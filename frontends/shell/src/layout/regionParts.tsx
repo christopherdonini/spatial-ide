@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 
 import { SCAN_LIVENESS_DELAY_MS, isScanInFlight } from "../App";
 import type { ScanState } from "../App";
+import type { AuthoritativeBbox } from "../canvas/viewportBbox";
+import type { CrsUnit } from "../skp/types";
+import { scaleBarLabel, scaleBarTitle, scaleLabel, scaleReading, SCALE_NOT_METRE_TEXT, SCALE_OUT_OF_RANGE_TEXT } from "./scaleBar";
 import { scanMirrorText, watcherStatusText } from "./statusItems";
 import type { WatcherFacts } from "./statusItems";
 
 /**
  * The frame's small parts (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md §2.1 and §2.5): the tab
- * list, the splitter, a section heading, the Layers row, and the two status-bar items that compute.
+ * list, the splitter, a section heading, the Layers row, and the three status-bar items that compute.
  * Pure view components: none imports the recorder or touches the kernel; `StudioLayout` owns every
  * dispatch and every console row.
  */
@@ -220,6 +223,37 @@ export function WatcherStatusItem({ facts, sessionEnded }: { facts: WatcherFacts
   return (
     <div className="status-source-watch" role="status">
       {text}
+    </div>
+  );
+}
+
+/**
+ * The scale item (SHELL-SCALE-DISPLAY-PREREGISTRATION.md §2 item 2): a bar and the length it spans in the dataset's CRS metres, or the line that says why
+ * there is none. It subscribes to the view-box store, as `FeaturePanel` does, so a pan or zoom renders this item and not `App`. Its snapshot is the
+ * canvas's zoom, or `null` while the store holds no box: until the dataset's own canvas has reported, the unit and a zoom are not known to belong together.
+ * No `role="status"`, no timer and no await: it changes at every zoom, and a live region would announce each change.
+ */
+export function ScaleItem({
+  unit,
+  subscribe,
+  getBox,
+  readZoom,
+}: {
+  unit: CrsUnit;
+  subscribe: (listener: () => void) => () => void;
+  getBox: () => AuthoritativeBbox | null;
+  readZoom: () => number | null;
+}) {
+  const zoom = useSyncExternalStore(subscribe, () => (getBox() === null ? null : readZoom()));
+  const reading = scaleReading(unit, zoom);
+  if (reading.kind === "none") return null;
+  if (reading.kind === "not-metre") return <div className="status-scale">{SCALE_NOT_METRE_TEXT}</div>;
+  if (reading.kind === "out-of-range") return <div className="status-scale">{SCALE_OUT_OF_RANGE_TEXT}</div>;
+  const decimal = scaleLabel(reading.mantissa, reading.exponent);
+  return (
+    <div className="status-scale" title={scaleBarTitle(decimal)} aria-label={scaleBarTitle(decimal)}>
+      <span className="status-scale-bar" style={{ width: `${reading.widthPx}px` }} />
+      {scaleBarLabel(decimal)}
     </div>
   );
 }

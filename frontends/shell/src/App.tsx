@@ -31,7 +31,7 @@ import type { FinishedOutcome } from "./feature/OpenDuringExportAsk";
 import { ToolSwitch } from "./feature/ToolSwitch";
 import ClauseCards from "./filter/ClauseCards";
 import FilterPanel from "./filter/FilterPanel";
-import { ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
+import { ScaleItem, ScanLivenessMirror, WatcherStatusItem } from "./layout/regionParts";
 import StudioLayout from "./layout/StudioLayout";
 import {
   beginResidencyStep,
@@ -1006,6 +1006,8 @@ export default function App() {
   // debounced query happened to fire for.
   const lastViewportBboxRef = useRef<Bbox | null>(null);
   const canvasRef = useRef<WorkingCanvasHandle>(null);
+  /** The zoom the canvas holds, for the status bar's scale item (`layout/regionParts.tsx`); `null` before the canvas's first camera write. */
+  const readZoom = useCallback(() => canvasRef.current?.currentView?.()?.zoom ?? null, []);
   /** Milestone 4 PR C (section 2.4): the table's first scope for this open (`table/tableSource.ts`), one per admitted dataset; the ref is for the export handler, which cancels its stream. */
   const [tableSource, setTableSource] = useState<TableSource | null>(null);
   const tableSourceRef = useRef<TableSource | null>(null);
@@ -2631,6 +2633,9 @@ export default function App() {
             {noticeText(notice)}
           </div>
         ),
+        /* The scale (SHELL-SCALE-DISPLAY-PREREGISTRATION.md §2 item 3): the unit is the dataset on the map's own, and the item reads a zoom only while the view box
+         * the canvas reported for that dataset stands, so a length is never shown with another dataset's unit. It subscribes itself: App renders nothing on a pan. */
+        "status.scale": admitted && <ScaleItem unit={admitted.describe.crs.unit} subscribe={viewBox.subscribe} getBox={viewBox.get} readZoom={readZoom} />,
         /* NEXT-CUT.md (publish cut) P3: "in .app-main's flex column below StylePanel" -- same
           * reasoning as `StylePanel`'s own placement below `.canvas-container` (S4): this panel
           * comes AFTER the canvas in both visual and flex order, so its own collapsed/expanded state

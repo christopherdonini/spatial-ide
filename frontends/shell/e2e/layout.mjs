@@ -525,6 +525,89 @@ async function stepBurst(page, consoleHandle) {
   return `RECORDED, NOT ASSERTED: ${BURST_MOVES} moves of ${BURST_STEP_PX}px; ${lines.length} viewport_query lines at ms after the first move [${relative}] (last move at ${lastMove - firstMove} ms, release at ${release - firstMove} ms)`;
 }
 
+// E-SCALE (SHELL-SCALE-DISPLAY-PREREGISTRATION.md §3 and §4; Amendments 2 item 5 and 4 item 3): the status bar's scale on the real app, the last step, on the dataset
+// open at the end of the suite (the 100k fixture). Z1 to Z6 set the camera through `e2eSetViewState`, so each zoom differs from the one before it (deck drops an equal
+// `initialViewState`); Z1 again, then W, one wheel notch from Z1; then D, corpus file #8 (degrees). It asserts DOM text, widths and rects, and records `devicePixelRatio`.
+const FIXTURE_DEGREE = "C:\dev\spatial-ide\target\fixtures\compat-corpus\gdal\ogr2ogr-epsg4326-default.parquet";
+const CORPUS_MANIFEST = "C:\dev\spatial-ide\target\fixtures\compat-corpus\MANIFEST.json";
+const SCALE_BAR_ROWS = [
+  { id: "Z1", zoom: 0, decimal: "100", widthPx: 100 },
+  { id: "Z2", zoom: -3, decimal: "500", widthPx: 62.5 },
+  { id: "Z3", zoom: 2.5, decimal: "20", widthPx: 113.137 },
+  { id: "Z4", zoom: -10, decimal: "100,000", widthPx: 97.656 },
+  { id: "Z5", zoom: 10, decimal: "0.1", widthPx: 102.4 },
+];
+const SCALE_WIDTH_TOLERANCE_PX = 1;
+const readScale = (page) =>
+  page.evaluate(() => {
+    const item = document.querySelector(".status-scale");
+    if (item === null) return null;
+    const rect = (el) => (({ left, top, right, bottom, width }) => ({ left, top, right, bottom, width }))(el.getBoundingClientRect());
+    const bar = item.querySelector(".status-scale-bar");
+    return { text: item.textContent, title: item.getAttribute("title"), aria: item.getAttribute("aria-label"), item: rect(item), bar: bar === null ? null : rect(bar), status: rect(document.querySelector(".status-bar")), dpr: window.devicePixelRatio };
+  });
+async function waitForScale(page, expectedText, label) {
+  let last = null;
+  for (let i = 0; i < 150; i += 1) {
+    last = await readScale(page);
+    if (last !== null && last.text === expectedText) return last;
+    await sleep(200);
+  }
+  throw new Error(`E-SCALE ${label}: .status-scale reads ${JSON.stringify(last?.text ?? null)} within 30000ms, expected ${JSON.stringify(expectedText)}`);
+}
+function assertBar(label, seen, expectedWidthPx, expectedTitle) {
+  if (seen.bar === null) throw new Error(`E-SCALE ${label}: no .status-scale-bar`);
+  if (Math.abs(seen.bar.width - expectedWidthPx) > SCALE_WIDTH_TOLERANCE_PX) throw new Error(`E-SCALE ${label}: the bar is ${seen.bar.width} CSS px wide, expected ${expectedWidthPx} within ${SCALE_WIDTH_TOLERANCE_PX}`);
+  const inside = seen.item.left >= seen.status.left - 0.5 && seen.item.right <= seen.status.right + 0.5 && seen.item.top >= seen.status.top - 0.5 && seen.item.bottom <= seen.status.bottom + 0.5;
+  if (!inside) throw new Error(`E-SCALE ${label}: the item's rect ${JSON.stringify(seen.item)} is not inside .status-bar's ${JSON.stringify(seen.status)}`);
+  if (seen.title !== expectedTitle || seen.aria !== expectedTitle) throw new Error(`E-SCALE ${label}: the title ${JSON.stringify(seen.title)} and the accessible name ${JSON.stringify(seen.aria)} are not ${JSON.stringify(expectedTitle)}`);
+}
+
+async function stepScale(page, consoleHandle) {
+  const scale = await loadShellModule("src/layout/scaleBar.ts");
+  const centre = { x: (PARCEL_AREA.xmin + PARCEL_AREA.xmax) / 2, y: (PARCEL_AREA.ymin + PARCEL_AREA.ymax) / 2 };
+  const setZoom = (zoom) => page.evaluate(([x, y, z]) => window.__SPATIAL_E2E__.e2eSetViewState(x, y, z), [centre.x, centre.y, zoom]);
+  const notes = [];
+  let dpr = null;
+  const barRow = async ({ id, zoom, decimal, widthPx }) => {
+    if (!(await setZoom(zoom))) throw new Error(`E-SCALE ${id}: e2eSetViewState moved nothing`);
+    const seen = await waitForScale(page, scale.scaleBarLabel(decimal), id);
+    assertBar(id, seen, widthPx, scale.scaleBarTitle(decimal));
+    dpr = seen.dpr;
+    notes.push(`${id} ${decimal} m ${seen.bar.width.toFixed(2)}px`);
+    return seen;
+  };
+  for (const row of SCALE_BAR_ROWS) await barRow(row);
+  // Z6: zoom -30 puts k at 11, past the exponent bound, so SHELL-SCALE-DISPLAY S-4 shows and no bar.
+  if (!(await setZoom(-30))) throw new Error("E-SCALE Z6: e2eSetViewState moved nothing");
+  const z6 = await waitForScale(page, scale.SCALE_OUT_OF_RANGE_TEXT, "Z6");
+  if (z6.bar !== null) throw new Error("E-SCALE Z6: a bar shows at a zoom with no bar");
+  notes.push("Z6 SHELL-SCALE-DISPLAY S-4");
+  // Z1 again, then W: one wheel notch from Z1 changes the zoom, and the item shows what `scaleReading` gives at the zoom the canvas holds.
+  const z1 = await barRow(SCALE_BAR_ROWS[0]);
+  await doWheel(page, await canvasRect(page).then((r) => ({ x: r.left + r.width / 2, y: r.top + r.height / 2 })), ZOOM_NOTCH_DELTA_Y);
+  await settleFully(page, consoleHandle, "E-SCALE W: after the wheel notch");
+  const held = await page.evaluate(async () => (await window.__SPATIAL_E2E__.e2eReadWorkspace()).view);
+  if (held === null || held.zoom === 0) throw new Error(`E-SCALE W: the zoom e2eReadWorkspace returns is ${held?.zoom}, expected a zoom other than 0 after a wheel notch`);
+  const reading = scale.scaleReading("metre", held.zoom);
+  if (reading.kind !== "bar") throw new Error(`E-SCALE W: scaleReading gives ${JSON.stringify(reading)} at the held zoom ${held.zoom}`);
+  const wLabel = scale.scaleBarLabel(scale.scaleLabel(reading.mantissa, reading.exponent));
+  if (wLabel === scale.scaleBarLabel("100")) throw new Error(`E-SCALE W: the label at zoom ${held.zoom} is Z1's`);
+  const w = await waitForScale(page, wLabel, "W");
+  assertBar("W", w, reading.widthPx, scale.scaleBarTitle(scale.scaleLabel(reading.mantissa, reading.exponent)));
+  notes.push(`W zoom ${held.zoom.toFixed(3)} ${wLabel} ${w.bar.width.toFixed(2)}px (Z1 was ${z1.text})`);
+  // D: corpus file #8, whose hash must equal the corpus manifest's (invalidator I5); degrees, so SHELL-SCALE-DISPLAY S-3 and no bar.
+  if (!existsSync(FIXTURE_DEGREE) || !existsSync(CORPUS_MANIFEST)) throw new Error("E-SCALE D: corpus file #8 or MANIFEST.json is absent: invalidator I5, STOP and report");
+  const entry = JSON.parse(readFileSync(CORPUS_MANIFEST, "utf8")).files.find((f) => f.path.endsWith("gdal/ogr2ogr-epsg4326-default.parquet"));
+  if (entry?.sha256 !== sha256(FIXTURE_DEGREE)) throw new Error(`E-SCALE D: corpus file #8's sha256 ${sha256(FIXTURE_DEGREE)} differs from the manifest's ${entry?.sha256}: invalidator I5, STOP and report`);
+  const outcome = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), FIXTURE_DEGREE);
+  if (outcome.kind !== "admitted") throw new Error(`E-SCALE D: openPath(corpus #8) returned ${JSON.stringify(outcome)}`);
+  const d = await waitForScale(page, scale.SCALE_NOT_METRE_TEXT, "D");
+  if (d.bar !== null) throw new Error("E-SCALE D: a bar shows for a dataset in degrees");
+  notes.push("D SHELL-SCALE-DISPLAY S-3, no bar");
+  return `${notes.join("; ")}; devicePixelRatio ${dpr}`;
+}
+
 async function main() {
   const fixtures = [FIXTURE_FILTER, FIXTURE_100K];
   const missing = fixtures.filter((path) => !existsSync(path));
@@ -572,6 +655,7 @@ async function main() {
     await runStep("E-REOPEN", 90_000, () => stepReopen(page));
     await runStep("FILL", 180_000, () => stepFill(page, consoleHandle));
     await runStep("BURST", 90_000, () => stepBurst(page, consoleHandle));
+    await runStep("E-SCALE", 300_000, () => stepScale(page, consoleHandle));
     const hashesAfter = fixtures.map(sha256);
     const unchanged = hashesBefore.every((hash, i) => hash === hashesAfter[i]);
     results.push({ id: "FIXTURES", status: unchanged ? "PASS" : "FAIL", note: fixtures.map((path, i) => `${path.split("\\").pop()} sha256 ${hashesBefore[i]} -> ${hashesAfter[i]}`).join("; ") });

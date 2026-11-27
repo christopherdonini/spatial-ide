@@ -39,6 +39,7 @@ const NO_SLOTS: Slots = {
   "status.scanLiveness": null,
   "status.scanIncomplete": null,
   "status.sourceWatch": null,
+  "status.scale": null,
 };
 
 describe("StudioLayout: what milestone 2 adds to the frame", () => {

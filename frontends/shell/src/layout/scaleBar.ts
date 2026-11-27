@@ -1,0 +1,58 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+import type { CrsUnit } from "../skp/types";
+
+/**
+ * The status bar's scale (governance/forms/frontends/SHELL-SCALE-DISPLAY-PREREGISTRATION.md §2 item 1 and §7): a bar of a length
+ * L = m x 10^k, m in {1, 2, 5}, in the dataset's own CRS metres, whose CSS width is L x 2^zoom, kept in [SCALE_BAR_MIN_PX, SCALE_BAR_MAX_PX).
+ * Pure: it reads no canvas and no store. `2^zoom` is the CSS pixels one unit spans (`canvas/viewportBbox.ts`'s reading, measured at a
+ * device pixel ratio of 1.0 only), so the width is claimed at that ratio and no other.
+ */
+
+/** The bar's CSS width, [min, max) (§7). The smallest 1-2-5 length with a width of at least the minimum is under 2.5 times it, so under the maximum. */
+export const SCALE_BAR_MIN_PX = 60;
+export const SCALE_BAR_MAX_PX = 150;
+/** The exponent k of the length, inclusive: L from 0.001 to 50,000,000 (§7; ADR-010 rule 6). Outside it no bar is shown. */
+export const SCALE_EXPONENT_MIN = -3;
+export const SCALE_EXPONENT_MAX = 7;
+/** The length's leading digit (§7). */
+export const SCALE_MANTISSAS = [1, 2, 5] as const;
+
+export type ScaleMantissa = (typeof SCALE_MANTISSAS)[number];
+
+export type ScaleReading =
+  | { kind: "none" }
+  | { kind: "not-metre" }
+  | { kind: "out-of-range" }
+  | { kind: "bar"; mantissa: ScaleMantissa; exponent: number; widthPx: number };
+
+/**
+ * The strings the item shows (§2 item 7). All four are drafts under the P6 placeholder mark: none is the human's wording and none is
+ * the advisor's yet. S-1 and S-2 take the length's decimal from `scaleLabel`.
+ */
+const MARK = "[P6 placeholder] ";
+/** SHELL-SCALE-DISPLAY S-1: the label beside the bar. */
+export const scaleBarLabel = (decimal: string): string => `${MARK}${decimal} m (CRS)`;
+/** SHELL-SCALE-DISPLAY S-2: the title and accessible name of the bar's item. */
+export const scaleBarTitle = (decimal: string): string =>
+  `${MARK}A length of ${decimal} metres as the dataset's CRS counts them, at the map's current zoom. It is not a distance on the ground.`;
+/** SHELL-SCALE-DISPLAY S-3: shown for a dataset whose unit is not the metre. */
+export const SCALE_NOT_METRE_TEXT = `${MARK}No scale bar: this dataset's coordinates are not known to be in metres.`;
+/** SHELL-SCALE-DISPLAY S-4: shown when `scaleReading` returns `out-of-range`. */
+export const SCALE_OUT_OF_RANGE_TEXT = `${MARK}No scale bar at this zoom.`;
+
+/** The length m x 10^k as its exact decimal in groups of three joined by ",", never the locale's (KNOWN-LIMITATIONS item 51), built from digits. */
+export function scaleLabel(_mantissa: ScaleMantissa, _exponent: number): string {
+  return "";
+}
+
+/** The reading for `pxPerUnit` CSS pixels per unit of a metre dataset: the smallest m x 10^k whose width m x 10^k x pxPerUnit is at least SCALE_BAR_MIN_PX. */
+export function readingAtPxPerUnit(_pxPerUnit: number): ScaleReading {
+  return { kind: "none" };
+}
+
+/** What the item shows for `unit` at `zoom`, the base-2 log of the CSS pixels one unit spans (`WorkingCanvasHandle.currentView`), or null when none is known. */
+export function scaleReading(_unit: CrsUnit, _zoom: number | null): ScaleReading {
+  return { kind: "none" };
+}

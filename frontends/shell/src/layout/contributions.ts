@@ -55,6 +55,7 @@ export const STATUS_ITEMS = [
   { id: "scanIncomplete" },
   { id: "sourceWatch" },
   { id: "selectionEnded" },
+  { id: "scale" },
 ] as const;
 
 export type RegionId = (typeof REGIONS)[number]["id"];
