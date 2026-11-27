@@ -517,3 +517,192 @@ fn a_narrow_integer_key_is_offered_on_both_carriers_and_declaring_it_from_the_li
         Some("i8,i16,i32,i64,u8,u16,u32,u64")
     );
 }
+
+/// The caller's choice to set aside the file's own `id` column, as the wire carries it.
+fn set_aside_req(path: &std::path::Path, cancel_key: &str) -> OpenDatasetRequest {
+    OpenDatasetRequest {
+        set_aside_file_id: true,
+        ..open_req(path, cancel_key, None, None)
+    }
+}
+
+/// **K-1** (`text-id-opens-for-the-session-by-row-position`). Through `SkpHost::open_dataset` and
+/// `SkpHost::describe`, a file whose `id` is text, opened with the choice, is on the session tier:
+/// `identity.set_aside_column` is `"id"`, the session statement is present as it is for any session
+/// tier, and the schema still lists `id` as a column that cannot be projected. The same open of a
+/// file with no `id` column, which is on the session tier with nothing set aside, carries the key
+/// present and null.
+///
+/// Mutation M-10: `describe_dataset` sets `set_aside_column` to `None`. Expected failure: this test
+/// fails at its first assertion on the member.
+#[test]
+fn an_open_setting_aside_a_text_id_describes_the_session_tier_with_set_aside_column_id() {
+    let text_id = fixture(
+        "set-aside-text-id",
+        &FixtureSpec {
+            identity: IdentityMode::StringIds,
+            ..small_spec()
+        },
+    );
+    let keyless = fixture(
+        "set-aside-keyless",
+        &FixtureSpec {
+            identity: IdentityMode::ForeignKeyColumn,
+            ..small_spec()
+        },
+    );
+    let host = host();
+    let describe_of = |req: OpenDatasetRequest| {
+        let resp = host.open_dataset(req).expect("open");
+        host.describe(DescribeRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset,
+        })
+        .expect("describe")
+    };
+
+    let chosen = describe_of(set_aside_req(&text_id, "set-aside-chosen"));
+    let identity = serde_json::to_value(&chosen.identity).expect("identity as JSON");
+    assert_eq!(identity["set_aside_column"], "id", "{identity}");
+    assert_eq!(identity["class"], "session-ordinal");
+    assert_eq!(identity["source"], "session-ordinal:file_row_number");
+    assert!(
+        chosen.identity.session_statement.is_some(),
+        "the session statement is carried as for any session tier"
+    );
+    let id_field = chosen
+        .schema
+        .iter()
+        .find(|f| f.name == "id")
+        .expect("the file's own id stays in the schema");
+    assert!(!id_field.projectable, "and cannot be projected");
+
+    // A session tier with nothing set aside: the key is present and null.
+    let plain = describe_of(open_req(&keyless, "set-aside-plain", None, None));
+    let identity = serde_json::to_value(&plain.identity).expect("identity as JSON");
+    assert_eq!(identity["class"], "session-ordinal");
+    assert!(
+        identity
+            .get("set_aside_column")
+            .is_some_and(|v| v.is_null()),
+        "the key is present and null: {identity}"
+    );
+}
+
+/// **K-2**. The three refusals of the choice reach the wire by their own code, with the one field
+/// `detail` and the engine's own message: a file with no `id` column, an `id` that serves, and a
+/// declared column beside the choice. None of them opens a dataset.
+///
+/// Mutation M-11: `error_of` maps `IdentitySetAsideRefused` to `engine.identity_unusable`. Expected
+/// failure: this test fails at the first code assertion.
+#[test]
+fn the_set_aside_refusals_reach_the_wire_by_name() {
+    let no_id = fixture(
+        "set-aside-refused-no-id",
+        &FixtureSpec {
+            identity: IdentityMode::ForeignKeyColumn,
+            ..small_spec()
+        },
+    );
+    let serves = fixture("set-aside-refused-serves", &small_spec());
+    let beside = fixture(
+        "set-aside-refused-declared",
+        &FixtureSpec {
+            identity: IdentityMode::StringIdsBesideParcelKey,
+            ..small_spec()
+        },
+    );
+    let host = host();
+
+    let declared = OpenDatasetRequest {
+        identity: Some(IdentityDeclaration {
+            column: "parcel_key".to_string(),
+        }),
+        ..set_aside_req(&beside, "refused-declared")
+    };
+    let cases = [
+        (
+            set_aside_req(&no_id, "refused-no-id"),
+            "the file has no column named `id` to set aside",
+        ),
+        (
+            set_aside_req(&serves, "refused-serves"),
+            "the file's own `id` column serves as its identity, so it cannot be set aside",
+        ),
+        (
+            declared,
+            "setting aside the file's `id` column cannot be combined with a declared identity column",
+        ),
+    ];
+    for (req, detail) in cases {
+        let err = host
+            .open_dataset(req)
+            .expect_err("the choice cannot be taken");
+        assert_eq!(err.code, "engine.identity_set_aside_refused", "{err:?}");
+        assert_eq!(err.message, format!("refused: {detail}"));
+        let keys: Vec<&String> = err.fields.keys().collect();
+        assert_eq!(keys, vec!["detail"], "exact key set");
+        assert_eq!(err.fields.get("detail").map(String::as_str), Some(detail));
+    }
+}
+
+/// **K-3**. A filter naming `id` on a set-aside open is refused as ambiguous through the wire, before
+/// any ticket is minted, with `source_column` `file_row_number` and the message that says the
+/// dataset is identified by row position for this session.
+///
+/// Mutation M-12: `identity_alias_ambiguity`'s session-tier arm returns `by_row_position` false.
+/// Expected failure: this test fails at the message assertion.
+#[test]
+fn a_filter_naming_id_on_a_set_aside_open_is_refused_as_ambiguous_through_skp() {
+    let path = fixture(
+        "set-aside-alias",
+        &FixtureSpec {
+            identity: IdentityMode::StringIds,
+            attributes: AttributeMode::FilterWitness,
+            features: 2,
+            avg_vertices: 6,
+            hole_every: 0,
+            ..Default::default()
+        },
+    );
+    let tickets = StreamRegistry::new();
+    let host = SkpHost::new(
+        Arc::new(Catalog::new()),
+        tickets.clone(),
+        watch_support::no_watch_arm(),
+        session_end_channel().0,
+    );
+    let resp = host
+        .open_dataset(set_aside_req(&path, "alias-set-aside"))
+        .expect("the choice opens the file");
+
+    let err = host
+        .viewport_query(ViewportQueryRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset: resp.dataset.clone(),
+            bbox: None,
+            bbox_crs: None,
+            limit: None,
+            filter: Some(
+                Filter::new("id = 'key-1'", FILTER_DIALECT_DUCKDB_EXPR_0).expect("dialect"),
+            ),
+            columns: None,
+        })
+        .expect_err("a predicate naming `id` must be refused as ambiguous");
+    assert_eq!(err.code, "skp.filter_identity_alias_ambiguous");
+    let mut keys: Vec<&String> = err.fields.keys().collect();
+    keys.sort();
+    assert_eq!(keys, vec!["column", "source_column"], "exact key set");
+    assert_eq!(err.fields.get("column").map(String::as_str), Some("id"));
+    assert_eq!(
+        err.fields.get("source_column").map(String::as_str),
+        Some("file_row_number")
+    );
+    assert_eq!(
+        err.message,
+        "refused: `id` is ambiguous — this dataset is identified by row position for this \
+         session, and the file also carries its own column named `id`; a predicate cannot say \
+         which one it means"
+    );
+    assert_eq!(tickets.cancel_all_for_dataset(resp.dataset.as_str()), 0);
+}

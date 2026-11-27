@@ -515,6 +515,27 @@ fn generate_the_string_id_refusing_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
+/// The "text id, no integer column" refusing file (`text-id-opens-for-the-session-by-row-position`,
+/// E-1): a text `id` (`key-{n}`) and **no other integer column** (`IdentityMode::StringIds`), so a
+/// plain open refuses as `engine.identity_unusable` and the refusal offers nothing to declare. The
+/// choice to open it by row position is the one way forward. Generated; no file of anyone's disk.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_text_id_no_integer_refusing_fixture() {
+    let path = dir().join("text-id-no-integer-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            identity: IdentityMode::StringIds,
+            ..Default::default()
+        },
+    )
+    .expect("write the text-id no-integer refusing fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
 /// The "duplicate id" refusing file (`NEXT-CUT.md` admission-remediation cut, P5's `DUPKEY'` E2E
 /// step and Part I's I6): a native `id` column that repeats a constant value
 /// (`IdentityMode::DuplicateIds` — an existing engine fixture mode, reused rather than added;
