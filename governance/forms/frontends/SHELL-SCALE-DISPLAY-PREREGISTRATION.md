@@ -1172,3 +1172,26 @@ A code or test comment that names one gives this form's name with the id (`SHELL
    - The worker's light run at the disk floor read three test files only (its report's CHECKS), so U4 did not run before the head.
 4. **A fix changes this form's words, these imports, or a test of another form,** so it goes to the advisor before any commit. No draft PR is opened until it is ruled.
 5. **Amendment 11 item 5's four places** went to the advisor at commit 27ca47cd3ed00f485d815949942bba2ea3a44d46.
+
+## Amendment 13 — 2026-11-27 — the custodian's: U4 by way (a), under ADV-2026-11-27-25 (class 1)
+
+*Post-result amendment. It was written after the red of U4 was seen at the head 9f8b67cd (Amendment 12). References only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-25, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-25-shell-scale-displays-u4-by-way-a-structural-types-in-layout-a-post-result-amendment-one-correction-commit-the-four-places.md`.
+2. **What was seen** (its item 3):
+   - the red is U4 of milestone 1's form, at the head 9f8b67cdab999426691b53fa452a9526833cf909;
+   - the three imports are those of Amendment 12 item 2;
+   - this form names no import and does not name U4. Neither its form gates, nor the narrow read at the base, nor ADV-2026-11-27-21 item 4 read §2 against that test;
+   - the worker's light run did not hold U4, because the heavy runs were held at the disk floor. That hold was right.
+3. **Class 1.** §2 items 1 and 2 are read as the ruling's item 2 restates them. §2 item 3 and §9's seam line for `CrsUnit` stand. The filed lines are not edited.
+4. **The order** is the ruling's item 4:
+   - this amendment;
+   - one correction commit, holding only the three import lines, the two types and the two doc sentences;
+   - the shell's typecheck, the shell's tests and CI's `node --test`, green at the new head;
+   - the draft PR, naming its bases;
+   - the gates' read parts, which read the correction with the rest. No separate narrow read is owed.
+5. **The four places of Amendment 11 item 5** are settled by the ruling's item 5:
+   - (i) no deviation is recorded;
+   - (ii) and (iii) go with the advisor's wording, which comes as its own ruling. The words commit waits for it, and until then none of those words changes;
+   - (iv) stands, and the tester's record of the device pixel ratio decides at the run part.
+6. **For the gates** (its item 6): the worker's §8 item 9, `SCALE_BAR_MAX_PX` with no product caller.
