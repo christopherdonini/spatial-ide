@@ -528,8 +528,8 @@ async function stepBurst(page, consoleHandle) {
 // E-SCALE (SHELL-SCALE-DISPLAY-PREREGISTRATION.md §3 and §4; Amendments 2 item 5 and 4 item 3): the status bar's scale on the real app, the last step, on the dataset
 // open at the end of the suite (the 100k fixture). Z1 to Z6 set the camera through `e2eSetViewState`, so each zoom differs from the one before it (deck drops an equal
 // `initialViewState`); Z1 again, then W, one wheel notch from Z1; then D, corpus file #8 (degrees). It asserts DOM text, widths and rects, and records `devicePixelRatio`.
-const FIXTURE_DEGREE = "C:\dev\spatial-ide\target\fixtures\compat-corpus\gdal\ogr2ogr-epsg4326-default.parquet";
-const CORPUS_MANIFEST = "C:\dev\spatial-ide\target\fixtures\compat-corpus\MANIFEST.json";
+const FIXTURE_DEGREE = "C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\gdal\\ogr2ogr-epsg4326-default.parquet";
+const CORPUS_MANIFEST = "C:\\dev\\spatial-ide\\target\\fixtures\\compat-corpus\\MANIFEST.json";
 const SCALE_BAR_ROWS = [
   { id: "Z1", zoom: 0, decimal: "100", widthPx: 100 },
   { id: "Z2", zoom: -3, decimal: "500", widthPx: 62.5 },
