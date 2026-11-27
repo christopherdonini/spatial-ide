@@ -188,8 +188,8 @@ fn strip_component_prefix(s: &str, root: &str) -> Option<String> {
     }
 }
 
-/// Path-component comparison: case-insensitive on Windows (letters outside ASCII included, through
-/// [`fold`]), case-sensitive elsewhere.
+/// Path-component comparison: case-insensitive on Windows as [`fold`] folds, letters outside ASCII
+/// included and with the departures from NTFS its doc declares; case-sensitive elsewhere.
 ///
 /// **Platform-specific by construction**, the same reason `publish::error::classify_io` keeps its
 /// code tables separate: NTFS is case-insensitive and ext4 is not, and a single rule would be wrong
@@ -205,11 +205,14 @@ fn component_eq(a: &str, b: &str) -> bool {
 ///
 /// NTFS upcases each UTF-16 unit through the volume's one-to-one table. This takes
 /// `char::to_uppercase` where it gives exactly one character and `c` lies in the BMP, else `c`.
-/// **It departs from NTFS in three declared ways.** (i) `std`'s Unicode version can fold letters an
-/// older volume table does not (Georgian Mkhedruli): over-normalization, a false refusal in
-/// `is_inside`. (ii) About 27 Greek letters with iota subscript (U+1F80-U+1FAF, U+1FB3, U+1FC3,
-/// U+1FF3) have a two-character full uppercase and stay unfolded: a narrow residual in the leak
-/// direction. (iii) `ı` and `ſ` fold to `I` and `S`, which Windows' table may not do.
+/// **It departs from NTFS in three declared classes.** (i) `std`'s Unicode version can fold letters
+/// an older volume table does not (Georgian Mkhedruli, Cherokee): over-normalization, a false
+/// refusal in `is_inside`. (ii) 27 Greek lowercase letters with iota subscript (U+1F80-U+1F87,
+/// U+1F90-U+1F97, U+1FA0-U+1FA7, U+1FB3, U+1FC3, U+1FF3) have a two-character full uppercase and
+/// stay unfolded, where NTFS folds them: a narrow residual in the leak direction. (iii) A letter
+/// whose uppercase is another letter's capital folds to it (`ı`, `ſ`, `µ`, `ς`, the Greek symbol
+/// letters such as `ϐ`, the titlecase digraphs such as `ǅ`), which the NTFS volume observed for
+/// this piece (2026-11-27, Windows 10) does not do: over-normalization, as (i).
 pub(crate) fn fold(c: char) -> char {
     #[cfg(windows)]
     {
