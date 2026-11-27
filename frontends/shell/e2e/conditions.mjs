@@ -11,7 +11,7 @@
 // Steps (the section's C-E2 row):
 //   1. open the copy; save through `e2eSaveProjectToFolder` into a new folder under the run's TMP: the strip's top is a `.save-notice`, the save notices hold one line, that begins with the owner's
 //      `SAVED_NOTICE` (read from `src/project/saveProject.ts` by name, as `project.mjs` reads S18) and ends with a time in brackets as `HH:MM:SS`, matched by pattern, and S-3 is absent (Amendment 4's N-4: exactly one notice here);
-//   1b. save again once the page's clock reads a whole second past step 1's: the first line's element is no longer connected, the strip's top `.save-notice` carries the alert role and its text differs from step 1's line, and no `.condition-occurrences` stands;
+//   1b. save again once the page's clock has passed into a later second than its reading after step 1: the first line's element is no longer connected, the strip's top `.save-notice` carries the alert role and its text differs from step 1's line, and no `.condition-occurrences` stands;
 //   2. write to the copy (an mtime touch with its sha256 unchanged, as `source-watch-idle.mjs:446-458`) and pan (H7): the top is session ended with S-3 at 1;
 //   3. S-3 opens Problems, which lists the top row and the `.save-notice` row; `.canvas-session-ended` and each `.save-notice` are each once in the DOM;
 //      no `.canvas-refusal` holds an `.admission-refusal-code` and none stands that is not a notice (no viewport-refusal and no stream-terminal condition: H7);
@@ -185,7 +185,7 @@ async function run(page, consoleHandle, copy) {
   record("S-3 opened Problems", open.problemsSelected, "the Problems tab is selected");
   record("Problems lists the top row and the .save-notice row", open.rows.length === 2 && open.rows[0].top && !open.rows[0].owner && open.rows[0].text === SHOWN_ABOVE && !open.rows[1].top && open.rows[1].saveNotices === 1, JSON.stringify(open.rows));
   record(".canvas-session-ended is once in the DOM", open.sessionEnded === 1, `${open.sessionEnded}`);
-  record("each .save-notice is once in the DOM", open.saveNotices.length === 1 && open.saveNotices[0] === afterSecondSave.text, JSON.stringify(open.saveNotices));
+  record("each .save-notice is once in the DOM", open.saveNotices.length === 1 && open.saveNotices[0] === afterSecondSave.text && isSavedLine(open.saveNotices[0], saved), JSON.stringify(open.saveNotices));
 
   // 4. The reopen: a successful open of the copy, and S-4 shows.
   const reopened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), copy);
