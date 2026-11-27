@@ -794,6 +794,7 @@ mod tests {
                 cancel_key: key.to_string(),
                 crs_assertion: None,
                 identity: None,
+                set_aside_file_id: false,
             }
         }
 
@@ -819,6 +820,7 @@ mod tests {
                 cancel_key: key.to_string(),
                 answer: None,
                 relink: None,
+                set_aside_file_id: false,
             }
         }
 
