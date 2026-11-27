@@ -1051,3 +1051,35 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 8 — 2026-11-27 — the custodian's: the base ruling, the base and the heads it holds, the number and the letter, and two readings replaced
+
+*References and git facts only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-21, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-21-shell-scale-displays-base-f64fac32-the-heads-it-holds-numbers-over-every-unmerged-branch-the-architects-narrow-read-before-the-code.md`.
+2. **The base is 530d7b0eff587cce7c71da26295c5dfa2602b63c**, on `cut/shell-scale-display` (items 1 and 2). It is a merge commit with two parents, and no other merge commit was made:
+   - f64fac32f3c75da5b4ea57e5b38eee89b92ec22a, which holds PR 365's head 639a96cc and PR A's head d6c2daf6;
+   - the identity route's head 7fa66a68a811cc20e09bf3251d0cb34d422fc81e, taken in by the merge.
+3. **The comparison** (item 2; ADV-2026-11-23-15 item 4) covers this form's whole list: §7's ten counted files and the three declared outside the count. It was taken at main aca0b05fb358b3f591c66864fed628faed1e7f61. For each `origin/cut/` branch that is in neither main nor f64fac32, it takes `git merge-tree --write-tree` of f64fac32 and the branch's head, then `git diff --numstat` from f64fac32 to that tree over the list:
+   - **the identity route:** one line of `frontends/shell/src/App.tsx`, besides its own limitation lines, its Part AG and its README entry. `App.tsx` is a file on the list, so its head comes in;
+   - **text-id**, which holds the route: beyond the route, only its Part AH and its README entry;
+   - **A:** rows in three existing Parts (the B2-1C, re-link and milestone 5 Parts), and one line of the `conditions.mjs` entry;
+   - **B:** two lines of the `project.mjs` entry;
+   - **PR 366:** eight lines in and seven out of `KNOWN-LIMITATIONS.md`, with no new item number;
+   - **PR 358, PR 359 and the re-link (PR 363):** nothing on the list;
+   - **every other branch:** no file on the list.
+   Rule (00a) counts each walkthrough Part, limitation item and README suite entry as a path of its own. None of those lines touches the new item, the new Part or the `layout.mjs` entry, so only the route's `App.tsx` line asks for a merge.
+4. **The re-link** (item 2, its third bullet). f64fac32 holds the re-link at e4e6493d92ec941425dd6566c0a4ec154c7eb633, the merge-base of f64fac32 and the re-link's head. It does not hold that head, bf11959dc4f4a83bd3ce10de73d8b35062ed7b16. The commits between them change no file on the list, so the current head is not taken in.
+5. **The number and the letter** (item 3). Each is the next unused over the base and over every unmerged branch whose code exists: the `origin/cut/` branches that main does not hold, and f64fac32. The highest limitation number is 79, at f64fac32 and on each branch built on it. The last Part letter is AH, text-id's. So:
+   - the new KNOWN-LIMITATIONS item is **80**;
+   - the new Part is **Part AI**. No branch's walkthrough and no form on main or on a branch names a Part AI.
+6. **The piece's own diff is 530d7b0e to its head** (ADV-2026-11-23-15 item 4). §7's count, the file list, the mutations and both gates are read on that range, by §7's command with `530d7b0e...<head>`.
+7. **The suites that start no app run at 530d7b0e before the code** (item 2), because the base is not f64fac32 itself. The worker's report records them.
+8. **Two readings replaced** (item 5). No filed line is edited:
+   - §9's Overlap, its last bullet ("the build is on the re-link's head" … "The merge follows the re-link's merge."), is replaced by items 1, 2 and 6;
+   - the header's "after the v0.2 tag" no longer holds. No merge into main waits for the tag, and the piece does not go into `release/v0.2` (ADV-2026-11-27-02; the human's approved message of 2026-11-26, item 3).
+9. **The merge** comes after PR 365, PR A and the identity route, and its place among the later pieces is the advisor's at its merge check (item 6). Its PR opens as a draft, and the body names its bases.
+10. **Next:**
+    - the architect's narrow read of §2 at the base, with no verdict and no gate-log row (item 4). Its result goes in the next amendment, and the worker starts after it.
+    - E-SCALE takes the last place on the port, after A's runs (item 7).
+    - Words that no ruling holds go to the advisor before they are committed (item 8).

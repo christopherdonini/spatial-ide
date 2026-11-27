@@ -1032,3 +1032,34 @@ Nothing above is edited.
    - **C1** (the architect's: the reopen with a recorded declaration of `id`) has no counterpart in the reviewer's read part. The reviewer's E-b, E-c, D-a and D-b have none in the architect's.
 5. **Nothing is changed until the advisor rules.** Both read parts go to the advisor in one message.
 6. **Next:** the advisor's ruling; the corrections it names, with their count; then the series in this piece's port turn.
+
+## Amendment 15 — 2026-11-27 — the custodian's: ADV-2026-11-27-22 filed, and the corrections it names, before their commits
+
+*References only. Nothing above is edited. The ruling's bytes govern every Old and New.*
+
+1. **The ruling** is ADV-2026-11-27-22, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-22-text-ids-seven-questions-r-eng-and-s-8-one-sentence-each-c1-a-gap-closed-by-a-follow-up-piece-the-closing-count-e-c-added.md`. It answers the seven questions on Amendment 14's read parts.
+2. **Class 9** (ADV-2026-11-27-12 item 4; the ruling's item 10):
+   - item 1, R-ENG's second sentence, and item 2, S-8's, in `frontends/shell/src/project/reopenNotices.ts`;
+   - item 3: R-ENG's doc and S-8's doc in that file, and row AH7 in `frontends/shell/MANUAL-WALKTHROUGH.md`;
+   - item 9's second place, if the worker takes it: `kernel/tests/publish_identity_tier.rs`, beside K-U1. This form names that file only as a pattern (§4, K-6), so it is outside §7. The overlap check at main aca0b05fb358b3f591c66864fed628faed1e7f61: `git diff --quiet origin/main...<branch>` on that file, over every `origin/cut/` branch that main does not hold, found none that changes it.
+3. **Class 2:**
+   - **item 4 (C1).** §2's sentence that S-6b is reached only if the file changes between attempts, or through another client, does not hold, and it is not edited. This is a gap in the form, and one case where the shell departs from ADR-016 Amendment 3, Decision 1. No code changes in this piece for it.
+     - A follow-up piece closes it, with a full form and both gates. Its form is drafted on this piece's corrected head by this form's drafter.
+     - At this piece's merge check, either that piece is ready to merge directly behind it, or the advisor rules a KNOWN-LIMITATIONS sentence first.
+   - **item 6.** §9 item 8 did not fire. No skeleton commit exists, so §4's "How red is read" and the first half of §5's first prediction were not carried out. Neither line is edited, and no skeleton is built after the fact. Nothing of this piece says that a test was written before its code.
+4. **Item 5:** the advisor's words for D1, in the `IdentitySetAsideRefused` doc in `engine/src/error.rs`, and one sentence more in `rowPositionOffer`'s doc in `frontends/shell/src/admission/AdmissionPanel.tsx`.
+5. **Item 7, the closing count:** two ranges, added together, 83812fd5..ebf961d3 and fc6d4b00 to the closing head. The merge commit is counted in neither. Its one resolved line, the comment under KNOWN-LIMITATIONS item 3, is named in a sentence.
+6. **Item 8:**
+   - E-b, D-a and D-b go in as the reviewer filed them;
+   - D3 is the advisor's span, in `protocol/skp/SKP-V0.md`'s skp/0.16 entry;
+   - the closing amendment says that M-24b is a mutation beside T-1 that §4 does not list.
+7. **Item 9 (E-c)**, test code only, with no new mutation owed. For a dataset opened by the choice:
+   - R1 in the second scope;
+   - R2 in both scopes, with no destination, no staging folder and no audit record, as K-U1 has them.
+   They go in K-6's file or beside K-U1, whichever takes fewer lines.
+8. **The commits** hold items 1, 2, 3, 5, 8 and 9 and nothing else (item 10). At fc6d4b00 the two old sentences stand only in `reopenNotices.ts` and in two filed records, a consult and a directive. Those records stay as they are, and so does `engine/ADMISSION-RESULTS.md`, so no check of the repository pins either old text.
+9. **Then:**
+   - the suites that start no app, green at the corrected head, before the series;
+   - each gate reads the corrections in its run part, and the reviewer runs M-15 again there;
+   - the architect's E1 is for the run part, and no test is added for the owner line on item 1's path.
+   The overrun stays class 8. The reviewer's three departures go into the closing amendment (item 11).
