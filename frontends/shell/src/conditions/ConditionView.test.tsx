@@ -176,6 +176,10 @@ describe("ConditionView: App's markup, moved whole (C-R1)", () => {
     }
   });
 
+  // RECORDED MUTATION for "CV-K1: in the strip, a condition with a new id and the same display is a new element; the same id raised again keeps its element" (M-A1): in `ConditionView.tsx` remove the key from the `canvas-refusal` root. Expected failure: the new-element half, at the held element still connected.
+  // OBSERVED AT 65981cb71d28694c04d260ab7ff912595185edac: FAILED -- "CV-K1: in the strip, a condition with a new id and the same display is a new element; the same id raised again keeps its element": AssertionError: the held element is gone from the document: expected true to be false // Object.is equality. Also failed: A-A1. Reverted after observing.
+  // RECORDED MUTATION for "CV-K1: in the strip, a condition with a new id and the same display is a new element; the same id raised again keeps its element" (M-A2): in `ConditionView.tsx` make the key `${condition.id}:${condition.occurrences}` on both roots. Expected failure: the kept-element half, at the element no longer the same node.
+  // OBSERVED AT 65981cb71d28694c04d260ab7ff912595185edac: FAILED -- "CV-K1: in the strip, a condition with a new id and the same display is a new element; the same id raised again keeps its element": AssertionError: the same id raised again keeps its element: expected <div class="canvas-refusal" …(1)>…(2)</div> to be <div class="canvas-refusal" …(1)>…(1)</div> // Object.is equality. Reverted after observing.
   it("CV-K1: in the strip, a condition with a new id and the same display is a new element; the same id raised again keeps its element", () => {
     // The kept-element half runs first: a guard, green before the other half fails. The same id raised again is the same element, and S-5 shows.
     render(conditionOn("stream-terminal", 1), "strip");

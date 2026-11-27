@@ -168,6 +168,10 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     expect(await newSaver().save(input()), "the saved notice, then O-9's place, and nothing after").toStrictEqual([lineAt(SAVED_NOTICE), THROUGH_LINK_NOTICE]);
   });
 
+  // RECORDED MUTATION for "SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact" (M-A3): in `createProjectSaver` read the clock once, when the saver is created. Expected failure: the two saved lines do not differ.
+  // OBSERVED AT 65981cb71d28694c04d260ab7ff912595185edac: FAILED -- "SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact": AssertionError: the two saved lines differ: expected 'The project was saved. (<the time, elided here>)' not to be the same text // Object.is equality. Also failed: SP-T2, A-A1, C-A6. Reverted after observing.
+  // RECORDED MUTATION for "SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact" (M-A6): in `saveTimeText` take the hours modulo 12. Expected failure: the time's fields, read as numbers, are not the set clock's local getters.
+  // OBSERVED AT 65981cb71d28694c04d260ab7ff912595185edac: FAILED -- "SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact": AssertionError: expected [ 11, 4, 5 ] to deeply equal [ 23, 4, 5 ]. Reverted after observing.
   it("SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
@@ -187,6 +191,10 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     }
   });
 
+  // RECORDED MUTATION for "SP-T2: two refused saves with the same kernel message, at two set seconds, answered first lines that differ" (M-A5): in `createProjectSaver` the catch arm's not-saved line with the kernel's message carries no time. Expected failure: the two not-saved lines do not differ.
+  // OBSERVED AT 65981cb71d28694c04d260ab7ff912595185edac: FAILED -- "SP-T2: two refused saves with the same kernel message, at two set seconds, answered first lines that differ": AssertionError: the two not-saved lines differ: expected 'The project was not saved: the folder…' not to be 'The project was not saved: the folder…' // Object.is equality. Also failed: "a refused save shows the owner's notice with the kernel's message". Reverted after observing.
+  // RECORDED MUTATION for "SP-T2: two refused saves with the same kernel message, at two set seconds, answered first lines that differ" (M-A7): in `createProjectSaver` the picker's failure line carries no time. Expected failure: the picker case's first line lacks the time.
+  // OBSERVED AT 65981cb71d28694c04d260ab7ff912595185edac: FAILED -- "SP-T2: two refused saves with the same kernel message, at two set seconds, answered first lines that differ": AssertionError: expected 'The project was not saved: the folder…' to be 'The project was not saved: the folder…' // Object.is equality. Reverted after observing.
   it("SP-T2: two refused saves with the same kernel message, at two set seconds, answered first lines that differ", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
