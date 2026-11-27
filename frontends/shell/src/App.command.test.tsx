@@ -689,4 +689,33 @@ describe("App: the command bar (milestone 3, PR A), through the real App", () =>
     await inAct(() => {});
     expect([states(), asked().at(-1)], "the first change completed once").toEqual([["false"], null]);
   });
+
+  it("RC-ENTER-AFTER-APPLIED: an Enter after an applied result and before its render leaves the bar empty and shows no busy line", async () => {
+    await open("C:/data/a.parquet");
+    let release = () => {};
+    mocks.manager.hold = new Promise<void>((resolve) => (release = resolve));
+    const before = mocks.manager.requests.length;
+    act(() => bar().focus());
+    setValue(bar(), `/filter ${A}`);
+    await inAct(() => void press(bar(), "Enter"));
+    expect(mocks.manager.requests.length - before, "the first Enter's change is held in flight").toBe(1);
+    // The window: the held change is released and the bar's continuation runs as microtasks, outside any React event, before React renders what it set. Nothing here is a timer. React's development build puts window.event back by assignment after a handler it calls, and vitest's global keeps an assigned value, so window.event stays an earlier event and React would render the continuation's updates at once, as for a key press; a browser has no window.event outside an event.
+    const eventSlot = Object.getOwnPropertyDescriptor(window, "event");
+    (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = false;
+    try {
+      Object.defineProperty(window, "event", { value: undefined, configurable: true });
+      mocks.manager.hold = null;
+      release();
+      for (let i = 0; i < 50; i++) await Promise.resolve();
+      expect(bar().value, "React has not rendered the clear yet").toBe(`/filter ${A}`);
+      bar().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", code: "Enter", bubbles: true, cancelable: true }));
+    } finally {
+      (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+      if (eventSlot === undefined) Reflect.deleteProperty(window, "event");
+      else Object.defineProperty(window, "event", eventSlot);
+    }
+    await inAct(() => {});
+    expect([bar().value, text(".command-note"), mocks.manager.requests.length - before], "empty, no note, one filter apply asked for").toEqual(["", "(no element matches .command-note)", 1]);
+    expect(cardTexts(), "the card is on").toEqual([A]);
+  });
 });
