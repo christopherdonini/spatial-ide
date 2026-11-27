@@ -644,3 +644,24 @@ New:
    - the pull request's body to 97019e91;
    - the build gates' read parts at 97019e91, the architect's and the reviewer's;
    - E-R1 at the port.
+
+## Amendment 7 — 2026-11-27 — the custodian's: the architect's read part at 97019e91
+
+*References only. Nothing above is edited.*
+
+1. **The read part** is filed at `state/consults/gates/2026-11-27-text-id-reopen-with-a-recorded-declaration-build-gate-architect-read-part.md`. It read the form at main 5e9b2184b7fb235fb488afe538ad451f331fdf30 and the code at 97019e9198a9a2d110d0d686ce8166574547d4ce. It gives no verdict.
+2. **Scope, in so many words** (ADV-2026-11-27-30 item 1), by the report's section 1:
+   - every changed file is inside §7's scope as its "each" lines resolve at the base;
+   - every change is inside §2 and §4 as gated.
+   - Its count agrees with Amendment 6: 919 lines, every row of the table resolving against the numstat.
+3. **F4** (Documentation, no code): its pair in `protocol/skp/tests/conformance/README.md` is read in place. Those words are the build worker's. A worker applies the pair with no re-gate, in the correction commit, and the PR body lists it.
+4. **To the advisor**, in one message once the reviewer's read part is filed:
+   - **F1 and F2**, by the report: E-R1 as written cannot reach its step (5). The save of step (1) keeps the project held in the window, so the reopen of step (3) is refused as `skp.project_open_elsewhere`; and step (4) does not wait for the replaced dataset's close. The correction changes the e2e step. It bears on the advisor's words: ADV-2026-11-27-30 item 2 rests row AH8 on E-R1 (5), and item 4 reads E-R1 (3).
+   - **F3**, before anything else (ADV-2026-11-27-30 item 1): text-id's own step `TEXTID'` (d), on the base and outside this piece's changes, makes the same save and same-window reopen. It is text-id's E-1 (d) control, and it runs in text-id's series at the port.
+   - **The README section's clause (3)**, which describes an outcome the step cannot reach as written, and the list of acts a correction would change. Both are ruled text, so they go unreworded.
+5. **F5** is for the run part, and nothing changes for it. The report's note on `frontends/shell/src/e2e-test-surface.ts` (a comment naming one caller of the hooks) concerns a file outside §7. It goes to the custodian's queue.
+6. **§7:** by the report, a correction of E-R1 adds lines to the e2e row. If it does, that is recorded as class 8 again, and §7 is not edited.
+7. **Next:**
+   - the reviewer's read part, which is running;
+   - one advisor message;
+   - one correction commit, as ruled.
