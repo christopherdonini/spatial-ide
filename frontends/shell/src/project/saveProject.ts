@@ -14,6 +14,9 @@
  * - **A selection made by clicking is not saved.** The workspace has no member for it; a save with one standing says so (`SELECTION_NOTICE`).
  * - **Every string here is the advisor's wording under the human's delegation of 2026-11-13**: `THROUGH_LINK_NOTICE` (O-9) from ADV-2026-11-20-05
  *   item 2, and the others the words the worker of step 1 wrote, taken as the app's words by ADV-2026-11-21-14 item 2.
+ * - **A save's first line ends with the time of that save**, in brackets: ADV-2026-11-26-25 item 1 is the source of the four first lines (S3, S4, S23, S7). The time is the machine's
+ *   local clock, read once when the shell has that save's outcome, as `HH:MM:SS` on the 24-hour clock (`saveTimeText`). Two saves whose outcomes fall in one clock second show the same
+ *   text, in new elements; a clock set back can show an earlier time; the time is when the shell had the outcome, not when the file was written.
  */
 
 import { encodeHexF64 } from "../skp/codec";
@@ -40,6 +43,10 @@ export const FOLDER_HOLDS_PROJECT_NOTICE = "The folder already holds a project."
 export const NO_VIEW_NOTICE = "The project was not saved.";
 /** S4: the not-saved notice, with the kernel's message. */
 export const notSavedNotice = (message: string): string => `The project was not saved: ${message}`;
+/** The time of a save: `HH:MM:SS` from `Date`'s local getters, two digits each, on the 24-hour clock, with no locale form. */
+export const saveTimeText = (at: Date): string => [at.getHours(), at.getMinutes(), at.getSeconds()].map((n) => String(n).padStart(2, "0")).join(":");
+/** A save's first line: the notice's words, then the time in brackets. The clock is read here, when the saver has that save's outcome. */
+const timed = (notice: string): string => `${notice} (${saveTimeText(new Date())})`;
 
 /** The code of the kernel's refusal of a first save into a folder that holds a project. */
 const FOLDER_HOLDS_PROJECT_CODE = "skp.project_folder_holds_project";
@@ -98,14 +105,14 @@ export function createProjectSaver(deps: ProjectSaverDeps): ProjectSaver {
       if (inFlight) return null;
       inFlight = true;
       try {
-        if (input.view === null) return [NO_VIEW_NOTICE];
+        if (input.view === null) return [timed(NO_VIEW_NOTICE)];
         const afterwards = input.selectionCount > 0 ? [SELECTION_NOTICE] : [];
         let folder: string | null = null;
         if (!saved.has(input.dataset)) {
           try {
             folder = await deps.pickFolder();
           } catch (error) {
-            return [notSavedNotice(failureOf(error).message)];
+            return [timed(notSavedNotice(failureOf(error).message))];
           }
           if (folder === null) return [];
         }
@@ -113,7 +120,7 @@ export function createProjectSaver(deps: ProjectSaverDeps): ProjectSaver {
           const response = await deps.save(input.dataset, folder, workspaceOf(input, input.view));
           saved.add(input.dataset);
           return [
-            SAVED_NOTICE,
+            timed(SAVED_NOTICE),
             ...(response.history_mark === "withheld" ? [MARK_WITHHELD_NOTICE] : []),
             ...(response.project_relative === "no-canonical-spelling" ? [NO_CANONICAL_SPELLING_NOTICE] : []),
             ...(response.project_relative === "through-link" ? [THROUGH_LINK_NOTICE] : []),
@@ -121,7 +128,7 @@ export function createProjectSaver(deps: ProjectSaverDeps): ProjectSaver {
           ];
         } catch (error) {
           const failure = failureOf(error);
-          return [failure.code === FOLDER_HOLDS_PROJECT_CODE ? FOLDER_HOLDS_PROJECT_NOTICE : notSavedNotice(failure.message), ...afterwards];
+          return [timed(failure.code === FOLDER_HOLDS_PROJECT_CODE ? FOLDER_HOLDS_PROJECT_NOTICE : notSavedNotice(failure.message)), ...afterwards];
         }
       } finally {
         inFlight = false;

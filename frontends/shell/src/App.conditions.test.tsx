@@ -178,7 +178,7 @@ import { UNTILED_FIRST_LOOK_ROW_LIMIT } from "./canvas/tileGridConstants";
 import { moreInProblemsText, NO_PROBLEMS_TEXT, raisedTimesText, SHOWN_IN_STRIP_TEXT } from "./conditions/conditionsConstants";
 import { consoleRecorder, isGuiActionEntry } from "./console/recorder";
 import { shownText } from "./project/shownText";
-import { MARK_WITHHELD_NOTICE, SAVED_NOTICE } from "./project/saveProject";
+import { MARK_WITHHELD_NOTICE, SAVED_NOTICE, saveTimeText } from "./project/saveProject";
 import { viewNotAppliedNotice } from "./project/reopenNotices";
 import { __resetResidencyArmForTests, getResidencyArm, setResidencyArm } from "./residency/residencyArm";
 import { SkpCallError } from "./skp/client";
@@ -230,6 +230,7 @@ function harness(arm: "candidate" | "baseline") {
       });
       state.container.remove();
       window.__SPATIAL_E2E__ = undefined;
+      vi.useRealTimers();
       __resetResidencyArmForTests();
     },
     async open(path: string): Promise<void> {
@@ -488,6 +489,11 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-A6: a save's notices are one batch: SAVED_NOTICE is the top, S-3 reads 1, and the other row is MARK_WITHHELD_NOTICE; a second save replaces both": AssertionError: expected [ Array(1) ] to deeply equal [ 'The project was saved.', …(1) ]. Reverted after observing.
   it("C-A6: a save's notices are one batch: SAVED_NOTICE is the top, S-3 reads 1, and the other row is MARK_WITHHELD_NOTICE; a second save replaces both", async () => {
     mocks.historyMark = "withheld";
+    // Both saves keep one set clock, installed before the open, so the second save's batch equals the first's.
+    const set = new Date(2026, 10, 26, 7, 8, 9);
+    const savedLine = `${SAVED_NOTICE} (${saveTimeText(set)})`;
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(set);
     await h.open("C:/data/a.parquet");
     const save = window.__SPATIAL_E2E__?.e2eSaveProjectToFolder;
     if (!save) throw new Error("e2eSaveProjectToFolder E2E hook is not registered");
@@ -496,9 +502,9 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
     });
     await flush();
     expect(mocks.saves).toHaveLength(1);
-    expect(h.texts(".save-notice")).toEqual([SAVED_NOTICE, MARK_WITHHELD_NOTICE]);
+    expect(h.texts(".save-notice")).toEqual([savedLine, MARK_WITHHELD_NOTICE]);
     expect(h.qa(".attention-strip .save-notice")).toHaveLength(1);
-    expect(h.strip()!.firstElementChild!.textContent).toBe(SAVED_NOTICE);
+    expect(h.strip()!.firstElementChild!.textContent).toBe(savedLine);
     expect(h.stripOthers()?.textContent).toBe(moreInProblemsText(1));
     h.click(h.stripOthers());
     expect(h.texts("#activity-panel-problems .save-notice")).toEqual([MARK_WITHHELD_NOTICE]);
@@ -508,7 +514,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
       await save("C:/projects/out");
     });
     await flush();
-    expect(h.texts(".save-notice"), "a second save replaces the batch whole").toEqual([SAVED_NOTICE, MARK_WITHHELD_NOTICE]);
+    expect(h.texts(".save-notice"), "a second save replaces the batch whole").toEqual([savedLine, MARK_WITHHELD_NOTICE]);
     expect(h.qa(".condition-occurrences"), "and counts no occurrence").toHaveLength(0);
   });
 

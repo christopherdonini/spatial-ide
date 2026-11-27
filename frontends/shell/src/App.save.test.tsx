@@ -121,11 +121,14 @@ vi.mock("./canvas/WorkingCanvas", () => {
 
 import App from "./App";
 import { COMMAND_UNAVAILABLE_NOTE } from "./command/CommandBar";
-import { NO_VIEW_NOTICE, SAVED_NOTICE } from "./project/saveProject";
+import { NO_VIEW_NOTICE, SAVED_NOTICE, saveTimeText } from "./project/saveProject";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 import { encodeHexF64 } from "./skp/codec";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+/** The set clock of these cases, installed before the open; a save's first line ends with its time in brackets. */
+const SET_CLOCK = new Date(2026, 10, 26, 7, 8, 9);
 
 describe("App: Save project (B2 piece 1c), through the real App", () => {
   let container: HTMLDivElement;
@@ -133,6 +136,8 @@ describe("App: Save project (B2 piece 1c), through the real App", () => {
 
   beforeEach(() => {
     Object.assign(mocks, { opens: 0, saves: [], picks: 0, view: { centre: [2_600_050.5, 1_200_050.25], zoom: 7.5 } });
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(SET_CLOCK);
     setResidencyArm("baseline");
     container = document.createElement("div");
     document.body.appendChild(container);
@@ -148,6 +153,7 @@ describe("App: Save project (B2 piece 1c), through the real App", () => {
     });
     container.remove();
     window.__SPATIAL_E2E__ = undefined;
+    vi.useRealTimers();
     __resetResidencyArmForTests();
   });
 
@@ -196,7 +202,7 @@ describe("App: Save project (B2 piece 1c), through the real App", () => {
     expect([mocks.picks, mocks.saves.length], "the bar's word: one folder asked, one save sent").toEqual([1, 1]);
     expect(mocks.saves[0].folder).toBe("C:/projects/parcels");
     expect(mocks.saves[0].workspace).toMatchObject({ filter: null, view: { centre: [encodeHexF64(2_600_050.5), encodeHexF64(1_200_050.25)], zoom: encodeHexF64(7.5) } });
-    expect(text(".save-notice")).toBe(SAVED_NOTICE);
+    expect(text(".save-notice")).toBe(`${SAVED_NOTICE} (${saveTimeText(SET_CLOCK)})`);
 
     await inAct(() => q<HTMLButtonElement>(".save-project")!.click());
     expect([mocks.picks, mocks.saves.length], "the control: one more save, the folder not asked again").toEqual([1, 2]);
@@ -210,6 +216,6 @@ describe("App: Save project (B2 piece 1c), through the real App", () => {
     mocks.view = null;
     await inAct(() => q<HTMLButtonElement>(".save-project")!.click());
     expect([mocks.picks, mocks.saves.length], "no folder asked, nothing sent").toEqual([0, 0]);
-    expect(text(".save-notice")).toBe(NO_VIEW_NOTICE);
+    expect(text(".save-notice")).toBe(`${NO_VIEW_NOTICE} (${saveTimeText(SET_CLOCK)})`);
   });
 });

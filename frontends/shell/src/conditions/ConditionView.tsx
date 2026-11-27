@@ -9,6 +9,8 @@
  * `place` says where the element stands. In the strip it carries `role="alert"`, as the owner's element did. In a row of Problems it carries none (the DOM rule: no row of
  * Problems, the top row included, carries the alert role). Session ended renders through `RefusalBlock`, whose own `role="alert"` this file cannot change; session ended is
  * urgency 1, so it is always the strip's top and never a row of Problems in the product.
+ *
+ * Each returned root is keyed by the condition's id, on every route: a condition with a new id is a new element, and the same id raised again (S-5) keeps its element.
  */
 
 import RefusalBlock from "../admission/RefusalBlock";
@@ -55,10 +57,10 @@ export default function ConditionView({ condition, place, onDismiss }: { conditi
   const route = condition.reason.route;
   if (route === "session-ended") {
     const shown = condition.occurrences > 1 ? condition.latest : condition.first;
-    return <div className="canvas-session-ended">{shown.kind === "refusal" ? <RefusalBlock refusal={shown.refusal} /> : shown.text}</div>;
+    return <div key={condition.id} className="canvas-session-ended">{shown.kind === "refusal" ? <RefusalBlock refusal={shown.refusal} /> : shown.text}</div>;
   }
   return (
-    <div className={`canvas-refusal${NOTICE_CLASS[route] ?? ""}`} role={place === "strip" ? "alert" : undefined}>
+    <div key={condition.id} className={`canvas-refusal${NOTICE_CLASS[route] ?? ""}`} role={place === "strip" ? "alert" : undefined}>
       <Body condition={condition} />
       {routeEnds(route, "dismissed") && (
         <button type="button" onClick={() => onDismiss(condition)}>

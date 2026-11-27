@@ -7,7 +7,7 @@
  * would hand the host.
  */
 
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const invokeMock = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
@@ -23,6 +23,7 @@ import {
   notSavedNotice,
   pickProjectFolder,
   SAVED_NOTICE,
+  saveTimeText,
   SELECTION_NOTICE,
   type SaveInput,
 } from "./saveProject";
@@ -45,6 +46,17 @@ const input = (more: Partial<SaveInput> = {}): SaveInput => ({
 
 const newSaver = () => createProjectSaver({ pickFolder: pickProjectFolder, save: saveProject });
 
+/** The set clock of every case here, built from local components so that no case depends on the machine's time zone. */
+const AT = new Date(2026, 10, 26, 7, 8, 9);
+/** A save's first line at `when`: the notice's words, then the time in brackets (ADV-2026-11-26-25 item 1). */
+const lineAt = (notice: string, when: Date = AT): string => `${notice} (${saveTimeText(when)})`;
+/** The time in brackets that ends `line`: of the form `HH:MM:SS`, and its three fields, read as numbers, are the set clock's local getters. No literal clock string is asserted. */
+function expectTimeOf(line: string | undefined, when: Date): void {
+  const shown = / \(([^)]*)\)$/.exec(line ?? "")?.[1] ?? "";
+  expect(shown, "the time in brackets ends the line").toMatch(/^\d{2}:\d{2}:\d{2}$/);
+  expect(shown.split(":").map(Number)).toEqual([when.getHours(), when.getMinutes(), when.getSeconds()]);
+}
+
 /** The commands the host was handed, in order, with their `request` objects. */
 const sent = (): { command: string; request: Record<string, unknown> | undefined }[] =>
   invokeMock.mock.calls.map((c) => ({ command: c[0] as string, request: (c[1] as { request?: Record<string, unknown> } | undefined)?.request }));
@@ -54,6 +66,12 @@ beforeEach(() => {
     if (command === "binding_pick_project_folder") return FOLDER;
     return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written", project_relative: "carried" };
   });
+  vi.useFakeTimers({ toFake: ["Date"] });
+  vi.setSystemTime(AT);
+});
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => {
@@ -61,8 +79,8 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
   // Expected failure: the second save asks the picker again and sends the folder a second time.
   it("save sends save_project with the version, the folder once, and the workspace", async () => {
     const saver = newSaver();
-    expect(await saver.save(input())).toEqual([SAVED_NOTICE]);
-    expect(await saver.save(input({ view: { centre: [1, 2], zoom: 3 } }))).toEqual([SAVED_NOTICE]);
+    expect(await saver.save(input())).toEqual([lineAt(SAVED_NOTICE)]);
+    expect(await saver.save(input({ view: { centre: [1, 2], zoom: 3 } }))).toEqual([lineAt(SAVED_NOTICE)]);
 
     const calls = sent();
     expect(calls.map((c) => c.command), "the picker once, then the save twice").toEqual(["binding_pick_project_folder", "save_project", "save_project"]);
@@ -91,8 +109,8 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
   // RECORDED MUTATION for "selection notice": in `createProjectSaver` drop `afterwards` from the success return. Expected failure: the notices are the saved notice alone.
   it("a click selection at save shows the selection notice", async () => {
     const saver = newSaver();
-    expect(await saver.save(input({ selectionCount: 3 }))).toEqual([SAVED_NOTICE, SELECTION_NOTICE]);
-    expect(await saver.save(input({ selectionCount: 0 })), "none standing, none shown").toEqual([SAVED_NOTICE]);
+    expect(await saver.save(input({ selectionCount: 3 }))).toEqual([lineAt(SAVED_NOTICE), SELECTION_NOTICE]);
+    expect(await saver.save(input({ selectionCount: 0 })), "none standing, none shown").toEqual([lineAt(SAVED_NOTICE)]);
     const request = sent().find((c) => c.command === "save_project")?.request;
     expect(JSON.stringify(request), "the selection is not in the file").not.toContain("selection");
   });
@@ -108,17 +126,17 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
     const saver = newSaver();
 
     replyWith("written", "no-canonical-spelling");
-    expect(await saver.save(input())).toEqual([SAVED_NOTICE, NO_CANONICAL_SPELLING_NOTICE]);
+    expect(await saver.save(input())).toEqual([lineAt(SAVED_NOTICE), NO_CANONICAL_SPELLING_NOTICE]);
     replyWith("withheld", "no-canonical-spelling");
     expect(await saver.save(input({ selectionCount: 2 })), "after S5, before S6").toEqual([
-      SAVED_NOTICE,
+      lineAt(SAVED_NOTICE),
       MARK_WITHHELD_NOTICE,
       NO_CANONICAL_SPELLING_NOTICE,
       SELECTION_NOTICE,
     ]);
     for (const judgment of ["carried", "outside"]) {
       replyWith("written", judgment);
-      expect(await saver.save(input()), `${judgment} shows no S18`).toEqual([SAVED_NOTICE]);
+      expect(await saver.save(input()), `${judgment} shows no S18`).toEqual([lineAt(SAVED_NOTICE)]);
     }
   });
 
@@ -129,13 +147,13 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
       throw { code: "skp.project_save_failed", message: "the folder could not be written", fields: {} };
     });
     const saver = newSaver();
-    expect(await saver.save(input())).toEqual([notSavedNotice("the folder could not be written")]);
+    expect(await saver.save(input())).toEqual([lineAt(notSavedNotice("the folder could not be written"))]);
 
     invokeMock.mockImplementation(async (command: string) => {
       if (command === "binding_pick_project_folder") return FOLDER;
       throw { code: "skp.project_folder_holds_project", message: "the folder holds a project", fields: {} };
     });
-    expect(await saver.save(input()), "a refusal leaves the next save to ask for the folder again").toEqual([FOLDER_HOLDS_PROJECT_NOTICE]);
+    expect(await saver.save(input()), "a refusal leaves the next save to ask for the folder again").toEqual([lineAt(FOLDER_HOLDS_PROJECT_NOTICE)]);
     expect(sent().filter((c) => c.command === "binding_pick_project_folder")).toHaveLength(2);
   });
 
@@ -147,18 +165,23 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
       if (command === "binding_pick_project_folder") return FOLDER;
       return { project: "spatial://project/00000000000000000000000000000001", history_mark: "written", project_relative: "through-link" };
     });
-    expect(await newSaver().save(input()), "the saved notice, then O-9's place, and nothing after").toStrictEqual([SAVED_NOTICE, THROUGH_LINK_NOTICE]);
+    expect(await newSaver().save(input()), "the saved notice, then O-9's place, and nothing after").toStrictEqual([lineAt(SAVED_NOTICE), THROUGH_LINK_NOTICE]);
   });
 
   it("SP-T1: two confirmed saves of one open answered saved lines that differ, each carrying its own save's fact", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     try {
       const saver = newSaver();
-      vi.setSystemTime(new Date(2026, 10, 26, 23, 4, 5));
+      const [clock1, clock2] = [new Date(2026, 10, 26, 23, 4, 5), new Date(2026, 10, 26, 23, 4, 7)];
+      vi.setSystemTime(clock1);
       const first = await saver.save(input());
-      vi.setSystemTime(new Date(2026, 10, 26, 23, 4, 7));
+      vi.setSystemTime(clock2);
       const second = await saver.save(input());
       expect(first?.[0], "the two saved lines differ").not.toBe(second?.[0]);
+      expect(first?.[0], "each line is its own save's: the saved notice, then its time").toBe(lineAt(SAVED_NOTICE, clock1));
+      expect(second?.[0]).toBe(lineAt(SAVED_NOTICE, clock2));
+      expectTimeOf(first?.[0], clock1);
+      expectTimeOf(second?.[0], clock2);
     } finally {
       vi.useRealTimers();
     }
@@ -172,11 +195,26 @@ describe("Save project: what the shell sends (B2 piece 1c, section 2.8)", () => 
         throw { code: "skp.project_save_failed", message: "the folder could not be written", fields: {} };
       });
       const saver = newSaver();
-      vi.setSystemTime(new Date(2026, 10, 26, 9, 4, 5));
+      const [clock1, clock2, clock3] = [new Date(2026, 10, 26, 9, 4, 5), new Date(2026, 10, 26, 9, 4, 7), new Date(2026, 10, 26, 9, 4, 9)];
+      vi.setSystemTime(clock1);
       const first = await saver.save(input());
-      vi.setSystemTime(new Date(2026, 10, 26, 9, 4, 7));
+      vi.setSystemTime(clock2);
       const second = await saver.save(input());
       expect(first?.[0], "the two not-saved lines differ").not.toBe(second?.[0]);
+      expect(first?.[0]).toBe(lineAt(notSavedNotice("the folder could not be written"), clock1));
+      expect(second?.[0]).toBe(lineAt(notSavedNotice("the folder could not be written"), clock2));
+      expectTimeOf(first?.[0], clock1);
+      expectTimeOf(second?.[0], clock2);
+
+      // A picker that throws answers its own first line, with the time at its set clock.
+      invokeMock.mockImplementation(async (command: string) => {
+        if (command === "binding_pick_project_folder") throw new Error("the folder picker failed");
+        return {};
+      });
+      vi.setSystemTime(clock3);
+      const third = await saver.save(input());
+      expect(third?.[0]).toBe(lineAt(notSavedNotice("the folder picker failed"), clock3));
+      expectTimeOf(third?.[0], clock3);
     } finally {
       vi.useRealTimers();
     }

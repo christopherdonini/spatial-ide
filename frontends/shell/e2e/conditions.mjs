@@ -2,15 +2,16 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-// E2E (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 4, C-E2 as Amendments 2, 4 and 12 leave it): the shipped candidate arm's real-app proof of seam 8, on real WebView2,
+// E2E (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 4, C-E2 as Amendments 2, 4 and 12 leave it, with step 1b of A's second-save form): the shipped candidate arm's real-app proof of seam 8, on real WebView2,
 // run as `node e2e/conditions.mjs` from frontends/shell. WRITTEN, NOT RUN, by the build that added it: the run is the tester's.
 // The fixture is a scratch copy of `100k-happy-path.parquet`, made by the manual-walkthrough fixture generator into this checkout's target/fixtures/manual-walkthrough;
 // `--fixture <path>` names another copy of the same file. The copy is hashed before and after the run (a write here is an mtime touch only). The app's store is a scratch LOCALAPPDATA.
 // The arm is the shipped one: `getResidencyArm()` is read back as "candidate" before the first `openPath`, and `setResidencyArm` is never called.
 //
 // Steps (the section's C-E2 row):
-//   1. open the copy; save through `e2eSaveProjectToFolder` into a new folder under the run's TMP: the strip's top is a `.save-notice`, the save notices include the owner's
-//      `SAVED_NOTICE` (read from `src/project/saveProject.ts` by name, as `project.mjs` reads S18), and S-3 is absent (Amendment 4's N-4: exactly one notice here);
+//   1. open the copy; save through `e2eSaveProjectToFolder` into a new folder under the run's TMP: the strip's top is a `.save-notice`, the save notices hold one line, that begins with the owner's
+//      `SAVED_NOTICE` (read from `src/project/saveProject.ts` by name, as `project.mjs` reads S18) and ends with a time in brackets as `HH:MM:SS`, matched by pattern, and S-3 is absent (Amendment 4's N-4: exactly one notice here);
+//   1b. save again once the page's clock reads a whole second past step 1's: the first line's element is no longer connected, the strip's top `.save-notice` carries the alert role and its text differs from step 1's line, and no `.condition-occurrences` stands;
 //   2. write to the copy (an mtime touch with its sha256 unchanged, as `source-watch-idle.mjs:446-458`) and pan (H7): the top is session ended with S-3 at 1;
 //   3. S-3 opens Problems, which lists the top row and the `.save-notice` row; `.canvas-session-ended` and each `.save-notice` are each once in the DOM;
 //      no `.canvas-refusal` holds an `.admission-refusal-code` and none stands that is not a notice (no viewport-refusal and no stream-terminal condition: H7);
@@ -81,6 +82,8 @@ function savedNoticeText() {
   if (found === null) throw new Void(`${SAVE_PROJECT_SOURCE} holds no exported SAVED_NOTICE constant`);
   return JSON.parse(found[1]);
 }
+/** A save's first line as the saver builds it: `SAVED_NOTICE`'s words, then ` (HH:MM:SS)`. The time is matched by its form and never by a literal. */
+const isSavedLine = (text, saved) => text.startsWith(saved) && /^ \(\d{2}:\d{2}:\d{2}\)$/.test(text.slice(saved.length));
 
 /** The strip and Problems as the page shows them, in one read. */
 const read = (page) =>
@@ -129,10 +132,10 @@ async function run(page, consoleHandle, copy) {
   const asked = await page.evaluate((f) => window.__SPATIAL_E2E__.e2eSaveProjectToFolder(f), folder);
   if (asked !== "asked") throw new Void(`e2eSaveProjectToFolder answered ${JSON.stringify(asked)}, expected "asked"`);
   const saved = savedNoticeText();
-  const afterSave = await waitFor("the save notices", () => read(page), (r) => r.saveNotices.includes(saved));
+  const afterSave = await waitFor("the save notices", () => read(page), (r) => r.saveNotices.some((text) => isSavedLine(text, saved)));
   record("the strip's top is a .save-notice", afterSave.topClasses?.split(" ").includes("save-notice") === true, `the strip's first element has the classes ${JSON.stringify(afterSave.topClasses)}`);
   record("the top carries the alert role", afterSave.topAlert === "alert", `role ${JSON.stringify(afterSave.topAlert)}`);
-  record("the save notices hold SAVED_NOTICE once, and only it (N-4: exactly one notice)", afterSave.saveNotices.length === 1 && afterSave.saveNotices[0] === saved, JSON.stringify(afterSave.saveNotices));
+  record("the save notices hold one line: SAVED_NOTICE, then the time in brackets as HH:MM:SS (N-4: exactly one notice)", afterSave.saveNotices.length === 1 && isSavedLine(afterSave.saveNotices[0], saved), JSON.stringify(afterSave.saveNotices));
   record("S-3 is absent", afterSave.othersText === null, `the strip's button reads ${JSON.stringify(afterSave.othersText)}`);
 
   // 1b. E-A1, a second save is announced: save again, and what the strip shows is a new element whose text differs from the first save's line.
@@ -182,7 +185,7 @@ async function run(page, consoleHandle, copy) {
   record("S-3 opened Problems", open.problemsSelected, "the Problems tab is selected");
   record("Problems lists the top row and the .save-notice row", open.rows.length === 2 && open.rows[0].top && !open.rows[0].owner && open.rows[0].text === SHOWN_ABOVE && !open.rows[1].top && open.rows[1].saveNotices === 1, JSON.stringify(open.rows));
   record(".canvas-session-ended is once in the DOM", open.sessionEnded === 1, `${open.sessionEnded}`);
-  record("each .save-notice is once in the DOM", open.saveNotices.length === 1 && open.saveNotices[0] === saved, JSON.stringify(open.saveNotices));
+  record("each .save-notice is once in the DOM", open.saveNotices.length === 1 && open.saveNotices[0] === afterSecondSave.text, JSON.stringify(open.saveNotices));
 
   // 4. The reopen: a successful open of the copy, and S-4 shows.
   const reopened = await page.evaluate((p) => window.__SPATIAL_E2E__.openPath(p), copy);
