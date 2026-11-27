@@ -1234,3 +1234,26 @@ A code or test comment that names one gives this form's name with the id (`SHELL
 4. **D2** is a reference owed at the closing amendment. **D3**, the PR body, is the custodian's and is edited at the PR. **D4** is recorded here: §9's format check has no script in the shell, and none is counted green.
 5. **ADV-2026-11-27-28's AI1 check:** the reviewer confirms `filter-zoned.parquet` is a dataset in metres, from its generator. AI1 does not change.
 6. **Next:** the advisor's ruling, then one correction commit; the run part at the port.
+
+## Amendment 17 — 2026-11-27 — the custodian's: ADV-2026-11-27-29, before the correction
+
+*References only. Nothing above is edited. Written before the correction's code.*
+
+1. **The ruling** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-29-shell-scale-displays-five-questions-scale-bar-max-px-to-its-test-a-form-amendment-then-one-correction-commit.md`. It answers the questions of Amendments 15 and 16. It replaces three places of ADV-2026-11-27-28: the second span of its item 2's comment (KNOWN-LIMITATIONS item 80), one span of row AI1 in its item 3, and its item 4 for two clauses of the e2e README's E-SCALE entry. The rest of ADV-2026-11-27-28 stands.
+2. **Class 9, the ruling's item 1.** `SCALE_BAR_MAX_PX` leaves `scaleBar.ts` and is declared in `scaleBar.test.ts`, beside U-SB2. §2 item 1 and §7's table are read so that `scaleBar.ts` holds the constants its code reads, and the maximum is declared in U-SB2's file. §7's values and §1's claim do not change, and §7 is not edited. Amendment 15 item 2's doc line (F1) is not applied.
+3. **Class 9 and class 8, the ruling's item 2.** `frontends/shell/src/e2e-test-surface.ts` joins the piece for one comment, the doc of `e2eReadWorkspace`. The count then reads 11 files against §7's 10: class 8, recorded here. §7 is not edited.
+   - **A shared path with B** (`reload-ends-the-old-pages-opens`, head 5ce0525a). B's commit 2962d546 changes two other caller lines of the same file. It counts under rule (00), and it is met as ADV-2026-11-27-27 item 2 has it: nothing is held. Whichever piece merges second takes main in by a merge commit, with the reviewer's narrow read of that file and the suites that start no app green, before the advisor's merge check. B's form records the same row, in its Amendment 8.
+   - **Rule (00)'s list**, checked by the custodian at 2026-11-27T15:07:26Z: of the 49 branches on origin not merged into main 646b8b88, only B's changes this file, by `git diff --name-only origin/main...<branch>`.
+4. **Class 9, the ruling's item 3: an addition to §2 item 2, recorded before its code.**
+   - With a bar, `ScaleItem`'s div gains `role="img"`, and R-SC1 case (ii) expects `"img"`.
+   - Three places say `aria-label` where they said accessible name.
+   - S-3 and S-4 get no role and no label. E-SCALE asserts nothing new.
+5. **Class 2, the ruling's item 6 (the reviewer's E1).**
+   - M1, M3 and M4 are each observed at their first named case only. Their second named cases are not observed: M1's 12, M3's k = -1 and M4's `unestablished`. Nothing may call those cases observed, and no test changes for them.
+   - After the correction commit, the reviewer's run part observes M2 and M5 again at the corrected head. M1, M3 and M4 stand as observed at cbea7d4e, unless the run part finds that the correction touched their code or their test's body.
+6. **Unchanged, by the ruling.** F4 changes neither now nor at the run part. D2, D3, D4, F7 and F8 stand as Amendments 15 and 16 have them.
+7. **Next,** in the ruling's order:
+   1. one correction commit, which holds the ruling's items 1 to 5 and nothing else;
+   2. the shell's typecheck and tests, CI's `node --test` and the verify scripts, green at the new head;
+   3. the PR body, naming that commit.
+   Each gate reads the correction in its run part, and no separate narrow read is owed. E-SCALE stays last at the port.

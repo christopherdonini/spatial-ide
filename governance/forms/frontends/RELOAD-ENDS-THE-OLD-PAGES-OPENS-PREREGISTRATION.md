@@ -912,3 +912,11 @@ Read the last amendment first.
    - No cargo build, test or clippy ran. They are the run part's.
 3. **The count at the corrected head,** for the closing amendment (Amendment 6 item 6): `git diff --numstat ca57685263df8628e1b6d452e1423319a30b6596...5ce0525aa0c5a1bb5e3c240aadf4456764e9c645` gives 1681 added and 17 deleted, 1698 changed lines over 8 files, by the custodian's git.
 4. **Next:** B red at f73dfed3 and green at 5ce0525a, in the port order; then the run parts.
+
+## Amendment 8 — 2026-11-27 — the custodian's: a shared path with shell-scale-display, under ADV-2026-11-27-29 item 2 (rule (00))
+
+*References only. Nothing above is edited.*
+
+1. **The shared file.** ADV-2026-11-27-29, filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-29-shell-scale-displays-five-questions-scale-bar-max-px-to-its-test-a-form-amendment-then-one-correction-commit.md`, puts `frontends/shell/src/e2e-test-surface.ts` into `shell-scale-display` (PR 368) for one comment, the doc of `e2eReadWorkspace`. This piece's commit 2962d546 changes two other caller lines of that file.
+2. **The rule.** It counts under rule (00), and it is met as ADV-2026-11-27-27 item 2 has it: nothing is held. Whichever of the two pieces merges second takes main in by a merge commit, with the reviewer's narrow read of that file and the suites that start no app green, before the advisor's merge check.
+3. **The other record.** Shell-scale-display's form records the same row, in its Amendment 17. Nothing of this piece changes.
