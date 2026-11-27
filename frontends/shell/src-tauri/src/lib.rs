@@ -11,12 +11,17 @@
 //! `Arc<StreamRegistry>` via `SkpHost::catalog()`/`SkpHost::tickets()`.
 //!
 //! **Contains no logic of its own.** `commands.rs` is decode → call `SkpHost` → serialize;
-//! everything semantic lives in `kernel::skp` and below it. See `docs/02`'s "frontends: clients
-//! only, no logic" and this crate's exclusion from the Cargo workspace (root `Cargo.toml`), which is
-//! the structural enforcement of that rule.
+//! everything semantic lives in `kernel::skp` and below it. The one exception is lifecycle
+//! bookkeeping (ADR-037, `page.rs`): the page-load hook below ends a replaced page's opens through
+//! calls the kernel already has, and the open commands wait at the page gate, so that a reload does
+//! not leave the old page's opens, and their project locks, held. It maps a fact only the host sees
+//! and decides nothing about data. See `docs/02`'s "frontends: clients only, no logic" and this
+//! crate's exclusion from the Cargo workspace (root `Cargo.toml`), which is the structural
+//! enforcement of that rule.
 
 mod commands;
 mod origin;
+mod page;
 mod publish;
 // Entry-40 empirical producer pass instrument (`pool_poll.rs`'s own module doc has the full
 // account): compiled in under EITHER a plain dev/test build OR the measure-build feature -- the
@@ -182,6 +187,45 @@ enum OriginSelfCheckOutcome {
     Unverifiable { pinned: String, error: String },
 }
 
+/// The `Started` arm's work (ADR-037; `page.rs`), for the main window's `Started`: it gathers the
+/// parts `Pages::page_started` takes and calls it, which starts the old page's end on a thread of
+/// its own and returns. It does no wait and no kernel call, and has no panic path: no `unwrap`,
+/// `expect`, indexing, `eprintln!` or unchecked arithmetic. The two closures are called on the end's
+/// thread, with a clone of the `AppHandle`: the pool stop (under its `cfg`; a no-op otherwise) and
+/// the session log's `SessionLog::append`. The handle `page_started` returns is read only by the
+/// tests of `page.rs`.
+fn start_page_end(webview: &tauri::Webview) {
+    let (Some(pages), Some(host), Some(projects), Some(publishes)) = (
+        webview.try_state::<Arc<page::Pages>>(),
+        webview.try_state::<Arc<SkpHost>>(),
+        webview.try_state::<Option<Arc<Projects>>>(),
+        webview.try_state::<Arc<publish::RunningPublishes>>(),
+    ) else {
+        return;
+    };
+    let for_poll = webview.app_handle().clone();
+    let for_log = for_poll.clone();
+    let parts = page::EndParts {
+        host: host.inner().clone(),
+        projects: projects.inner().clone(),
+        publishes: publishes.inner().clone(),
+        stop_poll: Box::new(move |name| {
+            #[cfg(any(debug_assertions, feature = "measure-build"))]
+            if let Some(tasks) = for_poll.try_state::<pool_poll::PoolPollTasks>() {
+                tasks.stop(name);
+            }
+            #[cfg(not(any(debug_assertions, feature = "measure-build")))]
+            let _ = (&for_poll, name);
+        }),
+        log: Box::new(move |level, message| {
+            if let Some(session_log) = for_log.try_state::<SessionLog>() {
+                session_log.append(level, message);
+            }
+        }),
+    };
+    let _ = pages.inner().page_started(parts);
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -194,7 +238,14 @@ pub fn run() {
         // page-load event, per webview (`tauri::Builder::on_page_load`,
         // `tauri-2.11.5/src/app.rs:1781-1789`: `Fn(&Webview<R>, &PageLoadPayload<'_>)`), for every
         // webview this process ever creates -- filtered below to `PageLoadEvent::Finished` and this
-        // process's one main window.
+        // process's one main window, after one arm for `PageLoadEvent::Started` that returns first.
+        //
+        // **The `Started` arm (ADR-037, `page.rs`).** At a `Started` of the main window the page has
+        // been replaced, and the arm hands the old page's end to `Pages::page_started`, which starts
+        // it on a thread of its own and returns: no wait, no kernel call and no panic path on this
+        // thread. The arm reads `PinnedOrigin.window_label` and nothing else from it, writes neither
+        // `PinnedOrigin` nor `DataPlaneConfig`, selects no origin and calls nothing in `origin.rs`.
+        // The self-check below is unchanged and still runs on `Finished` only.
         //
         // **This can only ever fire after `setup()` has returned.** Page-load events are dispatched
         // by the app's own event loop, which does not begin pumping until `setup()`'s synchronous
@@ -213,6 +264,14 @@ pub fn run() {
         // decision 4 untouched: no new Tauri command exists here for its unclassified-command scan
         // to see).
         .on_page_load(|webview, payload| {
+            if payload.event() == tauri::webview::PageLoadEvent::Started {
+                if let Some(pinned) = webview.try_state::<PinnedOrigin>() {
+                    if webview.label() == pinned.window_label {
+                        start_page_end(webview);
+                    }
+                }
+                return;
+            }
             if payload.event() != tauri::webview::PageLoadEvent::Finished {
                 return;
             }
@@ -488,6 +547,9 @@ pub fn run() {
             // call (`publish::RunningPublishes`'s own doc comment). Dies with the process, same as
             // every other publish-seam state above.
             app.manage(Arc::new(publish::RunningPublishes::new()));
+            // ADR-037: the main window's page bookkeeping. Managed here, with the state the
+            // `on_page_load` hook's `Started` arm and the commands read, before either can run.
+            app.manage(Arc::new(page::Pages::new()));
 
             // Viewport-residency cut P3r (RESIDENCY-PREREGISTRATION.md §12 Amendment 16, the "measure
             // build") -- the debug-gated CDP port, compiled in via this NAMED cargo feature, never a

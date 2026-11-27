@@ -14,7 +14,9 @@
 //!   command catalog and from any future conformance suite (SKP-V0.md §4 item 1).
 //!
 //! **This file contains no logic** beyond decode → call one `SkpHost`/state method → serialize
-//! (`close_dataset` also starts [`Projects::release_ended`], after the host's close) — docs/02's
+//! (`close_dataset` also starts [`Projects::release_ended`], after the host's close; `open_dataset`
+//! and `open_project` also pass the page gate and note the open on its page, and `cancel` and
+//! `close_dataset` note a gate-waiting open and a closed name, all in `page.rs`: ADR-037) — docs/02's
 //! "frontends: clients only, no logic" applied to the Rust half of a client. `lib.rs` lists every
 //! command below in its `tauri::generate_handler!` call; adding one here without adding it there is
 //! a command JS can never reach, which is the reason there is exactly one list.
@@ -42,11 +44,19 @@ use tauri::{Emitter, Manager, State};
 // not reintroduce an unused-import warning anywhere, because `Manager` is always used now.
 use tauri_plugin_dialog::DialogExt;
 
+use crate::page::Pages;
 use crate::publish::{
     self, EventProgress, ExecuteOutcome, PendingAttempts, PrepareOutcome, PublishScope,
     RunningPublishes,
 };
 use crate::state::{DataPlaneHandle, SessionLog};
+
+/// The managed [`Projects`], if there is one (`setup` manages `None` when the per-user data
+/// directory did not resolve): what a late close hands [`Projects::release_ended`] to.
+fn projects_of(app: &tauri::AppHandle) -> Option<Arc<Projects>> {
+    app.try_state::<Option<Arc<Projects>>>()
+        .and_then(|projects| projects.inner().clone())
+}
 
 /// **Runs on `spawn_blocking`.** Opens a DuckDB connection and runs ADR-016's whole-column
 /// uniqueness scan — real IO, and exactly the work `docs/01` principle 7 requires stay
@@ -55,6 +65,12 @@ use crate::state::{DataPlaneHandle, SessionLog};
 /// **Entry-40 pass:** on success, starts the dev/measure-build-gated pool-lease poll
 /// (`pool_poll.rs`) for the newly-opened dataset. `app` is unused (and would warn as such) in a
 /// plain release build, where `pool_poll` is not compiled in at all — see the `cfg_attr` below.
+///
+/// **The page gate (ADR-037 section 5).** The open first awaits `Pages::admit`, on the async
+/// runtime, before the kernel's `begin_open`; a `cancel` of its key ends that wait with the
+/// kernel's cancelled refusal. After the host's open, `Pages::settle` notes the returned name on the
+/// page the open began under: a name returned after its page ended is closed by a late close, and
+/// the pool poll starts only for a name of the current page.
 #[cfg_attr(
     not(any(debug_assertions, feature = "measure-build")),
     allow(unused_variables)
@@ -63,14 +79,20 @@ use crate::state::{DataPlaneHandle, SessionLog};
 pub async fn open_dataset(
     app: tauri::AppHandle,
     state: State<'_, Arc<SkpHost>>,
+    pages: State<'_, Arc<Pages>>,
     request: OpenDatasetRequest,
 ) -> Result<OpenDatasetResponse, SkpError> {
     let host = state.inner().clone();
-    let result = tokio::task::spawn_blocking(move || host.open_dataset(request))
+    let pages = pages.inner().clone();
+    let ticket = pages.admit(&request.cancel_key).await?;
+    let opening = host.clone();
+    let result = tokio::task::spawn_blocking(move || opening.open_dataset(request))
         .await
         .unwrap_or_else(|e| Err(SkpError::protocol("open_dataset_panicked", e.to_string())));
+    let name = result.as_ref().ok().map(|r| r.dataset.as_str().to_string());
+    let settled = pages.settle(ticket, name.as_deref(), &host, projects_of(&app));
     #[cfg(any(debug_assertions, feature = "measure-build"))]
-    if let Ok(response) = &result {
+    if let (Ok(response), crate::page::Settled::Current) = (&result, &settled) {
         if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
             tasks.start(app.clone(), response.dataset.as_str().to_string());
         }
@@ -100,12 +122,16 @@ pub async fn viewport_query(
         .unwrap_or_else(|e| Err(SkpError::protocol("viewport_query_panicked", e.to_string())))
 }
 
+/// The kernel's answer, as `SkpHost::cancel` gives it, except for one case (`Pages::cancel`, ADR-037
+/// section 5): a key an `open_dataset` or `open_project` of this binding still holds waiting at the
+/// page gate, which the kernel answers `unknown`, is cancelled there and answered `requested`.
 #[tauri::command]
 pub fn cancel(
     state: State<'_, Arc<SkpHost>>,
+    pages: State<'_, Arc<Pages>>,
     request: CancelRequest,
 ) -> Result<CancelResponse, SkpError> {
-    state.cancel(request)
+    pages.cancel(state.inner(), request)
 }
 
 /// **Entry-40 pass:** stops the dataset's pool-lease poll (if one is running) — `app` is unused
@@ -135,11 +161,15 @@ pub fn close_dataset(
     app: tauri::AppHandle,
     state: State<'_, Arc<SkpHost>>,
     projects: State<'_, Option<Arc<Projects>>>,
+    pages: State<'_, Arc<Pages>>,
     request: CloseDatasetRequest,
 ) -> Result<CloseDatasetResponse, SkpError> {
+    let closed_name = request.dataset.as_str().to_string();
     #[cfg(any(debug_assertions, feature = "measure-build"))]
     let dataset_for_stop = request.dataset.as_str().to_string();
     let result = state.close_dataset(request);
+    // The page closed this name itself: it leaves the page's opens, so no end closes it again.
+    pages.forget(&closed_name);
     if let Some(projects) = projects.inner().clone() {
         if let Err(e) = std::thread::Builder::new().spawn(move || projects.release_ended()) {
             eprintln!("[spatial-ide-shell] the project lock's release thread did not start: {e}");
@@ -195,7 +225,9 @@ pub async fn save_project(
 
 /// **Runs on `spawn_blocking`**, as `save_project` does: the reopen reads and writes files, opens
 /// the data, and can wait on the mutex in [`Projects`] that a save or a release holds. On `opened`
-/// it starts the pool-lease poll as `open_dataset` does, under the same `cfg`.
+/// it starts the pool-lease poll as `open_dataset` does, under the same `cfg`, and for a name of
+/// the current page only. It passes the page gate after the `Projects` check and before the
+/// reopen, and notes the open on its page, as `open_dataset` does (ADR-037).
 #[cfg_attr(
     not(any(debug_assertions, feature = "measure-build")),
     allow(unused_variables)
@@ -203,7 +235,9 @@ pub async fn save_project(
 #[tauri::command]
 pub async fn open_project(
     app: tauri::AppHandle,
+    host: State<'_, Arc<SkpHost>>,
     state: State<'_, Option<Arc<Projects>>>,
+    pages: State<'_, Arc<Pages>>,
     request: OpenProjectRequest,
 ) -> Result<OpenProjectResponse, SkpError> {
     let Some(projects) = state.inner().clone() else {
@@ -211,11 +245,21 @@ pub async fn open_project(
             "no per-user data directory is available",
         ));
     };
-    let result = tokio::task::spawn_blocking(move || projects.open_project_command(request))
+    let pages = pages.inner().clone();
+    let ticket = pages.admit(&request.cancel_key).await?;
+    let reopening = projects.clone();
+    let result = tokio::task::spawn_blocking(move || reopening.open_project_command(request))
         .await
         .unwrap_or_else(|e| Err(SkpError::protocol("open_project_panicked", e.to_string())));
+    let name = match &result {
+        Ok(OpenProjectResponse::Opened(opened)) => Some(opened.dataset.as_str().to_string()),
+        _ => None,
+    };
+    let settled = pages.settle(ticket, name.as_deref(), host.inner(), Some(projects));
     #[cfg(any(debug_assertions, feature = "measure-build"))]
-    if let Ok(OpenProjectResponse::Opened(opened)) = &result {
+    if let (Ok(OpenProjectResponse::Opened(opened)), crate::page::Settled::Current) =
+        (&result, &settled)
+    {
         if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
             tasks.start(app.clone(), opened.dataset.as_str().to_string());
         }
