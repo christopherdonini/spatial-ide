@@ -16,6 +16,7 @@
  */
 
 import type { BindingCommandEntry, ConsoleEntry, ConsoleRefusal, GuiActionEntry, SkpRequestEntry } from "./recorder";
+import type { ConsoleCountSnapshot } from "./collapsedCountSync";
 import { renderSkpRequest, type RenderedEntry } from "./render";
 import { classARows, classBRows, classCRows } from "./surfaceRegistry";
 
@@ -56,6 +57,20 @@ export function standingHeaderModel(expanded: boolean): readonly [typeof CONSOLE
 export const CLASS_B_THREW_SENTENCE =
   "The host reported an error. Details are in the session log — not recorded here (host error " +
   "text may contain paths).";
+
+/**
+ * The Console's label (known limitation 67; the advisor's words, ADV-2026-11-22-30): the count of
+ * held entries, and, when any were dropped, the total dropped with each ring's share, so neither
+ * count is hidden by the other. Stream first: data requests, cancels and log lines, then the other
+ * entries. It states no ring size and carries no placeholder mark (P6, unmarked).
+ */
+export function consoleLabelText(snapshot: ConsoleCountSnapshot): string {
+  const actionsWord = snapshot.count === 1 ? "action" : "actions";
+  const dropped = snapshot.droppedStream + snapshot.droppedOther;
+  return dropped > 0
+    ? `Console — ${snapshot.count} ${actionsWord} (${dropped} dropped: ${snapshot.droppedStream} of data requests, cancels and log lines; ${snapshot.droppedOther} of other entries)`
+    : `Console — ${snapshot.count} ${actionsWord}`;
+}
 
 export interface ClassARowViewModel {
   kind: "class-a";

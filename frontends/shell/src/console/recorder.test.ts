@@ -84,7 +84,7 @@ describe("ConsoleRecorder", () => {
 
     const entries = recorder.entries().map(asSkpRequestEntry);
     expect(entries).toHaveLength(MAX_CONSOLE_ENTRIES);
-    expect(recorder.droppedCount()).toBe(10);
+    expect(recorder.droppedCount("other")).toBe(10);
     // Oldest 10 (i = 0..9) are gone; the surviving window starts at i = 10 and stays in order.
     expect((entries[0]!.request as { i: number }).i).toBe(10);
     expect((entries[entries.length - 1]!.request as { i: number }).i).toBe(total - 1);
@@ -222,6 +222,144 @@ describe("ConsoleRecorder", () => {
       recorder.recordGuiAction("style.togglePanelExpanded");
       expect(listener).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+/** The seven names the lane tests draw from: three of the stream kind (a named `viewport_query` or
+ * `cancel` request, and the `binding_log_session_event` binding command) and four of the other
+ * kind. Each line is how the name is recorded, by the recorder's own three capture methods. */
+const STREAM_NAMES = ["viewport_query", "cancel", "binding_log_session_event"] as const;
+const OTHER_NAMES = ["describe", "binding_pick_file", "style.setFillColor", "record_step"] as const;
+type LaneName = (typeof STREAM_NAMES)[number] | (typeof OTHER_NAMES)[number];
+
+function recordByName(recorder: ConsoleRecorder, name: LaneName): void {
+  switch (name) {
+    case "binding_log_session_event":
+    case "binding_pick_file":
+      recorder.recordBindingCommand(name);
+      return;
+    case "style.setFillColor":
+      recorder.recordGuiAction(name);
+      return;
+    default:
+      recorder.record({ name }, name);
+  }
+}
+
+function isStreamName(name: LaneName): boolean {
+  return (STREAM_NAMES as readonly string[]).includes(name);
+}
+
+/** A small seeded generator (mulberry32), so the 3,000-entry run below is the same every time. */
+function seeded(seed: number): () => number {
+  let s = seed >>> 0;
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0;
+    let t = s;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+/**
+ * The two lanes (known limitation 67; `governance/forms/frontends/CONSOLE-STREAM-LANE-PREREGISTRATION.md`
+ * section 4): a data request, a cancel and a session-log line are held in a ring of their own, every
+ * other entry in another ring, each of MAX_CONSOLE_ENTRIES. Every figure below is written against
+ * MAX_CONSOLE_ENTRIES, never a literal ring size.
+ */
+describe("ConsoleRecorder lanes", () => {
+  it("CL1: a record_step survives any amount of stream traffic, which is counted against its own ring", () => {
+    const recorder = new ConsoleRecorder();
+    recorder.record({ step: 1 }, "record_step");
+    for (let i = 0; i < 300; i++) {
+      recorder.record({ i }, "viewport_query");
+      recorder.recordBindingCommand("binding_log_session_event");
+    }
+
+    const entries = recorder.entries();
+    expect(entries.some((e) => e.kind === "skp-request" && e.command === "record_step")).toBe(true);
+    expect(recorder.droppedCount("stream")).toBe(600 - MAX_CONSOLE_ENTRIES);
+    expect(recorder.droppedCount("other")).toBe(0);
+    expect(recorder.count()).toBe(MAX_CONSOLE_ENTRIES + 1);
+  });
+
+  it("CL2: each lane holds its newest MAX_CONSOLE_ENTRIES, whatever the other lane does", () => {
+    const recorder = new ConsoleRecorder();
+    for (let i = 0; i < 300; i++) {
+      recorder.recordGuiAction("style.setFillColor");
+      recorder.record({ i }, "cancel");
+    }
+
+    const entries = recorder.entries();
+    expect(recorder.count()).toBe(2 * MAX_CONSOLE_ENTRIES);
+    expect(recorder.droppedCount("stream")).toBe(300 - MAX_CONSOLE_ENTRIES);
+    expect(recorder.droppedCount("other")).toBe(300 - MAX_CONSOLE_ENTRIES);
+    // The oldest held entry of each lane is that lane's (300 - M + 1)th: its seq is twice the
+    // number dropped from that lane (gui-action first, cancel second, in each pair).
+    const firstGui = entries.find((e) => e.kind === "gui-action")!;
+    const firstCancel = entries.find((e) => e.kind === "skp-request")!;
+    expect(firstGui.seq).toBe(2 * (300 - MAX_CONSOLE_ENTRIES));
+    expect(firstCancel.seq).toBe(2 * (300 - MAX_CONSOLE_ENTRIES) + 1);
+  });
+
+  it("CL3: entries() is every held entry, oldest first by seq, across both lanes", () => {
+    const recorder = new ConsoleRecorder();
+    recorder.recordGuiAction("style.setFillColor");
+    for (let i = 0; i < 300; i++) recorder.record({ i }, "viewport_query");
+    recorder.recordGuiAction("tool.set");
+
+    const entries = recorder.entries();
+    expect(entries[0]).toMatchObject({ kind: "gui-action", action: "style.setFillColor", seq: 0 });
+    expect(entries[entries.length - 1]).toMatchObject({ kind: "gui-action", action: "tool.set", seq: 301 });
+    for (let k = 1; k < entries.length; k++) {
+      expect(entries[k]!.seq).toBeGreaterThan(entries[k - 1]!.seq);
+    }
+  });
+
+  it("CL4: never silently truncates across both rings -- count() plus both drop counts is every entry recorded", () => {
+    const recorder = new ConsoleRecorder();
+    const next = seeded(67);
+    const names: LaneName[] = [...STREAM_NAMES, ...OTHER_NAMES];
+    const streamSeqs = new Set<number>();
+    const checkAbsent = (recorded: number): void => {
+      const held = new Set(recorder.entries().map((e) => e.seq));
+      const absent: number[] = [];
+      for (let seq = 0; seq < recorded; seq++) if (!held.has(seq)) absent.push(seq);
+      expect(absent.length).toBe(recorder.droppedCount("stream") + recorder.droppedCount("other"));
+      expect(absent.filter((seq) => streamSeqs.has(seq)).length).toBe(recorder.droppedCount("stream"));
+    };
+
+    let recorded = 0;
+    for (let i = 0; i < 3000; i++) {
+      // Seven names drawn evenly: over 3,000 entries both rings overflow (asserted below).
+      const name = names[Math.floor(next() * names.length)]!;
+      if (isStreamName(name)) streamSeqs.add(recorded);
+      recordByName(recorder, name);
+      recorded++;
+
+      const dropped = recorder.droppedCount("stream") + recorder.droppedCount("other");
+      expect(recorder.count() + dropped).toBe(recorded);
+      if (i % 100 === 99) checkAbsent(recorded);
+    }
+    checkAbsent(recorded);
+    expect(recorder.droppedCount("stream")).toBeGreaterThan(0);
+    expect(recorder.droppedCount("other")).toBeGreaterThan(0);
+    // Each lane holds at most MAX_CONSOLE_ENTRIES: the held entries of each lane, by name.
+    const entries = recorder.entries();
+    const heldStream = entries.filter((e) => streamSeqs.has(e.seq)).length;
+    expect(heldStream).toBeLessThanOrEqual(MAX_CONSOLE_ENTRIES);
+    expect(entries.length - heldStream).toBeLessThanOrEqual(MAX_CONSOLE_ENTRIES);
+  });
+
+  it("CL5: each name goes to its own lane only -- a stream name to the stream lane, every other name to the other", () => {
+    for (const name of [...STREAM_NAMES, ...OTHER_NAMES] as LaneName[]) {
+      const recorder = new ConsoleRecorder();
+      for (let i = 0; i < MAX_CONSOLE_ENTRIES + 1; i++) recordByName(recorder, name);
+
+      expect(recorder.droppedCount("stream"), `${name}: stream drops`).toBe(isStreamName(name) ? 1 : 0);
+      expect(recorder.droppedCount("other"), `${name}: other drops`).toBe(isStreamName(name) ? 0 : 1);
+    }
   });
 });
 

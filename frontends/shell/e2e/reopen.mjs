@@ -12,7 +12,7 @@
 // **The store is a scratch folder.** As `project.mjs` does, the suite sets `LOCALAPPDATA` to a fresh folder before it launches the app, launches its own app and refuses one
 // already listening, and removes the store and every folder it made (under the OS temp folder) at the end, a failing run included.
 //
-// **The Console is read, not trusted.** R5, R8, R9 and E-CHANGED read `close_dataset` rows and R6 and R8 read `open_project` rows (class A) from the Console, whose ring keeps 256 entries (ADV-2026-11-19-06, A4-1).
+// **The Console is read, not trusted.** R5, R8, R9 and E-CHANGED read `close_dataset` rows and R6 and R8 read `open_project` rows (class A) from the Console, which keeps 128 entries of each kind (ADV-2026-11-19-06, A4-1; ADV-2026-11-22-22 item 2).
 // R6's read follows its call at once; each close row is read while the open after it runs, and R8's `same` row after the click, each polled to a harness bound. The suite prints the ring's label at each read, and the entries newer than the row at each close read and at R6.
 // A row that is not there by its bound fails the step by name; the close reads and R6 name the form's stop 13. Every bound below is a harness bound, never a claim about how long anything takes (ADR-018).
 //
