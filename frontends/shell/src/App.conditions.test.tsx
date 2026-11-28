@@ -513,6 +513,7 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
   });
 
   // RECORDED MUTATION for C-A8: in `ordered` (conditions.ts) order urgency 3 by `seq` alone. Expected failure: the strip's top stays the reopen notice after the save. Also fails C-U2b.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "C-A8: after an open of a project that raised a notice, a save's first line is the strip's top, and the reopen notice is listed in Problems after the top row": AssertionError: the save's first line is the top: expected 'The saved view was not applied: it wa…' to be 'The project was saved.'. Also failed: C-U2b. Reverted after observing.
   it("C-A8: after an open of a project that raised a notice, a save's first line is the strip's top, and the reopen notice is listed in Problems after the top row", async () => {
     expect(await h.reopen(openedWithNotice())).toBe("admitted");
     expect(h.qa(".reopen-notice")).toHaveLength(1);

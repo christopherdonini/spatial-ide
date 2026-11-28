@@ -31,8 +31,9 @@ const NOT_IN_FLIGHT: ScanState[] = [
 const run = (id: ExportJob["id"], cancel: () => Promise<boolean> = async () => true): ExportJob => ({ id, cancel });
 
 describe("jobsFrom (J-U1)", () => {
-  // RECORDED MUTATION for J-U1: in `jobsFrom` (jobs.ts) list the scan for the `complete` state too (`isScanInFlight(scanState) || scanState.kind === "complete"`).
+  // RECORDED MUTATION for J-U1: in `jobsFrom` (jobs.ts) list the scan for the `complete` state too (`isInFlight(scanState) || scanState.kind === "complete"`).
   // Expected failure: the complete state gives a scan job. J-E1 is the real-app test of the same row; it is written and not run.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "J-U1: the three in-flight states give the scan job; idle, complete, cancelled and failed give none; one job for each run, in report order": AssertionError: complete: expected [ { kind: 'scan' } ] to deeply equal []. Also failed: J-U1's second case ("the same answer as FilterPanel's for every state"). Reverted after observing.
   it("J-U1: the three in-flight states give the scan job; idle, complete, cancelled and failed give none; one job for each run, in report order", () => {
     for (const state of IN_FLIGHT) expect(jobsFrom(state, [], isScanInFlight).map((job) => job.kind), state.kind).toEqual(["scan"]);
     for (const state of NOT_IN_FLIGHT) expect(jobsFrom(state, [], isScanInFlight), state.kind).toEqual([]);
@@ -59,6 +60,7 @@ function latch(initial: ExportCancelState) {
 describe("the export Cancel's latch (J-U2)", () => {
   // RECORDED MUTATION for J-U2: in `requestExportCancel` (jobs.ts) do not clear the latch when `cancel()` answers false or rejects (drop the un-latch). Expected failure: the
   // latch stays at "cancelling" after a false answer and after a rejection. J-E2 is the real-app test of the same S-11; it is written and not run.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "J-U2: a false answer clears the latch and shows S-11's state; so does a rejection": AssertionError: expected 'cancelling' to be 'not-cancelled'. Reverted after observing.
   it("J-U2: Cancel latches before it asks, asks once, and a true answer leaves it at Cancelling (the row leaves when the run ends)", async () => {
     const { held, apply } = latch("idle");
     let calls = 0;

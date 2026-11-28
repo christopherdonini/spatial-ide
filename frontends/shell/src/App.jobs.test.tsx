@@ -230,8 +230,9 @@ describe("App: the Jobs tab, through the real App on the shipped candidate arm (
     expect(mocks.tileRejects).toHaveLength(1); // one tile, tracked
   }
 
-  // RECORDED MUTATION for J-A1: in `JobsTab`'s scan row call `onCancelScan` no more, and in `App.tsx` give it a handler that dispatches `applyScanEvent({ kind: "reset" })` and does not call `handleCancelScan`.
-  // Expected failure: the row and `.filter-cancel` go, but the status bar keeps its text (`relinquishFill` was not called). J-E1 is the real-app test of the same seam; it is written and not run.
+  // RECORDED MUTATION for J-A1: in `App.tsx` give `JobsTab` `onCancelScan={() => applyScanEvent({ kind: "reset" })}` in place of `handleCancelScan`.
+  // Expected failure: the row and `.filter-cancel` go, but `relinquishFill` is not called, so the status is not the one FilterPanel's Cancel gives. J-E1 is the real-app test of the same seam; it is written and not run.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "J-A1: the Jobs scan row's Cancel is FilterPanel's Cancel: relinquishFill runs, the row and .filter-cancel go, .scan-incomplete stays absent, and the status is the one FilterPanel's Cancel gives": AssertionError: relinquishFill's own statement, the same as FilterPanel's Cancel gives: expected undefined to be 'Filling stopped — showing 3 features …'. Reverted after observing.
   it("J-A1: the Jobs scan row's Cancel is FilterPanel's Cancel: relinquishFill runs, the row and .filter-cancel go, .scan-incomplete stays absent, and the status is the one FilterPanel's Cancel gives", async () => {
     // The twin first: FilterPanel's own Cancel at the same point.
     await openWithOnePendingTile();
@@ -274,6 +275,7 @@ describe("App: the Jobs tab, through the real App on the shipped candidate arm (
 
   // RECORDED MUTATION for J-A2: in `handleExportRunning`'s `ended` handler (App.tsx) do not remove the run from `exportJobs`. Expected failure: the row stands after `ended`.
   // J-E2 is the real-app test of the same row; it is written and not run.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "J-A2: a run's report adds a row; its Cancel calls report.cancel once; ended removes the row and releases the consumer (the Table issues again)": AssertionError: ended removes the row: expected [ <div …(1)>…(3)</div> ] to have a length of +0 but got 1. Also failed: J-A2's second test ("two runs are two rows …"). Reverted after observing.
   it("J-A2: a run's report adds a row; its Cancel calls report.cancel once; ended removes the row and releases the consumer (the Table issues again)", async () => {
     await open("C:/data/a.parquet");
     activity();

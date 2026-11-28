@@ -65,6 +65,7 @@ describe("JobsTab (J-R1)", () => {
   });
 
   // RECORDED MUTATION for J-R1: in `JobsTab.tsx` leave the export row's Cancel enabled while it reads Cancelling (drop its `disabled`). Expected failure: the button is not disabled while Cancelling.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "J-R1: an export row shows S-9; Cancel asks once and is disabled and reads Cancelling while the run stands; the row goes when the run does": AssertionError: Cancel is disabled while Cancelling: expected false to be true. Reverted after observing.
   it("J-R1: an export row shows S-9; Cancel asks once and is disabled and reads Cancelling while the run stands; the row goes when the run does", async () => {
     let calls = 0;
     let answer!: (reached: boolean) => void;

@@ -79,7 +79,9 @@ describe("conditions: the strip's top, and the count of the others (C-U2)", () =
   });
 
   // RECORDED MUTATION for C-U2b: in `ordered` (conditions.ts) order urgency 3 by `seq` alone, as C-U2 does for every urgency. Expected failure: the reopen notices come first, before the save's two lines. Also fails C-A8.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "C-U2b: within urgency 3 the route raised most recently comes first, and each route keeps its own raise order; urgency 2 is unchanged": AssertionError: expected [ 'stream-terminal#null', …(4) ] to deeply equal [ 'stream-terminal#null', …(4) ]. Also failed: C-A8 (App.conditions.test.tsx). Reverted after observing.
   // RECORDED MUTATION for C-U2b, the second (Amendment 17 item 5): in `ordered` sort the seq descending (newest first) for every urgency. Expected failure: the order within each route flips. Also fails C-U2.
+  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "C-U2b: within urgency 3 the route raised most recently comes first, and each route keeps its own raise order; urgency 2 is unchanged": AssertionError: expected [ 'stream-terminal#null', …(4) ] to deeply equal [ 'stream-terminal#null', …(4) ]. Also failed: C-U2, C-U3, C-U7. Reverted after observing.
   it("C-U2b: within urgency 3 the route raised most recently comes first, and each route keeps its own raise order; urgency 2 is unchanged", () => {
     const state = fold([
       opened(R),
