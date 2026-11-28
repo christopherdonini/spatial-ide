@@ -532,3 +532,15 @@ Read the last amendment first.
 5. **C-1 and D-1 to D-3** (its item 7) are held until the reviewer's read part; where its words for a place differ, both go to the advisor first. D-3 goes in by an appended amendment.
 
 Read the last amendment first.
+
+## Amendment 13 — 2026-11-28 — the custodian's: the reviewer's read part filed; its findings; the advisor's one ruling on the ADR amendment and the KNOWN-LIMITATIONS item now due
+
+*References only. Nothing above is edited. Where this amendment summarises the report, its bytes govern.*
+
+1. **The reviewer's read part** at 5174676a is filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-build-gate-reviewer-read-part.md` (its hand-back's sha256 e8aeb1ab8bfc86868d890c8824b99a7aec1e8f5247bdf790c24469ad94b65198). It gives no verdict. By it: the five paths are in Scope and the declared-unchanged paths are untouched; the count is 417 lines over 5 files, with class 8 as Amendments 7 and 9 record it; the caller rule is met; each of M-U1 to M-U6 turned its own test red at 5174676a, and those runs are the observations of record at that head (its check 4); the suites that start no app are green at the head; no item of §9 is met; the seams match the registry sources the lock names.
+2. **Its findings:** RC-1, words only, in `lib.rs`'s region comment, with its Old and New; RD-1, a record: the closing amendment records `verify-mutation`'s exit 1 at the head as a run, never as an observation, and names the report's check 4 as the observation of record; RD-2, the KNOWN-LIMITATIONS draft's source 1 clause that the code contradicts, as the architect found, with no words proposed. It agrees with the architect's C-1, D-1 and D-2 and gives no words of its own for their places, so no two gates give differing words for one place.
+3. **For the advisor now** (Amendment 12 item 4): its one ruling on ADR-037's amendment (OPEN-2) and the KNOWN-LIMITATIONS item, with RD-2; and the reviewer's suggestion S-1 under ADV-2026-11-28-09 item 5 (c), a Windows unit test over the live settings that would put the key stub under Product CI (shell), which is a suggestion and not a finding.
+4. **For the run part:** E-1 at the base and at the head, with E1's FAIL note read as `found 0`; E-1's series is the only evidence that the settings call made inline from `setup()` runs without a panic.
+5. **Next:** after the advisor's ruling, one worker applies C-1, D-1, D-2 and RC-1 (words only, no re-gate), and D-3 goes in by an appended amendment. `D:/wt/keys-target` (9006 MB, by the report) stays for the port run.
+
+Read the last amendment first.
