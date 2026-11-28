@@ -232,7 +232,7 @@ describe("App: the Jobs tab, through the real App on the shipped candidate arm (
 
   // RECORDED MUTATION for J-A1: in `App.tsx` give `JobsTab` `onCancelScan={() => applyScanEvent({ kind: "reset" })}` in place of `handleCancelScan`.
   // Expected failure: the row and `.filter-cancel` go, but `relinquishFill` is not called, so the status is not the one FilterPanel's Cancel gives. J-E1 is the real-app test of the same seam; it is written and not run.
-  // OBSERVED AT 12f326aa0004fc112a0ecfb37c10d710653f2a9c (2026-11-28): FAILED -- "J-A1: the Jobs scan row's Cancel is FilterPanel's Cancel: relinquishFill runs, the row and .filter-cancel go, .scan-incomplete stays absent, and the status is the one FilterPanel's Cancel gives": AssertionError: relinquishFill's own statement, the same as FilterPanel's Cancel gives: expected undefined to be 'Filling stopped — showing 3 features …'. Reverted after observing.
+  // OBSERVED AT 5dbb45f731e0798a6179e85a9adf595230ce8911 (2026-11-28): FAILED -- "J-A1: the Jobs scan row's Cancel is FilterPanel's Cancel: relinquishFill runs, the row and .filter-cancel go, .scan-incomplete stays absent, and the status is the one FilterPanel's Cancel gives": AssertionError: relinquishFill's own statement, the same as FilterPanel's Cancel gives: expected undefined to be 'Filling stopped — showing 3 features …'. Reverted after observing.
   it("J-A1: the Jobs scan row's Cancel is FilterPanel's Cancel: relinquishFill runs, the row and .filter-cancel go, .scan-incomplete stays absent, and the status is the one FilterPanel's Cancel gives", async () => {
     // The twin first: FilterPanel's own Cancel at the same point.
     await openWithOnePendingTile();
