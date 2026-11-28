@@ -212,9 +212,18 @@ export function visibleFor(state: ConditionsState, context: { readonly view: Vie
   );
 }
 
-/** Urgency first, then the first raise (oldest first). */
+/**
+ * Urgency first. Within urgency 1 and 2 the first raise comes first (oldest first). Within urgency 3 the route raised most recently comes first (the newest `seq` among that route's
+ * conditions in the list), and inside a route the first raise comes first, so a save's lines keep their order and come before the reopen notices of an earlier open (Amendment 17
+ * item 6, OPEN-B1 (b)). This is the one order: the strip's top and the Problems tab both read it.
+ */
 export function ordered(list: readonly Condition[]): Condition[] {
-  return [...list].sort((a, b) => a.urgency - b.urgency || a.seq - b.seq);
+  const newestOfRoute = new Map<ConditionRoute, number>();
+  for (const condition of list) {
+    if (condition.urgency === 3) newestOfRoute.set(condition.reason.route, Math.max(newestOfRoute.get(condition.reason.route) ?? -1, condition.seq));
+  }
+  const routeNewest = (condition: Condition): number => newestOfRoute.get(condition.reason.route) ?? condition.seq;
+  return [...list].sort((a, b) => a.urgency - b.urgency || (a.urgency === 3 ? routeNewest(b) - routeNewest(a) : 0) || a.seq - b.seq);
 }
 
 /** The top of the list and how many conditions stand below it, or `null` for an empty list. */

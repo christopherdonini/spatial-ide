@@ -47,6 +47,7 @@
     "e2e:second-open": "node e2e/second-open.mjs",
     "e2e:conditions": "node e2e/conditions.mjs",
     "e2e:conditions-baseline": "node e2e/conditions-baseline.mjs",
+    "e2e:jobs": "node e2e/jobs.mjs",
     "test:residency-trace": "node e2e/residencyTrace.test.mjs",
     "test:citation-integrity": "node e2e/citationIntegrity.test.mjs",
     "test:export-elapsed": "node e2e/exportElapsed.test.mjs",

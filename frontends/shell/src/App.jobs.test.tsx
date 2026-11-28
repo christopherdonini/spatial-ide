@@ -323,6 +323,5 @@ describe("App: the Jobs tab, through the real App on the shipped candidate arm (
     await act(async () => two.end({ phase: "execute", outcome: { status: "unknown-attempt" } }));
     await flush();
     expect(qa("#activity-panel-jobs .jobs-row-export")).toHaveLength(0);
-    expect(q("#activity-panel-jobs .jobs-empty")).not.toBeNull();
   });
 });

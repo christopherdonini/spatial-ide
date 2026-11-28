@@ -11,6 +11,9 @@ import { FormattedRefusal, formatRefusal } from "./admission/formatRefusal";
 import type { CeilingKind } from "./canvas/limits";
 import ConditionView from "./conditions/ConditionView";
 import ProblemsTab from "./conditions/ProblemsTab";
+import JobsTab from "./jobs/JobsTab";
+import { jobsFrom } from "./jobs/jobs";
+import type { ExportJob } from "./jobs/jobs";
 import { attentionOf, conditionsReducer, initialConditionsState, visibleFor } from "./conditions/conditions";
 import type { Condition, ConditionTarget } from "./conditions/conditions";
 import { projectionFor, projectionSummary } from "./attributes/projection";
@@ -1282,6 +1285,8 @@ export default function App() {
    */
   const exportRunsRef = useRef(new Map<ExportConsumerId, ExportRun>());
   const exportSeqRef = useRef(0);
+  /** The Jobs tab's mirror of `exportRunsRef` (milestone 5 section 2.4): the standing runs' ids and cancels, in the order they were reported. Written where the runs are, and nowhere else. */
+  const [exportJobs, setExportJobs] = useState<readonly ExportJob[]>([]);
   /** The open waiting on the ask: its answer, and the runs that stood when it was asked or were reported while it stands. */
   const askRef = useRef<{ answer: (go: boolean) => void; runs: readonly ExportRun[] } | null>(null);
   const [asking, setAsking] = useState(false);
@@ -1298,6 +1303,7 @@ export default function App() {
     const id: ExportConsumerId = `export-${++exportSeqRef.current}`;
     const run: ExportRun = { cancel: report.cancel, cancelChosen: false, end: null };
     exportRunsRef.current.set(id, run);
+    setExportJobs((jobs) => [...jobs, { id, cancel: report.cancel }]);
     // A run reported while the ask stands belongs to the ask: if it ends before the choice it leaves `exportRunsRef`, and the choice would otherwise never see it.
     if (askRef.current !== null) askRef.current = { ...askRef.current, runs: [...askRef.current.runs, run] };
     setLateCancel([]);
@@ -1307,6 +1313,7 @@ export default function App() {
       const finished = lateCancelOutcome(run.cancelChosen, end);
       if (finished !== null) setLateCancel((shown) => [...shown, finished]);
       exportRunsRef.current.delete(id);
+      setExportJobs((jobs) => jobs.filter((job) => job.id !== id));
       dispatch({ type: "consumer.released", resource, consumer: id });
     });
   }, []);
@@ -2258,6 +2265,81 @@ export default function App() {
     }
   }
 
+  /**
+   * The one scan Cancel (milestone 5 section 8 item 7): FilterPanel's Cancel and the Jobs tab's scan row call this function, so the two can never differ. It reads only refs and
+   * the stable scan setter, so a call from either place does what the other's does at the same moment.
+   */
+  const handleCancelScan = (): void => {
+    // P6 review, should-fix 1: reads `scanStateRef.current`, NEVER the render-scope
+    // `scanState` this closure could otherwise capture stale -- see the ref's own doc
+    // comment. Both the dispatch and the handle handed to `cancelStream` come from the
+    // exact same, freshest-possible read.
+    const current = scanStateRef.current;
+    if (!isScanInFlight(current)) return;
+    // P5f complex-gate should-fix 3: candidate arm's own cancel path -- before this piece,
+    // `candidateManagerRef.current` never existed and no scan event was ever dispatched for
+    // this arm at all, so Cancel was never reachable (`isScanInFlight` never true).
+    //
+    // Item A (residency-debt cut 1b, decisions 32a/33b) REPOINTS this branch: it used to
+    // dispatch `{kind:"reset"}` here and call `candidateManagerRef.current.stop()` (a
+    // PERMANENT kill -- every future `onCameraChange` for this dataset session refused
+    // forever, docs/01 principle 7's own conviction, `spikes/viewport-residency-1a-diagnosis/`).
+    // Entry 32's own ruling, verbatim (its rider elided here): "32a — Cancel becomes the
+    // scoped relief, permanent kill leaves the UI (close/reopen stays the hard reset)…".
+    // Concretely: stop filling,
+    // keep the current partial view, let tiling resume on the next camera change. 33b adds
+    // that the relief cancels in-flight tile streams too (the existing `cancel` SKP command,
+    // ADR-018 -- no new wire), not merely the queued backlog.
+    //
+    // **Scope boundary, entry 35 -- RULED 2026-09-05 ("yes with grid frame, no at
+    // bootstrap").** This lever reaches the TILE fill (`relinquishFill` cancels every
+    // in-flight tile stream and drops the queued backlog, 33b) AND, now, the untiled first-
+    // look/reissue stream too, but ONLY once a grid frame already exists -- the frameless
+    // bootstrap window stays uncancellable and documented (the anchor hazard: cancelling
+    // before that stream's own terminal would freeze the grid on a truncated union). See
+    // `candidateArmSession.ts`'s own `relinquishFill` doc comment for the full rule and the
+    // string-3 reachability trace it carries out. The status this branch triggers is honest
+    // about which case is live either way (`emitResidencyRelinquished`'s own doc comment has
+    // the full account of the `untiledStreamStillRunning` wording, now reachable only from
+    // the frameless window).
+    //
+    // `candidateSessionRef.current.relinquishFill()` (NOT `candidateManagerRef.current.stop()`)
+    // is the call now -- it owns its OWN scan-liveness dispatch internally, unlike the OLD
+    // `stop()` path this comment used to describe: `relinquishFill`/`relinquishOutstanding`
+    // never await anything (both methods' own doc comments), so there is no async gap for a
+    // dataset-close/remount to race, and dispatching `{kind:"reset"}` a SECOND time here
+    // would desync the session's own `scanActive` bookkeeping from what its internal
+    // `syncScanLiveness` believes, silently swallowing the next genuine `{kind:"issued"}`
+    // transition once tiling resumes (`candidateArmSession.ts`'s own `relinquishFill` doc
+    // comment has the full account of why the dispatch moved). `candidateManagerRef` itself
+    // is left as the branch discriminator -- it and `candidateSessionRef` share the exact
+    // same set/clear lifecycle (`candidateSessionRef`'s own doc comment above).
+    if (candidateManagerRef.current) {
+      // S6 (reviewer gate, residency-debt cut 1b): never a silent no-op. `candidateManagerRef`
+      // being set is exactly this branch's own discriminator for "a candidate-arm
+      // CandidateArmSession exists" (the two refs share one set/clear lifecycle, above) -- a
+      // null `candidateSessionRef` here would mean that shared lifecycle broke, a genuine
+      // bug worth reporting loudly, never a click the button should quietly swallow.
+      const session = candidateSessionRef.current;
+      if (!session) {
+        logSessionEvent(
+          "candidate-cancel-session-missing",
+          "Cancel clicked while candidateManagerRef was set but candidateSessionRef was null -- relinquishFill could not be called"
+        );
+        return;
+      }
+      session.relinquishFill();
+      return;
+    }
+    const handle = current.streamHandle;
+    // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- dispatched synchronously
+    // here, in the SAME handler that calls `cancelStream`, never awaiting anything: a
+    // self-cancelled stream's terminal is suppressed by the manager and will never arrive
+    // to drive this transition otherwise.
+    applyScanEvent({ kind: "cancelledByUser", streamHandle: handle });
+    void managerRef.current?.cancelStream(handle);
+  };
+
   return (
     <StudioLayout
       overlays={<ErrorBanner />}
@@ -2324,76 +2406,7 @@ export default function App() {
             appliedFilter={activeFilter}
             onApply={handleApplyFilter}
             scanState={scanState}
-            onCancel={() => {
-              // P6 review, should-fix 1: reads `scanStateRef.current`, NEVER the render-scope
-              // `scanState` this closure could otherwise capture stale -- see the ref's own doc
-              // comment. Both the dispatch and the handle handed to `cancelStream` come from the
-              // exact same, freshest-possible read.
-              const current = scanStateRef.current;
-              if (!isScanInFlight(current)) return;
-              // P5f complex-gate should-fix 3: candidate arm's own cancel path -- before this piece,
-              // `candidateManagerRef.current` never existed and no scan event was ever dispatched for
-              // this arm at all, so Cancel was never reachable (`isScanInFlight` never true).
-              //
-              // Item A (residency-debt cut 1b, decisions 32a/33b) REPOINTS this branch: it used to
-              // dispatch `{kind:"reset"}` here and call `candidateManagerRef.current.stop()` (a
-              // PERMANENT kill -- every future `onCameraChange` for this dataset session refused
-              // forever, docs/01 principle 7's own conviction, `spikes/viewport-residency-1a-diagnosis/`).
-              // Entry 32's own ruling, verbatim (its rider elided here): "32a — Cancel becomes the
-              // scoped relief, permanent kill leaves the UI (close/reopen stays the hard reset)…".
-              // Concretely: stop filling,
-              // keep the current partial view, let tiling resume on the next camera change. 33b adds
-              // that the relief cancels in-flight tile streams too (the existing `cancel` SKP command,
-              // ADR-018 -- no new wire), not merely the queued backlog.
-              //
-              // **Scope boundary, entry 35 -- RULED 2026-09-05 ("yes with grid frame, no at
-              // bootstrap").** This lever reaches the TILE fill (`relinquishFill` cancels every
-              // in-flight tile stream and drops the queued backlog, 33b) AND, now, the untiled first-
-              // look/reissue stream too, but ONLY once a grid frame already exists -- the frameless
-              // bootstrap window stays uncancellable and documented (the anchor hazard: cancelling
-              // before that stream's own terminal would freeze the grid on a truncated union). See
-              // `candidateArmSession.ts`'s own `relinquishFill` doc comment for the full rule and the
-              // string-3 reachability trace it carries out. The status this branch triggers is honest
-              // about which case is live either way (`emitResidencyRelinquished`'s own doc comment has
-              // the full account of the `untiledStreamStillRunning` wording, now reachable only from
-              // the frameless window).
-              //
-              // `candidateSessionRef.current.relinquishFill()` (NOT `candidateManagerRef.current.stop()`)
-              // is the call now -- it owns its OWN scan-liveness dispatch internally, unlike the OLD
-              // `stop()` path this comment used to describe: `relinquishFill`/`relinquishOutstanding`
-              // never await anything (both methods' own doc comments), so there is no async gap for a
-              // dataset-close/remount to race, and dispatching `{kind:"reset"}` a SECOND time here
-              // would desync the session's own `scanActive` bookkeeping from what its internal
-              // `syncScanLiveness` believes, silently swallowing the next genuine `{kind:"issued"}`
-              // transition once tiling resumes (`candidateArmSession.ts`'s own `relinquishFill` doc
-              // comment has the full account of why the dispatch moved). `candidateManagerRef` itself
-              // is left as the branch discriminator -- it and `candidateSessionRef` share the exact
-              // same set/clear lifecycle (`candidateSessionRef`'s own doc comment above).
-              if (candidateManagerRef.current) {
-                // S6 (reviewer gate, residency-debt cut 1b): never a silent no-op. `candidateManagerRef`
-                // being set is exactly this branch's own discriminator for "a candidate-arm
-                // CandidateArmSession exists" (the two refs share one set/clear lifecycle, above) -- a
-                // null `candidateSessionRef` here would mean that shared lifecycle broke, a genuine
-                // bug worth reporting loudly, never a click the button should quietly swallow.
-                const session = candidateSessionRef.current;
-                if (!session) {
-                  logSessionEvent(
-                    "candidate-cancel-session-missing",
-                    "Cancel clicked while candidateManagerRef was set but candidateSessionRef was null -- relinquishFill could not be called"
-                  );
-                  return;
-                }
-                session.relinquishFill();
-                return;
-              }
-              const handle = current.streamHandle;
-              // "Transitions AT THE CANCEL CALL SITE" (P4 binding note 6) -- dispatched synchronously
-              // here, in the SAME handler that calls `cancelStream`, never awaiting anything: a
-              // self-cancelled stream's terminal is suppressed by the manager and will never arrive
-              // to drive this transition otherwise.
-              applyScanEvent({ kind: "cancelledByUser", streamHandle: handle });
-              void managerRef.current?.cancelStream(handle);
-            }}
+            onCancel={handleCancelScan}
           />
           <ClauseCards key={`clauses-${admitted.dataset}`} clauses={view === null ? [] : viewClauses(view)} pending={clausePending} onChange={changeClauses} />
           </>
@@ -2673,6 +2686,8 @@ export default function App() {
         /* Milestone 4 PR C (section 2.4): the table, keyed on the dataset like the panels above so a new open starts on the first scope. */
         /* Milestone 5 section 2.3: every condition of the open on the map, once; the strip's top is the first row, without its own element. */
         "activity.problems": <ProblemsTab conditions={visibleConditions} notKept={conditions.notKept} onDismiss={dismissCondition} />,
+        /* Milestone 5 section 2.4: the map's feature scan while one is in flight and each export run; the scan row's Cancel is FilterPanel's own handler. */
+        "activity.jobs": <JobsTab jobs={jobsFrom(scanState, exportJobs, isScanInFlight)} scanLiveness={scanLivenessText(scanState)} onCancelScan={handleCancelScan} />,
         "activity.table": admitted && (
           <TableTab
             key={admitted.dataset}

@@ -1512,3 +1512,26 @@ body,
   outline: 2px solid currentColor;
   outline-offset: -2px;
 }
+
+/* Milestone 5 section 2.4: the Jobs tab. A row is a label, the owner's liveness text for the scan when there is one, and one Cancel; nothing in it is counted or timed. */
+.jobs-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.25rem 0.5rem;
+  overflow-y: auto;
+}
+
+.jobs-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+}
+
+.jobs-empty,
+.jobs-not-cancelled {
+  margin: 0;
+  font-size: 0.85rem;
+}

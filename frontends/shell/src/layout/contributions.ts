@@ -3,6 +3,7 @@
 
 import type { ReactNode } from "react";
 import { PROBLEMS_LABEL } from "../conditions/conditionsConstants";
+import { JOBS_LABEL } from "../jobs/jobs";
 
 /**
  * Registered contributions (SHELL-MIGRATION-MILESTONE-1-PREREGISTRATION.md §2.3 (b), plan seam 7):
@@ -43,6 +44,7 @@ export const ACTIVITY_TABS = [
   { id: "notices", label: "Notices" },
   { id: "table", label: "[P6 placeholder] Table" },
   { id: "problems", label: PROBLEMS_LABEL },
+  { id: "jobs", label: JOBS_LABEL },
 ] as const;
 
 /** The strip has one place, the top condition (milestone 5 section 2.3); the conditions below it are rows of the Problems tab. */

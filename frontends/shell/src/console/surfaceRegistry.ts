@@ -326,7 +326,7 @@ const CLASS_C_ROWS = [
     class: "C",
     action: "layout.selectActivityTab",
     statement:
-      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices, Table and Problems tabs is pure view state for this session, never sent to the kernel.",
+      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices, Table, Problems and Jobs tabs is pure view state for this session, never sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
