@@ -3054,3 +3054,16 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 28 — 2026-11-28 — the custodian's: lead-data's class 9 draft filed (ADV-2026-11-28-15 item 1); one of its places is the architect's D-4, for the advisor
+
+*References only. Nothing above is edited. Where this amendment summarises the draft, its bytes govern. The draft binds nothing until a later amendment carries it.*
+
+1. **The draft** went out at 2026-11-28T08:19:41Z (date -u) and is filed at `state/drafts/2026-11-28-b2-piece-1c-step-3-recovery-offer-class-9-listing-refused-lead-data-draft.md` (its hand-back's sha256 7d5d24ae566cdee44a2ba505d8fbf8fc321bde2af9d13b3b7884aa76ae1256b6). It gives a kernel row, K-C43, with mutations M-K43 and M-K43-A; a shell row, S-11, with mutation M-S11; SKP-V0's sentences for §13.3, §13.4's reused list and §8's `skp/0.18` entry, and none for §10.4's row; a hypothesis, H4, that each of the kernel's three CI runners can make a folder unreadable to the test with no product seam, which K-C43's red run on each runner checks; and a stop, I13, for the advisor if it cannot.
+2. **Its scope and count, by its estimate:** no file added; about 131 lines; Part 1 about 5,015 over 46 files, against 5,200 and 47; the kernel product group about 1,430 against 1,040, which is class 8 and is recorded in the class 9 amendment before the code. It names two groups near their figures (src-tauri and protocol); the custodian counts them before the correction is dispatched.
+3. **One place, two texts:** its §13.4 sentence and the architect's D-4 fall on one line of SKP-V0. It gives both, and a third text that carries both, and rules nothing between them. They go to the advisor before any of them is committed (ADV-2026-11-27-10 item 2), with the reviewer's read part (Amendment 27 item 3).
+4. **Next:** after the advisor's ruling, the draft's amendment text is appended as the class 9 amendment, with that ruling's text at §13.4, before any code of its rows. The correction carries it with the held findings (Amendment 27 item 7).
+
+Read the last amendment first.
+
+Nothing above is edited.
