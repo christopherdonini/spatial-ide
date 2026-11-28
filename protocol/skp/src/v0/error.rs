@@ -287,7 +287,7 @@ impl SkpError {
     pub fn recoverable_record_locked(record: &str) -> Self {
         Self::protocol_with_fields(
             "recoverable_record_locked",
-            format!("{record} is held by a run of the application that is still going, so it was not read or changed"),
+            format!("[P6 placeholder] {record} is held by a run of the application that is still going, so it was not read or changed"),
             [("record", record.to_string())],
         )
     }
@@ -297,7 +297,9 @@ impl SkpError {
     pub fn recoverable_record_unknown(record: &str) -> Self {
         Self::protocol_with_fields(
             "recoverable_record_unknown",
-            format!("{record} is not a record that can be recovered or discarded here"),
+            format!(
+                "[P6 placeholder] {record} is not a record that can be recovered or discarded here"
+            ),
             [("record", record.to_string())],
         )
     }
@@ -307,7 +309,7 @@ impl SkpError {
     pub fn recoverable_record_refused(record: &str, file: &str, rule: &str) -> Self {
         Self::protocol_with_fields(
             "recoverable_record_refused",
-            format!("{record} cannot be recovered: {file}: {rule}"),
+            format!("[P6 placeholder] {record} cannot be recovered: {file}: {rule}"),
             [
                 ("record", record.to_string()),
                 ("file", file.to_string()),
@@ -321,7 +323,7 @@ impl SkpError {
     pub fn recoverable_record_not_for_this_open(record: &str) -> Self {
         Self::protocol_with_fields(
             "recoverable_record_not_for_this_open",
-            format!("{record} is not the record for this open"),
+            format!("[P6 placeholder] {record} is not the record for this open"),
             [("record", record.to_string())],
         )
     }
