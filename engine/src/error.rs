@@ -137,8 +137,8 @@ pub enum EngineError {
     /// the value a consumer branches on is `refusal` — one of `crate::lod`'s declared constants —
     /// and `detail` is the evidence that convicted this source. **One variant rather than one per
     /// refusal**, because from a caller's side they are one failure — this source cannot be tiered —
-    /// and the identifier is what says which; the same argument `IdentityUnusable` above records for
-    /// ADR-016's four.
+    /// and the identifier is what says which; the same argument `IdentityUnusable` below records for
+    /// ADR-016's identity refusals.
     ///
     /// The two *size* ceilings are deliberately NOT here: they are `CeilingExceeded`, which already
     /// carries a declared ceiling's name with the limit and the observed value, and a second shape
@@ -150,21 +150,47 @@ pub enum EngineError {
 
     /// The declared or native identity column cannot serve as stable feature identity.
     ///
-    /// ADR-016. Covers a missing column, a type that cannot widen into `u64` without a transform,
-    /// a negative value, and a column that is not unique. All four are the same failure from a
-    /// consumer's side — the id it is handed does not identify one feature — so they share a
-    /// variant and are distinguished by `detail`.
+    /// ADR-016. Covers a missing column, a column whose name cannot be addressed, a type that
+    /// cannot widen into `u64` without a transform, a negative value, a null in the column and a
+    /// column that is not unique. All six are the same failure from a consumer's side — the id it
+    /// is handed does not identify one feature — so they share a variant and are distinguished by
+    /// `detail`.
     ///
-    /// `candidate_columns` (NEXT-CUT.md P0): the file's 64-bit integer columns (`Int64` and
-    /// `UInt64`), in schema order, unranked and unpreselected — no scoring, no "looks like an id"
+    /// `candidate_columns` (NEXT-CUT.md P0): the file's integer columns of every width admission
+    /// takes (`Int8` to `Int64` and `UInt8` to `UInt64`, ADR-016's Note 2026-11-26), in schema
+    /// order, unranked and unpreselected — no scoring, no "looks like an id"
     /// guess (that is Alpha data-doctor territory, `docs/05`). A remediation UI lists them; it does
     /// not recommend one. Carried only in this structured field — `Display` below does not mention
     /// it, so the refusal's verbatim text stays unchanged for every existing consumer of it.
+    ///
+    /// `identity_source` (ADR-016 Amendment 3, Decision 1) is `IdSource::as_envelope_value` of the
+    /// source the engine checked when it refused: `file:id` for the file's own `id` column, checked
+    /// with no declaration, and `mapped:<column>` for a column a declaration named. It carries the
+    /// engine's own fact, under the wire's name, and the kernel passes it through. Like
+    /// `candidate_columns` it rides only in this structured field: `Display` below does not mention
+    /// it.
     IdentityUnusable {
         column: String,
         detail: String,
         candidate_columns: Vec<String>,
+        identity_source: String,
     },
+
+    /// The caller's choice to set aside the file's own `id` column (ADR-016 Amendment 3) cannot be
+    /// taken: it was sent beside a declared identity column, the file has no column named `id`, or
+    /// the file's own `id` column serves as its identity.
+    ///
+    /// **Refused by name, and nothing opens.** The choice answers a refusal of the file's own `id`
+    /// column; the engine never makes it, infers it or falls back to it. Each case states a fact
+    /// about this engine's own check and no consequence (the human's ruling of 2026-09-16, round 7:
+    /// "Engine messages state engine facts; owners state consequences."). Through the shell, none
+    /// of the three is reached unless something changes on disk between the refused attempt and
+    /// the choice. The shell offers the choice only beside an `engine.identity_unusable` refusal
+    /// whose `identity_source` is `file:id`, which a declared column never gives. So the first is
+    /// reached only at a reopen whose project file gained a declaration in between, and the other
+    /// two only when the file the choice opens is no longer the file that was refused. All three
+    /// can be reached through another client.
+    IdentitySetAsideRefused { detail: String },
 
     /// The source is not the file this dataset opened against — the **structural descriptor**
     /// differs (R-D1/R-D2, `engine/ADMISSION-PREREGISTRATION.md` §2e).
@@ -179,13 +205,17 @@ pub enum EngineError {
     /// is not a check that passed.
     SourceChanged { detail: String },
 
-    /// A **partitioned** source reached the session-ordinal path — R-I4 (§2d; boundary 7).
+    /// A path read as a **partitioned** source, a folder or a pattern — R-I4 (§2d; boundary 7).
     ///
     /// The session tier's identity is (dataset-session generation, physical file-row ordinal), and
     /// a file-row ordinal is a position **within one file**. Across a partition set there is no
     /// such position without a declared file order, and declaring one would be a packing contract
     /// this cut does not introduce (A5). Refused by name rather than admitted with an ordinal that
     /// would silently mean a different row per scan.
+    ///
+    /// The refusal comes on every open path, before any identity is read, with or without a
+    /// declared identity column: a declaration does not change it, so the message offers none. The
+    /// session tier's reasoning above is why the ordinal path cannot admit a partitioned source.
     IdentityOrdinalPartitionedUnsupported { detail: String },
 
     /// This engine's own record of an admission contradicts itself.
@@ -356,12 +386,12 @@ impl fmt::Display for EngineError {
             Self::LodRefused { refusal, detail } => {
                 write!(f, "refused ({refusal}): {detail}")
             }
-            Self::IdentityUnusable { column, detail, candidate_columns: _ } => write!(
+            Self::IdentityUnusable { column, detail, candidate_columns: _, identity_source: _ } => write!(
                 f,
-                "refused: `{}` cannot serve as stable feature identity — {detail}. \
-                 Synthesizing a row ordinal instead is the hazard ADR-010 rule 2 exists to prevent",
+                "refused: `{}` cannot serve as stable feature identity — {detail}",
                 crate::addressability::render_visible_escape(column)
             ),
+            Self::IdentitySetAsideRefused { detail } => write!(f, "refused: {detail}"),
             // **Two sentences, and both are facts about this engine's own check**: what it found
             // differing, and what the check does not establish (boundary 4's limitation, in that
             // boundary's own words). No "snapshot" claim and no "was verified" anywhere (A1,
@@ -385,9 +415,10 @@ impl fmt::Display for EngineError {
             ),
             Self::IdentityOrdinalPartitionedUnsupported { detail } => write!(
                 f,
-                "refused: this source is partitioned across more than one file ({detail}), and \
-                 session identity is a row's position within one file. Open a single file, or \
-                 declare an identity column that is carried in the data"
+                "refused: this path is read as a folder or a pattern, not \
+                 as one file ({detail}). This engine opens a single file only, and it \
+                 refuses such a path before reading it, whether or not an identity column is \
+                 declared"
             ),
             Self::InternalInconsistency { detail } => {
                 write!(f, "internal inconsistency: {detail}")

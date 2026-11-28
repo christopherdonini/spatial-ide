@@ -1,0 +1,10 @@
+{
+  "code": "engine.identity_unusable",
+  "message": "refused: `id` cannot serve as stable feature identity — type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping: it gives no stable identity",
+  "fields": {
+    "column": "id",
+    "detail": "type is Utf8; identity must be an integer that widens into u64 without transformation. A hash, a dictionary index or a row ordinal is not a mapping: it gives no stable identity",
+    "candidate_columns": "",
+    "identity_source": "mapped:id"
+  }
+}

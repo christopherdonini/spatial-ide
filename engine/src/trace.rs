@@ -367,8 +367,9 @@ impl Drop for TraceGuard {
 /// handed a request, it does not accept one — so this is the one event a producer cannot emit for
 /// itself.
 pub const REQUEST_ACCEPTED: &str = "request_accepted";
-/// `cancel()` returned to whoever called it — **`cancel_requested`, the first of the three
-/// cancellation instants** and the only one the canceller itself can stamp.
+/// Stamped inside `CancelToken::cancel`, before the cancelled flag is published, at most once per
+/// token — **`cancel_requested`, the first of the three cancellation instants** (ADR-018 item 1, as
+/// its note of 2026-11-22 reads it) and the only one the canceller itself can stamp.
 ///
 /// ## The other two instants live where the operations do, deliberately
 ///

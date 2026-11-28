@@ -12,6 +12,7 @@ import { act } from "react";
 import { createRoot, Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
+import { moreInProblemsText, PROBLEMS_LABEL } from "../conditions/conditionsConstants";
 import { consoleRecorder, isGuiActionEntry } from "../console/recorder";
 import type { Tool } from "../workspace/workspaceState";
 import type { Slots } from "./contributions";
@@ -31,10 +32,9 @@ const NO_SLOTS: Slots = {
   "inspector.feature": null,
   "activity.console": null,
   "activity.notices": null,
+  "activity.problems": null,
   "activity.table": null,
-  "attention.sessionEnded": null,
-  "attention.canvasRefusal": null,
-  "attention.viewportRefusal": null,
+  "attention.top": null,
   "status.residency": null,
   "status.scanLiveness": null,
   "status.scanIncomplete": null,
@@ -65,6 +65,7 @@ describe("StudioLayout: what milestone 2 adds to the frame", () => {
       root.render(
         <StudioLayout
           overlays={null}
+          attentionOthers={0}
           slots={{ ...NO_SLOTS, ...slots }}
           layersRow={null}
           onZoomToLayer={() => {}}
@@ -198,7 +199,7 @@ describe("StudioLayout: the status bar keeps one height (SHELL-STATUS-BAR-ONE-HE
 
   function mount(slots: Partial<Slots>): void {
     act(() => {
-      root.render(<StudioLayout overlays={null} slots={{ ...NO_SLOTS, ...slots }} layersRow={null} onZoomToLayer={() => {}} />);
+      root.render(<StudioLayout overlays={null} attentionOthers={0} slots={{ ...NO_SLOTS, ...slots }} layersRow={null} onZoomToLayer={() => {}} />);
     });
   }
 
@@ -253,7 +254,7 @@ describe("StudioLayout: the reveal entries (milestone 4 PR B, section 2.3 (j))",
 
   function mount(dataset: boolean): void {
     act(() => {
-      root.render(<StudioLayout overlays={null} slots={{ ...NO_SLOTS, "inspector.style": <span>the style panel</span>, "activity.table": <span>the table</span> }} layersRow={dataset ? { pathDisplay: "C:/data/a.parquet" } : null} onZoomToLayer={() => {}} />);
+      root.render(<StudioLayout overlays={null} attentionOthers={0} slots={{ ...NO_SLOTS, "inspector.style": <span>the style panel</span>, "activity.table": <span>the table</span> }} layersRow={dataset ? { pathDisplay: "C:/data/a.parquet" } : null} onZoomToLayer={() => {}} />);
     });
   }
 
@@ -298,5 +299,75 @@ describe("StudioLayout: the reveal entries (milestone 4 PR B, section 2.3 (j))",
     expect(shown("#region-activity"), "Activity at the first layout").toBe(false);
     runBar("/table");
     expect([shown("#region-activity"), shown("#activity-panel-table"), shown("#activity-panel-console")], "Activity, its Table panel and its Console panel").toEqual([true, true, false]);
+  });
+});
+
+describe("StudioLayout: the attention strip's one slot, and the count of the others (SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 2.3, C-R3)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+
+  afterEach(() => {
+    act(() => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
+  function mount(others: number, top: boolean): void {
+    act(() => {
+      root.render(
+        <StudioLayout
+          overlays={null}
+          attentionOthers={others}
+          slots={{ ...NO_SLOTS, "attention.top": top ? <div className="the-top">the top</div> : null, "activity.problems": <span>the problems</span> }}
+          layersRow={null}
+          onZoomToLayer={() => {}}
+        />
+      );
+    });
+  }
+
+  const q = <T extends Element = HTMLElement>(selector: string): T => container.querySelector<T>(selector)!;
+  const shown = (selector: string) => !q(selector).hasAttribute("hidden");
+
+  // RECORDED MUTATION for C-R3: in `StudioLayout.tsx` the S-3 button selects Activity's Console tab in place of its Problems tab. Expected failure: the Problems panel is not shown.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-R3: S-3 shows when attentionOthers is above 0 and its button opens Activity on Problems": AssertionError: Activity, its Problems panel and its Console panel: expected [ true, false, true ] to deeply equal [ true, true, false ]. Reverted after observing.
+  it("C-R3: S-3 shows when attentionOthers is above 0 and its button opens Activity on Problems", () => {
+    mount(2, true);
+    const strip = q(".attention-strip");
+    expect(strip.hasAttribute("hidden"), "the strip shows with a top").toBe(false);
+    expect(strip.querySelectorAll(".the-top"), "the one slot").toHaveLength(1);
+    const button = strip.querySelector<HTMLButtonElement>("button.attention-others")!;
+    expect(button.textContent).toBe(moreInProblemsText(2));
+    expect(shown("#region-activity"), "Activity at the first layout").toBe(false);
+    act(() => button.click());
+    expect([shown("#region-activity"), shown("#activity-panel-problems"), shown("#activity-panel-console")], "Activity, its Problems panel and its Console panel").toEqual([true, true, false]);
+    expect(container.querySelector("#activity-panel-problems")!.textContent).toBe("the problems");
+  });
+
+  // RECORDED MUTATION for "C-R3: with attentionOthers 0 there is no button, and with no top the strip is hidden": in `StudioLayout.tsx` render the S-3 button from `attentionOthers >= 0`.
+  // Expected failure: a button shows with attentionOthers 0.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R3: with attentionOthers 0 there is no button, and with no top the strip is hidden": AssertionError: expected <button type="button" …(1)></button> to be null. Reverted after observing.
+  it("C-R3: with attentionOthers 0 there is no button, and with no top the strip is hidden", () => {
+    mount(0, true);
+    expect(container.querySelector("button.attention-others")).toBeNull();
+    expect(shown(".attention-strip")).toBe(true);
+    mount(0, false);
+    expect(shown(".attention-strip")).toBe(false);
+  });
+
+  // RECORDED MUTATION for "C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)": in `ACTIVITY_TABS` (contributions.ts) put Problems before Table.
+  // Expected failure: the tab order is not Console, Notices, Table, Problems.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)": AssertionError: expected [ 'Console', 'Notices', …(2) ] to deeply equal [ 'Console', 'Notices', …(2) ]. Reverted after observing.
+  it("C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)", () => {
+    mount(0, false);
+    const tabs = [...container.querySelectorAll('#region-activity [role="tab"]')].map((tab) => tab.textContent);
+    expect(tabs).toEqual(["Console", "Notices", "[P6 placeholder] Table", PROBLEMS_LABEL]);
   });
 });

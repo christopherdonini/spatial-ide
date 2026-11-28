@@ -282,9 +282,15 @@ pub enum FilterError {
 
     /// The predicate referenced the wire's `id` name while a declared identity mapping means that
     /// name **also** exists, unrelated, in the source file — see [`identity_alias_ambiguity`].
+    ///
+    /// `by_row_position` names the tier: it is true when the dataset is on the session tier by the
+    /// caller's choice to set aside the file's own `id` column (ADR-016 Amendment 3), whose
+    /// `source_column` is `file_row_number`. It cannot be read from `source_column` alone, because a
+    /// mapped identity may be declared from a file column literally named `file_row_number`.
     IdentityAliasAmbiguous {
         column: String,
         source_column: String,
+        by_row_position: bool,
     },
 
     /// The predicate binds, but its inferred type is not `BOOLEAN`. An int-to-bool (or any other)
@@ -349,7 +355,13 @@ impl fmt::Display for FilterError {
                 "refused: `{}` cannot be filtered on — {reason}",
                 crate::addressability::render_visible_escape(column)
             ),
-            Self::IdentityAliasAmbiguous { column, source_column } => write!(
+            Self::IdentityAliasAmbiguous { column, by_row_position: true, .. } => write!(
+                f,
+                "refused: `{column}` is ambiguous — this dataset is identified by row position for \
+                 this session, and the file also carries its own column named `{column}`; a \
+                 predicate cannot say which one it means"
+            ),
+            Self::IdentityAliasAmbiguous { column, source_column, by_row_position: false } => write!(
                 f,
                 "refused: `{column}` is ambiguous — this dataset's identity is mapped from \
                  `{source_column}`, and the file also carries its own, unrelated column literally \
@@ -1129,7 +1141,14 @@ fn walk_expr(node: &Value, depth: usize, columns: &mut Vec<String>) -> Result<()
 /// refused here. Proven through SKP by `kernel/tests/skp_admission_remediation.rs::a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous`. The note
 /// this replaces said no product entry point constructed a `Mapped` identity; that stopped being
 /// true when the admission-remediation cut threaded `open_dataset`'s `identity` into the engine.
-fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
+///
+/// **A second arm, for the session tier by the caller's choice** (ADR-016 Amendment 3, Decision 5):
+/// a dataset whose [`crate::identity::DatasetIdentity::set_aside_column`] is `Some` carries the
+/// file's own `id` column beside an identity that is the row position, so the name `id` would mean
+/// two columns there as well. It answers `("id", "file_row_number", true)`, the last member naming
+/// the tier. A session-tier open of a file with no `id` column does not reach this arm and still
+/// refuses `id` as an unknown column.
+fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String, bool)> {
     match dataset.identity().source() {
         IdSource::Mapped { column, .. } if column != ID_COLUMN => {
             let file_has_its_own_id = dataset
@@ -1137,8 +1156,15 @@ fn identity_alias_ambiguity(dataset: &Dataset) -> Option<(String, String)> {
                 .fields()
                 .iter()
                 .any(|f| f.name() == ID_COLUMN);
-            file_has_its_own_id.then(|| (ID_COLUMN.to_string(), column.clone()))
+            file_has_its_own_id.then(|| (ID_COLUMN.to_string(), column.clone(), false))
         }
+        IdSource::SessionOrdinal => dataset.identity().set_aside_column().map(|set_aside| {
+            (
+                set_aside.to_string(),
+                crate::identity::FILE_ROW_NUMBER_COLUMN.to_string(),
+                true,
+            )
+        }),
         _ => None,
     }
 }
@@ -1179,11 +1205,12 @@ fn namespace_admit(
     }
 
     for name in columns {
-        if let Some((ambiguous_name, source_column)) = &alias {
+        if let Some((ambiguous_name, source_column, by_row_position)) = &alias {
             if name == ambiguous_name {
                 return Err(FilterError::IdentityAliasAmbiguous {
                     column: name.clone(),
                     source_column: source_column.clone(),
+                    by_row_position: *by_row_position,
                 });
             }
         }
@@ -1280,7 +1307,7 @@ fn filter_surrogate(name: &str, field: &Field) -> std::result::Result<&'static s
 fn duckdb_type_name(ty: &DataType) -> Option<&'static str> {
     use DataType as D;
     match ty {
-        D::Utf8 | D::LargeUtf8 | D::Utf8View => Some("VARCHAR"),
+        D::Utf8 => Some("VARCHAR"),
         D::Boolean => Some("BOOLEAN"),
         D::Int8 => Some("TINYINT"),
         D::Int16 => Some("SMALLINT"),
@@ -2688,15 +2715,10 @@ mod tests {
     // RECORDED MUTATION (observed at `ca3d7ae`, line numbers at that commit): in `duckdb_type_name`,
     // remove the `D::Float32 => Some("REAL")` arm. Observed: this test fails by name -- "f32
     // (Float32) must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
-    // RECORDED MUTATION (observed at `ca3d7ae`): in `duckdb_type_name`, drop `LargeUtf8` and
-    // `Utf8View` from the `VARCHAR` arm. Observed: this test fails by name -- "large (LargeUtf8)
-    // must carry a surrogate" at `engine/src/predicate.rs:1283`. Reverted.
     #[test]
     fn every_type_the_filter_namespace_admits_carries_a_surrogate() {
         let cases = [
             ("s", DataType::Utf8),
-            ("large", DataType::LargeUtf8),
-            ("view", DataType::Utf8View),
             ("b", DataType::Boolean),
             ("i8", DataType::Int8),
             ("i16", DataType::Int16),
@@ -2723,6 +2745,27 @@ mod tests {
                 filter_surrogate(name, &field).is_ok(),
                 "{name} ({ty}) must carry a surrogate: {:?}",
                 filter_surrogate(name, &field)
+            );
+        }
+    }
+
+    /// T4 (`LARGE-UTF8-AND-UTF8-VIEW-ATTRIBUTE-COLUMNS-PREREGISTRATION.md` §4): a `LargeUtf8` or
+    /// `Utf8View` column is not filterable. Constructed fields, the accepted pattern for types
+    /// `read_parquet` cannot yield.
+    // RECORDED MUTATION (observed at `cea0ef8c`, line number in the mutated file): in
+    // `filterable_column_type`, return `Ok(field.data_type().clone())` for `LargeUtf8 | Utf8View`
+    // before the gate. Observed: this test fails by name -- "LargeUtf8 must not be filterable" at
+    // `engine/src/predicate.rs:2735`. Reverted.
+    #[test]
+    fn a_large_utf8_or_utf8_view_column_is_not_filterable() {
+        for ty in [DataType::LargeUtf8, DataType::Utf8View] {
+            let field = Field::new("zone", ty.clone(), true);
+            assert!(
+                matches!(
+                    filterable_column_type("zone", &field),
+                    Err(FilterError::ColumnNotFilterable { .. })
+                ),
+                "{ty} must not be filterable"
             );
         }
     }

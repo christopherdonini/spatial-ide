@@ -1,5 +1,5 @@
 {
-  "skp": "skp/0.14",
+  "skp": "skp/0.17",
   "path": "C:/data/parcels.parquet",
   "cancel_key": "open-1",
   "crs_assertion": {
@@ -8,5 +8,6 @@
   },
   "identity": {
     "column": "parcel_key"
-  }
+  },
+  "set_aside_file_id": false
 }

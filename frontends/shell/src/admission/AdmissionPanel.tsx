@@ -6,17 +6,18 @@ import { forwardRef, useCallback, useEffect, useImperativeHandle, useRef, useSta
 import { registerE2eHook, unregisterE2eHook } from "../e2e-test-surface";
 import { isInstrumentedBuild } from "../isInstrumentedBuild";
 import { admitProject, type Reopened } from "../project/openProject";
-import { fileNotFoundNotice, QUESTION_CANCEL, QUESTION_COPY, QUESTION_SAME, QUESTION_TEXT, RELINK_CHOICE } from "../project/reopenNotices";
+import { fileNotFoundNotice, QUESTION_CANCEL, QUESTION_COPY, QUESTION_SAME, QUESTION_TEXT, RELINK_CHOICE, REOPEN_LOCATOR_REFUSAL_NOTICE } from "../project/reopenNotices";
 import { cancel as cancelClient } from "../skp/client";
 import { crsCatalog } from "../skp/crsCatalog";
 import { pickFile, pickProjectFolder } from "../skp/dialog";
-import type { ReopenAnswer } from "../skp/types";
+import type { IdentityDeclaration, ReopenAnswer } from "../skp/types";
 import { admitDataset, AdmitOptions, Admitted, AdmissionOutcome } from "./admitDataset";
 import { splitCandidateColumns } from "./candidateColumns";
 import CrsAssertionForm from "./CrsAssertionForm";
 import { fieldValue, FormattedRefusal } from "./formatRefusal";
 import IdentityDeclarationForm from "./IdentityDeclarationForm";
 import RefusalBlock from "./RefusalBlock";
+import RowPositionChoice, { ROW_POSITION_CARRIED_LINE } from "./RowPositionChoice";
 
 /** Which remediation form, if any, stays reachable for the CURRENT refusal (NEXT-CUT.md P3 item
  * D: "the form still reachable — no dead end"). `null` means no form renders. */
@@ -70,6 +71,9 @@ export type State =
        * `.identity` off of it to decide which liveness line applies (I11: the whole-file
        * uniqueness check is a materially different wait than a plain open). */
       options: AdmitOptions;
+      /** The `admitted` state this run started from, held only when it is a session-tier admission that `identityDeclarationOffer` offered the declaration for
+       * (a declaration started from that offer). A cancel of this run returns to it, so the offer is back. */
+      resume?: Extract<State, { kind: "admitted" }>;
     }
   | {
       kind: "refused";
@@ -101,10 +105,17 @@ export type State =
        * RENDERED refusal until the resubmit itself resolves (P4 item A: `openLivenessText` needs
        * to know whether the identity form's own submit, specifically, is the one in flight). */
       pendingOptions: AdmitOptions | null;
-      /** A reopen refusal's owner place (B2 piece 1c, `project/openProject.ts`'s `reopenRefusalPlace`), shown inside the block. Absent for a dataset open. */
+      /** A reopen refusal's owner place (B2 piece 1c), chosen by `admitProject` in `project/openProject.ts` from the refusal's code, through `reopenRefusalPlace`, and from the attempt's own options (S-8, an
+       * attempt that carried the choice to open by row position), and shown inside the block. Absent for a dataset open. */
       owner?: string | null;
     }
-  | { kind: "admitted"; admitted: Admitted }
+  | {
+      kind: "admitted";
+      admitted: Admitted;
+      /** The path this admission opened and the `AdmitOptions` it ran with (`runAdmitPath` sets both), so that `identityDeclarationOffer` can offer a declaration against the same file under the same CRS assertion. */
+      path: string;
+      options: AdmitOptions;
+    }
   /** B2 piece 1c (O-14): a reopen's run ended at a `question` (S8) or a `not_found` (S11). `options` are the run's, so that a choice re-enters
    * the run with the answer it gave; nothing else is held between the calls (SKP-V0.md section 12.3). */
   | { kind: "question"; folder: string; options: AdmitOptions }
@@ -140,6 +151,105 @@ export function openCancelKey(state: State): string | null {
   if (state.kind === "opening") return state.cancelKey;
   if (state.kind === "refused" && state.inFlight) return state.cancelKey;
   return null;
+}
+
+/** The re-link choice a state offers (KNOWN-LIMITATIONS item 73), or `null`: the folder to re-enter the run for, and the run's own `AdmitOptions`, so that
+ * the choice re-enters it with the answer it gave. It is offered in two states and no other:
+ * - `not_found` (S11), as before;
+ * - `refused`, when the run is a reopen (`options.reopen` is set), nothing is in flight and the owner place is `REOPEN_LOCATOR_REFUSAL_NOTICE`, which
+ *   `reopenRefusalPlace` in `project/openProject.ts` gives only to `skp.project_target_unresolvable` with a `locator`. A refusal for a link or a wrong kind at the
+ *   recorded place has another code, so another place, and no choice (OPEN-5). The kernel already uses a `relink` before any locator (`Projects::open_project`).
+ * The owner place stays the one decision site; the refused block's render and the DEV hook `e2eRelinkFile` both read this function. */
+export function relinkOffer(state: State): { folder: string; options: AdmitOptions } | null {
+  if (state.kind === "not_found") return { folder: state.folder, options: state.options };
+  if (state.kind === "refused" && state.options.reopen !== undefined && !state.inFlight && state.owner === REOPEN_LOCATOR_REFUSAL_NOTICE) {
+    return { folder: state.path, options: state.options };
+  }
+  return null;
+}
+
+/** The declaration the panel offers beside the Open buttons, or `null`. */
+export interface IdentityDeclarationOffer {
+  path: string;
+  options: AdmitOptions;
+  candidateColumns: string[];
+}
+
+/** The identity declaration a state offers (identity-declaration-route-for-session-tier, section 2 item 4 (b)), or `null`. It is offered when every one of these holds:
+ * - the state is `admitted`, which is a dataset the panel itself has admitted and no run in flight;
+ * - the run was a direct open, not a reopen (`options.reopen` is unset): a project's reopen is not offered the declaration;
+ * - the dataset's identity is on the session tier (`describe.identity.class` is `"session-ordinal"`);
+ * - the engine's list came with it (`candidate_columns` is neither `null` nor absent), and the list may be empty;
+ * - the dataset the panel admitted is the dataset on the map (`datasetOnMap`, the handle of App's own `admitted`): a later admission by another route (a reopen) has
+ *   replaced the map's dataset, and a declaration against the earlier file would replace what the operator is looking at.
+ * It carries the run's own path and `AdmitOptions`, so that the declaration is sent for the same file under the same CRS assertion. The one decision site: the panel's render and
+ * `runAdmitPath`'s hold of the admission both read this function. */
+export function identityDeclarationOffer(state: State, datasetOnMap: string | null): IdentityDeclarationOffer | null {
+  if (state.kind !== "admitted") return null;
+  if (state.options.reopen !== undefined) return null;
+  const identity = state.admitted.describe.identity;
+  if (identity.class !== "session-ordinal") return null;
+  if (identity.candidate_columns === null || identity.candidate_columns === undefined) return null;
+  if (datasetOnMap === null || state.admitted.dataset !== datasetOnMap) return null;
+  return { path: state.path, options: state.options, candidateColumns: identity.candidate_columns };
+}
+
+/** The options a declaration submits (section 2 item 4 (c)): the offer's own, with the declaration over them. A CRS assertion the session open was admitted under is carried, as a
+ * remediation submit carries it (`IdentityDeclarationForm`'s refused-state submit merges the same way); nothing else of the run is, and in particular never the choice to open by row position
+ * (`setAsideFileId`): a declaration is sent beside no choice (ADR-016 Amendment 3). */
+export function declarationOptions(offer: IdentityDeclarationOffer, identity: IdentityDeclaration): AdmitOptions {
+  const { setAsideFileId: _choice, ...rest } = offer.options;
+  return { ...rest, identity };
+}
+
+/** The options a declaration submits from a refused state: the run's own, with the declaration over them and without the choice to open by row position. A file refused after the choice
+ * and then declared is sent as a declaration alone, so the shell never sends `identity` and `setAsideFileId` together. */
+export function refusedDeclarationOptions(options: AdmitOptions, identity: IdentityDeclaration): AdmitOptions {
+  const { setAsideFileId: _choice, ...rest } = options;
+  return { ...rest, identity };
+}
+
+/** The choice to open by row position that a refused state offers: the file's path (a reopen's folder) and the options of the run it would re-run. */
+export interface RowPositionOffer {
+  path: string;
+  options: AdmitOptions;
+}
+
+/** The choice to open the file by row position (`RowPositionChoice`), or `null`. It is offered for a refused state only when every one of these holds:
+ * - the refusal is `engine.identity_unusable` and names the column `id` (`fieldValue(refusal, "column")`): the file's own `id` is what cannot serve;
+ * - the refusal's `identity_source` is `file:id` (`skp/0.17`): the engine checked the file's own `id`, with no declaration;
+ * - the run declared no identity (`options.identity` is unset): a declaration that was refused is not the file's own `id`, and the two are never sent together;
+ * - the run carries no choice already (`options.setAsideFileId` is unset).
+ * It is offered for a reopen's refusal as for a direct open's (ADR-016 Amendment 3, C2): the project file records nothing of the choice, so a reopen asks again. At a reopen the recorded claims are the kernel's to send and this function does not see them; the refusal's `identity_source` says whether the engine checked `id` as the file's own column, with no declaration (`file:id`), or as the column a declaration named (`mapped:id`), which at a reopen is the project file's. Only the first is offered the choice (ADR-016 Amendment 3, Decision 1). The one decision site for the
+ * panel's render; it makes no choice and sets nothing. */
+export function rowPositionOffer(state: State): RowPositionOffer | null {
+  if (state.kind !== "refused") return null;
+  if (state.refusal.code !== "engine.identity_unusable") return null;
+  if (fieldValue(state.refusal, "column") !== "id") return null;
+  if (fieldValue(state.refusal, "identity_source") !== "file:id") return null;
+  if (state.options.identity) return null;
+  if (state.options.setAsideFileId !== undefined) return null;
+  return { path: state.path, options: state.options };
+}
+
+/** The options the choice runs with: the offer's own, without any `identity`, with `setAsideFileId`. A reopen keeps its answer and its re-link (`options.reopen`). The click of the choice is the only caller. */
+export function rowPositionOptions(offer: RowPositionOffer): AdmitOptions {
+  const { identity: _identity, ...rest } = offer.options;
+  return { ...rest, setAsideFileId: true };
+}
+
+/** S-5's line for a remediation attempt whose options carry the choice, or `null`. */
+export function carriedChoiceLine(options: AdmitOptions): string | null {
+  return options.setAsideFileId === true ? ROW_POSITION_CARRIED_LINE : null;
+}
+
+/** A reopen's retry after a `question` or a `not_found` reply (ADR-016 Amendment 3, C2; ADV-2026-11-24-12 item 1): the run's answer and re-link with the one the retry gives, and nothing else of the
+ * run. In particular a retry never carries the choice to open by row position: if the retry is refused for the file's `id` column again, the choice is offered again. Its product callers are the
+ * question block's two answers and `handleRelink`, each through `reopenPath`. */
+export function reopenRetryOptions(options: AdmitOptions, retry: { answer: ReopenAnswer } | { relink: string }): AdmitOptions {
+  const answer = options.reopen?.answer ?? null;
+  const relink = options.reopen?.relink ?? null;
+  return { reopen: "answer" in retry ? { answer: retry.answer, relink } : { answer, relink: retry.relink } };
 }
 
 /** The `AdmitOptions` the in-flight open (if any) is actually running with -- see the `State`
@@ -210,7 +320,7 @@ export interface AdmitPathDeps {
  *
  * **A reopen's run** (B2 piece 1c, Amendment 54 item 5 (b) to (e)) is this same function, with `options.reopen` set and `admitProject` as its
  * `admit`, so the liveness line, Cancel and the refusal block are the ones above. Its refusal opens no form (the claims are the project file's,
- * not the user's), a `question` or a `not_found` ends the run, and one that arrives after Cancel for its key asks nothing and ends at the
+ * not the user's; the one choice a reopen's refusal can offer, to open by row position, is the user's and is offered again each time, `rowPositionOffer`), a `question` or a `not_found` ends the run, and one that arrives after Cancel for its key asks nothing and ends at the
  * cancelled note. An admission after a Cancel is applied, as any late admission is.
  */
 export async function runAdmitPath(
@@ -229,11 +339,12 @@ export async function runAdmitPath(
   // `inFlight`), never resets to the bare `{kind: "opening"}` a plain first-open (or a fresh path)
   // uses -- see the `State["refused"]["inFlight"]` doc comment above for what that reset used to
   // break.
-  deps.setState((prev) =>
-    prev.kind === "refused" && prev.path === path
-      ? { ...prev, inFlight: true, cancelKey, pendingOptions: options }
-      : { kind: "opening", cancelKey, options }
-  );
+  deps.setState((prev) => {
+    if (prev.kind === "refused" && prev.path === path) return { ...prev, inFlight: true, cancelKey, pendingOptions: options };
+    // An open of the same path while the session-tier offer stands (a declaration from the offer, or the same file opened again) holds the admission it started from, so that Cancel returns to it with its offer. The offer's own rule is the test.
+    if (prev.kind === "admitted" && prev.path === path && identityDeclarationOffer(prev, prev.admitted.dataset) !== null) return { kind: "opening", cancelKey, options, resume: prev };
+    return { kind: "opening", cancelKey, options };
+  });
 
   const outcome = await deps.admit(path, cancelKey, options);
 
@@ -256,6 +367,8 @@ export async function runAdmitPath(
           // whatever the operator had typed into it survive because `kind` never left `"refused"`.
           return { ...prev, inFlight: false, cancelKey: null, pendingOptions: null };
         }
+        // A declaration from the session-tier offer was cancelled: back to the admission it started from, with its offer. The file was never closed.
+        if (prev.kind === "opening" && prev.cancelKey === cancelKey && prev.resume !== undefined) return prev.resume;
         // A plain open was cancelled (or this is a stale cancellation racing a fresher attempt for
         // the same path/refusal -- the guard above already excluded it): the pre-open state, i.e.
         // idle, with the one-line note ADR-018 §1 permits (no duration, no "acknowledged").
@@ -285,7 +398,7 @@ export async function runAdmitPath(
     return outcome;
   }
 
-  deps.setState(() => ({ kind: "admitted", admitted: outcome.admitted }));
+  deps.setState(() => ({ kind: "admitted", admitted: outcome.admitted, path, options }));
   if (outcome.reopened !== undefined && deps.onReopened !== undefined) deps.onReopened(outcome.admitted, outcome.reopened);
   else deps.onAdmitted(outcome.admitted);
   return outcome;
@@ -306,6 +419,12 @@ const newCancelKey = (): string => (typeof crypto.randomUUID === "function" ? cr
 const OPEN_PROJECT_IDLE = "Open project…";
 const OPEN_PROJECT_OPENING = "Opening project…";
 
+/** D1 and D2 (identity-declaration-route-for-session-tier): the offer's label and its first line. The advisor's words under the human's delegation of 2026-11-13 (ADV-2026-11-23-26 item 2), not
+ * the human's; each is shown as the words commit set it. D2's present words are the advisor's ADV-2026-11-27-15 item 1, which replaces the D2 of ADV-2026-11-23-26 item 2. D2 is true of the code as follows: "opens this file again" is `runAdmitPath` called with the same path; "the filter and the selection are cleared and Colour by ends; the rest of the style is kept" is what an admission of
+ * another dataset does to the workspace (`workspaceState.ts`); "stays open as it is now" is that a refusal leaves App's `admitted` as it was. */
+const DECLARE_IDENTITY_LABEL = "Declare an identity column…";
+const DECLARE_IDENTITY_FIRST_LINE = "Declaring opens this file again with the column you choose. The filter and the selection are cleared and Colour by ends; the rest of the style is kept. If the column is refused, the file stays open as it is now.";
+
 interface Props {
   onAdmitted: (admitted: Admitted) => void;
   /** Resolves `true` at once when no export runs; otherwise `App` asks, and `false` (Keep exporting) drops the open. */
@@ -314,6 +433,8 @@ interface Props {
   onReopened: (admitted: Admitted, reopened: Reopened) => void;
   /** The project identity this window holds, or `null`; read when a reopen is refused, for S9's own-window place (Amendment 54 item 5 (f)). */
   heldProject: () => string | null;
+  /** The handle of the dataset on the map, or `null` (App's own `admitted`): the identity declaration is offered only while the dataset this panel admitted is that one (`identityDeclarationOffer`). */
+  datasetOnMap: string | null;
 }
 
 /** What the command bar's `/open` calls (SHELL-MIGRATION-MILESTONE-3-PREREGISTRATION.md section 2.7): it does what a click of Open does at that moment.
@@ -333,7 +454,7 @@ export interface AdmissionPanelHandle {
  * path. B2 piece 1c adds the Open project control (O-19a): a folder picked runs `reopenPath`, which is `runAdmitPath` with the reopen's own
  * `admit`, and S8's choices and S11's re-link re-enter it.
  */
-const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen, onReopened, heldProject }, ref) {
+const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function AdmissionPanel({ onAdmitted, confirmOpen, onReopened, heldProject, datasetOnMap }, ref) {
   const [state, setState] = useState<State>({ kind: "idle", note: null });
   /** The keys Cancel was pressed for (Amendment 54 item 5 (e)), read by `runAdmitPath` when a reopen's `question` or `not_found` arrives. */
   const cancelledKeys = useRef(new Set<string>());
@@ -359,10 +480,10 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
     [onAdmitted, confirmOpen]
   );
 
-  // A reopen's run (B2 piece 1c): the same transition with the reopen's `admit`, which never reaches `admitDataset`.
+  // A reopen's run (B2 piece 1c): the same transition with the reopen's `admit`, which never reaches `admitDataset`. `options` are the run's: a first call's, a retry's (`reopenRetryOptions`), or the choice's (`rowPositionOptions`).
   const reopenPath = useCallback(
-    (folder: string, reopen: { answer: ReopenAnswer | null; relink: string | null }): Promise<AdmissionOutcome | null> =>
-      runAdmitPath(folder, { reopen }, {
+    (folder: string, options: AdmitOptions): Promise<AdmissionOutcome | null> =>
+      runAdmitPath(folder, options, {
         admit: (path, cancelKey, options) => admitProject(path, cancelKey, options, heldProject()),
         setState,
         onAdmitted,
@@ -385,16 +506,16 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   // O-19a: the folder picker (S2's title, shared with the save), then the reopen's first call. A dismissed picker starts nothing.
   const handleProjectPick = useCallback(async (): Promise<AdmissionOutcome | null> => {
     const folder = await takeSlot(e2eFolderRef, pickProjectFolder);
-    return folder === null ? null : reopenPath(folder, { answer: null, relink: null });
+    return folder === null ? null : reopenPath(folder, { reopen: { answer: null, relink: null } });
   }, [reopenPath]);
 
-  // S11's choice: the file picker, then the re-link call with the answer the run already gave (Amendment 54 item 5 (d)). A dismissed picker ends
-  // the run at the cancelled note.
+  // S11's choice, and item 73's after a refusal at the recorded place (`relinkOffer`): the file picker, then the re-link call with the answer the run already gave
+  // (Amendment 54 item 5 (d)). A dismissed picker ends the run at the cancelled note. A Cancel of the call after item 73's refusal returns to that refusal, with its choice (`runAdmitPath`); after S11's, it ends the run at the cancelled note.
   const handleRelink = useCallback(
     async (folder: string, options: AdmitOptions): Promise<AdmissionOutcome | null> => {
       const file = await takeSlot(e2eFileRef, pickFile);
       if (file === null) setState({ kind: "idle", note: "Open cancelled" });
-      else return reopenPath(folder, { answer: options.reopen?.answer ?? null, relink: file });
+      else return reopenPath(folder, reopenRetryOptions(options, { relink: file }));
       return null;
     },
     [reopenPath]
@@ -450,10 +571,10 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       try { return answer(await handleProjectPick()); } finally { e2eFolderRef.current = null; }
     });
     registerE2eHook("e2eRelinkFile", async (file) => {
-      const at = stateRef.current;
-      if (at.kind !== "not_found") return "not-asked";
+      const offer = relinkOffer(stateRef.current);
+      if (offer === null) return "not-asked";
       e2eFileRef.current = file;
-      try { return answer(await handleRelink(at.folder, at.options)); } finally { e2eFileRef.current = null; }
+      try { return answer(await handleRelink(offer.folder, offer.options)); } finally { e2eFileRef.current = null; }
     });
     return () => {
       unregisterE2eHook("e2eOpenProjectFolder");
@@ -479,6 +600,9 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
   }, [inFlightCancelKey]);
 
   const openLivenessMessage = showOpenLiveness ? openLivenessText(state) : null;
+  const offer = state.kind === "refused" ? relinkOffer(state) : null;
+  const declareOffer = identityDeclarationOffer(state, datasetOnMap);
+  const rowOffer = rowPositionOffer(state);
 
   return (
     <div className="admission-panel">
@@ -516,14 +640,28 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
 
       {state.kind === "idle" && state.note && <p className="admission-open-cancelled-note">{state.note}</p>}
 
+      {/* Identity-declaration-route-for-session-tier: a file that opened on the session tier is offered the declaration beside the Open buttons. The offer renders only in the `admitted` state, where
+          `isOpenInFlight` is false, so the form is never disabled here; its submit is `admitPath` with `declarationOptions`, the same function a remediation submit uses. */}
+      {declareOffer !== null && (
+        <details className="admission-declare-identity">
+          <summary>{DECLARE_IDENTITY_LABEL}</summary>
+          <p className="admission-declare-identity-first-line">{DECLARE_IDENTITY_FIRST_LINE}</p>
+          <IdentityDeclarationForm
+            candidateColumns={declareOffer.candidateColumns}
+            disabled={false}
+            onSubmit={(identity) => void admitPath(declareOffer.path, declarationOptions(declareOffer, identity))}
+          />
+        </details>
+      )}
+
       {/* S8 (B2 piece 1c): the reopen's question. A choice re-enters the run with its answer and a fresh key; the third ends the run. */}
       {state.kind === "question" && (
         <div className="admission-reopen-question" role="group">
           <p>{QUESTION_TEXT}</p>
-          <button type="button" className="admission-reopen-copy" onClick={() => void reopenPath(state.folder, { answer: "copy", relink: state.options.reopen?.relink ?? null })}>
+          <button type="button" className="admission-reopen-copy" onClick={() => void reopenPath(state.folder, reopenRetryOptions(state.options, { answer: "copy" }))}>
             {QUESTION_COPY}
           </button>
-          <button type="button" className="admission-reopen-same" onClick={() => void reopenPath(state.folder, { answer: "same", relink: state.options.reopen?.relink ?? null })}>
+          <button type="button" className="admission-reopen-same" onClick={() => void reopenPath(state.folder, reopenRetryOptions(state.options, { answer: "same" }))}>
             {QUESTION_SAME}
           </button>
           <button type="button" className="admission-reopen-cancel" onClick={() => setState({ kind: "idle", note: null })}>
@@ -545,6 +683,12 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
       {state.kind === "refused" && (
         <>
           <RefusalBlock refusal={state.refusal} reopen={state.options.reopen !== undefined} owner={state.owner ?? null} />
+          {/* Item 73: the refusal at the recorded place offers the same choice S11 does; `handleRelink` and the run's own options are unchanged. */}
+          {offer !== null && (
+            <button type="button" className="admission-reopen-relink" onClick={() => void handleRelink(offer.folder, offer.options)}>
+              {RELINK_CHOICE}
+            </button>
+          )}
           {state.formFamily === "crs" && (
             <>
               {/* MF2 honesty requirement: a carried identity option is the operator's own earlier
@@ -555,6 +699,7 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
                   {state.options.identity.column}).
                 </p>
               )}
+              {carriedChoiceLine(state.options) !== null && <p className="admission-carried-option">{carriedChoiceLine(state.options)}</p>}
               <CrsAssertionForm
                 disabled={state.inFlight}
                 onSubmit={(crsAssertion) => void admitPath(state.path, { ...state.options, crsAssertion })}
@@ -572,9 +717,17 @@ const AdmissionPanel = forwardRef<AdmissionPanelHandle, Props>(function Admissio
               <IdentityDeclarationForm
                 candidateColumns={splitCandidateColumns(fieldValue(state.refusal, "candidate_columns"))}
                 disabled={state.inFlight}
-                onSubmit={(identity) => void admitPath(state.path, { ...state.options, identity })}
+                onSubmit={(identity) => void admitPath(state.path, refusedDeclarationOptions(state.options, identity))}
               />
             </>
+          )}
+          {/* ADR-016 Amendment 3: the choice to open the file by row position, for a refusal of the file's own `id` column. It is offered beside the identity form on a direct open and alone on a reopen
+              (whose refusal opens no form). Its click is the one act that sets the choice. */}
+          {rowOffer !== null && (
+            <RowPositionChoice
+              disabled={state.inFlight}
+              onChoose={() => void (rowOffer.options.reopen !== undefined ? reopenPath(rowOffer.path, rowPositionOptions(rowOffer)) : admitPath(rowOffer.path, rowPositionOptions(rowOffer)))}
+            />
           )}
         </>
       )}

@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.14";
+export const SKP_VERSION = "skp/0.17";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -49,6 +49,9 @@ export interface OpenDatasetRequest {
   crs_assertion: CrsAssertion | null;
   /** `skp/0.2`. `null` declares "no declaration" -- same discipline as `crs_assertion`. */
   identity: IdentityDeclaration | null;
+  /** `skp/0.16` (ADR-016, Amendment 3): the user's choice to open a file whose own `id` column cannot serve by row position, for this session only. Always present, `false` for no choice,
+   * never beside an `identity`. */
+  set_aside_file_id: boolean;
 }
 export interface OpenDatasetResponse {
   dataset: string;
@@ -143,6 +146,15 @@ export interface IdentityInfo {
    * generation value accompanies it, here or anywhere else on the wire: the generation is kernel
    * and client state, and this client mirrors it by live-ticket set rather than by value. */
   session_statement: string | null;
+  /** `skp/0.15` (ADR-016, Amendment 2 and the Note 2026-11-26): the engine's candidate list for a declaration, non-null exactly when `class === "session-ordinal"` --
+   * every column whose type `open_dataset` admits as an identity column, less the columns the engine leaves out of the list: a name that holds a comma and a name nothing can address (§8's skp/0.15 entry), in schema order, unranked, with nothing preselected; it may be empty. On a native or a mapped
+   * identity the wire carries the key as `null`. Declared optional here so that a describe from before `skp/0.15` still types; the wire always carries the key, and
+   * `__tests__/fixtures.test.ts` pins it on the real fixture. Never a declaration and never a recommendation. */
+  candidate_columns?: string[] | null;
+  /** `skp/0.16` (ADR-016, Amendment 3): `"id"` exactly when the dataset is on the session tier by the user's choice to set aside the file's own `id` column, and `null` on
+   * every other open. Declared optional here so that a describe from before `skp/0.16` still types; the wire always carries the key, and `__tests__/fixtures.test.ts` pins
+   * it on the real fixtures. */
+  set_aside_column?: string | null;
 }
 
 /** `skp/0.3` (Brief A boundary 9): what the range check was decided from at this open.
@@ -390,6 +402,8 @@ export interface OpenProjectRequest {
   cancel_key: string;
   answer: ReopenAnswer | null;
   relink: string | null;
+  /** `skp/0.16`: the user's choice to open the data by row position at this call alone (SKP-V0.md section 12.3), always present, `false` for none. The project file records nothing of it. */
+  set_aside_file_id: boolean;
 }
 
 /** Whether the saved view applies to the reopened data. `basis` names both spaces by identifiers, each cut by the kernel at 262 bytes, and holds no path. */

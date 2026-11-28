@@ -120,6 +120,7 @@ fn a_duplicate_id_column_is_refused_rather_than_admitted_as_identity() {
             column,
             detail,
             candidate_columns,
+            ..
         }) => {
             assert_eq!(column, "id");
             assert!(
@@ -239,7 +240,7 @@ fn a_declared_mapping_to_a_non_integer_column_is_refused_not_hashed() {
                 "the refusal names the type: {detail}"
             );
             assert!(
-                detail.contains("synthesized"),
+                detail.contains("no stable identity"),
                 "and says why a hash is not a way out: {detail}"
             );
         }

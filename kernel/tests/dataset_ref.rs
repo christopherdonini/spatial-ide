@@ -247,6 +247,7 @@ fn a_reference_survives_a_reopen_through_open_dataset_and_reports_no_change_dete
             cancel_key: cancel_key.to_string(),
             crs_assertion: crs,
             identity: id,
+            set_aside_file_id: false,
         };
         let opened = host.open_dataset(request).expect("open");
         host.catalog()

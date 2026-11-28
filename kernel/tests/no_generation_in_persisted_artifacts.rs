@@ -641,6 +641,7 @@ fn the_published_bundle_carries_no_session_reference_key_or_value() {
             cancel_key: "r-b".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .expect("open");
     let minted_session = open.session.as_str().to_string();
@@ -776,6 +777,7 @@ fn a_dataset_reference_carries_no_generation_session_reference_handle_path_or_as
             identity: Some(IdentityDeclaration {
                 column: "parcel_key".to_string(),
             }),
+            set_aside_file_id: false,
         })
         .expect("open");
     let ds = host.catalog().get(open.dataset.as_str()).expect("catalog");
@@ -873,6 +875,7 @@ fn a_session_history_carries_no_generation_session_reference_handle_path_or_user
             cancel_key: "g2".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .expect("open");
     let recorder = StepRecorder::new(d.join("store"), host.clone());
@@ -988,6 +991,7 @@ fn a_project_file_carries_no_generation_handle_session_reference_absolute_path_o
             cancel_key: "g3".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .expect("open");
     let ds = host.catalog().get(open.dataset.as_str()).expect("catalog");

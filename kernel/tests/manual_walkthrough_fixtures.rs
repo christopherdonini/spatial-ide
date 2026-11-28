@@ -515,6 +515,27 @@ fn generate_the_string_id_refusing_fixture() {
     println!("wrote {} ({} features)", path.display(), facts.features);
 }
 
+/// The "text id, no integer column" refusing file (`text-id-opens-for-the-session-by-row-position`,
+/// E-1): a text `id` (`key-{n}`) and **no other integer column** (`IdentityMode::StringIds`), so a
+/// plain open refuses as `engine.identity_unusable` and the refusal offers nothing to declare. The
+/// choice to open it by row position is the one way forward. Generated; no file of anyone's disk.
+#[test]
+#[ignore = "generates a real file for the manual walkthrough; not part of the default suite"]
+fn generate_the_text_id_no_integer_refusing_fixture() {
+    let path = dir().join("text-id-no-integer-refused.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: 100,
+            avg_vertices: 12,
+            identity: IdentityMode::StringIds,
+            ..Default::default()
+        },
+    )
+    .expect("write the text-id no-integer refusing fixture");
+    println!("wrote {} ({} features)", path.display(), facts.features);
+}
+
 /// The "duplicate id" refusing file (`NEXT-CUT.md` admission-remediation cut, P5's `DUPKEY'` E2E
 /// step and Part I's I6): a native `id` column that repeats a constant value
 /// (`IdentityMode::DuplicateIds` — an existing engine fixture mode, reused rather than added;
@@ -825,5 +846,51 @@ fn generate_the_attributes_multitype_fixture() {
         path.display(),
         facts.features,
         oracle.display()
+    );
+}
+
+/// colour-by-refill-keeps-the-view (`governance/forms/frontends/COLOUR-BY-REFILL-KEEPS-THE-VIEW-PREREGISTRATION.md` §3 and Amendment 2 item 4 D6): `colour-refill-300k.parquet`, the file
+/// `frontends/shell/e2e/colour-refill.mjs` opens. Its attribute bytes held, once the view shows most of it, pass the shell's `RESIDENT_ATTRIBUTE_MAX_BYTES` (268,435,456,
+/// `frontends/shell/src/canvas/limits.ts`), so the status bar says that attributes were not held. Colour by is applied to its `zone` column, the one a refill keeps. `AttributeMode::MultiType`'s `text` is about 1 KiB of hash hex per row (`text_for`),
+/// so 300,000 rows hold about 307,200,000 text bytes alone, over the ceiling, while the vertices stay under the shell's `MAX_RESIDENT_VERTICES` (2,000,000): `avg_vertices: 4` gives
+/// 4 to 6 per ring (`parcel()`'s floor is 4), and no hole. The file is not small (snappy does not shrink hash hex): the run that makes it states its bytes.
+// RECORDED MUTATION for "generate_the_colour_refill_fixture" (M-F1): set `FEATURES` to 200_000. Expected failure: the assertion "the text column alone must pass the attribute ceiling".
+// Not observed in this commit: the run writes the fixture file over the one E-RK1 opens.
+#[test]
+#[ignore = "generates a real file for the E2E colour-refill spec; not part of the default suite"]
+fn generate_the_colour_refill_fixture() {
+    const FEATURES: usize = 300_000;
+    const ATTRIBUTE_CEILING_BYTES: u64 = 268_435_456;
+    const MAX_RESIDENT_VERTICES: u64 = 2_000_000;
+    let path = dir().join("colour-refill-300k.parquet");
+    let facts = write_geoparquet(
+        &path,
+        &FixtureSpec {
+            features: FEATURES,
+            avg_vertices: 4,
+            hole_every: 0,
+            attributes: AttributeMode::MultiType,
+            ..Default::default()
+        },
+    )
+    .expect("write the colour-refill fixture");
+    println!(
+        "wrote {} ({} features, {} vertices, {} bytes)",
+        path.display(),
+        facts.features,
+        facts.vertices,
+        facts.bytes
+    );
+    assert_eq!(facts.features, FEATURES);
+    // Guards against a file that cannot reach the not-held fact: the `text` column alone (about 1 KiB a row) passes the attribute ceiling, and the vertices stay under
+    // the vertex ceiling, so that the first refusal is the attribute one and not the ceiling refusal.
+    assert!(
+        (facts.features as u64) * 1024 > ATTRIBUTE_CEILING_BYTES,
+        "the text column alone must pass the attribute ceiling"
+    );
+    assert!(
+        (facts.vertices as u64) < MAX_RESIDENT_VERTICES,
+        "the whole file's vertices must stay under the vertex ceiling (got {})",
+        facts.vertices
     );
 }

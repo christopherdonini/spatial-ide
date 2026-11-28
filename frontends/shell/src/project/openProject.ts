@@ -7,18 +7,22 @@
  *
  * - **The reopen's `admit`** (`admitProject`) is what `runAdmitPath` (`admission/AdmissionPanel.tsx`) runs for a reopen, in place of
  *   `admitDataset`: `open_project` and then `describe` (section 2.8). It never calls `open_dataset`. A `question` or a `not_found` ends the run
- *   (O-14); the panel re-enters the run with the answer, or with the re-link and the answer the run already gave.
+ *   (O-14); the panel re-enters the run with the answer, or with the re-link and the answer the run already gave. A `describe` that fails after
+ *   `opened` first sends `close_dataset` for the opened handle, and the failure goes on when the close settles or once
+ *   `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed, whichever is first (`admission/admitDataset.ts`'s `describeOpened`).
  * - **Text from a file is bounded** (item 5 (j)) by `project/shownText.ts` here, before it reaches a place or the log: every refusal's message and
  *   fields, `file_name`, `basis` and O-18's column. The workspace's own text is not (item 5 (k)): it applies whole, and W-TEXT names the member.
- * - **The refusal's owner place** (item 5 (g); ADV-2026-11-20-05 item 4) is chosen here from the code alone, and S9's two places from the
- *   refusal's `project` against the identity this window holds. The refusal itself shows in the existing block, with no remediation form.
+ * - **The refusal's owner place** (item 5 (g); ADV-2026-11-20-05 item 4) is chosen here from the code, and S9's two places from the
+ *   refusal's `project` against the identity this window holds; for an `engine.*` refusal it also reads the attempt, which tells S-8 (an attempt that
+ *   carried the user's choice to open the file by row position) from R-ENG (one that carried none). The refusal itself shows in the existing block, with
+ *   no remediation form.
  * - **One log line per refusal** (item 5 (l)), the code and the bounded message, beside `admitDataset`'s `admission-refused` line.
  */
 
-import type { AdmissionOutcome, AdmitOptions } from "../admission/admitDataset";
+import { describeOpened, type AdmissionOutcome, type AdmitOptions } from "../admission/admitDataset";
 import { fieldValue, formatRefusal, type FormattedRefusal } from "../admission/formatRefusal";
 import { logSessionEvent } from "../diagnostics/log";
-import { describe as describeDataset, openProject, SkpCallError } from "../skp/client";
+import { openProject, SkpCallError } from "../skp/client";
 import { decodeHexF64 } from "../skp/codec";
 import type { LineageRefusal, ProjectWorkspace, ReopenCheck, ReopenLineage, ReopenView } from "../skp/types";
 import { DEFAULT_STYLE_STATE, readStyleDocument, type StyleState } from "../style/document";
@@ -37,6 +41,7 @@ import {
   relinkedFileNotice,
   REOPEN_LOCATOR_REFUSAL_NOTICE,
   REOPEN_REFUSAL_NOTICE,
+  SET_ASIDE_REFUSAL_NOTICE,
   STYLE_NOT_APPLIED_NOTICE,
   viewNotAppliedNotice,
   workspaceTextNotice,
@@ -56,29 +61,33 @@ export interface Reopened {
 /**
  * The reopen's `admit`: `open_project` with the run's answer and re-link (both `null` at a first call), then `describe`. `heldProject` is the
  * identity this window holds, for S9. A typed refusal is bounded, logged once and returned with its owner place; any other failure is rethrown,
- * as `admitDataset` rethrows it, for the global handlers. A cancel after the engine's open answers `opened` and is applied as any `opened` is
+ * as `admitDataset` rethrows it, for the global handlers. When `describe` fails, `describeOpened` first sends `close_dataset` for the opened
+ * handle, which frees the project's lock once the kernel has closed it and its release has run; the failure goes on when the close settles or
+ * once `DESCRIBE_FAILED_CLOSE_WAIT_MS` has passed, whichever is first. A cancel after the engine's open answers `opened` and is applied as any `opened` is
  * (item 5 (e)): that is timing inside one round trip, not covered by a test.
  */
 export async function admitProject(folder: string, cancelKey: string, options: AdmitOptions = {}, heldProject: string | null = null): Promise<AdmissionOutcome> {
   const answer = options.reopen?.answer ?? null;
   const relink = options.reopen?.relink ?? null;
   try {
-    const reply = await openProject(folder, cancelKey, answer, relink);
+    const reply = await openProject(folder, cancelKey, answer, relink, options.setAsideFileId === true);
     if ("question" in reply) return { kind: "question" };
     if ("not_found" in reply) return { kind: "not_found", fileName: reply.not_found.file_name === null ? null : shownText(reply.not_found.file_name) };
     const { project, dataset, session, workspace, view, check, lineage } = reply.opened;
-    const describe = await describeDataset(dataset);
+    const describe = await describeOpened(dataset);
     return { kind: "admitted", admitted: { dataset, describe, session }, reopened: { project, workspace, view, check, lineage, relinked: relink !== null } };
   } catch (e) {
     if (!(e instanceof SkpCallError)) throw e;
     const refusal = shownRefusal(formatRefusal(e.skpError));
     logSessionEvent("reopen-refused", `${refusal.code}: ${refusal.message}`);
-    return { kind: "refused", refusal, owner: reopenRefusalPlace(refusal, heldProject) };
+    const place = reopenRefusalPlace(refusal, heldProject);
+    // S-8: an `engine.*` refusal of an attempt that carried the user's choice names that choice as well as the project file's claims.
+    return { kind: "refused", refusal, owner: place === ENGINE_REFUSAL_NOTICE && options.setAsideFileId === true ? SET_ASIDE_REFUSAL_NOTICE : place };
   }
 }
 
 /**
- * The owner's place beside a reopen refusal (ADV-2026-11-20-05 item 4), one at most. `engine.cancelled` has none: it is the cancelled note
+ * The place a reopen refusal's code gives (ADV-2026-11-20-05 item 4), one at most; `admitProject` alone turns R-ENG into S-8 when its attempt carried the choice to open by row position. `engine.cancelled` has none: it is the cancelled note
  * (`CANCELLED_REFUSAL_CODE` in `admission/AdmissionPanel.tsx`). Every code without a line of its own takes R-CODE.
  */
 export function reopenRefusalPlace(refusal: FormattedRefusal, heldProject: string | null): string | null {

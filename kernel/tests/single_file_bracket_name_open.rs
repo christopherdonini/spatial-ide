@@ -74,6 +74,7 @@ fn open_dataset_admits_an_existing_bracket_named_file_and_describe_reports_only_
             cancel_key: "open-bracket-named-file".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .unwrap_or_else(|e| panic!("the open must succeed for an existing single file: {e:?}"));
 

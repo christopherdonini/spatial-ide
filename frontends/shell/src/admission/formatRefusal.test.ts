@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 
 import type { SkpError } from "../skp/types";
+import { formFamilyForCode, nextFormFamily } from "./AdmissionPanel";
 import { fieldValue, formatRefusal, refusalGuidance } from "./formatRefusal";
 
 // Mirrors kernel/src/skp.rs::error_of's exact shape for each family, so this test would fail if
@@ -135,7 +136,8 @@ describe("refusalGuidance", () => {
  * this commit" below, because the human ruled its exact words (round 5 item 1).** The header used
  * to say "no string here is asserted verbatim. All four are placeholders", twelve lines above that
  * assertion; it was true when written and stopped being true when the ruling landed. The other
- * three are placeholders for the P6 sight, and
+ * three are not asserted verbatim — two are placeholders for the P6 sight, and the partitioned
+ * guidance is the advisor's wording (ADV-2026-11-23-27 item 7) — and
  * for those what is asserted is that each state has guidance at all and that it says the thing the
  * operator needs (what ended, whether their file is at fault, what to do) — properties a rewording
  * keeps.
@@ -170,15 +172,34 @@ describe("refusalGuidance for Brief A P3's new states", () => {
     expect(refusalGuidance("engine.source_changed")).not.toMatch(/snapshot/i);
   });
 
-  // Mutation: drop the "identity column" sentence from that case. Expected failure:
-  // "engine.identity_ordinal_partitioned_unsupported: names both real routes forward" fails --
-  // an operator would be told only to split their data, never that declaring a column works.
-  it("engine.identity_ordinal_partitioned_unsupported: names both real routes forward", () => {
+  // Mutation: put back the old last sentence of that case ("... Open a single file, or declare an
+  // identity column."). Expected failure: "engine.identity_ordinal_partitioned_unsupported: names
+  // the single-file route and no declaration" fails at its second assertion -- an operator would be
+  // offered a declaration that cannot help, because the refusal comes before any identity is read.
+  // RECORDED MUTATION (observed at `2b90ed511f119052d752c849c7507ba59218cf39`):
+  // the case's text ended "Open a single file, or declare an identity column." instead. Observed
+  // outcome: this test fails by name at its second assertion (`expected '[P6 placeholder] This app
+  // cannot open…' not to contain 'or declare an identity column'`).
+  it("engine.identity_ordinal_partitioned_unsupported: names the single-file route and no declaration", () => {
     const guidance = refusalGuidance("engine.identity_ordinal_partitioned_unsupported");
     expect(guidance).not.toBeNull();
-    expect(guidance).toMatch(/more than one file/i);
     expect(guidance).toMatch(/single file/i);
-    expect(guidance).toMatch(/identity column/i);
+    expect(guidance).not.toContain("or declare an identity column");
+    expect(guidance).toMatch(/does not change/i);
+  });
+
+  // Mutation: map this code to "identity" in `formFamilyForCode` (AdmissionPanel.tsx). Expected
+  // failure: "engine.identity_ordinal_partitioned_unsupported: opens no form" fails -- the panel
+  // would offer the declaration form whose submit sends the same path and is refused again. A guard,
+  // green before the fix: a prior family is carried forward by `nextFormFamily`, which this does not
+  // cover.
+  // RECORDED MUTATION (observed at `2b90ed511f119052d752c849c7507ba59218cf39`):
+  // `formFamilyForCode` in `AdmissionPanel.tsx` also returning "identity" for this code. Observed
+  // outcome: this test fails by name at its first assertion (`expected 'identity' to be null`).
+  it("engine.identity_ordinal_partitioned_unsupported: opens no form", () => {
+    const code = "engine.identity_ordinal_partitioned_unsupported";
+    expect(formFamilyForCode(code)).toBeNull();
+    expect(nextFormFamily(null, code)).toBeNull();
   });
 
   // Mutation: reword that case to blame the file. Expected failure:

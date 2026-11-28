@@ -1202,9 +1202,20 @@ impl SkpHost {
         };
         let arm_outcome = self.arm.arm(Path::new(&req.path), sink);
 
-        let outcome =
+        // ADR-016 Amendment 3: the caller's choice to set aside the file's own `id` column, carried
+        // from the request and nowhere else. It is never inferred here and never recorded.
+        let outcome = if req.set_aside_file_id {
+            self.catalog.open_cancellable_setting_aside_file_id(
+                handle.as_str(),
+                &req.path,
+                assertion,
+                identity,
+                cancel,
+            )
+        } else {
             self.catalog
-                .open_cancellable(handle.as_str(), &req.path, assertion, identity, cancel);
+                .open_cancellable(handle.as_str(), &req.path, assertion, identity, cancel)
+        };
         if let Err(e) = outcome {
             // The open itself refused before admission was ever reached: disarm, nothing else to
             // clean up (the catalog entry was never inserted).
@@ -2049,6 +2060,16 @@ fn describe_dataset(ds: &Dataset) -> DescribeResponse {
                 .source()
                 .is_session_ordinal()
                 .then(|| spatial_engine::SESSION_IDENTITY_STATEMENT.to_string()),
+            // `skp/0.15`: the engine's candidate list, for the session tier only, as the engine
+            // gives it (ADR-016 Amendment 2). A native or a mapped identity carries `None`, which
+            // serializes as a present `null`; the refusal carries the list there.
+            candidate_columns: identity
+                .source()
+                .is_session_ordinal()
+                .then(|| identity.candidate_columns().to_vec()),
+            // `skp/0.16`: the column the caller chose to set aside, from the engine's record and
+            // no other source; `None` (a present `null`) on every other open.
+            set_aside_column: identity.set_aside_column().map(str::to_string),
         },
         schema: ds
             .file_schema()
@@ -2190,6 +2211,10 @@ pub fn error_of(e: &EngineError) -> SkpError {
             "identity_ordinal_partitioned_unsupported",
             vec![("detail", detail.clone())],
         ),
+        EngineError::IdentitySetAsideRefused { detail } => (
+            "identity_set_aside_refused",
+            vec![("detail", detail.clone())],
+        ),
         // The retyped internal-inconsistency arm (Brief A P3). It used to
         // arrive here as `engine.source`, telling a caller its file was unreadable when the
         // contradiction is in this tree's own record.
@@ -2224,6 +2249,7 @@ pub fn error_of(e: &EngineError) -> SkpError {
             column,
             detail,
             candidate_columns,
+            identity_source,
         } => (
             "identity_unusable",
             vec![
@@ -2231,8 +2257,11 @@ pub fn error_of(e: &EngineError) -> SkpError {
                 ("detail", detail.clone()),
                 // `SkpError::fields` is `BTreeMap<String, String>` (SKP-V0.md §5) — no list shape
                 // on the wire, so the schema-ordered, unranked candidate list is comma-joined into
-                // one string field. Empty when the file carries no 64-bit integer column at all.
+                // one string field. Empty when the file has no column the engine lists.
                 ("candidate_columns", candidate_columns.join(",")),
+                // `skp/0.17`: the source the engine checked, `file:id` or `mapped:<column>`, as the
+                // engine built it. Passed through as `column` is; the kernel composes nothing.
+                ("identity_source", identity_source.clone()),
             ],
         ),
         EngineError::FeatureTooLarge { id, limit, saw } => (
@@ -2340,6 +2369,7 @@ pub fn filter_error_of(e: &FilterError) -> SkpError {
         FilterError::IdentityAliasAmbiguous {
             column,
             source_column,
+            by_row_position: _,
         } => SkpError::protocol_with_fields(
             "filter_identity_alias_ambiguous",
             message,
@@ -2880,6 +2910,7 @@ mod tests {
         let e = filter_error_of(&FilterError::IdentityAliasAmbiguous {
             column: "id".into(),
             source_column: "parcel_key".into(),
+            by_row_position: false,
         });
         assert_eq!(e.code, "skp.filter_identity_alias_ambiguous");
         assert_eq!(e.fields.get("column").map(String::as_str), Some("id"));
@@ -3057,6 +3088,7 @@ mod tests {
                 cancel_key: "row3-crs-unit-seam".to_string(),
                 crs_assertion: None,
                 identity: None,
+                set_aside_file_id: false,
             })
             .expect("open");
         let describe = host
@@ -3217,6 +3249,7 @@ mod tests {
                     cancel_key: format!("describe-encoding-{name}"),
                     crs_assertion: None,
                     identity: None,
+                    set_aside_file_id: false,
                 })
                 .expect("open");
             let describe = host
@@ -3294,6 +3327,7 @@ mod tests {
                 cancel_key: "describe-point".to_string(),
                 crs_assertion: None,
                 identity: None,
+                set_aside_file_id: false,
             })
             .expect("open");
         let describe = host
@@ -3399,6 +3433,7 @@ mod tests {
                     cancel_key: format!("describe-line-{name}"),
                     crs_assertion: None,
                     identity: None,
+                    set_aside_file_id: false,
                 })
                 .expect("open");
             let describe = host
@@ -4259,6 +4294,7 @@ mod ticket_drop_under_lock_regression {
                 cancel_key: "e7".to_string(),
                 crs_assertion: None,
                 identity: None,
+                set_aside_file_id: false,
             })
             .expect("open");
         let name = open.dataset.as_str().to_string();
@@ -4345,6 +4381,7 @@ mod ticket_drop_under_lock_regression {
                 cancel_key: "e8".to_string(),
                 crs_assertion: None,
                 identity: None,
+                set_aside_file_id: false,
             })
             .expect("open");
         let name = open.dataset.as_str().to_string();
@@ -4415,6 +4452,7 @@ mod ticket_drop_under_lock_regression {
                 cancel_key: "k15".to_string(),
                 crs_assertion: None,
                 identity: None,
+                set_aside_file_id: false,
             })
             .expect_err("a coverage loss racing admission refuses the open");
         assert_eq!(
@@ -4499,6 +4537,7 @@ mod ticket_drop_under_lock_regression {
             cancel_key: cancel_key.to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .expect("open")
     }
@@ -5487,6 +5526,7 @@ mod ticket_drop_under_lock_regression {
             cancel_key: "kcdo".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         });
 
         // 1. The watch ran after the insert and before the mint; its close did not refuse.

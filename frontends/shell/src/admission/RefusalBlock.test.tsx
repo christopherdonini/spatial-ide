@@ -117,8 +117,8 @@ describe("RefusalBlock at a reopen (Amendment 54 item 5 (g); Amendment 56 item 4
     const { consoleRecorder } = await import("../console/recorder");
     const { default: ConsolePanel } = await import("../console/ConsolePanel");
     (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
-    consoleRecorder.record({ skp: "skp/0.14", folder: "C:/p", cancel_key: "k1", answer: null, relink: null }, "open_project").resolveRefused(conflict);
-    consoleRecorder.record({ skp: "skp/0.14", path: "C:/d.parquet", cancel_key: "k2", crs_assertion: null, identity: null }, "open_dataset").resolveRefused(conflict);
+    consoleRecorder.record({ skp: "skp/0.17", folder: "C:/p", cancel_key: "k1", answer: null, relink: null }, "open_project").resolveRefused(conflict);
+    consoleRecorder.record({ skp: "skp/0.17", path: "C:/d.parquet", cancel_key: "k2", crs_assertion: null, identity: null }, "open_dataset").resolveRefused(conflict);
     const container = document.createElement("div");
     document.body.appendChild(container);
     const root = createRoot(container);

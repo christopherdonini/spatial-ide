@@ -897,7 +897,11 @@ fn cancelling_mid_stream_stops_production_promptly() {
     // **THE ASSERTION: the interval docs/08:8 declares a budget for.** `cancel_requested →
     // cancel_observed`, 100 ms, "scored on the producer's clock" (ADR-018). This is the only figure
     // here that is checked against a declared number, and it is the number that was declared.
-    let budgeted = Duration::from_nanos(observed.saturating_sub(requested));
+    assert!(
+        observed >= requested,
+        "cancel_observed ({observed} ns) was stamped before cancel_requested ({requested} ns)"
+    );
+    let budgeted = Duration::from_nanos(observed - requested);
     assert!(
         budgeted < Duration::from_millis(100),
         "cancel_requested → cancel_observed took {budgeted:?}, over docs/08:8's declared 100 ms"

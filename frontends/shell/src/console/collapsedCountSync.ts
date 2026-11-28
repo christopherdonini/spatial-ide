@@ -5,7 +5,7 @@
  * NEXT-CUT.md I9 ("closed console = ZERO DOM work; recorder updates coalesced via the existing
  * `canvas/coalesceOncePerFrame.ts` pattern"): the ONE place a collapsed `ConsolePanel` reacts to
  * new recorder activity. Factored out of `ConsolePanel.tsx` specifically so I9 is assertable
- * without a DOM -- `onCount` below is typed to receive only a `ConsoleCountSnapshot` (two numbers),
+ * without a DOM -- `onCount` below is typed to receive only a `ConsoleCountSnapshot` (three numbers),
  * never a `ConsoleEntry`, so there is structurally no way for a caller wired through this module to
  * read, format, or render an individual entry while collapsed; a test can prove the ONLY thing a
  * burst of recorder notifications ever produces here is (at most) one `onCount` call per frame.
@@ -21,22 +21,26 @@
  */
 
 import { coalesceOncePerFrame } from "../canvas/coalesceOncePerFrame";
+import type { ConsoleLane } from "./recorder";
 
 /** The subset of `ConsoleRecorder`'s API this module needs -- kept narrow and structural so a test
  * can hand it a small fake instead of a real `ConsoleRecorder` instance. */
 export interface CountableRecorder {
   count(): number;
-  droppedCount(): number;
+  droppedCount(lane: ConsoleLane): number;
   subscribe(listener: () => void): () => void;
 }
 
 export interface ConsoleCountSnapshot {
   count: number;
-  dropped: number;
+  /** Entries evicted from the stream ring (data requests, cancels, log lines). */
+  droppedStream: number;
+  /** Entries evicted from the other ring. */
+  droppedOther: number;
 }
 
 /**
- * Subscribes to `recorder`, calling `onCount` with the current count/dropped-count -- coalesced to
+ * Subscribes to `recorder`, calling `onCount` with the current count and each ring's dropped count -- coalesced to
  * at most once per animation frame via `coalesceOncePerFrame` (reused, not reimplemented, per
  * NEXT-CUT.md I9's own wording). Fires once immediately on attach, so a drawer that is already
  * collapsed when this is called shows the CURRENT count right away rather than waiting for the next
@@ -55,7 +59,8 @@ export function attachCollapsedCountSync(
 ): () => void {
   const snapshot = (): ConsoleCountSnapshot => ({
     count: recorder.count(),
-    dropped: recorder.droppedCount(),
+    droppedStream: recorder.droppedCount("stream"),
+    droppedOther: recorder.droppedCount("other"),
   });
   const coalesced = coalesceOncePerFrame(() => onCount(snapshot()), requestFrame, cancelFrame);
 
