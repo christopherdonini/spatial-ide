@@ -425,3 +425,17 @@ Read the last amendment first.
 6. **Next:** Part A's code waits for the advisor's answer on DOC-5. No further form gate is planned (§31), unless that answer asks for one.
 
 Read the last amendment first.
+
+## Amendment 5 — 2026-11-28 — the custodian's: ADV-2026-11-28-05 carried (`unread` under Part A alone, DOC-2 as the gate gives it), and one narrow second attempt of each form gate
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** ADV-2026-11-28-05 is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-05-the-reload-keys-unread-under-part-a-alone-doc-2-as-the-gate-gives-it-one-narrow-second-attempt-of-each-form-gate.md`. It answers Amendment 4 item 4. Where this amendment summarises it, the ruling's bytes govern.
+2. **`unread`** (its item 1): the third bullet of ADV-2026-11-28-04 item 1 is replaced by the ruling's item 1. §1's line claim is the fence of ADV-2026-11-28-05 item 1, byte for byte, in place of the fence of ADV-2026-11-28-04 item 1 (Amendment 3 item 2 is read so). The bytes of both lines, both levels and the not-applied cases stand. The source comment at the key setter and getter is the worker's, as the ruling's item 1 says.
+3. **The case where `with_webview` returns `Err`** (its item 2) stands as the reviewer's gate reads it. The source comment at that arm says, in the worker's words, that it cannot run from `setup()` today, naming the crate version the gate read. No test is claimed for the arm.
+4. **DOC-2** (its item 3) is applied as the reviewer's report gives it (Amendment 4 item 1), from that report's bytes. Its Old stands once in this form, by the node count of Amendment 4 item 2.
+5. **The second attempts** (its item 4), each narrow, as the ruling lists what each reads: the reviewer's attempt 2 reads Amendment 4 and this amendment; the architect's attempt 2 reads Amendments 2 to 5. Everything else of each attempt 1 is carried forward. Words-only findings are applied with no third attempt; a FAIL on anything else goes to the advisor. They run in either order or at once. Both attempts 1 stay FAIL in every record.
+6. **The candidate's row** (its item 5, OPEN-8) is the advisor's, written when a candidate is named.
+7. **Next:** the two second attempts, now that this amendment is on main. Part A's code is dispatched when both have ended PASS or PASS WITH NOTES.
+
+Read the last amendment first.

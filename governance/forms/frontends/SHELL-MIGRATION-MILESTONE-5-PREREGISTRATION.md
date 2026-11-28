@@ -2194,3 +2194,13 @@ Read the last amendment first.
 6. **Next:** the worker's corrected head, then the reviewer's read part there. The run part comes at the port, after E-SCALE.
 
 Read the last amendment first.
+
+## Amendment 21 — 2026-11-28 — the custodian's: the architect's words at 5dbb45f7, J-A1's record at 42859420, the reviewer's read part
+
+*References only. Nothing above is edited.*
+
+1. **The architect's words** (Amendment 20 item 2) are committed at 5dbb45f731e0798a6179e85a9adf595230ce8911, by the worker's script, each old counted once before any write. J-A1's recorded mutation was observed again there, and its record line names that commit at 42859420101bd5d17db7c16eff444a080ec5dd9a. `npm run verify` exited 0 at 42859420 by the worker's report, filed at `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-architect-words-worker-report.md` (its hand-back's sha256 9852f12c0fe5348890f3ccf0e117a7122c7f6dade4401c927c99ccd406d5f748). By that report, the worker once tried to read a file under a temp folder, which its brief forbade; the read was refused.
+2. **The reviewer's read part** is dispatched at 42859420 against main f0098033e0cf57db5fcf3f7ee9f446fa9f6b9517, read in D:/wt/read-1128b. It is also the narrow read of 5dbb45f7 that the architect's report asks for, and it gives no verdict.
+3. **Item 83** (Amendment 20 item 4): the advisor answers the sight item next (ADV-2026-11-28-05 item 6, filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-05-the-reload-keys-unread-under-part-a-alone-doc-2-as-the-gate-gives-it-one-narrow-second-attempt-of-each-form-gate.md`). Until then item 83 stands as filed, and the reviewer's read part does not wait for it.
+
+Read the last amendment first.
