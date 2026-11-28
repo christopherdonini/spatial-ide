@@ -155,7 +155,7 @@ fn crash_in(test: &str, mode: &str, dir: &Path) {
         attributes: AttributeMode::CategoricalZone,
         ..Default::default()
     };
-    write_geoparquet(&dir.join("data").join("parcels.parquet"), &spec).expect("fixture");
+    write_geoparquet(dir.join("data").join("parcels.parquet"), &spec).expect("fixture");
     std::fs::create_dir_all(dir.join("project")).expect("the project folder");
     let exe = std::env::current_exe().expect("the test binary");
     let mut child = Command::new(exe)
