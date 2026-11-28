@@ -1249,3 +1249,172 @@ fn the_session_ended_event_fixture_decodes_with_exactly_two_members() {
         "a third member on the event payload must be refused, not tolerated"
     );
 }
+
+/// **P-1** (`skp/0.18`, B2 piece 1c step 3, the recovery offer: SKP-V0 §13 to §15). The three
+/// commands' requests and replies round-trip with every null member present, `cannot-be-offered`
+/// carries its three reasons, a missing or an unknown member is refused at deserialize on each
+/// type, and the four new codes are what their constructors build.
+///
+/// Mutation: `deny_unknown_fields` dropped on `RecoverSessionRequest`. Expected failure: this test
+/// fails by name, at `recover_session request with an unknown member`.
+#[test]
+fn recovery_commands_round_trip_and_refuse_unknown_or_missing_members() {
+    use serde_json::{json, Value};
+    fn trips<T: serde::Serialize + serde::de::DeserializeOwned>(what: &str, wire: Value) {
+        let parsed: T = serde_json::from_value(wire.clone())
+            .unwrap_or_else(|e| panic!("{what}: does not deserialize: {e}"));
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), wire, "{what}");
+    }
+    fn refused<T: serde::de::DeserializeOwned>(what: &str, wire: Value) {
+        let parsed = serde_json::from_value::<T>(wire);
+        assert!(parsed.is_err(), "{what}: was accepted");
+    }
+    let (ds, sr) = (
+        "ds_00112233445566778899aabbccddeeff",
+        "sr_00112233445566778899aabbccddeeff",
+    );
+    let record = "unsaved-00112233445566778899aabbccddeeff";
+    let skp = SKP_VERSION;
+
+    for dataset in [Value::Null, json!(ds)] {
+        let wire = json!({"skp": skp, "dataset": dataset});
+        trips::<ListRecoverableRequest>("list_recoverable request", wire);
+        let wire = json!({"skp": skp, "record": record, "cancel_key": "k", "dataset": dataset});
+        trips::<RecoverSessionRequest>("recover_session request", wire);
+    }
+    trips::<DiscardRecoverableRequest>(
+        "discard_recoverable request",
+        json!({"skp": skp, "record": record}),
+    );
+    trips::<DiscardRecoverableResponse>("discard_recoverable reply", json!({}));
+
+    let entry = |data: Value| {
+        json!({"record": record, "file_name": "parcels.parquet",
+               "last_step_at": "2026-11-28T10:00:00Z", "steps": 3, "data": data})
+    };
+    let cannot = |reason: &str| json!({"state": "cannot-be-offered", "reason": reason});
+    let listed = json!({"records": [
+        entry(json!({"state": "found"})),
+        entry(json!({"state": "not-found"})),
+        entry(cannot("no-step")),
+        entry(cannot("later-version")),
+        {
+            let mut e = entry(cannot("locations-refused"));
+            e["file_name"] = Value::Null;
+            e["last_step_at"] = Value::Null;
+            e["steps"] = json!(0);
+            e
+        },
+    ], "more": true});
+    trips::<ListRecoverableResponse>("list_recoverable reply", listed);
+    trips::<ListRecoverableResponse>("an empty list", json!({"records": [], "more": false}));
+    let check = json!({"observed": ["size", "footer-hash"], "admission": ["crs"]});
+    let steps = json!([
+        {"action": "filter.apply", "params": {"filter": null}},
+        {"action": "style.set", "params": {"property": "fillOpacity", "value": 0.5}}
+    ]);
+    trips::<RecoverSessionResponse>(
+        "recover_session reply, opened",
+        json!({"dataset": ds, "opened": {"session": sr, "check": check}, "steps": steps}),
+    );
+    trips::<RecoverSessionResponse>(
+        "recover_session reply, not opened",
+        json!({"dataset": ds, "opened": null, "steps": []}),
+    );
+
+    let bad = |wire: Value, key: &str, value: Value| {
+        let mut wire = wire;
+        wire[key] = value;
+        wire
+    };
+    let list = json!({"skp": skp, "dataset": null});
+    let recover = json!({"skp": skp, "record": record, "cancel_key": "k", "dataset": null});
+    let discard = json!({"skp": skp, "record": record});
+    refused::<ListRecoverableRequest>(
+        "list_recoverable request with an unknown member",
+        bad(list.clone(), "x", json!(1)),
+    );
+    refused::<ListRecoverableRequest>(
+        "list_recoverable request without dataset",
+        json!({"skp": skp}),
+    );
+    refused::<RecoverSessionRequest>(
+        "recover_session request with an unknown member",
+        bad(recover.clone(), "x", json!(1)),
+    );
+    refused::<RecoverSessionRequest>(
+        "recover_session request without dataset",
+        json!({"skp": skp, "record": record, "cancel_key": "k"}),
+    );
+    refused::<RecoverSessionRequest>(
+        "recover_session request without cancel_key",
+        json!({"skp": skp, "record": record, "dataset": null}),
+    );
+    refused::<DiscardRecoverableRequest>(
+        "discard_recoverable request with an unknown member",
+        bad(discard, "x", json!(1)),
+    );
+    refused::<DiscardRecoverableResponse>(
+        "discard_recoverable reply with a member",
+        json!({"x": 1}),
+    );
+    let reply = |data: Value| json!({"records": [entry(data)], "more": false});
+    refused::<ListRecoverableResponse>("an unknown data state", reply(json!({"state": "changed"})));
+    refused::<ListRecoverableResponse>(
+        "cannot-be-offered without a reason",
+        reply(json!({"state": "cannot-be-offered"})),
+    );
+    refused::<ListRecoverableResponse>("an unknown reason", reply(cannot("damaged")));
+    refused::<ListRecoverableResponse>(
+        "found with a member",
+        reply(json!({"state": "found", "reason": "x"})),
+    );
+    refused::<ListRecoverableResponse>("a list without more", json!({"records": []}));
+    let mut no_time = entry(json!({"state": "found"}));
+    no_time.as_object_mut().unwrap().remove("last_step_at");
+    refused::<ListRecoverableResponse>(
+        "an entry without last_step_at",
+        json!({"records": [no_time], "more": false}),
+    );
+    let opened = json!({"dataset": ds, "opened": {"session": sr, "check": check}, "steps": []});
+    refused::<RecoverSessionResponse>(
+        "a reply with an unknown member",
+        bad(opened.clone(), "x", json!(1)),
+    );
+    refused::<RecoverSessionResponse>(
+        "a reply without opened",
+        json!({"dataset": ds, "steps": []}),
+    );
+    let mut inner = opened.clone();
+    inner["opened"]["x"] = json!(1);
+    refused::<RecoverSessionResponse>("opened with an unknown member", inner);
+
+    let (locked, unknown) = (
+        SkpError::recoverable_record_locked(record),
+        SkpError::recoverable_record_unknown(record),
+    );
+    let refused_by = SkpError::recoverable_record_refused(record, "locations.json", "a rule");
+    let elsewhere = SkpError::recoverable_record_not_for_this_open(record);
+    for (built, code, fields) in [
+        (locked, "skp.recoverable_record_locked", vec!["record"]),
+        (unknown, "skp.recoverable_record_unknown", vec!["record"]),
+        (
+            refused_by,
+            "skp.recoverable_record_refused",
+            vec!["file", "record", "rule"],
+        ),
+        (
+            elsewhere,
+            "skp.recoverable_record_not_for_this_open",
+            vec!["record"],
+        ),
+    ] {
+        assert_eq!(built.code, code);
+        let named: Vec<&str> = built.fields.keys().map(String::as_str).collect();
+        assert_eq!(named, fields, "{code}");
+        assert_eq!(built.fields["record"], record, "{code}");
+        let wire = serde_json::to_value(&built).unwrap();
+        let again: SkpError = serde_json::from_value(wire.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&again).unwrap(), wire, "{code}");
+    }
+}
