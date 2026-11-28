@@ -3101,3 +3101,260 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 31 — 2026-11-28 — class 9 under ADV-2026-11-28-15 item 1: a refused listing logged by the shell, an unreadable session store refused by the kernel
+
+*Post-result for the piece: lead-data drafted this after Part 1's runs at ffef5945 (Amendment 24 item 3) and the architect's read part (Amendment 26) had been seen. No outcome of the two rows below exists, and none of their code. Rulings are cited by id and item. Branch lines are cited at ffef5945. Texts marked verbatim are byte-copied from the file named; everything else is lead-data's. The drafter has no hashing tool, so the custodian pins each cited span at filing.*
+
+1. **Authority and scope.**
+   - ADV-2026-11-28-15 item 1 (i) and (ii): class 9 on ADV-2026-11-27-46 items 2 to 4 and on §2.3 and §2.4. Amendment 27 item 2.
+   - Files, all already in Part 1 (§2.11; Amendment 10 item 2): `kernel/src/recovery.rs`, `kernel/tests/recovery.rs`, `protocol/skp/SKP-V0.md`, `frontends/shell/src/project/RecoveryOffer.tsx` and `frontends/shell/src/project/RecoveryOffer.test.tsx`. No file is added.
+   - No new code, wire member, capability entry, dependency, manifest or lockfile change. `protocol/skp/src/v0/error.rs` is not edited. The refusal is built by `SkpError::protocol_with_fields` (`protocol/skp/src/v0/error.rs`, lines 35-48 at ffef5945), as `cut` builds its own.
+   - **Not touched:**
+     - `hex_folders`'s results, the dedupe, `MAX_RECOVERABLE_RECORDS`, `MAX_DEDUPE_RECORDS`, `more` and the at-open arm of `list_recoverable`;
+     - `frontends/shell/src-tauri/**` and `frontends/shell/src/App.tsx`;
+     - every existing test, K-C27 among them.
+
+2. **The kernel row** (ADV-2026-11-28-15 item 1 (ii)).
+   - **At ffef5945:**
+     - `list_recoverable`'s start arm calls `walk` (`kernel/src/recovery.rs`, line 536 at ffef5945).
+     - `walk` reads `folder_names(root).unwrap_or_default()` (line 358).
+     - `folder_names` gives `None` for every `read_dir` error but `NotFound` (lines 338-348; the arm is line 342).
+     - So a store folder that is there and cannot be read answers `Ok`, with no record and `more` false.
+   - **The change.** The worker may re-wrap lines for rustfmt; nothing else changes.
+     - `folder_names` returns `std::io::Result<Vec<String>>`. Its arms become `Err(e) if e.kind() == ErrorKind::NotFound => return Ok(Vec::new()),` and `Err(e) => return Err(e),`, and its last line becomes `Ok(names)`. Its doc gains: a root that is there and cannot be read gives the error `read_dir` gave.
+     - `hex_folders`: line 401 becomes `for name in folder_names(root).ok()? {`. Its results are unchanged.
+     - `Walked` (lines 332-335) gains `unreadable: Option<std::io::Error>`, documented as `Some` when the store's folder is there and could not be read, in which case nothing was taken.
+     - `walk` keeps its signature, because K-C27 calls it and reads `taken` and `more` (line 1101). Its first line becomes `let mut walked = Walked { taken: Vec::new(), more: false, unreadable: None };`. Then:
+       ```text
+       let names = folder_names(root).unwrap_or_else(|e| {
+           walked.unreadable = Some(e);
+           Vec::new()
+       });
+       ```
+       Line 358 becomes `for name in names {`.
+     - A new private function after `walk`, `fn unreadable_store(e: std::io::Error) -> SkpError`, built as `cut` builds its refusal (lines 793-801):
+       ```text
+       let detail = format!("read_dir: {e}");
+       SkpError::protocol_with_fields(
+           "session_history_unwritable",
+           format!("[P6 placeholder] the session store could not be read, so no record is listed: {detail}"),
+           [("detail", detail)],
+       )
+       ```
+       The message is ADV-2026-11-28-15 item 2's fourth string (verbatim, from the ruling's fence): `[P6 placeholder] the session store could not be read, so no record is listed: {detail}`. Its doc comment, in the worker's words, says three things:
+       - it is a start's refusal when the store's folder is there and cannot be read, because an empty list would say that no record was left out;
+       - it is built as `cut`'s is;
+       - the error's text names no path.
+     - In the start arm, line 536 becomes `let Walked { taken, more: over, unreadable } = walk(&self.root, &held);`, followed by:
+       ```text
+       if let Some(e) = unreadable {
+           return Err(unreadable_store(e));
+       }
+       ```
+       Nothing has been taken at that point, so no lock is held. The doc comment of `list_recoverable` (lines 510-512) gains one sentence: at a start, a session store that is there and cannot be read refuses the list.
+   - **The reply:**
+     - the code is `skp.session_history_unwritable`;
+     - `fields` holds only `detail`, which begins `read_dir: ` and goes on with the error's text;
+     - `message` is the fourth string with that `detail`.
+   - **Unchanged:** a store folder that is not there still gives an empty list with `more` false. The bound, `more`, the dedupe and the at-open arm do not change.
+   - The binding passes the refusal through unchanged (`frontends/shell/src-tauri/src/commands.rs`, lines 286-300 at ffef5945).
+
+3. **The shell row** (ADV-2026-11-28-15 item 1 (i)).
+   - **Where.** The shell asks for the list in one place, at mount and at a project's open: `RecoveryOffer`'s effect (`frontends/shell/src/project/RecoveryOffer.tsx`, lines 142-155 at ffef5945). `App.tsx` mounts it with `projectDataset` `null` and with a reopen's handle (`frontends/shell/src/App.tsx`, lines 2337-2338 at ffef5945).
+   - **The handler.** The rejection handler `() => undefined` (line 149) becomes:
+     ```text
+     (e: unknown) => {
+       if (!(e instanceof SkpCallError)) return;
+       const refusal = shownRefusal(formatRefusal(e.skpError));
+       logSessionEvent("recover-list-refused", `${refusal.code}: ${refusal.message}`);
+     }
+     ```
+   - **The line.**
+     - Its name is ADV-2026-11-28-15 item 1 (i)'s (verbatim): `recover-list-refused`.
+     - Its fields are those of `recover-refused` and `discard-refused`: the code and the bounded message after `shownRefusal(formatRefusal(...))` (lines 80-84 and 97-98).
+     - The imports are already present (lines 25, 27, 28 and 30).
+     - It reaches the session log as those lines do: `logSessionEvent` (`frontends/shell/src/diagnostics/log.ts`, lines 20-22 at ffef5945), then `binding_log_session_event`, then `SessionLog::append_redacted` (`frontends/shell/src-tauri/src/commands.rs`, lines 463-470 at ffef5945).
+   - **What it does not do:**
+     - `listed` stays `null`, so the component renders nothing (line 206): no offer and no new text.
+     - A list that succeeds writes no such line.
+     - A failure that is not a typed refusal returns as before and writes nothing.
+     - The handler does not read `current`, so a refusal that arrives after the offer unmounted is still written once.
+   - **Comments** (in the worker's words):
+     - line 144's comment adds that a typed refusal writes one `recover-list-refused` line and any other failure writes none;
+     - the file's doc (lines 17-18) names the line beside `discard-refused`.
+
+4. **Tests**, added after S-10's row (Amendment 20 item 4). Each is committed and run red at a named commit before its code (§4), then green. Each mutation is applied, run, recorded by name with its commit, and reverted at Part 1's head.
+
+| Id | Test | Mutation | Fails |
+|---|---|---|---|
+| K-C43 | `a_start_whose_session_store_cannot_be_read_is_refused_and_one_with_no_store_lists_nothing` (`kernel/tests/recovery.rs`). A real `SkpHost` and `StepRecorder` through the file's `site` and `run` (lines 48-100 at ffef5945). `list_recoverable` is called with `ListRecoverableRequest { skp, dataset: None }`, not through `Run::list`, which expects `Ok`. In order: (1) with the site's store folder not there, the reply's `(records.len(), more)` is `Ok((0, false))`; (2) `crashed(&s, 2)` (lines 208-221) leaves a record, its two files are read, and the list names it; (3) the store folder is made unreadable (below), and the reply is `Err`, which the assertion's message prints otherwise: its `code` is `skp.session_history_unwritable`, its `fields` keys are exactly `["detail"]`, `detail` begins `read_dir: ` and is longer than that, `detail` holds neither the store's path nor the record's name, and `message` equals the fourth string with `{detail}` replaced by `detail`; (4) with access restored, the record's two files are byte for byte as in (2), and the list names the record again. To make the folder unreadable: on Windows, `icacls <store> /deny *S-1-1-0:(RD)`, removed with `/remove:d *S-1-1-0`; on Linux and macOS, mode `0o000`, restored to `0o755`. Each status is checked, and a guard's `Drop` restores access even if the test panics, as `DenyGuard` (`kernel/tests/session_history.rs`, lines 605-629 at ffef5945) and `readable` (`kernel/tests/project_reopen.rs`, lines 1173-1192 at ffef5945) do. No early return on any operating system | **M-K43:** in `walk`, Old `walked.unreadable = Some(e);`, New `drop(e);`. **M-K43-A:** in `folder_names`, Old `Err(e) if e.kind() == ErrorKind::NotFound => return Ok(Vec::new()),`, New: the line removed | M-K43: K-C43, at step (3)'s refusal assertion. M-K43-A: K-C43, at step (1)'s assertion, and any test that lists a start before a store folder exists |
+| S-11 | `a_refused_listing_logs_one_line_with_its_code_and_bounded_message_and_shows_no_offer_and_any_other_listing_logs_none` (`RecoveryOffer.test.tsx`, with the file's mocks at lines 13-55 at ffef5945; the component, `formatRefusal` and `shownRefusal` are real). Each case renders `<RecoveryOffer>` afresh with a new `key` and settles as `mount` does (lines 100-107). `listed` and `logs` are reset between cases. **Case 1**, at mount: `listRecoverable` throws `skp.session_history_unwritable` with a message holding U+202E and longer than 1,024 characters. `listed` is `[null]`, the logs are `[{level: "recover-list-refused", message: "skp.session_history_unwritable: " + shownText(message)}]`, the container's text is empty, and no `.recovery-offer` stands. **Case 2**, at a project's open (`projectDataset` `"ds_1"`): it throws `skp.unknown_dataset` with the message `m`. `listed` is `["ds_1"]`, the logs are `[{level: "recover-list-refused", message: "skp.unknown_dataset: m"}]`, and nothing is rendered. **Case 3:** it resolves one `found` record; one `.recovery-entry` stands, and the logs are `[]`. **Case 4:** it rejects with a plain `Error`; the logs are `[]`, and nothing is rendered | **M-S11:** Old ``logSessionEvent("recover-list-refused", `${refusal.code}: ${refusal.message}`);``, New: the line removed | S-11, at case 1's logs equality |
+
+   - **Red runs:**
+     - K-C43 uses only items that are public at ffef5945, so it builds before its code. On each of the three entries of Product CI (Rust workspace) at the red commit, steps (1) and (2) pass, and step (3) fails at its refusal assertion, printing `Ok` with `records: []` and `more: false`. A reply there that names the record means the folder stayed readable on that runner (H4 false): that is a finding, not a red run.
+     - S-11 fails at case 1's logs equality, `[]` against one line, while the handler is still `() => undefined`.
+   - **Known pass cases:** no whole test passes before its code. The steps that pin unchanged behaviour do pass: K-C43's (1) and (2), and S-11's cases 3 and 4.
+   - **Why each mutation fails at an assertion and not at a compile:**
+     - M-K43's closure stops capturing `walked`, so `unreadable` is never `Some`.
+     - Under M-K43-A, a missing folder falls to `Err(e) => return Err(e),`.
+     - Under M-S11 `refusal` is unused, and vitest does not type-check. S-10's mutation has the same shape, and it was observed failing its test (Amendment 24 item 1).
+   - Each Old text stands once in its file, in the function named. Leading whitespace is not part of an Old text.
+
+5. **SKP-V0's sentences.** They are read together with the architect's D-3 and D-4 (ADV-2026-11-28-15 items 1 and 5).
+   - **§13.3.** Old (verbatim, `protocol/skp/SKP-V0.md`, line 1559 at ffef5945):
+     ```text
+     - **Not cancellable, no progress:** one pass over the store's folders.
+     ```
+     New:
+     ```text
+     - **A store that cannot be read.** At a start, when the session store's folder is there and cannot be read, the list is refused `skp.session_history_unwritable`, its `detail` `read_dir: ` and the error's text: an empty list would say that no record was left out. A store whose folder is not there holds no record, and the reply is an empty list with `more` `false`.
+     - **Not cancellable, no progress:** one pass over the store's folders.
+     ```
+     This is not D-3's place, since D-3 edits the `cannot-be-offered` bullet (line 1558). Read together: D-3's `no-step` is a record whose own history could not be opened, locked or read; this bullet is about the store's folder, before any record is reached.
+   - **§13.4.** This is the same place as D-4. Old (verbatim, line 1563):
+     ```text
+     Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has). The four `skp.recoverable_record_*` codes are §14.4's and §15's, and this command returns none of them.
+     ```
+     Lead-data's New:
+     ```text
+     Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has); `skp.session_history_unwritable`, as §10.4 gives it, at a start whose session store's folder is there and cannot be read (§13.3). The four `skp.recoverable_record_*` codes are §14.4's and §15's, and this command returns none of them.
+     ```
+     D-4's New for the first sentence (verbatim, from the architect's read part, D-4):
+     ```text
+     Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has); `skp.session_history_unwritable`, as §10.4 gives it (no per-user data directory resolves).
+     ```
+     If both are taken, one text carries both:
+     ```text
+     Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has); `skp.session_history_unwritable`, as §10.4 gives it (no per-user data directory resolves; or, at a start, the session store's folder is there and cannot be read, §13.3). The four `skp.recoverable_record_*` codes are §14.4's and §15's, and this command returns none of them.
+     ```
+     Which of them is taken is not lead-data's to decide (ADV-2026-11-27-10 item 2).
+   - **§8, the `skp/0.18` entry.** Old (verbatim, line 1232):
+     ```text
+     - **One code is reached by a new path.** `skp.session_history_unwritable` is `recover_session`'s refusal when the history could not be cut to its kept steps; its `detail` names `set_len`, `seek` or `sync_all`. Its code and field are §10.4's.
+     ```
+     New:
+     ```text
+     - **One code is reached by two new paths.** `skp.session_history_unwritable` is `recover_session`'s refusal when the history could not be cut to its kept steps, its `detail` naming `set_len`, `seek` or `sync_all`; and `list_recoverable`'s at a start when the session store's folder is there and cannot be read, its `detail` `read_dir: ` and the error's text (§13.3). Its code and field are §10.4's.
+     ```
+     Neither D-3 nor D-4 touches this line. The entry's "no message and no other code changes" (line 1228) stays true. The binding's no-recorder refusal at the three new commands, D-4's case, is not named in this bullet; whether it is named is for the gates.
+   - **§10.4's row** (line 1390): no clause. Its code and field are what §13.4 and §8 point to. The case is said in §13.3, as the cut's case is said in §14.3 (line 1594) and pointed to from §14.4 (line 1600) with no clause in the row.
+
+6. **The count**, by §2.11's counting over `97e2156d...` the head. These are estimates; the custodian's count before the code governs.
+
+| File | Group | Adds (about) |
+|---|---|---|
+| `kernel/src/recovery.rs` | kernel product | 25 |
+| `kernel/tests/recovery.rs` | kernel tests | 65 |
+| `protocol/skp/SKP-V0.md` | protocol | 1 (the other two edits are of lines Part 1 added) |
+| `frontends/shell/src/project/RecoveryOffer.tsx` | shell product | 8 |
+| `frontends/shell/src/project/RecoveryOffer.test.tsx` | shell tests | 32 |
+
+   - **Class 8, recorded here before the code** (ADV-2026-11-28-15 item 1; Amendment 27 item 2).
+     - The kernel product group was 1,405 at 96c3821a (Amendment 22 item 2), and the second phase wrote no kernel line (Amendment 24 item 1).
+     - With these rows it is about 1,430, against its Part 1 ceiling of 1,040 (Amendment 17 item 6): over by about 390, of which about 25 are these rows'.
+     - §7 is not edited.
+   - **The other groups:**
+     - shell product, 388 now, about 396 of 528;
+     - shell tests, 452 now, about 484 of 550 (Amendment 24 item 2; the figures that bind are Amendment 21's, by Amendment 27 item 6);
+     - kernel tests, about 1,253 of 1,510;
+     - protocol, about 325 of 330.
+     - The kernel tests and protocol figures come from the first-phase worker's counts at 96c3821a, 1,188 and 324 by its report; those are not the custodian's counts.
+   - **Part 1:** 4,884 lines over 46 files (Amendment 24 item 2) plus about 131 is about 5,015 over 46, against 5,200 and 47 (Amendment 21 item 2). Not passed.
+   - **Not counted here:**
+     - the held corrections: C-1, C-2, D-1 to D-6, ADV-2026-11-28-15 items 2 and 3, and K-C1b and K-C4b;
+     - src-tauri is at 428 of 430 (Amendment 24 item 2), and the protocol group has about 5 lines to spare.
+
+7. **Shared paths** (§2.11's table, as N-7 revises it; Amendment 17 item 7; Amendment 20 item 7). Named, not ruled:
+   - `protocol/skp/SKP-V0.md` is named under the relink branch, and under PR 353's `protocol/` row (rule (00)).
+   - `kernel/src/recovery.rs`, `kernel/tests/recovery.rs`, `RecoveryOffer.tsx` and `RecoveryOffer.test.tsx` are not named in that list.
+
+8. **Additions to the form's sections** (read with the sections named):
+   - **§0, Hypotheses: H4** (the drafter's reading, from K-O6's and E-1's practice in this repository): on each of Product CI (Rust workspace)'s three runners, the test process can make a folder it owns unreadable to itself. On Windows, a deny of Everyone's list-folder right makes `std::fs::read_dir` of that folder fail with a kind other than `NotFound`. On Linux and macOS the suite does not run as root, so mode `0o000` makes it fail with `PermissionDenied`. Discriminator: K-C43's red run on each runner (item 4).
+   - **§1, May claim:**
+     - a start whose session store's folder is there and cannot be read is refused, and a start with no store folder lists nothing (K-C43);
+     - a typed refusal of the list leaves one session-log line and shows no offer, and any other listing leaves no such line (S-11).
+   - **§2.3, Listing:** item 2's refusal.
+   - **§2.4, Wire:** item 5's sentences.
+   - **§2.9, Seams:**
+     - `std::fs::read_dir` → `folder_names` → `walk` → `list_recoverable`'s refusal;
+     - `logSessionEvent` → `RecoveryOffer`'s listing.
+   - **§5, Declared unchanged:**
+     - `walk`'s signature;
+     - `hex_folders`'s results;
+     - `more`, the bound, the dedupe and the at-open arm;
+     - the path of an untyped failure of the list;
+     - every existing test.
+   - **§5, Invalidators: I13**, a stop. It applies if K-C43 cannot make the folder unreadable on one of the three runners without a product seam or a new dependency, or if the row needs `walk`'s signature changed or an existing test edited. It goes to the advisor (ADV-2026-11-28-15 item 1).
+   - **§8, item 19:** any of these:
+     - a start's list that answers `Ok` when the store's folder is there and was not read;
+     - such a refusal whose `detail` or `message` carries a path;
+     - a change by these rows to `more`, the bound, the dedupe or the at-open arm;
+     - a `recover-list-refused` line written for a list that succeeded, or for a failure that is not a typed refusal.
+   - **Amendment 10 item 2:**
+     - Tests gain K-C43 and S-11.
+     - Callers: `unreadable_store`'s product caller is `list_recoverable`.
+   - **§2.12, after D24:** | D25 | rule | (none) | a start's list refused when the store's folder is there and cannot be read; the shell's `recover-list-refused` line; K-C43 and S-11 | ADV-2026-11-28-15 item 1 |
+
+9. **Named, not changed:**
+   - (a) A store path that is a file makes `read_dir` fail. On Unix the list is then refused. On Windows the error's kind is not established here, and if it is `NotFound` the list is empty, as for no folder. No test asserts this case.
+   - (b) An entry error during the walk, or a name that is not UTF-8, is still dropped (line 344). Neither can have either shape.
+   - (c) The at-open arm reads no list of folders. A store folder that cannot be read gives there what the probe gives (lines 554-558), unchanged.
+   - (d) The dedupe's own later read of the names still withholds on a failure and sets `more`.
+   - (e) In a development build, React's StrictMode (`frontends/shell/src/bootstrap.tsx`, line 26 at ffef5945) runs the effect twice. So a development run asks twice, and two refusals write two lines, one per call.
+   - (f) The user is told nothing when the list is refused (item 1 (i)). Whether a record says so is not drafted here.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 32 — 2026-11-28 — the custodian's: the class 9 amendment completed (Amendment 31 read with ADV-2026-11-28-17's two SKP-V0 texts; R-S13, class 9; the groups counted before the correction, class 8)
+
+*References only, but for the three texts below, which are byte-copied by script from the ruling's file. Nothing above is edited.*
+
+1. **Amendment 31** is the fenced text of lead-data's draft at `state/drafts/2026-11-28-b2-piece-1c-step-3-recovery-offer-class-9-listing-refused-lead-data-draft.md`, appended byte for byte with its number and date filled (Amendment 28 item 4). Its words are lead-data's. Its verbatim spans were checked by the custodian's script against their sources, each line with its LF:
+   - `protocol/skp/SKP-V0.md`:1232 at ffef5945, sha256 5d3d8c02b520cdc987d15b36721818b25cc2be82708c1d93f6afbee9d8b0d0ac;
+   - `protocol/skp/SKP-V0.md`:1559 at ffef5945, sha256 718ed5e587d88daa76ec5c6d51583828babb97803d5641bf4be5f42789f463c2;
+   - `protocol/skp/SKP-V0.md`:1563 at ffef5945, sha256 79038330a7fb12365430f1e6941500cde629f0a4a14b9a876c0060f718ca6e9e;
+   - the fourth string, `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-15-the-recovery-offers-part-1-a-failed-listing-logged-and-an-unreadable-store-refused-four-message-strings-one-byte-in-skp-v0-10-3.md`:57, sha256 f47a857bc6af3f3947ef55918f73ee05f438491f519451f40b18e5fdf76f9ba4;
+   - D-4's New for §13.4, `state/consults/gates/2026-11-28-b2-piece-1c-step-3-recovery-offer-part-1-build-gate-architect-read-part.md`:193 inside its double backticks, sha256 04e46c6095caccb01d000d1ecdef515d2d9de74a5d867032ee0e08fc69bc881c;
+   - its other line cites are lead-data's, at ffef5945; the correction's reviewer read reads them.
+2. **§13.4** (ADV-2026-11-28-17 item 2, its first fence; sha256 9acc17814976d8243f7e6412bb94ecb3b27135234ab53f70f2c4298ea8258e67): this text replaces Amendment 31 item 5's three texts for §13.4, and D-4's New there.
+
+````text
+Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has); `skp.session_history_unwritable`, with the code and the field §10.4 gives it, when no per-user data directory resolves, and at a start when the session store's folder is there and cannot be read (§13.3). The four `skp.recoverable_record_*` codes are §14.4's and §15's, and this command returns none of them.
+````
+
+3. **§8, the `skp/0.18` entry's bullet** (its second fence; sha256 39846dde1413eda7ab23eb39965f965c9e6daa77269910ed33cb3dda0572a60a): this text replaces Amendment 31 item 5's New for it. It names the binding's refusal when no per-user data directory resolves, so Amendment 31 item 5's question of whether that case is named is answered. Amendment 31 item 5's §13.3 bullet stands; D-3 stands at its own place; D-4 stands for §15.4 alone; §10.3 keeps Amendment 27 item 5's full stop.
+
+````text
+- **One code is reached by new paths.** `skp.session_history_unwritable` is `recover_session`'s refusal when the history could not be cut to its kept steps, its `detail` naming `set_len`, `seek` or `sync_all`; `list_recoverable`'s at a start when the session store's folder is there and cannot be read, its `detail` `read_dir: ` and the error's text (§13.3); and the refusal of each of the three commands when no per-user data directory resolves. Its code and field are §10.4's.
+````
+
+4. **R-S13** (its item 3; class 9 on ADV-2026-11-23-39 item 1, recorded here; its third fence, sha256 a729e2ad2cba8fb2583fa4b8bd3d6a01196637b7d82939590b1855ac90938b36): a constant in `RecoveryOffer.tsx` beside the labels for Recover and Discard, in place of the bare `Cancel` the reviewer's D names. It joins §2.8's R-S strings after R-S12, and §8 item 7 holds for it as for them. `AdmissionPanel.tsx` is not edited.
+
+````text
+[P6 placeholder] Cancel
+````
+
+5. **The groups, counted before the correction** (Amendment 29 item 3). At ffef5945, by the custodian's run of `git diff --numstat 97e2156d...ffef5945`, insertions plus deletions: Part 1 4884 lines over 46 files. Each group below is at its figure that binds; the additions are estimates, Amendment 31 item 6's for its rows and the custodian's for the correction's further lines. An edit of a line Part 1 added does not change a count; an edit of a line that was there before Part 1 adds two.
+
+| Group | Figure | At ffef5945 | Amendment 31's rows | The correction's further lines | Class 8 |
+|---|---|---|---|---|---|
+| protocol | 330 (Amendment 10 item 6) | 324 | about 1 | about 0: C-2, D-3, D-4, §10.3 and the strings edit lines Part 1 added | not passed by the estimate |
+| kernel product | 1,040 (Amendment 17 item 6) | 1405 | about 25 | about 5: C-1, C-2 and the strings; the rename edits lines Part 1 added | passed, as Amendment 22 item 2 records; the rows and the correction are recorded here, before their code, to at most 1,460 |
+| kernel tests | 1,510 | 1188 | about 65 | none | not passed |
+| src-tauri | 430 (Amendment 20 item 5) | 428 | none | about 20: H, six mutation notes; D-1, three edits of lines there before Part 1, with any re-wrap; A and C edit lines Part 1 added | passed: recorded here, before the code, to at most 460 |
+| shell product | 528 (Amendment 21 item 5, by Amendment 27 item 6) | 388 | about 8 | about 8: R-S13, J's comment at its two places, D-2 | not passed |
+| shell tests | 550 (Amendment 21 item 5, by Amendment 27 item 6) | 452 | about 32 | none | not passed |
+| e2e | 300 | 298 | none | about 0: G replaces one line Part 1 added | not passed by the estimate |
+| records | 25 (Amendment 17 item 6) | 23 | none | none | not passed |
+| **Part 1** | **5,200 lines, 47 files (Amendment 21 item 2)** | **4884, 46 files** | **about 131, no file** | **about 35, no file** | **not passed** |
+
+   The conformance, fixtures and literal groups take no line from either. §7 is not edited.
+6. **The worker counts before its commit,** by the same command at its head. A group past the figure this amendment leaves it (its figure, or 1,460 and 460 for the two groups recorded), Part 1 past 5,200 lines or 47 files, or a file added, is a stop before the commit: reported, and recorded by amendment before any commit of it.
+7. **Next:** one correction, by one worker, carrying Amendment 27 item 7, Amendment 29 item 5, Amendment 30 items 2 to 6, and Amendments 31 and 32: K-C43 and S-11 committed and run red at a named commit before their code (Amendment 31 item 4), then the code and the words; its push runs; the reviewer's narrow read of its code lines; then the run parts, with E-RECOVER last at the port.
+
+Read the last amendment first.
+
+Nothing above is edited.
