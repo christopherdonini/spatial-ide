@@ -2204,3 +2204,13 @@ Read the last amendment first.
 3. **Item 83** (Amendment 20 item 4): the advisor answers the sight item next (ADV-2026-11-28-05 item 6, filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-05-the-reload-keys-unread-under-part-a-alone-doc-2-as-the-gate-gives-it-one-narrow-second-attempt-of-each-form-gate.md`). Until then item 83 stands as filed, and the reviewer's read part does not wait for it.
 
 Read the last amendment first.
+
+## Amendment 22 — 2026-11-28 — the custodian's: ADV-2026-11-28-06 carried (item 83 gains one sentence for a notice that is not kept)
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** ADV-2026-11-28-06 is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-06-milestone-5-pr-b-known-limitations-item-83-one-sentence-added-for-a-notice-that-is-not-kept.md`. It answers Amendment 20 item 4 and Amendment 21 item 3. Its item 2's fence replaces the fence of ADV-2026-11-28-03 item 2, with NN as 83. The rest of ADV-2026-11-28-03 stands.
+2. **How it lands** (its item 4): one words-only commit on PR B's branch that changes item 83's text and its source comment, and nothing else. The comment's words are the worker's. It names this ruling beside ADV-2026-11-28-03 and adds the three symbols of the ruling's item 3. The item's text is copied by script from the ruling's fence.
+3. **When:** the commit is made after the reviewer's read part (Amendment 21 item 2) has ended, since that part makes and reverts mutations in D:/wt/m5b at 42859420. Neither read part waits for the commit or runs again for it. The reviewer's check of item 83 against ADV-2026-11-28-03's fence is read with this ruling beside it. The advisor compares item 83 with the ruling's file at the merge check.
+
+Read the last amendment first.
