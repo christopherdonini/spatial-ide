@@ -3083,3 +3083,21 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 30 — 2026-11-28 — the custodian's: ADV-2026-11-28-17 carried (the architect's names for the rename; SKP-V0's §13.4 and §8 texts; R-S13; J recorded with a node; the harness stays; the Discard's line read in the series' session log)
+
+*References only. Nothing above is edited. Where this amendment summarises the ruling, its bytes govern; its three fenced texts are taken from its file alone.*
+
+1. **The ruling** is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-17-the-recovery-offers-part-1-the-architects-names-two-skp-v0-texts-r-s13-j-a-node-the-discard-line-in-the-log.md`, in answer to the custodian's message sent at 2026-11-28T09:35:48Z (date -u).
+2. **The rename** (its item 1): the architect's D-6 names, at the eleven lines of `kernel/src/recovery.rs` it lists, the `expect` text among them. The worker then searches the piece's diff for `replay` in any case and reports each hit with what it is said of; a hit said of recovery is renamed too (§8 item 4). It gets the reviewer's narrow read.
+3. **SKP-V0** (its item 2): §13.4's sentence and the bullet of §8's `skp/0.18` entry are the ruling's first and second fences, byte for byte, in place of lead-data's New and of D-4's New for §13.4. Lead-data's §13.3 bullet stands; D-4 stands for §15.4, and D-3 for its own place. §10.3 keeps Amendment 27 item 5's full stop.
+4. **R-S13** (its item 3): the third fence, a constant in `RecoveryOffer.tsx` beside the labels for Recover and Discard; class 9 on ADV-2026-11-23-39 item 1, recorded in the class 9 amendment. `AdmissionPanel.tsx` is not edited.
+5. **J** (its item 4): no code change. One source comment at the two places, in the worker's words, names the node and the ruling; the reviewer's narrow read checks it. The node (what the shell does with a failure that is not a typed refusal, for every panel; its first step says what each panel does today) is opened on main by the custodian before the correction, and the advisor grades it. J is closed for this piece, and is no reason for a FAIL at the run part.
+6. **F and G** (its item 5): the harness stays. G's words are applied as the reviewer gives them (AUTONOMY §31 (d)). The tester's brief for E-RECOVER's series says that a run that stops on a missing fixture, on an app already listening or on a port not freed ran no step: it is void, recorded with its printed line and run again, and is not a finding.
+7. **M** (its item 6): no harness code. The tester copies the session log of the series' Discard run. Both run parts check one `recovery-discarded kind=unsaved` line at `info` after the Discard and none before it, and quote it with its place in the log. An assertion inside the suite is named in the shared log folder's form as a follow-up, or as a node.
+8. **Taken with nothing ruled** (its item 7): C-1, C-2, D-1, D-2, A, C and H; K-C1 and K-C4 in their two-edit forms (Amendment 29 item 2); H4 and I13 as drafted; the groups counted before the correction. Its item 8 is owed at Part 2's words.
+9. **Next:** the J node on main; then the class 9 amendment, carrying lead-data's draft with this ruling's two SKP-V0 texts, R-S13 and the class 8 counts, before any code of its rows; then one correction carrying Amendment 27 item 7, Amendment 29 item 5 and items 2 to 6 here; then the push runs at its head; then the run parts, with E-RECOVER last at the port.
+
+Read the last amendment first.
+
+Nothing above is edited.
