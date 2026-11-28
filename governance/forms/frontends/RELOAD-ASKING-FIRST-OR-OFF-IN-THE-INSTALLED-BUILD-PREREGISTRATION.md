@@ -354,3 +354,16 @@ As B's §6, by reference: the C: floor, the human's app closed, the log folder's
 11. **Next:** a fresh architect form gate, then the reviewer's. Part A's code waits for both.
 
 Read the last amendment first.
+
+## Amendment 2 — 2026-11-28 — the custodian's: the architect's form gate (FAIL), its words applied but three, which go to the advisor
+
+*References only. Nothing above is edited.*
+
+1. **The architect's form gate** at main 9fca8614 and B's head 5ce0525a: FAIL, filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-form-gate-architect.md` (its hand-back's sha256 d952ee837e0953447413d0cda35547aa872df2ca84448df514cd0a57324c9c87). It has one Correctness finding (C1), three Evidence findings (E1 to E3), two Architecture findings (A1, A2) and six Documentation findings (D1 to D6). Its words are the architect's, not the human's or the advisor's.
+2. **Applied with no re-gate (§31), as that report writes them:** C1 with its follow-on, E1, E2, E3 with its second change, A1, A2, D2's first and third changes, D3, D5, and D6's first change. A1 is met before Part A's build.
+3. **D6's second change:** §2 item 5's two dependency lines take their default features, and check 8's reading of Part B rests on that. Part B stays the human's (ADV-2026-11-27-45).
+4. **To the advisor:** D2's second change, since it writes the not-applied line for a case ADV-2026-11-27-44 item 7 does not name (no main window found); D1, KNOWN-LIMITATIONS.md as a ninth file in §7's Scope; and D4, Amendment 1 item 10's pins at B's head beside round 15 (e) and round 25 item 2, a matter of rulings. The pins stand until that ruling.
+5. **For the human's digest, beside ADV-2026-11-27-45** (that report's check 7): a direct `webview2-com` dependency ties the shell to the version tauri takes, which that report reads as able to move in a tauri minor release.
+6. **Next:** after the advisor's ruling, the reviewer's form gate reads the form with this amendment. Part A's code waits for both gates.
+
+Read the last amendment first.

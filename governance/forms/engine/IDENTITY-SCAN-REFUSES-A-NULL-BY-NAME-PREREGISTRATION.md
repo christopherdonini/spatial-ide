@@ -518,3 +518,15 @@ Nothing above is edited.
 5. **The reviewer's build gate** is dispatched at 6e5a0b83, one part with a verdict (Amendment 4 item 5).
 
 Read the last amendment first.
+
+## Amendment 8 — 2026-11-28 — the custodian's: the reviewer's build gate, 6e5a0b83 recorded, D3 and D1 next
+
+*References only. Nothing above is edited.*
+
+1. **The reviewer's build gate** at 6e5a0b83: PASS WITH NOTES, filed at `state/consults/gates/2026-11-28-identity-scan-refuses-a-null-by-name-build-gate-reviewer.md` (its hand-back's sha256 8777996582f0f443cd51029b9770b1d2f9aecd91c04d66b983d8b56f7e951fad). It has no Correctness or Evidence finding, and three Documentation findings, D1 to D3, each fixed before the merge. M-1 to M-9 were observed again at the head, each failing its own test at an assertion. CI at 6e5a0b83 is green on every workflow, on push and pull_request, as that report lists.
+2. **6e5a0b83** (its D2): the `LodRefused` doc edit in engine/src/error.rs is a consequence of §2.2, since the piece made that doc's count untrue. §7's count at 6e5a0b83 is 545 lines over 6 files, against 650 and 7, by the reviewer's command.
+3. **D3** is the reviewer's words for one comment in engine/src/dataset.rs, Old and New as that report writes them. They apply with no re-gate, and the reviewer's narrow read of that line follows, since it is a line of a .rs file.
+4. **D1:** PR 371's body is brought up to date after D3, naming its commits, its gates and the words applied with no re-gate.
+5. **Next:** the D3 commit, the narrow read, then the body. The merge comes after C1 (369).
+
+Read the last amendment first.
