@@ -6,7 +6,8 @@
 //!
 //! - **SKP v0** (`open_dataset`, `describe`, `viewport_query`, `cancel`, `close_dataset` and, from
 //!   `skp/0.12`, `record_step` and, from `skp/0.13`, `save_project`, and, from `skp/0.14`,
-//!   `open_project`) — each takes the exact request struct `protocol/skp` defines and returns the
+//!   `open_project`, and, from `skp/0.18`, `list_recoverable`, `recover_session` and
+//!   `discard_recoverable`) — each takes the exact request struct `protocol/skp` defines and returns the
 //!   exact response or `SkpError`. No renaming, no remapping: the same type is the fixture-verified
 //!   wire shape and the Tauri command's own argument/return type, so there is nothing here to
 //!   drift.
@@ -17,7 +18,8 @@
 //! (`close_dataset` also starts [`Projects::release_ended`], after the host's close; `open_dataset`
 //! and `open_project` also pass the page gate and note the open on its page, and `cancel` and
 //! `close_dataset` respectively end an open that waits at the gate and drop a closed name from the
-//! page's opens, all in `page.rs`: ADR-037) — docs/02's
+//! page's opens, all in `page.rs`: ADR-037; `recover_session` with a null `dataset` is an open command of its page too, and
+//! `discard_recoverable` also writes the `recovery-discarded` line through `write_host_line`, in `lib.rs`) — docs/02's
 //! "frontends: clients only, no logic" applied to the Rust half of a client. `lib.rs` lists every
 //! command below in its `tauri::generate_handler!` call; adding one here without adding it there is
 //! a command JS can never reach, which is the reason there is exactly one list.
@@ -31,9 +33,11 @@ use spatial_kernel::session_history::StepRecorder;
 use spatial_kernel::skp::SkpHost;
 use spatial_skp::v0::{
     CancelRequest, CancelResponse, CloseDatasetRequest, CloseDatasetResponse, DescribeRequest,
-    DescribeResponse, OpenDatasetRequest, OpenDatasetResponse, OpenProjectRequest,
-    OpenProjectResponse, RecordStepRequest, RecordStepResponse, SaveProjectRequest,
-    SaveProjectResponse, SkpError, ViewportQueryRequest, ViewportQueryResponse,
+    DescribeResponse, DiscardRecoverableRequest, DiscardRecoverableResponse,
+    ListRecoverableRequest, ListRecoverableResponse, OpenDatasetRequest, OpenDatasetResponse,
+    OpenProjectRequest, OpenProjectResponse, RecordStepRequest, RecordStepResponse,
+    RecoverSessionRequest, RecoverSessionResponse, SaveProjectRequest, SaveProjectResponse,
+    SkpError, ViewportQueryRequest, ViewportQueryResponse,
 };
 use tauri::{Emitter, Manager, State};
 // Entry-40 pass: `AppHandle::try_state` (used by `open_dataset`/`close_dataset` below) is a
@@ -45,7 +49,7 @@ use tauri::{Emitter, Manager, State};
 // not reintroduce an unused-import warning anywhere, because `Manager` is always used now.
 use tauri_plugin_dialog::DialogExt;
 
-use crate::page::Pages;
+use crate::page::{Pages, Settled, Ticket};
 use crate::publish::{
     self, EventProgress, ExecuteOutcome, PendingAttempts, PrepareOutcome, PublishScope,
     RunningPublishes,
@@ -266,6 +270,156 @@ pub async fn open_project(
         }
     }
     result
+}
+
+/// A blocking task's result, with a panic as the named refusal.
+fn joined<T>(
+    run: Result<Result<T, SkpError>, tokio::task::JoinError>,
+    name: &str,
+) -> Result<T, SkpError> {
+    run.unwrap_or_else(|e| Err(SkpError::protocol(name, e.to_string())))
+}
+
+/// **Runs on `spawn_blocking`.** Reads each record's history under a lock probe and the data file's
+/// place by its metadata. It starts no open, so it is no part of the page gate (ADR-037, Amendment 1).
+/// With no recorder (no per-user data directory) it is refused by name.
+#[tauri::command]
+pub async fn list_recoverable(
+    state: State<'_, Option<Arc<StepRecorder>>>,
+    request: ListRecoverableRequest,
+) -> Result<ListRecoverableResponse, SkpError> {
+    let Some(recorder) = state.inner().clone() else {
+        return Err(SkpError::session_history_unwritable(
+            "no per-user data directory is available",
+        ));
+    };
+    joined(
+        tokio::task::spawn_blocking(move || recorder.list_recoverable(request)).await,
+        "list_recoverable_panicked",
+    )
+}
+
+/// **Runs on `spawn_blocking`**, through [`recover_on_page`]. With a null `dataset` it is an open
+/// command of its page (ADR-037, Amendment 1), and the pool poll starts only for a name of the
+/// current page. With a handle it opens nothing and takes no part in the gate.
+#[cfg_attr(
+    not(any(debug_assertions, feature = "measure-build")),
+    allow(unused_variables)
+)]
+#[tauri::command]
+pub async fn recover_session(
+    app: tauri::AppHandle,
+    host: State<'_, Arc<SkpHost>>,
+    recorder: State<'_, Option<Arc<StepRecorder>>>,
+    projects: State<'_, Option<Arc<Projects>>>,
+    pages: State<'_, Arc<Pages>>,
+    request: RecoverSessionRequest,
+) -> Result<RecoverSessionResponse, SkpError> {
+    let Some(recorder) = recorder.inner().clone() else {
+        return Err(SkpError::session_history_unwritable(
+            "no per-user data directory is available",
+        ));
+    };
+    let (result, settled) = recover_on_page(
+        pages.inner(),
+        recorder,
+        host.inner(),
+        projects.inner().clone(),
+        request,
+    )
+    .await;
+    #[cfg(any(debug_assertions, feature = "measure-build"))]
+    if let (Ok(response), Some(crate::page::Settled::Current)) = (&result, &settled) {
+        if let Some(tasks) = app.try_state::<crate::pool_poll::PoolPollTasks>() {
+            tasks.start(app.clone(), response.dataset.as_str().to_string());
+        }
+    }
+    result
+}
+
+/// `recover_session` on its page: with a handle nothing is gated or settled; with a null `dataset`
+/// the open passes the gate under the request's cancel key, and a refusal of the gate is the reply.
+pub(crate) async fn recover_on_page(
+    pages: &Arc<Pages>,
+    recorder: Arc<StepRecorder>,
+    host: &Arc<SkpHost>,
+    projects: Option<Arc<Projects>>,
+    request: RecoverSessionRequest,
+) -> (Result<RecoverSessionResponse, SkpError>, Option<Settled>) {
+    if request.dataset.is_some() {
+        let run = tokio::task::spawn_blocking(move || recorder.recover_session(request));
+        return (joined(run.await, "recover_session_panicked"), None);
+    }
+    let ticket = match pages.admit(&request.cancel_key).await {
+        Ok(ticket) => ticket,
+        Err(refusal) => return (Err(refusal), None),
+    };
+    let (result, settled) =
+        recover_admitted(pages, ticket, recorder, host, projects, request).await;
+    (result, Some(settled))
+}
+
+/// The null-`dataset` recover after the gate: the kernel's recover, then `Pages::settle` with the
+/// name its open returned, so that a name returned after its page ended is closed by a late close.
+pub(crate) async fn recover_admitted(
+    pages: &Arc<Pages>,
+    ticket: Ticket,
+    recorder: Arc<StepRecorder>,
+    host: &Arc<SkpHost>,
+    projects: Option<Arc<Projects>>,
+    request: RecoverSessionRequest,
+) -> (Result<RecoverSessionResponse, SkpError>, Settled) {
+    let run = tokio::task::spawn_blocking(move || recorder.recover_session(request));
+    let result = joined(run.await, "recover_session_panicked");
+    let name = result
+        .as_ref()
+        .ok()
+        .filter(|reply| reply.opened.is_some())
+        .map(|reply| reply.dataset.as_str().to_string());
+    let settled = pages.settle(ticket, name.as_deref(), host, projects);
+    (result, settled)
+}
+
+/// **Runs on `spawn_blocking`.** Removes one record, and on the kernel's `Ok` writes the binding's
+/// own line through `write_host_line` (`lib.rs`). It makes no `Pages` call.
+#[tauri::command]
+pub async fn discard_recoverable(
+    app: tauri::AppHandle,
+    state: State<'_, Option<Arc<StepRecorder>>>,
+    request: DiscardRecoverableRequest,
+) -> Result<DiscardRecoverableResponse, SkpError> {
+    let Some(recorder) = state.inner().clone() else {
+        return Err(SkpError::session_history_unwritable(
+            "no per-user data directory is available",
+        ));
+    };
+    let log = move |level, message| crate::write_host_line(&app, level, message);
+    let run = tokio::task::spawn_blocking(move || discard_and_log(&recorder, request, &log));
+    joined(run.await, "discard_recoverable_panicked")
+}
+
+/// The recorder's discard, and one line when it removed a record. The line is one of two literals
+/// of [`discarded_line`], so no text of the page reaches the log through it.
+pub(crate) fn discard_and_log(
+    recorder: &StepRecorder,
+    request: DiscardRecoverableRequest,
+    log: &dyn Fn(&'static str, &'static str),
+) -> Result<DiscardRecoverableResponse, SkpError> {
+    let line = discarded_line(&request.record);
+    let reply = recorder.discard_recoverable(request);
+    if reply.is_ok() {
+        log("info", line);
+    }
+    reply
+}
+
+/// The line a discard writes: it names the record's kind and nothing else of it.
+pub(crate) fn discarded_line(record: &str) -> &'static str {
+    if record.starts_with("unsaved-") {
+        "recovery-discarded kind=unsaved"
+    } else {
+        "recovery-discarded kind=project"
+    }
 }
 
 // -------------------------------------------------------------------------------------------
@@ -920,26 +1074,51 @@ mod tests {
     #[test]
     fn the_discarded_line_is_unsaved_for_an_unsaved_name_and_project_for_any_other() {
         let unsaved = format!("unsaved-{}", "0".repeat(32));
-        assert_eq!(super::discarded_line(&unsaved), "recovery-discarded kind=unsaved");
-        assert_eq!(super::discarded_line(&"0".repeat(32)), "recovery-discarded kind=project");
+        assert_eq!(
+            super::discarded_line(&unsaved),
+            "recovery-discarded kind=unsaved"
+        );
+        assert_eq!(
+            super::discarded_line(&"0".repeat(32)),
+            "recovery-discarded kind=project"
+        );
     }
 
     /// T-1: a text scan, as K-4's. `lib.rs`'s handler list names the three commands, each is an async
     /// command, and the blocking work is in a `spawn_blocking` closure of the function that does it.
     #[test]
     fn the_three_recovery_commands_are_registered_and_run_off_the_main_thread() {
-        let read = |name: &str| std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("src").join(name)).unwrap();
+        let read = |name: &str| {
+            std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("src").join(name))
+                .unwrap()
+        };
         let (lib, commands) = (read("lib.rs"), read("commands.rs"));
         for name in ["list_recoverable", "recover_session", "discard_recoverable"] {
             let entry = format!("commands::{name},");
-            assert!(lib.lines().any(|l| l.trim() == entry), "{name} is not in generate_handler!");
-            assert!(commands.contains(&format!("pub async fn {name}(")), "{name} is not an async command");
+            assert!(
+                lib.lines().any(|l| l.trim() == entry),
+                "{name} is not in generate_handler!"
+            );
+            assert!(
+                commands.contains(&format!("pub async fn {name}(")),
+                "{name} is not an async command"
+            );
         }
-        for name in ["list_recoverable", "recover_admitted", "recover_on_page", "discard_recoverable"] {
-            let start = commands.find(&format!("fn {name}(")).unwrap_or_else(|| panic!("no fn {name}"));
+        for name in [
+            "list_recoverable",
+            "recover_admitted",
+            "recover_on_page",
+            "discard_recoverable",
+        ] {
+            let start = commands
+                .find(&format!("fn {name}("))
+                .unwrap_or_else(|| panic!("no fn {name}"));
             let body = &commands[start..];
             let body = &body[..body.find("\n}\n").expect("a closing brace line")];
-            assert!(body.contains("spawn_blocking("), "{name} does not use spawn_blocking");
+            assert!(
+                body.contains("spawn_blocking("),
+                "{name} does not use spawn_blocking"
+            );
         }
     }
 }

@@ -12,7 +12,7 @@ import type { DecU64, HexF64 } from "./codec";
  * See `protocol/skp/SKP-V0.md` for the design note and the mandatory named-deferral list this
  * client must not silently exceed (no capability discovery, no idempotency, no subscriptions, …).
  */
-export const SKP_VERSION = "skp/0.17";
+export const SKP_VERSION = "skp/0.18";
 
 /** The single dialect `skp/0.1` admits for `Filter.predicate` (see `Filter` below). `skp/1` is
  * RESERVED (docs/07's 1.0 freeze); a second dialect, if one is ever added, gets its own version
@@ -469,3 +469,60 @@ export interface ReopenNotFound {
 
 /** `skp/0.14`: one of three replies, externally tagged. No reply carries a path. */
 export type OpenProjectResponse = { opened: OpenedProject } | { question: ReopenQuestion } | { not_found: ReopenNotFound };
+
+/** `skp/0.18`, `list_recoverable`: with `dataset` `null`, the sessions an earlier run left; with a reopen's handle, that project's record. Always present. */
+export interface ListRecoverableRequest {
+  skp: string;
+  dataset: string | null;
+}
+
+/** Why a listed record cannot be recovered; Discard stays. */
+export type CannotBeOfferedReason = "no-step" | "later-version" | "locations-refused";
+
+/** What the kernel found at the data file's place by its metadata alone, or why the record cannot be recovered. A fact at the moment of the list. */
+export type RecoverableData = { state: "found" } | { state: "not-found" } | { state: "cannot-be-offered"; reason: CannotBeOfferedReason };
+
+/** One record a run left. `record` is a name in the session store, never a path; `file_name` is a last name, or `null`; a record that cannot be offered has `null` and `0`. */
+export interface RecoverableRecord {
+  record: string;
+  file_name: string | null;
+  last_step_at: string | null;
+  steps: number;
+  data: RecoverableData;
+}
+
+/** `more` is true when a record was left out of the list. */
+export interface ListRecoverableResponse {
+  records: RecoverableRecord[];
+  more: boolean;
+}
+
+/** `skp/0.18`, `recover_session`: with `dataset` `null` the kernel opens the record's data under `cancel_key`; with a handle the record is a project's and the handle is the open `open_project` replied with. */
+export interface RecoverSessionRequest {
+  skp: string;
+  record: string;
+  cancel_key: string;
+  dataset: string | null;
+}
+
+/** What `recover_session` opened, when it opened: the session and the check of the data against the record's reference. */
+export interface RecoveredOpen {
+  session: string;
+  check: ReopenCheck;
+}
+
+/** `opened` is `null` for a handle given. `steps` are the last step for each key a step set, as the intents the client applies. */
+export interface RecoverSessionResponse {
+  dataset: string;
+  opened: RecoveredOpen | null;
+  steps: StepIntent[];
+}
+
+/** `skp/0.18`, `discard_recoverable`: removes a record that is not held. */
+export interface DiscardRecoverableRequest {
+  skp: string;
+  record: string;
+}
+
+/** The reply carries no member. */
+export type DiscardRecoverableResponse = Record<string, never>;

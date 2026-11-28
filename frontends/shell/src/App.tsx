@@ -90,6 +90,7 @@ import { decodeHexF64, encodeHexF64 } from "./skp/codec";
 import { actionEntry } from "./layout/actionRegistry";
 import { closeDataset, recordStep, saveProject, SkpCallError } from "./skp/client";
 import { reopenApply, type Reopened } from "./project/openProject";
+import RecoveryOffer, { CHANGED_TEXT, type Recovery } from "./project/RecoveryOffer";
 import { createProjectSaver, pickProjectFolder } from "./project/saveProject";
 import { listenDatasetSessionEnded } from "./skp/events";
 import type { Bbox, DatasetSessionEnded, EndReason, Filter } from "./skp/types";
@@ -104,6 +105,7 @@ import { NO_MEMBERS, unionOfBounds } from "./workspace/selection";
 import type { SelectionMode } from "./workspace/selection";
 import { DEFAULT_SELECTION_MODE, DEFAULT_TOOL } from "./workspace/selectionConstants";
 import {
+  applyViewTransition,
   styleTransitions,
   viewClauses,
   viewInspected,
@@ -124,6 +126,7 @@ import {
   type ExportConsumerId,
   type Tool,
   type ViewId,
+  type ViewState,
 } from "./workspace/workspaceState";
 import {
   RequestOutcome,
@@ -903,6 +906,8 @@ export default function App() {
   // are for the dataset they were made on and end with it, as `recordNotice` does.
   /** The project identity this window holds and the open it is for (Amendment 54 item 5 (f)), from `SaveProjectResponse.project` and `opened.project`. */
   const heldProjectRef = useRef<{ dataset: string; project: string } | null>(null);
+  /** The open a reopen returned, while the recovery offer for that project's record stands (`project/RecoveryOffer.tsx`); it shows only while that open is the one on the map. */
+  const [projectOffer, setProjectOffer] = useState<string | null>(null);
   /** A reopen's saved view (O-17), held for its open's `[admitted]` effect, which writes it to the canvas once. */
   const reopenViewRef = useRef<{ dataset: string; view: { centre: [number, number]; zoom: number } } | null>(null);
   /** The one-shot slot of the DEV-only `e2eSaveProjectToFolder` hook (`e2e-test-surface.ts`): a folder it supplies for the save it starts. Always `null` in a plain build. */
@@ -1266,8 +1271,46 @@ export default function App() {
       applied.notices.forEach((text, ordinal) =>
         dispatchConditions({ type: "raise", route: "reopen-notice", code: "project.reopen_notice", ordinal, target: { kind: "resource" }, generation: next.dataset, display: { kind: "text", text } })
       );
+      setProjectOffer(next.dataset);
     },
     [handleAdmitted, projectSaver]
+  );
+
+  /**
+   * The recovery offer's Recover (the recovery offer's preregistration, section 2.7): what a recover returns goes through the same transitions `handleReopened` uses, and **no step is recorded** for any of
+   * it (the record already holds them). `next` is the open `recover_session` made, which `handleAdmitted` adopts as for any open and the first look then runs under the recovered filter; `null` is a
+   * project's record, whose steps apply to the open on the map (the filter through `applyFilterWith`, which issues the query, and committing nothing). The style goes as `styleTransitions` from the style the view has to the one
+   * the steps give, and becomes the baseline the next committed edit diffs from. When the check names a difference, R-S4 is shown where the reopen's notices show, its components the check's `observed` words and then its
+   * `admission` words, joined by a comma and a space.
+   */
+  const handleRecovered = useCallback(
+    (next: Admitted | null, recovery: Recovery, fileName: string): void => {
+      const before = workspaceRef.current;
+      const prior = before.drawOrder[0] === undefined ? undefined : before.views[before.drawOrder[0]];
+      const viewId: ViewId = prior === undefined ? `view-${before.nextViewNumber}` : prior.id;
+      const current = next === null ? prior?.style ?? DEFAULT_STYLE_STATE : prior === undefined ? DEFAULT_STYLE_STATE : { ...prior.style, fillMatch: null };
+      const probe: ViewState = { ...(prior ?? { id: viewId, resource: next?.dataset ?? "", filter: null }), style: current };
+      const target = recovery.steps.reduce((style, step) => (step.action === "style.set" ? applyViewTransition({ ...probe, style }, step as ViewTransition).style : style), current);
+      if (next !== null) handleAdmitted(next);
+      const resource = next === null ? admittedDatasetRef.current : next.dataset;
+      const apply = (transition: ViewTransition) => dispatch({ type: "view.transition", view: viewId, transition });
+      for (const step of recovery.steps) {
+        if (step.action !== "filter.apply") continue;
+        const commit = (filter: Filter | null) => {
+          activeFilterRef.current = filter;
+          apply({ action: "filter.apply", params: { filter } });
+        };
+        if (next === null) void applyFilterWith(step.params.filter, commit);
+        else commit(step.params.filter);
+      }
+      for (const transition of styleTransitions(current, target)) apply(transition);
+      lastCommittedStyle.current = target;
+      const components = [...(recovery.check?.observed ?? []), ...(recovery.check?.admission ?? [])];
+      if (components.length === 0 || resource === null) return;
+      const text = CHANGED_TEXT.replace("{file}", () => fileName).replace("{components}", () => components.join(", "));
+      dispatchConditions({ type: "raise", route: "reopen-notice", code: "project.reopen_notice", ordinal: 0, target: { kind: "resource" }, generation: resource, display: { kind: "text", text } });
+    },
+    [handleAdmitted, applyFilterWith]
   );
 
   /** The identity this window holds for its current open, or `null` (S9's own-window place, Amendment 54 item 5 (f)). */
@@ -2291,6 +2334,8 @@ export default function App() {
                 {actionEntry("project.save").label}
               </button>
             )}
+            <RecoveryOffer projectDataset={null} confirmOpen={confirmOpen} onRecovered={handleRecovered} />
+            {admitted && projectOffer === admitted.dataset && <RecoveryOffer key={projectOffer} projectDataset={projectOffer} confirmOpen={confirmOpen} onRecovered={handleRecovered} />}
             {asking && <OpenDuringExportAsk onKeep={() => answerOpenAsk(false)} onCancelAndGo={() => answerOpenAsk(true)} />}
             {lateCancel.map((outcome, index) => (
               <LateCancelStatement key={index} outcome={outcome} />

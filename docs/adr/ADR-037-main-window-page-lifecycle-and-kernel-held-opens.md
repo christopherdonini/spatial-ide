@@ -191,3 +191,26 @@ ADR-036's rules are unchanged. The end ends no session-history record. The recor
 ## Open
 
 1. A mark for steps discarded by a reload, with the `version` step it needs (ADR-036 §3).
+
+## Amendment 1 — 2026-11-28 — the open that `recover_session` starts is among the page's opens (node `b2-piece-1c-step-3-recovery-offer`)
+
+*Appended under the advisor's rulings ADV-2026-11-27-37, item 2, ADV-2026-11-27-41, item 1, and ADV-2026-11-28-02, item 1, under the human's delegation of 2026-11-13, and accepted in the text the last of them gives. The words are the architect's, except these, which are the advisor's: this paragraph; in item 2's row, the sentence on a refusal after the open, the sentence on a refusal of the truncation and the three sentences on the listing; and item 6. None of them is the human's. It lands in the part of the recovery offer that lands `recover_session`'s handler. Nothing above this heading is edited: each item names a passage above by its section, and that passage is read with the item's words in its place, or with them added where the item says so. This amendment carries no `path:line`; for the code, the tree is authoritative.*
+
+1. **§2, "What they are."** The list is read as:
+   - each dataset name its `open_dataset` and `open_project` commands returned to that page, and each dataset name its `recover_session` command returned to that page for a request whose `dataset` was null;
+   - the cancel key of each such command still in flight;
+   - nothing else.
+
+   `recover_session` with a null `dataset` is an open command wherever §3 to §5 and the Consequences name `open_dataset` and `open_project`. Its reply is `Opened` in §4's sense when the reply's `opened` is present. `recover_session` with a handle, `list_recoverable` and `discard_recoverable` start no open. They are not open commands, and nothing in this ADR applies to them.
+
+2. **§4, the table.** A row is read after the `open_project` row:
+
+   | `recover_session`, `dataset` null | Cancelled through its key (§3 (i)), or at the gate (§5), or completed and then closed (this section). Before its open it locks and reads the record and writes nothing. A refusal or a cancel before the record is truncated leaves the history byte for byte (the recovery offer's preregistration, Amendment 4 item 5). A refusal after its open closes that open in the kernel before it answers (the same preregistration, Amendment 17 item 5). A refusal of the truncation itself leaves the history byte for byte or truncated to its kept lines, and a later listing reads the same steps either way (the same item). A completed recover has truncated the record to its kept lines and adopted it into this run. After the late close the record stays with this run, as an unsaved open's record does after a close (Consequences (e)), and a normal end clears it. The listing does not wait at the gate (§5). It skips a record this run holds and a record whose history is locked, so it lists neither a record that a recover has adopted nor one that a recover in flight has locked. When a recover in flight is then cancelled or refused, a later listing lists its record again. No open is left that no page can reach. |
+
+3. **§5, "Which commands wait."** Read as: The new page's `open_dataset`, `open_project`, and `recover_session` with a null `dataset`, await the open gate on the async runtime before they start. No other command waits: `recover_session` with a handle, `list_recoverable` and `discard_recoverable` do not.
+
+4. **Consequences (e), last bullet, the sentence on the offer's product caller.** Read as: At c28c8cf1, ADR-036 §9's offer had no product caller: `session_history::recover` was called from `kernel/src/session_history.rs` and kernel tests only, and no command in the shell's handler list reached it. From the piece that lands this amendment, the offer's product callers are `list_recoverable`, `recover_session` and `discard_recoverable`, in the shell's handler list. A record that a crash left is offered as ADR-036 §9 says. In the run that made it, the record of an unsaved open that a reload closed is still never offered: the listing skips the records this run holds, and a normal end clears it.
+
+5. **What this ADR does not decide, "The recovery offer's product caller."** Read as removed. Item 1 decides it, for the open that `recover_session` starts. Nothing else of the recovery offer is decided here.
+
+6. **§2, "What a page's end touches", its first sub-bullet.** Read with this added after it: From the piece that lands this amendment, `SkpHost::open_under` is reached by a third route, `recover_session` with a null `dataset`, and that route too is reached only through its Tauri command. So every open in the catalog is still one that a page of the main window made.

@@ -11,13 +11,16 @@ import {
   CloseDatasetResponse,
   CrsAssertion,
   DescribeResponse,
+  DiscardRecoverableResponse,
   Filter,
   IdentityDeclaration,
+  ListRecoverableResponse,
   OpenDatasetResponse,
   OpenProjectResponse,
   ProjectWorkspace,
   ReopenAnswer,
   RecordStepResponse,
+  RecoverSessionResponse,
   SaveProjectResponse,
   SkpError,
   SKP_VERSION,
@@ -183,4 +186,25 @@ export function openProject(
     relink,
     set_aside_file_id: setAsideFileId,
   });
+}
+
+/**
+ * `skp/0.18`: lists the sessions an earlier run left (`dataset` `null`), or a reopen's project's record (that open's handle). Client only: this function checks nothing; the kernel
+ * does. `dataset` is sent as `null`, never omitted.
+ */
+export function listRecoverable(dataset: string | null): Promise<ListRecoverableResponse> {
+  return call("list_recoverable", { skp: SKP_VERSION, dataset });
+}
+
+/**
+ * `skp/0.18`: takes a listed record into this run. With `dataset` `null` the kernel opens the record's data under `cancelKey`; with a handle it opens nothing. Client only. `dataset` is
+ * sent as `null`, never omitted.
+ */
+export function recoverSession(record: string, cancelKey: string, dataset: string | null): Promise<RecoverSessionResponse> {
+  return call("recover_session", { skp: SKP_VERSION, record, cancel_key: cancelKey, dataset });
+}
+
+/** `skp/0.18`: removes a record that is not held. Client only. */
+export function discardRecoverable(record: string): Promise<DiscardRecoverableResponse> {
+  return call("discard_recoverable", { skp: SKP_VERSION, record });
 }

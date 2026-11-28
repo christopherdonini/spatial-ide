@@ -230,6 +230,15 @@ fn start_page_end(webview: &tauri::Webview) {
     let _ = pages.inner().page_started(parts);
 }
 
+/// Writes one line to the session log, as the page-end line is written (`start_page_end`). Both texts are `&'static str` on purpose: only a literal of this crate can reach the log
+/// through it, so no text a page holds (a record name, a path, a message) can. A caller with a text that is not a literal of the crate is a stop, not a change of these types
+/// (the recovery offer's form, I12 and section 8 item 18).
+pub(crate) fn write_host_line(app: &tauri::AppHandle, level: &'static str, message: &'static str) {
+    if let Some(session_log) = app.try_state::<SessionLog>() {
+        session_log.append(level, message);
+    }
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -622,6 +631,9 @@ pub fn run() {
             commands::record_step,
             commands::save_project,
             commands::open_project,
+            commands::list_recoverable,
+            commands::recover_session,
+            commands::discard_recoverable,
             commands::binding_data_plane_attach,
             commands::binding_log_session_event,
             commands::binding_pick_file,

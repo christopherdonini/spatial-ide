@@ -160,6 +160,14 @@ export function refusalGuidance(code: string): string | null {
         "The definition does not establish an x-first axis order. The file was refused, not " +
         "reinterpreted (ADR-015 §5) -- this is protective behavior, not an error in your file."
       );
+    // The recovery offer (ADV-2026-11-23-39 item 1, R-S8 to R-S10): the guidance of the four codes of `recover_session` and `discard_recoverable`, under the P6 marking.
+    case "skp.recoverable_record_locked":
+      return "[P6 placeholder] These changes are in use in another window of the app.";
+    case "skp.recoverable_record_unknown":
+    case "skp.recoverable_record_refused":
+      return "[P6 placeholder] These changes can no longer be read.";
+    case "skp.recoverable_record_not_for_this_open":
+      return "[P6 placeholder] These changes can be recovered only right after the project is opened, before any change is made.";
     default:
       return null;
   }

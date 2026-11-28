@@ -13,13 +13,13 @@
 //! `RunningPublishes::cancel_all`.
 //!
 //! **The page's opens** are what the commands return to it: each dataset name `open_dataset` and
-//! `open_project` returned to the current page, and the cancel key of each such command still in
+//! `open_project` returned to the current page, and each name `recover_session` returned for a null `dataset` (ADR-037, Amendment 1), and the cancel key of each such command still in
 //! flight (ADR-037 section 2). A name the page closes itself leaves them ([`Pages::forget`]).
 //!
 //! **The end** ([`Pages::page_started`], [`run_end`]) runs on a thread of its own, started from the
 //! page-load hook without waiting. **A late close** ([`Pages::settle`]) is the same close for an open
 //! that returned after its page ended. **The gate** ([`Pages::admit`]) holds the new page's
-//! `open_dataset` and `open_project` until every earlier end, every earlier page's in-flight open and
+//! `open_dataset`, `open_project` and `recover_session` with a null `dataset` until every earlier end, every earlier page's in-flight open and
 //! every late close has finished (ADR-037 section 5). It lives here, in the binding, before the
 //! kernel's `begin_open`; no wait is added inside the kernel.
 //!
@@ -885,7 +885,10 @@ mod tests {
 
     impl Rig {
         fn sessions(&self) -> PathBuf {
-            self.machine.parent().expect("the rig's folder").join("sessions")
+            self.machine
+                .parent()
+                .expect("the rig's folder")
+                .join("sessions")
         }
 
         /// A record a crashed run left: a second recorder on a host of its own records one step and is
@@ -912,7 +915,12 @@ mod tests {
             drop(recorder);
             let mut names: Vec<String> = std::fs::read_dir(self.sessions())
                 .expect("the sessions folder")
-                .map(|e| e.expect("an entry").file_name().to_string_lossy().into_owned())
+                .map(|e| {
+                    e.expect("an entry")
+                        .file_name()
+                        .to_string_lossy()
+                        .into_owned()
+                })
                 .filter(|n| n.starts_with("unsaved-"))
                 .collect();
             assert_eq!(names.len(), 1, "one crashed record: {names:?}");
@@ -961,7 +969,10 @@ mod tests {
                 Some(projects),
                 request,
             ));
-            assert!(matches!(settled, Some(Settled::Ended(None))), "an ended page, no name");
+            assert!(
+                matches!(settled, Some(Settled::Ended(None))),
+                "an ended page, no name"
+            );
             result.expect_err("the recover was refused").code == "engine.cancelled"
         });
         assert!(entered.wait(), "the recover reached the watch arm");
@@ -1442,7 +1453,10 @@ mod tests {
         late.join().expect("the late close ran");
         assert!(!rig.is_open(&name), "the late close closed the open");
         assert!(rig.host.catalog().names().is_empty());
-        assert!(rig.pages.lock().names.is_empty(), "the name did not enter the current set");
+        assert!(
+            rig.pages.lock().names.is_empty(),
+            "the name did not enter the current set"
+        );
     }
 
     #[test]
@@ -1454,7 +1468,10 @@ mod tests {
         let (release, recover) = held_recover(&rig, &record, "t3");
         rig.page();
         release.set();
-        assert!(recover.join().expect("the recover's thread"), "engine.cancelled");
+        assert!(
+            recover.join().expect("the recover's thread"),
+            "engine.cancelled"
+        );
         assert!(rig.host.catalog().names().is_empty(), "nothing is open");
         assert_eq!(rig.history(&record), before, "the history is byte for byte");
         assert_eq!(

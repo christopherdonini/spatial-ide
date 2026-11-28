@@ -122,7 +122,7 @@ import App from "./App";
 import { CHANGED_TEXT, PROJECT_OFFER_TEXT } from "./project/RecoveryOffer";
 import { __resetResidencyArmForTests, setResidencyArm } from "./residency/residencyArm";
 import { encodeHexF64 } from "./skp/codec";
-import type { RecoverableRecord, RecoverSessionResponse } from "./skp/types";
+import type { RecoverableRecord, RecoverSessionResponse, ReopenCheck } from "./skp/types";
 import { DEFAULT_STYLE_STATE, toStyleDocument } from "./style/document";
 
 (globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -131,7 +131,7 @@ const UNSAVED = `unsaved-${"0".repeat(32)}`;
 const PROJECT_RECORD = "0".repeat(32);
 const AT = "2026-11-27T10:15:30.000Z";
 const recordOf = (record: string): RecoverableRecord => ({ record, file_name: "parcels.parquet", last_step_at: AT, steps: 2, data: { state: "found" } });
-const recovered = (check: RecoverSessionResponse["opened"] extends infer T ? NonNullable<T>["check"] : never): (() => Promise<RecoverSessionResponse>) => async () => ({
+const recovered = (check: ReopenCheck): (() => Promise<RecoverSessionResponse>) => async () => ({
   dataset: "ds_00000000000000000000000000000001",
   opened: { session: "sr_00000000000000000000000000000001", check },
   steps: [
@@ -139,7 +139,7 @@ const recovered = (check: RecoverSessionResponse["opened"] extends infer T ? Non
     { action: "style.set", params: { property: "fillOpacity", value: 0.5 } },
   ],
 });
-const none = { observed: [], admission: [] } as const;
+const none: ReopenCheck = { observed: [], admission: [] };
 
 describe("App: the recovery offer (the recovery offer's Part 1), through the real App", () => {
   let container: HTMLDivElement;
