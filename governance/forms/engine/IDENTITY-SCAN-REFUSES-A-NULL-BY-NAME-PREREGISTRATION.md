@@ -530,3 +530,14 @@ Read the last amendment first.
 5. **Next:** the D3 commit, the narrow read, then the body. The merge comes after C1 (369).
 
 Read the last amendment first.
+
+## Amendment 9 — 2026-11-28 — the custodian's: D3 at 73f95dd8, its narrow read (PASS), the target removed
+
+*References only. Nothing above is edited.*
+
+1. **D3** (Amendment 8 item 3) is committed at 73f95dd82070c6f50ecf4c3831e0b4a02b49de37, one comment line of engine/src/dataset.rs in the reviewer's words. The worker's report is filed at `state/consults/gates/2026-11-28-identity-scan-refuses-a-null-by-name-d3-words-worker-report.md` (its hand-back's sha256 47c19a333abec332655b35049c176655e0efcfccbfa7ab35223862b6d92e595d).
+2. **The reviewer's narrow read** of that line: PASS, filed at `state/consults/gates/2026-11-28-identity-scan-refuses-a-null-by-name-d3-narrow-read-reviewer.md` (its hand-back's sha256 6453ce5ddccc91f68fc906ea54148ad4b9ba21de04f754f4275966b0d5d709e0). It has no finding. CI at 73f95dd8 is green on every workflow, on push and pull_request, the push run 46093509154 read after the report.
+3. **The target** D:/wt/nullname-target, 21391 MB by du, was removed after the piece's gates. D: went from 16004 MB to 37387 MB free. The worktree D:/wt/nullname stays.
+4. **Next:** PR 371's body (Amendment 8 item 4), then the merge after C1 (369).
+
+Read the last amendment first.
