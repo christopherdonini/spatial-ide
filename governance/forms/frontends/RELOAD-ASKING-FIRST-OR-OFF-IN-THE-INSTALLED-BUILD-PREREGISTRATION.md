@@ -520,3 +520,15 @@ Read the last amendment first.
 5. **Next.** The reviewer's read part goes out when C: allows (ADV-2026-11-28-11 items 1 and 3); its cargo runs rebuild keys-target once, in holds, each after its own read of C:.
 
 Read the last amendment first.
+
+## Amendment 12 — 2026-11-28 — the custodian's: ADV-2026-11-28-14 carried: the architect's answers taken; the order of the human's row; the ADR amendment and the KNOWN-LIMITATIONS item after the reviewer's read part
+
+*References only. Nothing above is edited. Where this amendment summarises the ruling, its bytes govern.*
+
+1. **The ruling** is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-14-the-reload-keys-a-b-e-r-1-and-r-2-taken-the-adr-amendment-and-the-known-limitations-item-after-the-reviewers-read-part.md`.
+2. **(a), (b) and (e) are taken** as the architect's read part gives them (its items 1 to 3). §1's third "may not claim" stands as it is. The stub and the five cfg forms stand, and no change to two forms is asked. The class 8 at the count stands as Amendments 7 and 9 record it; the stub is a code path inside a Scope file, and nothing more is owed for it.
+3. **R-1 and R-2 are taken** (its items 4 and 5). The order of the human's row is the one its item 4 gives, the right-click first. Where a record quotes ADV-2026-11-27-44 item 12, it is read with the ruling's item 5.
+4. **ADR-037's amendment (OPEN-2) and the KNOWN-LIMITATIONS item** (its item 6): no word of either is committed before the advisor's one ruling on both, after the reviewer's read part.
+5. **C-1 and D-1 to D-3** (its item 7) are held until the reviewer's read part; where its words for a place differ, both go to the advisor first. D-3 goes in by an appended amendment.
+
+Read the last amendment first.
