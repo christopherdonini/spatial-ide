@@ -154,6 +154,25 @@ function newestSessionLog() {
   }
 }
 
+// E-1 (the reload keys' form, Part A): the one `webview-chrome` line `setup()` writes, as a fixed string.
+// `unread` is the key setting's value in the commit that lands Part A alone; the commit that adds the
+// approved Part B dependency lines changes this one string to `on`. The step never accepts both.
+const WEBVIEW_CHROME_EXPECTED = "webview-chrome context_menus=on accelerator_keys=unread";
+
+/** Every line holding `webview-chrome` in the newest `session-*.log` of the folder `newestSessionLog`
+ * resolves. That helper has no launch filter and returns only its last 40 lines and its own pattern's
+ * matches, so this reads the file itself. */
+function webviewChromeLines() {
+  const log = newestSessionLog();
+  if (log.error) return { error: log.error };
+  try {
+    const lines = readFileSync(log.path, "utf8").split(/\r?\n/).filter((l) => l.includes("webview-chrome"));
+    return { path: log.path, lines };
+  } catch (e) {
+    return { error: `could not read the session log: ${e.message}` };
+  }
+}
+
 function withTimeout(promise, ms, stepId) {
   return new Promise((resolve, reject) => {
     let settled = false;
@@ -322,6 +341,28 @@ async function main() {
     console.log(`source-watch-idle: waiting for the app to mount (up to ${MOUNT_READY_TIMEOUT_MS}ms)...`);
     await waitForMountReady(page);
     console.log("source-watch-idle: mount-readiness gate PASSED");
+
+    // ------------------------------------------------------------------------------------
+    // E-1: `setup()` wrote exactly one `webview-chrome` line, at info, with the dev build's values
+    // (the reload keys' form, section 4). The line is written before the page mounts, so there is no
+    // wait and no retry here. Recorded mutation: remove the `with_webview` call from `setup()`; the
+    // step fails with no line. The run must have launched the app, or "since launch" has no meaning.
+    // ------------------------------------------------------------------------------------
+    await runStep("E1-webview-chrome-line", async () => {
+      if (!launched) throw new Error("E1: launched:false -- the newest session log cannot be tied to this run's launch");
+      const found = webviewChromeLines();
+      if (found.error) throw new Error(`E1: ${found.error}`);
+      observation.webviewChromeLines = found.lines;
+      if (found.lines.length !== 1) {
+        throw new Error(`E1: expected exactly one webview-chrome line since launch, found ${found.lines.length}: ${JSON.stringify(found.lines)}`);
+      }
+      const match = /^\d+ info (webview-chrome .*)$/.exec(found.lines[0]);
+      if (match === null) throw new Error(`E1: the line is not written at info: ${JSON.stringify(found.lines[0])}`);
+      if (match[1] !== WEBVIEW_CHROME_EXPECTED) {
+        throw new Error(`E1: the line reads ${JSON.stringify(match[1])}, expected ${JSON.stringify(WEBVIEW_CHROME_EXPECTED)}`);
+      }
+      return `one line at info: ${match[1]}`;
+    });
 
     // ------------------------------------------------------------------------------------
     // W1: open the scratch copy through the real admission path.
