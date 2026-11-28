@@ -137,8 +137,8 @@ pub enum EngineError {
     /// the value a consumer branches on is `refusal` — one of `crate::lod`'s declared constants —
     /// and `detail` is the evidence that convicted this source. **One variant rather than one per
     /// refusal**, because from a caller's side they are one failure — this source cannot be tiered —
-    /// and the identifier is what says which; the same argument `IdentityUnusable` above records for
-    /// ADR-016's four.
+    /// and the identifier is what says which; the same argument `IdentityUnusable` below records for
+    /// ADR-016's identity refusals.
     ///
     /// The two *size* ceilings are deliberately NOT here: they are `CeilingExceeded`, which already
     /// carries a declared ceiling's name with the limit and the observed value, and a second shape
