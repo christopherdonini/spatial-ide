@@ -975,3 +975,13 @@ npm run e2e:admission
 It exits as the suite does: 0 when every step passes, 1 when one fails. It is operator-run and not in CI or in `npm run verify`.
 
 **What it proves not.** The words of R-ENG (the step compares the line with a copy of it), any timing, macOS or Linux, the native folder picker or a project file edited in place (row AH8 of the operator's Part AH), a project that a save wrote with a declaration of `id` (the kernel test K-R1 does that), that no form shows beside the refusal, or a recorded declaration of a column other than `id`. The unrun step is not an observation: M-RD8, `rowPositionOffer` without its check of `identity_source`, is the step's own mutation and was not observed by the build.
+
+## Recovery offer spec (b2-piece-1c-step-3-recovery-offer)
+
+```
+node e2e/recover.mjs
+```
+
+`e2e/recover.mjs` is E-RECOVER: a killed run's session is offered at the next start, Recover brings it back, and Discard removes it, on real WebView2 with `filter-zoned.parquet`. It sets `LOCALAPPDATA` to a scratch folder before `lib.mjs` loads, launches its own app three times on that store (each after the earlier app's CDP port is free) and refuses an app already listening. Steps: `RUN-1` (open, apply `zone = 'residential'`, commit a `#112233` fill colour, kill the process tree, read two chained steps from `history.jsonl`); `RECOVER` (the offer has one entry naming `filter-zoned.parquet` and a time; Recover; `e2eReadWorkspace` shows the filter and the fill colour; the entry leaves the list; no reopen notice; one more fill-opacity step is recorded and, after a kill, its `parent` is the last kept id); `DISCARD` (a third start offers the record; Discard; the folder is gone from the store).
+
+It exits 0 when every step passes and 1 when one fails; it is operator-run, not in CI. **What it proves not.** The recover's check against changed data, the native pickers, any timing, and the operator's reading of the offer's words.
