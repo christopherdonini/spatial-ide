@@ -916,4 +916,30 @@ mod tests {
             offenders.join("\n")
         );
     }
+
+    #[test]
+    fn the_discarded_line_is_unsaved_for_an_unsaved_name_and_project_for_any_other() {
+        let unsaved = format!("unsaved-{}", "0".repeat(32));
+        assert_eq!(super::discarded_line(&unsaved), "recovery-discarded kind=unsaved");
+        assert_eq!(super::discarded_line(&"0".repeat(32)), "recovery-discarded kind=project");
+    }
+
+    /// T-1: a text scan, as K-4's. `lib.rs`'s handler list names the three commands, each is an async
+    /// command, and the blocking work is in a `spawn_blocking` closure of the function that does it.
+    #[test]
+    fn the_three_recovery_commands_are_registered_and_run_off_the_main_thread() {
+        let read = |name: &str| std::fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("src").join(name)).unwrap();
+        let (lib, commands) = (read("lib.rs"), read("commands.rs"));
+        for name in ["list_recoverable", "recover_session", "discard_recoverable"] {
+            let entry = format!("commands::{name},");
+            assert!(lib.lines().any(|l| l.trim() == entry), "{name} is not in generate_handler!");
+            assert!(commands.contains(&format!("pub async fn {name}(")), "{name} is not an async command");
+        }
+        for name in ["list_recoverable", "recover_admitted", "recover_on_page", "discard_recoverable"] {
+            let start = commands.find(&format!("fn {name}(")).unwrap_or_else(|| panic!("no fn {name}"));
+            let body = &commands[start..];
+            let body = &body[..body.find("\n}\n").expect("a closing brace line")];
+            assert!(body.contains("spawn_blocking("), "{name} does not use spawn_blocking");
+        }
+    }
 }

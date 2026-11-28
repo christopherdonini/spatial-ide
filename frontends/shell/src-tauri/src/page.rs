@@ -532,7 +532,9 @@ mod tests {
     use spatial_kernel::skp::{session_end_channel, StreamRegistry};
     use spatial_kernel::Catalog;
     use spatial_skp::v0::{
-        HexF64, OpenDatasetRequest, OpenProjectRequest, OpenProjectResponse, SaveProjectRequest,
+        DiscardRecoverableRequest, HexF64, OpenDatasetRequest, OpenProjectRequest,
+        OpenProjectResponse, RecordStepRequest, RecoverSessionRequest, SaveProjectRequest,
+        StepIntent, StyleSetParams,
     };
 
     use super::*;
@@ -670,6 +672,8 @@ mod tests {
         pages: Arc<Pages>,
         publishes: Arc<RunningPublishes>,
         seen: Arc<Seen>,
+        /// The recorder `projects` was built over (the recovery commands' tests call it).
+        recorder: Arc<StepRecorder>,
     }
 
     fn rig(name: &str) -> Rig {
@@ -699,7 +703,7 @@ mod tests {
         ));
         let machine = dir.join("machine");
         let recorder = Arc::new(StepRecorder::new(dir.join("sessions"), host.clone()));
-        let projects = Arc::new(Projects::new(machine.clone(), recorder));
+        let projects = Arc::new(Projects::new(machine.clone(), recorder.clone()));
         Rig {
             machine,
             folder,
@@ -710,6 +714,7 @@ mod tests {
             pages: Arc::new(Pages::new()),
             publishes: Arc::new(RunningPublishes::new()),
             seen: Arc::new(Seen::default()),
+            recorder,
         }
     }
 
@@ -876,6 +881,91 @@ mod tests {
                 },
             )
         }
+    }
+
+    impl Rig {
+        fn sessions(&self) -> PathBuf {
+            self.machine.parent().expect("the rig's folder").join("sessions")
+        }
+
+        /// A record a crashed run left: a second recorder on a host of its own records one step and is
+        /// dropped without `end_session`. Returns its name, the one `unsaved-` entry of the folder.
+        fn crashed_record(&self) -> String {
+            let arm = Arc::new(TestArm(Mutex::new(Mode::Plain)));
+            let host = Arc::new(SkpHost::new(
+                Arc::new(Catalog::new()),
+                StreamRegistry::new(),
+                arm,
+                session_end_channel().0,
+            ));
+            let recorder = StepRecorder::new(self.sessions(), host.clone());
+            let dataset = host
+                .open_dataset(self.open_request("crashed"))
+                .expect("the crashed run's open")
+                .dataset;
+            let step = RecordStepRequest {
+                skp: SKP_VERSION.to_string(),
+                dataset,
+                intent: StepIntent::StyleSet(StyleSetParams::FillOpacity { value: 0.5 }),
+            };
+            recorder.record_step(step).expect("the step");
+            drop(recorder);
+            let mut names: Vec<String> = std::fs::read_dir(self.sessions())
+                .expect("the sessions folder")
+                .map(|e| e.expect("an entry").file_name().to_string_lossy().into_owned())
+                .filter(|n| n.starts_with("unsaved-"))
+                .collect();
+            assert_eq!(names.len(), 1, "one crashed record: {names:?}");
+            names.remove(0)
+        }
+
+        fn recover_request(&self, record: &str, key: &str) -> RecoverSessionRequest {
+            RecoverSessionRequest {
+                skp: SKP_VERSION.to_string(),
+                record: record.to_string(),
+                cancel_key: key.to_string(),
+                dataset: None,
+            }
+        }
+
+        fn history(&self, record: &str) -> Vec<u8> {
+            std::fs::read(self.sessions().join(record).join("history.jsonl")).expect("the history")
+        }
+    }
+
+    fn runtime() -> tokio::runtime::Runtime {
+        tokio::runtime::Builder::new_multi_thread()
+            .enable_all()
+            .build()
+            .expect("a runtime")
+    }
+
+    /// A `recover_on_page` with a null `dataset` running on its own thread, held in the watch arm.
+    fn held_recover(
+        rig: &Rig,
+        record: &str,
+        key: &str,
+    ) -> (Arc<Latch>, std::thread::JoinHandle<bool>) {
+        let (entered, release) = (Latch::new(), Latch::new());
+        rig.arm.set(Mode::Block {
+            entered: entered.clone(),
+            release: release.clone(),
+        });
+        let (pages, recorder, host) = (rig.pages.clone(), rig.recorder.clone(), rig.host.clone());
+        let (projects, request) = (rig.projects.clone(), rig.recover_request(record, key));
+        let thread = std::thread::spawn(move || {
+            let (result, settled) = runtime().block_on(crate::commands::recover_on_page(
+                &pages,
+                recorder,
+                &host,
+                Some(projects),
+                request,
+            ));
+            assert!(matches!(settled, Some(Settled::Ended(None))), "an ended page, no name");
+            result.expect_err("the recover was refused").code == "engine.cancelled"
+        });
+        assert!(entered.wait(), "the recover reached the watch arm");
+        (release, thread)
     }
 
     /// An open running on its own thread, held inside `arm`.
@@ -1322,5 +1412,89 @@ mod tests {
             &rig.host,
             Some(rig.projects.clone()),
         );
+    }
+
+    #[test]
+    fn a_recover_whose_reply_arrives_after_its_page_ended_is_closed() {
+        let rig = rig("t2");
+        let record = rig.crashed_record();
+        rig.page();
+        let ticket = rig.admit_now("t2");
+        rig.page();
+        assert_eq!(
+            rig.last_line(),
+            "info page-end opens_closed=0 opens_cancelled=0 publishes_cancelled=0"
+        );
+        let (reply, settled) = runtime().block_on(crate::commands::recover_admitted(
+            &rig.pages,
+            ticket,
+            rig.recorder.clone(),
+            &rig.host,
+            Some(rig.projects.clone()),
+            rig.recover_request(&record, "t2"),
+        ));
+        let reply = reply.expect("the recover");
+        assert!(reply.opened.is_some(), "the premise: the recover opened");
+        let name = reply.dataset.as_str().to_string();
+        let Settled::Ended(Some(late)) = settled else {
+            panic!("the recover's page had ended, so a late close was expected");
+        };
+        late.join().expect("the late close ran");
+        assert!(!rig.is_open(&name), "the late close closed the open");
+        assert!(rig.host.catalog().names().is_empty());
+        assert!(rig.pages.lock().names.is_empty(), "the name did not enter the current set");
+    }
+
+    #[test]
+    fn a_page_end_cancels_a_recover_in_flight_and_leaves_its_record() {
+        let rig = rig("t3");
+        let record = rig.crashed_record();
+        let before = rig.history(&record);
+        rig.page();
+        let (release, recover) = held_recover(&rig, &record, "t3");
+        rig.page();
+        release.set();
+        assert!(recover.join().expect("the recover's thread"), "engine.cancelled");
+        assert!(rig.host.catalog().names().is_empty(), "nothing is open");
+        assert_eq!(rig.history(&record), before, "the history is byte for byte");
+        assert_eq!(
+            rig.last_line(),
+            "info page-end opens_closed=0 opens_cancelled=1 publishes_cancelled=0"
+        );
+    }
+
+    #[test]
+    fn a_new_pages_open_waits_for_an_earlier_pages_recover() {
+        let rig = rig("t4");
+        let record = rig.crashed_record();
+        rig.page();
+        let (release, recover) = held_recover(&rig, &record, "t4");
+        rig.page();
+        let mut next = Box::pin(rig.pages.admit("next"));
+        assert_pending(poll(&mut next), "the earlier page's recover is in flight");
+        release.set();
+        recover.join().expect("the recover's thread");
+        let ticket = ready(poll(&mut next), "the recover has returned").expect("admitted");
+        rig.pages.settle(ticket, None, &rig.host, None);
+    }
+
+    #[test]
+    fn a_discard_that_removed_a_record_writes_one_session_log_line_naming_only_its_kind() {
+        let rig = rig("t6");
+        let record = rig.crashed_record();
+        let request = || DiscardRecoverableRequest {
+            skp: SKP_VERSION.to_string(),
+            record: record.clone(),
+        };
+        let log = rig.recording_log();
+        crate::commands::discard_and_log(&rig.recorder, request(), &*log).expect("the discard");
+        assert!(!rig.sessions().join(&record).exists(), "the folder is gone");
+        assert_eq!(rig.seen.lines(), ["info recovery-discarded kind=unsaved"]);
+        let line = &rig.seen.lines()[0];
+        let sessions = rig.sessions().display().to_string();
+        let hex = record.trim_start_matches("unsaved-");
+        assert!(!line.contains(&record) && !line.contains(hex) && !line.contains(&sessions));
+        crate::commands::discard_and_log(&rig.recorder, request(), &*log).expect_err("a second");
+        assert_eq!(rig.seen.lines().len(), 1, "a refused discard writes none");
     }
 }
