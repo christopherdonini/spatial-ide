@@ -72,9 +72,9 @@ test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_sit
   assert.equal(r.stderr, "");
   const lines = r.stdout.split("\n").filter((l) => l !== "");
   const siteLines = lines.slice(0, -1);
-  assert.equal(siteLines.length, 19);
+  assert.equal(siteLines.length, 24);
   for (const l of siteLines) assert.doesNotMatch(l, /outside every boundary/);
-  assert.equal(lines.at(-1), "cfg-boundary: 19 sites in 7 files, 0 outside every boundary");
+  assert.equal(lines.at(-1), "cfg-boundary: 24 sites in 8 files, 0 outside every boundary");
   const perFile = {};
   for (const l of siteLines) {
     const m = /^cfg-boundary: (\S+):\d+ /.exec(l);
@@ -86,6 +86,7 @@ test("the_boundary_check_passes_on_the_shipped_tree_and_lists_every_boundary_sit
     "engine/src/lod.rs": 2,
     "engine/src/watch.rs": 3,
     "frontends/shell/src-tauri/src/origin.rs": 2,
+    "frontends/shell/src-tauri/src/webview_chrome.rs": 5,
     "kernel/src/permission/audit/log.rs": 1,
     "kernel/src/permission/audit/normalize.rs": 2,
     "kernel/src/publish/error.rs": 6,
