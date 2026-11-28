@@ -2058,3 +2058,81 @@ Read the last amendment first.
 *References only. Nothing above is edited.*
 
 1. **Class 2** (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-32-the-two-hooks-caller-lines-b-alone-brings-both-current-after-it-takes-main-in.md`, item 5): `e2e/conditions.mjs` calls the save hook `e2eSaveProjectToFolder`, and the declaration at this piece's head does not name it. The piece B (`reload-ends-the-old-pages-opens`) names the file under that ruling, and this piece does not edit the line.
+
+## Amendment 15 — 2026-11-27 — the architect's, before PR B's code: the §0.3 re-sweep for PR B by reading at d6c2daf6; two existing tests join PR B's Scope (class 9); J-E1's start under N-2; the moved cites (class 3); App's predicted overrun (class 8)
+
+*Written by the architect before any code of PR B and before any run of a J test. Every "`path`, line N at d6c2daf6" below is read at d6c2daf69eb500027197945f5a4302f0508e0f69 on `cut/shell-migration-milestone-5-pr-a`, a branch commit; no span is pinned by hash. It is made by reading alone: no suite was run (item 12, OPEN-B3).*
+
+1. **Authority.** ADV-2026-11-27-37 item 6 (c) (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-37-the-recovery-offers-base-c1-with-b-merged-in-its-recover-open-counted-adr-037-amendment-1-the-posture-check-the-places.md`); ADV-2026-11-26-25 item 6, the finding for this part (`state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-25-a-form-open-a1-to-a8-the-time-of-the-save-on-every-first-line-seven-walkthrough-spans.md`); Amendment 11 item 5 (PR B's re-sweep before PR B's code). These are the advisor's rulings under the human's delegation of 2026-11-13, not the human's words.
+
+2. **The base** is PR A's head d6c2daf69eb500027197945f5a4302f0508e0f69 (Amendment 4 item 11; ADV-2026-11-27-37 item 6 (c)). How a later head of PR A comes in is OPEN-B3.
+
+3. **The §0.2 interfaces PR B is written against, at d6c2daf6.** None differs in shape (no I4); the cites move (class 3):
+   - `ScanState` and `isScanInFlight`: `frontends/shell/src/App.tsx`, lines 454-461 and 534-536 at d6c2daf6; `scanLivenessText`, lines 558-567.
+   - FilterPanel's Cancel: `frontends/shell/src/filter/FilterPanel.tsx`, lines 28 and 120-121 at d6c2daf6.
+   - App's inline Cancel handler, moved whole into `handleCancelScan` (§2.4): `App.tsx`, lines 2327-2396 at d6c2daf6; its candidate branch lines 2372-2388, its baseline branch lines 2389-2395.
+   - `ExportRunReport`: `frontends/shell/src/publish/PublishPanel.tsx`, lines 33-41 at d6c2daf6; reported at lines 403-408 (prepare) and 518-521 (execute); the destination path registers no token (lines 449-453).
+   - App's runs: the ref at `App.tsx` line 1283 at d6c2daf6; §2.4's two mirror sites are the set at line 1300 and the delete at line 1309; the ask's call is line 1343, inside `answerOpenAsk` (lines 1330-1347).
+   - Labels: PublishPanel's Cancel and Cancelling, `PublishPanel.tsx` line 727 at d6c2daf6; the S-12 statement, `frontends/shell/src/console/surfaceRegistry.ts` line 329 at d6c2daf6; `ACTIVITY_TABS`, `frontends/shell/src/layout/contributions.ts` lines 41-46 at d6c2daf6, rendered by `StudioLayout.tsx` lines 457-463, so StudioLayout.tsx is not edited.
+   - The Table is shown only with its tab selected (`StudioLayout.tsx`, lines 175-176 at d6c2daf6) and its load ends when hidden (`frontends/shell/src/table/TableTab.tsx`, lines 63-67 at d6c2daf6).
+   - The relinquished statement J-A1 and J-E1 compare with: `frontends/shell/src/residency/residencyStatus.ts`, line 462 at d6c2daf6.
+   - Not named in the form, unchanged by PR B: the run record's `cancelChosen` and `end` (`App.tsx`, lines 138-143 at d6c2daf6) and the late-cancel statement (`frontends/shell/src/feature/OpenDuringExportAsk.tsx`, lines 26-34 at d6c2daf6).
+   - I8 is read for PR B as: PR A's change is the base, not an invalidator.
+
+4. **Declared selector list for PR B.** e2e: none (the suites read Activity's tabs by id; `e2e/layout.mjs`'s Tab walk, lines 193-224 at d6c2daf6, counts regions). Unit: `frontends/shell/src/layout/StudioLayout.test.tsx`, lines 24-42 (the `Slots` literal lacks `activity.jobs`, a `tsc` error) and line 371 (the tab list) at d6c2daf6; `frontends/shell/src/App.table.test.tsx`, line 206 at d6c2daf6 (the tab list).
+
+5. **Scope, class 9 on the seam rule, declared before their code.** PR B's Tests (§2.6) gain two existing files:
+   - `frontends/shell/src/layout/StudioLayout.test.tsx`: `NO_SLOTS` gains `"activity.jobs": null`; the tab-list case expects Jobs after Problems, with its comment. No other line changes.
+   - `frontends/shell/src/App.table.test.tsx`: the expected tab list gains Jobs. No other line changes.
+   - Declared unchanged for them (§5): every other case of both files.
+   - **Mutation M15-1:** in `contributions.ts`, put Jobs before Problems in `ACTIVITY_TABS`. Expected failure: both tab-list assertions. Observed and recorded as a dated line beside the StudioLayout case (§4, "How a mutation is observed").
+
+6. **§2.4 at this base, declared.**
+   - The Jobs export Cancel calls `run.cancel()` once and never sets `cancelChosen`. The late-cancel statement stays the ask's alone, as its own comment says (`OpenDuringExportAsk.tsx`, lines 14-17 at d6c2daf6). An execute cancelled from Jobs that ends in a bundle anyway shows no statement in Jobs. That needs the cancel to land within one request round trip (the same comment), a case named in the JobsTab comment and not tested.
+   - `handleExportRunning` and `answerOpenAsk` keep every existing line byte for byte; the mirror adds lines beside lines 1300 and 1309 at d6c2daf6. The recorded mutations of `App.selection.test.tsx` name lines there (line 1103 at d6c2daf6).
+   - S-2, S-7, S-8, S-9 and S-11 (ADV-2026-11-23-30 item 1) live in `jobs.ts`, copied by script from the ruling; `contributions.ts` imports S-2 from it. No constants file is added.
+   - On the shipped arm the scan row shows S-8 alone: the candidate session dispatches only `issued` and `reset` (`candidateArmSession.ts`, lines 624-633 at d6c2daf6), for which `scanLivenessText` is null. The liveness text reaches the row on baseline only; J-R1 covers the digit clause.
+
+7. **Tests.** The J rows are §4's as Amendment 2 leaves them, with each one mutation there. Three declarations, no row edited:
+   - **J-A1 and J-A2's harness.** The PublishPanel stand-in keeps the `onExportRunning` that App passes, as `App.table.test.tsx` does (lines 97-102 at d6c2daf6). The test calls it with a report of `ExportRunReport`'s real shape. The module is already mocked by the harness, so this is not I5. J-A2 observes "releases the consumer" through the Table's first scope, which issues again once `ended` resolves, as the table suite observes `exportHeld`; it does not use a spy.
+   - **J-E1's start, under N-2 (Amendment 4).** In place of the pan (H6), the step waits for the settle and applies the slow predicate through the Filter panel, as `e2e/filter-panel.mjs`'s FIND' does on the shipped arm (lines 304-334 at d6c2daf6). It then waits for `button.filter-cancel` and the Jobs scan row, and goes on as Amendment 2's J-E1 row. Why: FIND' shows that the predicate's scan of the 4,000,000-feature fixture runs long (its bound, lines 336-349 at d6c2daf6), while a fill after a pan has no recorded duration. H6 is then not tested; it is neither confirmed nor refuted. Operator step 4 already filters (Amendment 2, E-1 item 5). Any status other than the statement at `residencyStatus.ts` line 462 at d6c2daf6 FAILS the step.
+   - **J-E2.** If the export row is gone before the click, the run is VOID (exit 2), never a PASS, as `e2e/admission-remediation.mjs` reports a fast open (line 655 at d6c2daf6).
+
+8. **§7, not edited.** Predicted at the count:
+   - B-P: jobs ~110 (120), JobsTab ~150 (170), contributions ~3 (5), surfaceRegistry ~2 (6), styles.css ~30 (40) and package.json 1 (1) hold. **App ~185 against 150, class 8:** the 70-line move counts about 140 under numstat, as the form gate's attempt 1 named it under "Ceiling risk", plus the mirror, the slot and the imports.
+   - B-T: jobs.test, JobsTab.test and App.jobs.test within 260, 230 and 400. The two files of item 5 have no ceiling of their own, so their ~6 lines are class 8 against 0 (as Amendment 12 item 7 reads such files).
+   - B-E: jobs.mjs within 420 plus 60.
+   - PR B: about 1,850 against 1,862. Any overrun is class 8 in PR B's closing amendment.
+   - Records, outside the count: walkthrough ~14 of 120, e2e/README ~6 of 40, KNOWN-LIMITATIONS ~6 of 50 (OPEN-B2 (b) adds ~5).
+
+9. **KNOWN-LIMITATIONS.** KL-B and KL-C land with PR B (Amendment 9 item 6), in ADV-2026-11-23-30 item 2's words, at the numbers of item 10. Each has a source comment naming, by symbol, where the code does each clause. The build's gates check each clause, and the advisor compares the words byte for byte at the merge check.
+
+10. **Part and numbers.** Part AF, rows AF4 and AF5 before AF6, and their Result log lines before AF6's (`frontends/shell/MANUAL-WALKTHROUGH.md`, lines 2075 and 2091 at d6c2daf6), from §9's steps 4 and 5 as Amendment 2 leaves step 4. AF6 gains S-2, S-7, S-8, S-9 and S-11. The S-12 row text that AF6 shows changes to the widened tab list. KL-B's and KL-C's numbers are the next unused under rule (00a) over the base and every unmerged branch, named by the custodian by script at this amendment's filing and checked again before their commit.
+
+11. **The row-filter paragraph (§9a).** No note is added. Its correction speaks of v0.1.0. At d6c2daf6 a tile dropped on a refused mint ends its work (`frontends/shell/src/streaming/tileViewportStreamManager.ts`, lines 1004-1007 and 1032-1036; `candidateArmSession.ts`, lines 1083-1086 at d6c2daf6). The Jobs scan row uses FilterPanel's predicate exactly. Limit: other paths were not traced.
+
+12. **OPEN-B1 to OPEN-B4** go to the advisor with this amendment. No code of OPEN-B1 (b) or (c), or of OPEN-B2 (b), before its ruling (I7). Under OPEN-B1 (b), the scope additions there are declared by this item and bind only on that ruling.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 16 — 2026-11-28 — the custodian's: ADV-2026-11-27-42 carried (OPEN-B1 to OPEN-B4), the KNOWN-LIMITATIONS numbers named
+
+*References only. Nothing above is edited.*
+
+1. **Amendment 15** is the architect's, appended byte for byte from its draft `state/drafts/2026-11-27-shell-migration-milestone-5-second-part-pr-b-form-on-pr-a-head-architect-draft.md`: the text between the two four-backtick fences of its section 2 (9600 bytes with its final newline, sha256 2c7849ce3c95ae4d8c6a8c4d79d4cbf712c1dced92611dab7f1dc0190191b73a). Its cites are read at d6c2daf6, a branch commit, as its italic line says.
+2. **ADV-2026-11-27-42** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-42-milestone-5-second-part-open-b1-b-in-pr-b-open-b2-b-in-the-advisors-words-open-b3-b-open-b4-a-amendment-15-appended-as-drafted.md`. Its words are the advisor's under the delegation of 2026-11-13, not the human's.
+3. **OPEN-B1: (b), in PR B** (item 1). Within urgency 3 only, the notices of the route raised most recently come first, and each route keeps its own raise order. It is class 9 on that ruling, declared before code:
+   - Scope: `frontends/shell/src/conditions/conditions.ts`; the new case C-U2b in `frontends/shell/src/conditions/conditions.test.ts`; one App test from the real App in `frontends/shell/src/App.conditions.test.tsx` (an open of a project that raises a notice, then a save, and the top is the save's first line).
+   - Mutations: plain `seq` order fails C-U2b; newest first for every urgency fails C-U2 and C-U2b.
+   - Ceiling: 1,862 plus the about 80 lines this adds (about 10, 30 and 40), so 1,942, and at most 1,950. That is not class 8. The overrun predicted for App's own row (Amendment 15 item 8) stays class 8 at the count.
+   - The shared path `App.conditions.test.tsx` is met by the order: the a-second-save piece merges first, and PR B then takes main in by a merge commit with the reviewer's narrow read of that file.
+   - The reviewer's read part says whether S-10 and KNOWN-LIMITATIONS items 77 to 79 at the base are still true under the new order.
+4. **The KNOWN-LIMITATIONS numbers** (Amendment 15 item 10; rule (00a)). By script, the highest item number is 80, on cut/shell-scale-display, the only ref with it. It is 75 on main and 79 at PR A's head, and no other unmerged branch has an item above 79 (52 branches read). So KL-B is item 81, KL-C is item 82, and OPEN-B2's new item (item 2 of the ruling, NN) is item 83. The numbers are checked again before their commit.
+5. **OPEN-B2: (b).** Item 83 is the advisor's words in the ruling's item 2, by reference, with NN as 83. Its source comment is the worker's, in the form of items 77 to 79. The build's gates check each clause against the landed code, and a clause the code does not meet goes to the advisor before the words are committed.
+6. **OPEN-B3: (b)** (item 3). PR B's code and its vitest runs go ahead inside holds while the port is held. Its base runs come at the port before any J-E run. A later head of PR A comes in by a merge commit with the reviewer's narrow read, recorded by amendment.
+7. **OPEN-B4: (a)** (item 4). KL-C stands as ruled. The case of a row that still reads Cancel after the ask's choice is named in KL-C's source comment, in the worker's words.
+8. **Next** (items 5 and 6): the reviewer's form gate reads Amendments 15 and 16 alone, before code. Then PR B's code starts on d6c2daf6 when a place is free. Its build gates run in two parts. Its base runs and J-E runs go to the end of the port order, after E-SCALE. It merges after the a-second-save piece, and its pull request stays a draft until PR A is on main.
+
+Read the last amendment first.

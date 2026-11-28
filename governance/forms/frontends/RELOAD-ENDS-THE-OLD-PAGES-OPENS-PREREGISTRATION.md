@@ -932,3 +932,17 @@ Read the last amendment first.
    - In the ruled order, the two spans are the ruling's item 4 Old/New pairs, read in place. If the search gives other files, the lists follow it, and the advisor is told before the commit.
 3. **The reads:** the reviewer's narrow read of that file covers the merge and this commit. The suites that start no app are green at the new head, before the advisor's merge check.
 4. **At the merge check** (the ruling's item 8), the advisor runs the search at this piece's head.
+
+## Amendment 10 — 2026-11-28 — the custodian's: class 9 on ADV-2026-11-27-43 item 2, the two literals B carries on main
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** is ADV-2026-11-27-43 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-43-the-recovery-base-corrected-by-one-commit-outside-part-1s-count-b-carries-the-two-lines-on-main-a-required-protocol-member-named.md`), item 2. Text-id and the C1 piece merge before B. Text-id's commit 8e4247d8 adds the required member `set_aside_file_id` to `OpenDatasetRequest` and `OpenProjectRequest` in protocol/, and two literals in page.rs's tests (`open_request` and `reopen_request`) lack it. Once B takes main in, those literals no longer compile.
+2. **The order of B's commits after its merge of main** (Amendment 9; ADV-2026-11-27-32 item 4, `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-32-the-two-hooks-caller-lines-b-alone-brings-both-current-after-it-takes-main-in.md`):
+   1. the merge commit, as git makes it;
+   2. one commit that gives the two literals `set_aside_file_id: false`, the value that means no choice was made, and nothing else;
+   3. then the doc commit of ADV-2026-11-27-32 item 4, a commit of its own.
+3. **The reviewer's narrow read** covers the merge and both commits. The suites that start no app and B's checks are green at the new head before the advisor's merge check. The two lines are counted by §7's command as they fall.
+4. The same two lines were made on the recovery offer's base as 97e2156d (ADV-2026-11-27-43 item 1). When B's new head comes into that branch and git does not take them as one change, that file gets the reviewer's narrow read.
+
+Read the last amendment first.
