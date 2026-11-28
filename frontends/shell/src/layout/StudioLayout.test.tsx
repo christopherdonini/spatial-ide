@@ -33,6 +33,7 @@ const NO_SLOTS: Slots = {
   "activity.console": null,
   "activity.notices": null,
   "activity.problems": null,
+  "activity.jobs": null,
   "activity.table": null,
   "attention.top": null,
   "status.residency": null,
@@ -365,9 +366,10 @@ describe("StudioLayout: the attention strip's one slot, and the count of the oth
   // RECORDED MUTATION for "C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)": in `ACTIVITY_TABS` (contributions.ts) put Problems before Table.
   // Expected failure: the tab order is not Console, Notices, Table, Problems.
   // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)": AssertionError: expected [ 'Console', 'Notices', …(2) ] to deeply equal [ 'Console', 'Notices', …(2) ]. Reverted after observing.
+  // RECORDED MUTATION M15-1 (Amendment 15 item 5): in `ACTIVITY_TABS` (contributions.ts) put Jobs before Problems. Expected failure: the tab order is not Console, Notices, Table, Problems, Jobs; App.table.test.tsx's tab-list assertion fails with it.
   it("C-R3: the Problems tab is a tab of Activity, labelled S-1, after Table (S-12 names them in that order)", () => {
     mount(0, false);
     const tabs = [...container.querySelectorAll('#region-activity [role="tab"]')].map((tab) => tab.textContent);
-    expect(tabs).toEqual(["Console", "Notices", "[P6 placeholder] Table", PROBLEMS_LABEL]);
+    expect(tabs).toEqual(["Console", "Notices", "[P6 placeholder] Table", PROBLEMS_LABEL, "Jobs"]);
   });
 });

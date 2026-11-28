@@ -77,6 +77,27 @@ describe("conditions: the strip's top, and the count of the others (C-U2)", () =
     expect(attentionOf(refusals)?.others).toBe(1);
     expect(attentionOf([])).toBeNull();
   });
+
+  // RECORDED MUTATION for C-U2b: in `ordered` (conditions.ts) order urgency 3 by `seq` alone, as C-U2 does for every urgency. Expected failure: the reopen notices come first, before the save's two lines. Also fails C-A8.
+  // RECORDED MUTATION for C-U2b, the second (Amendment 17 item 5): in `ordered` sort the seq descending (newest first) for every urgency. Expected failure: the order within each route flips. Also fails C-U2.
+  it("C-U2b: within urgency 3 the route raised most recently comes first, and each route keeps its own raise order; urgency 2 is unchanged", () => {
+    const state = fold([
+      opened(R),
+      raise("reopen-notice", "project.reopen_notice", { ordinal: 0 }),
+      raise("reopen-notice", "project.reopen_notice", { ordinal: 1 }),
+      raise("stream-terminal", "a"),
+      { type: "replaceBatch", route: "save-notice", code: "project.save_notice", target: RESOURCE, generation: R, displays: [text("save 0"), text("save 1")] },
+    ]);
+    const place = (condition: Condition): string => `${condition.reason.route}#${condition.reason.ordinal}`;
+    expect(shown(state).map(place)).toEqual(["stream-terminal#null", "save-notice#0", "save-notice#1", "reopen-notice#0", "reopen-notice#1"]);
+    // A route raised again goes first: a second save's batch replaces the first, and a refused step's notice is raised after it.
+    const later = fold([
+      { type: "replaceBatch", route: "save-notice", code: "project.save_notice", target: RESOURCE, generation: R, displays: [text("save 0 again")] },
+      { type: "replaceBatch", route: "record-notice", code: "step-record-style", target: VIEW_1, generation: R, displays: [text("not recorded")] },
+    ], state);
+    expect(shown(later).map(place)).toEqual(["stream-terminal#null", "record-notice#null", "save-notice#0", "reopen-notice#0", "reopen-notice#1"]);
+    expect(attentionOf(shown(later))?.top.reason.code).toBe("a");
+  });
 });
 
 describe("conditions: a newer raise never ends an older blocker or refusal (C-U3)", () => {

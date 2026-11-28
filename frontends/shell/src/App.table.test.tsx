@@ -203,7 +203,7 @@ describe("App: the Table tab in Activity (milestone 4 PR C), through the real Ap
 
   it("the Table tab is third in Activity; the table issues nothing until it is shown, then one query with bbox null, the limit, the view's filter and the open's projection", async () => {
     await open("C:/data/a.parquet");
-    expect([...container.querySelectorAll("#region-activity [role='tab']")].map((t) => t.textContent)).toEqual(["Console", "Notices", "[P6 placeholder] Table", "Problems"]);
+    expect([...container.querySelectorAll("#region-activity [role='tab']")].map((t) => t.textContent)).toEqual(["Console", "Notices", "[P6 placeholder] Table", "Problems", "Jobs"]);
     await flush();
     expect(mocks.queries).toEqual([]);
     activity();

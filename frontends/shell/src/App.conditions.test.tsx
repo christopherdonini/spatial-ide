@@ -512,6 +512,28 @@ describe("App: conditions, the strip and the Problems tab (milestone 5 PR A), on
     expect(h.qa(".condition-occurrences"), "and counts no occurrence").toHaveLength(0);
   });
 
+  // RECORDED MUTATION for C-A8: in `ordered` (conditions.ts) order urgency 3 by `seq` alone. Expected failure: the strip's top stays the reopen notice after the save. Also fails C-U2b.
+  it("C-A8: after an open of a project that raised a notice, a save's first line is the strip's top, and the reopen notice is listed in Problems after the top row", async () => {
+    expect(await h.reopen(openedWithNotice())).toBe("admitted");
+    expect(h.qa(".reopen-notice")).toHaveLength(1);
+    expect(h.strip()!.firstElementChild!.matches(".reopen-notice"), "before the save the reopen notice is the top").toBe(true);
+    const save = window.__SPATIAL_E2E__?.e2eSaveProjectToFolder;
+    if (!save) throw new Error("e2eSaveProjectToFolder E2E hook is not registered");
+    await act(async () => {
+      expect(await save("C:/projects/out"), "a reopened open's folder is held by the kernel: the picker is not asked (O-11)").toBe("not-asked");
+    });
+    await flush();
+    expect(mocks.saves.map((entry) => entry.folder)).toEqual([null]);
+    expect(h.strip()!.firstElementChild!.textContent, "the save's first line is the top").toBe(SAVED_NOTICE);
+    expect(h.qa(".attention-strip .reopen-notice")).toHaveLength(0);
+    expect(h.stripOthers()?.textContent).toBe(moreInProblemsText(1));
+    h.click(h.stripOthers());
+    expect(h.problemRows()).toHaveLength(2);
+    expect(h.problemRows()[0].classList.contains("problem-row-top")).toBe(true);
+    expect(h.problemRows()[1].querySelector(".reopen-notice"), "the reopen notice is the row after the top").not.toBeNull();
+    expect(h.qa(".reopen-notice")).toHaveLength(1);
+  });
+
   // RECORDED MUTATION for "C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line": in `App.tsx`'s `createStepQueue` report handler dispatch `raise` for the record-notice route again, as at 12a9aa98, in place of `replaceBatch`. Expected failure: the second refused step merges into the first as an occurrence, so an S-5 line stands in the notice.
   // OBSERVED 2026-11-24 at 7c18e29f: FAILED -- AssertionError: its owner replaced it: no occurrence count: expected [ <div …(1)></div> ] to have a length of +0 but got 1. Reverted after observing.
   it("C-A7: two refused steps of one kind, through the step queue, leave one record notice replaced by its owner: the latest text, no S-5 line", async () => {
