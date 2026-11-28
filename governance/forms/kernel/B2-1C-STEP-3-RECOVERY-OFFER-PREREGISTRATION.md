@@ -2810,3 +2810,21 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 19 — 2026-11-28 — the custodian's: form gate attempt 8 filed, the gate's words for N-43 to N-46, the base 97e2156d, and ADV-2026-11-27-46
+
+*References and hashes only. Nothing above is edited.*
+
+1. **Form gate, attempt 8** (the architect, at 45ef4cc3): PASS WITH NOTES, filed at `state/consults/gates/2026-11-28-b2-piece-1c-step-3-recovery-offer-form-gate-architect-attempt-8.md` (its hand-back's sha256 ba09be4e7969ab6e8356d65bce55c379d4e60cc6ad65f8fdf081be3a7ffcf3cf). It reads Amendment 17 once and whole, as ADV-2026-11-27-37 item 2 asks.
+2. **N-43 to N-46** are the gate's words, not the human's or the build's. They apply as that report writes them, with no re-gate: N-43 restates Amendment 17 item 1's bullet on the shell files; N-44 replaces the first bullet of item 5's step 5; N-45 adds two places to item 8's list; N-46 adds a sentence to item 5 after K-C42's row. N-44's two cites, as the gate asked, are `kernel/src/skp.rs:1123 @ 45ef4cc302533fb1850a8a5d0e4fde0ca877caa6 sha256:619a7471b2b09ce29187a5b73ae3006665454a747843b74fe65bac03e7d3ae21` and `protocol/skp/src/v0/error.rs:126-132 @ 45ef4cc302533fb1850a8a5d0e4fde0ca877caa6 sha256:e9847a4cdbce3f2d6934ca10a25cea8f8c71d334e61badb9991e196b792b99ed`.
+3. **N-47** stays open, a must-fix before the merge: one appended row recording that 5ce0525a and f7770e1a are reachable from main, or each span of Amendment 18 item 3 pinned again at a main commit by script.
+4. **The base** (N-42; ADV-2026-11-27-43 item 1) is 97e2156d571bfa3b6cbe216eeb4f4b884ac9c58b, one commit on f533fadc giving the two literals in page.rs's tests the field. The worker's report is `state/consults/gates/2026-11-27-b2-piece-1c-step-3-recovery-offer-base-correction-97e2156d-worker-report.md`. The reviewer's narrow read passed, filed at `state/consults/gates/2026-11-27-b2-piece-1c-step-3-recovery-offer-base-correction-97e2156d-narrow-read-reviewer.md` (sha256 da198bd593357e6d092791a66ea921568bbf9079242dd3b15a2b381aacb355e9). CI at 97e2156d is green on every workflow it ran, push and pull_request, as that report lists. Part 1's count starts from 97e2156d, outside it.
+5. **ADV-2026-11-27-46** is filed at `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-46-a-discard-leaves-one-session-log-line-written-by-the-binding-a-refused-recover-or-discard-leaves-a-line-amendment-1-stands-for-now.md`. It answers N-48 and N-49.
+   - Items 2 to 4 are class 9 on that ruling, in Part 1, before its code: the binding's `recovery-discarded` line on a discard that removed a record, and the `recover-refused` and `discard-refused` lines from where the shell calls the command. The lines count in Part 1, and the whole stays inside 6,000.
+   - Each line's test and mutation is named in Amendment 20, before Part 1's code, as item 4 of that ruling asks. No further form-gate attempt is made (item 5). Part 1's build gates read the lines, and the reviewer's report says where each is written.
+   - N-49: ADR-037's Amendment 1 stands as ADV-2026-11-27-41 has it (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-41-adr-037-amendment-1-accepted-in-the-architects-words-with-two-changes-the-catalog-miss-needs-no-test-row-place-b-accepted-beforehand.md`). The gate's three additions are ruled under a new id, and Part 1's code does not wait for that ruling (item 6).
+6. **Before Part 1's code:** Amendment 20; and room on D: with a margin named in the record (ADV-2026-11-27-40, `state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-40-the-recovery-bases-suites-read-from-ci-on-a-draft-pull-request-no-target-of-an-open-piece-removed-for-them-part-1-waits-for-room-on-d.md`).
+
+Read the last amendment first.
+
+Nothing above is edited.

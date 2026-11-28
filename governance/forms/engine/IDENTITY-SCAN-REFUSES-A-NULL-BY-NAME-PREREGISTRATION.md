@@ -506,3 +506,15 @@ Nothing above is edited.
 4. **Named by the build where the form left it open:** §2.6's two new enums are `NullBearingWidth` and `NullBearingValues`.
 5. **The pull request** is PR 371, opened as a draft at f6614e15 (§8, Amendment 4 item 7).
 6. **The gates** come next, the architect and the reviewer, one part each (Amendment 4 item 5), as places are free.
+
+## Amendment 7 — 2026-11-28 — the custodian's: the architect's build gate, D1 applied at 6e5a0b83, the reviewer's gate next
+
+*References only. Nothing above is edited.*
+
+1. **The architect's build gate** at f6614e15: PASS WITH NOTES, filed at `state/consults/gates/2026-11-27-identity-scan-refuses-a-null-by-name-build-gate-architect.md` (its hand-back's sha256 08e6ad3dee524559c476247452d3cc03b24b5963a338b0e81c66aa32be4c521b). It has no Correctness, Evidence or Architecture finding, and two Documentation findings.
+2. **D1** is applied at 6e5a0b834ca37a2bb9ad20073fe20511b760558e: the gate's two pairs in engine/src/error.rs, 2 insertions and 2 deletions, with no re-gate. The worker's report is filed at `state/consults/gates/2026-11-28-identity-scan-refuses-a-null-by-name-d1-words-worker-report.md` (sha256 511ac5ec7b1770192cd91f5bab65313c8d7449222d297a42bfc450b5d064ea82).
+3. **D2**, a reading, in the gate's words and not the human's: §10's 'docs/01's engine-facts rule for messages' is read as the human's round-7 ruling on operator-visible text; docs/01 carries no such sentence.
+4. **§10's suites line:** at f6614e15, Product CI (Rust workspace) passed on push (run 46082315194) and on pull_request (run 46083500431), as did every other workflow. CI at 6e5a0b83 is read by the reviewer's gate.
+5. **The reviewer's build gate** is dispatched at 6e5a0b83, one part with a verdict (Amendment 4 item 5).
+
+Read the last amendment first.
