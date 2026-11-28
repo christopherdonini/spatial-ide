@@ -439,3 +439,19 @@ Read the last amendment first.
 7. **Next:** the two second attempts, now that this amendment is on main. Part A's code is dispatched when both have ended PASS or PASS WITH NOTES.
 
 Read the last amendment first.
+
+## Amendment 6 — 2026-11-28 — the custodian's: both form gates' attempts 2 (PASS WITH NOTES), their words applied, Part A's code next
+
+*References only. Nothing above is edited.*
+
+1. **The gate** is filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-form-gate-architect-attempt-2.md`: PASS WITH NOTES, attempt 2, read at main 8cacfdd1bbbd47e03a4252d60f8168c12aaa8593 and B's head 5ce0525a. No Correctness or Evidence finding. Attempt 1 stays FAIL.
+2. **Applied with no third attempt** (ADV-2026-11-28-05 item 4; §31): A3 (before Part A's code) and D7 (before the merge), each as that report gives it. The form reads each New in the place of its Old. Each Old stands once in this form, by a node count with a control, before this amendment.
+3. **The note on `session_log`** in that report's check 3 is the build gate's to read, as the report says.
+4. **The reviewer's attempt 2** is filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-form-gate-reviewer-attempt-2.md`: PASS WITH NOTES, read at main 8cacfdd1 and B's head 5ce0525a. No Correctness or Evidence finding. Attempt 1 stays FAIL.
+5. **DOC-A** (before the merge; words only, with no Old) is applied with no third attempt. Its words, appended here byte for byte from that report:
+
+   > E-1's expected `accelerator_keys` value is one fixed string in the suite's source: `unread` in the commit that lands Part A alone, and `on` in the commit that adds §0 item 3; the step never accepts both.
+
+6. **Next:** both attempts 2 ended PASS WITH NOTES (ADV-2026-11-28-05 item 4), so Part A's code is dispatched on B's head once this amendment is on main. Part B stays behind the human's typed approval of ADV-2026-11-27-45.
+
+Read the last amendment first.

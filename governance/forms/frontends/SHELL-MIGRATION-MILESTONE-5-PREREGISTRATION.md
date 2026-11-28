@@ -2214,3 +2214,17 @@ Read the last amendment first.
 3. **When:** the commit is made after the reviewer's read part (Amendment 21 item 2) has ended, since that part makes and reverts mutations in D:/wt/m5b at 42859420. Neither read part waits for the commit or runs again for it. The reviewer's check of item 83 against ADV-2026-11-28-03's fence is read with this ruling beside it. The advisor compares item 83 with the ruling's file at the merge check.
 
 Read the last amendment first.
+
+## Amendment 23 — 2026-11-28 — the custodian's: the reviewer's build gate, the read part (no verdict), and where its findings go
+
+*References only. Nothing above is edited.*
+
+1. **The read part** is filed at `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-build-gate-reviewer-read-part.md`. It gives no verdict. No Correctness finding. It is also the narrow read of 5dbb45f7 and 42859420 that Amendment 21 item 2 names.
+2. **E-1** (Evidence; e2e test code in `frontends/shell/e2e/jobs.mjs` and its words in `frontends/shell/e2e/README.md`) and **D-2** (item 82's source comment, words) go to the branch by a worker, copied by script from that report, in one commit. E-1 changes a code line, so the reviewer's run part makes the narrow read of that commit.
+3. **D-1** goes to PR B's closing amendment, beside Amendment 20 item 3: the count at the final head, read by §7's command (1,108 at 42859420, with Amendment 16 item 3's files at 61); verify-mutation's rc 1 at its tool commit and its 8 MISS rows as the tool's checklist reading; and the expectations check 3 records as unobserved.
+4. **Item 83's button count** past the cap (that report's check 6, no words proposed) is answered by the advisor's ADV-2026-11-28-07, filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-07-milestone-5-pr-b-known-limitations-item-83-the-buttons-count-and-a-refusal-past-the-cap.md`. Its item 2's fence replaces the fence of ADV-2026-11-28-06 item 2, with NN as 83; Amendment 22 item 1 is read so. The fence of ADV-2026-11-28-06 item 2 is not committed, and the rest of that ruling stands.
+5. **Item 83's words commit** (Amendment 22 items 2 and 3) is one commit of item 83's text and its source comment, and nothing else. The text is copied by script from the fence of ADV-2026-11-28-07 item 2. The comment's words are the worker's; it names that ruling and, for the two changed clauses, the symbols of the ruling's item 3. It follows the commit of item 2 above. Neither read part runs again for it.
+6. **Item 2's commit** is 4195e92cd51f54be45d294f7c9b02f8df4701cdc: three files, 4 insertions and 4 deletions, each Old counted once before any write; `npm run verify` exited 0 there, by the worker's report filed at `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-reviewer-words-worker-report.md` (its hand-back's sha256 49d0fd39903dc4aa2fb9d6f86081c1d0ed366709b33ce93a33fa01a14ac3fa46). By that report, it ran a read-only watcher loop while verify ran, which its brief forbade. Item 83's words commit is on top of it: 2aa41daf6a637d0045c6f7c3a0e276c881f13432, KNOWN-LIMITATIONS.md alone, 2 insertions and 2 deletions, by the worker's report filed at `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-item-83-words-worker-report.md` (its hand-back's sha256 14ec73ccb85cd41c9b9f0dbb26b9acef35896e244c4a78679613f4a54e5228af). PR B's head is 2aa41daf.
+7. **Next:** the run part, after the port has served PR B's base runs and its J-E runs, reading the corrected head.
+
+Read the last amendment first.
