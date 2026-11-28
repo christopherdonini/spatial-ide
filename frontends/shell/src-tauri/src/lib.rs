@@ -608,7 +608,8 @@ pub fn run() {
             }
 
             // The reload keys, Part A (`webview_chrome.rs`): once, here, the main window's WebView2
-            // settings are set for this build and read back, and one session-log line says what was
+            // context-menu setting is set for this build and read back (Part A makes no call for the key
+            // setting), and one session-log line says what was
             // read, or that the settings were not reached. The window exists already (tauri creates
             // each window the config declares before `setup()` runs; the measure-build block above
             // builds its own).
@@ -633,7 +634,7 @@ pub fn run() {
                         // line it writes is U-5's. If the runtime holds no such webview, the message
                         // is dropped with no error and the closure does not run (`src/lib.rs`,
                         // the `if let` at `:3751`): no line is written. Ordinary use does not reach
-                        // that case; the build's architect gate says whether this read still holds.
+                        // that case; the build's architect gate re-read it at 2.11.4: it holds.
                         let ran = window.with_webview(move |webview| {
                             in_closure(&webview_chrome::reach(&webview, chrome));
                         });

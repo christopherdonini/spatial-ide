@@ -3,7 +3,7 @@
 
 //! The main webview's browser chrome (ADR-037, the first bullet of "What this ADR does not decide";
 //! the reload keys' form, Part A): in a build without `debug_assertions`, `setup()` switches WebView2's
-//! default context menus off; in a build with them, both browser settings are set to WebView2's own
+//! default context menus off; in a build with them, the context-menu setting is set to WebView2's own
 //! default, on. One session-log line then states what was read back, or that the settings were not
 //! reached (`log_entry`).
 //!
@@ -28,7 +28,7 @@ pub(crate) struct Chrome {
 }
 
 /// A development build (`debug_assertions`, and nothing else) keeps WebView2's default, on for both;
-/// any other build turns both off.
+/// any other build decides off for both. Without Part B, `Live` neither sets nor reads the key setting.
 pub(crate) fn chrome_for(debug_build: bool) -> Chrome {
     Chrome {
         context_menus: debug_build,
@@ -175,7 +175,8 @@ pub(crate) fn reach(webview: &PlatformWebview, chrome: Chrome) -> Outcome {
     Outcome::Reached(apply(&mut live, chrome))
 }
 
-/// Only Windows has a WebView2 controller to reach.
+/// Only Windows has a WebView2 controller to reach. Off Windows, `setup()` therefore writes
+/// `webview-chrome not-applied` at `error` at each start; the shell's CI builds it on Windows only.
 #[cfg(not(windows))]
 pub(crate) fn reach(_webview: &tauri::webview::PlatformWebview, _chrome: Chrome) -> Outcome {
     Outcome::NotReached
@@ -323,5 +324,30 @@ mod tests {
             line,
             "webview-chrome context_menus=unread accelerator_keys=on"
         );
+    }
+
+    /// U-7 (class 9, the form's Amendment 14 item 4): the product impl `Live`, built from two
+    /// closures over a value of the test's own and with no WebView2, reads the menu off and the keys
+    /// `unread` for the installed build under Part A alone.
+    #[cfg(windows)]
+    #[test]
+    fn the_live_settings_of_part_a_alone_set_the_menu_off_and_read_the_keys_unread() {
+        use std::cell::Cell;
+        let menus = Cell::new(true);
+        let set_menus = |on: bool| -> Result<(), ChromeError> {
+            menus.set(on);
+            Ok(())
+        };
+        let get_menus = || -> Result<bool, ChromeError> { Ok(menus.get()) };
+        let mut live = Live {
+            set_menus: &set_menus,
+            get_menus: &get_menus,
+        };
+        let line = readback_line(&apply(&mut live, chrome_for(false)));
+        assert_eq!(
+            line,
+            "webview-chrome context_menus=off accelerator_keys=unread"
+        );
+        assert!(!menus.get(), "the menu setter did not get false");
     }
 }
