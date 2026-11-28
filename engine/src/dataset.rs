@@ -2125,7 +2125,7 @@ fn admit_identity(
     // cold-open cost. `MIN` is here because a signed source column widens into u64 exactly only if
     // it holds no negative value — §4 admits the *type* and this refuses the *values*. `count(c)`
     // is here because `count(*)` counts every row while `count(DISTINCT c)`, `MIN` and `MAX` skip
-    // nulls: the two counts differ by the nulls, which are refused by name below.
+    // nulls: `count(*)` and `count(c)` differ by the nulls, which are refused by name below.
     let sql = format!(
         "SELECT count(*), count(DISTINCT \"{c}\"), min(\"{c}\"), max(\"{c}\"), count(\"{c}\") \
          FROM read_parquet('{p}')",
