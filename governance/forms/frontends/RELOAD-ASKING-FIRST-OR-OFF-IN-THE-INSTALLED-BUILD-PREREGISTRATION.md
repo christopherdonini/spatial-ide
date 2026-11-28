@@ -487,3 +487,15 @@ Read the last amendment first.
 8. **Next.** Once this amendment is on main, a worker makes item 3's correction on the branch. Its push runs are read, and then the two read parts are dispatched. Part B stays behind the human's typed approval of ADV-2026-11-27-45.
 
 Read the last amendment first.
+
+## Amendment 9 — 2026-11-28 — the custodian's: the cfg-boundary correction at 5174676a, its push runs green, and the two read parts next
+
+*References only. Nothing above is edited.*
+
+1. **The correction** (Amendment 8 item 3). The report is filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-part-a-cfg-boundary-correction-worker-report.md` (its hand-back's sha256 dfd6613be80b543545d09f281eca642a1863de25e173c0cb94805edb383aa35c). 5174676a is one commit over 8ba765d9, and by the custodian's run `git diff --numstat 8ba765d9 5174676a` gives 3 insertions and 2 deletions in `scripts/plan/cfg-boundary.test.mjs` alone: that test's three expectations. By the report, the test was red at 8ba765d9 on the number of sites and is green at 5174676a, and the steps of the Governance CI job from CI's `node --test` to its end passed when run in the worktree. Four of those steps' exit codes were not kept; their PASS lines are the report's evidence.
+2. **The count** (§7; Amendment 7 item 2; Amendment 8 item 3). By `git diff --numstat 5ce0525a...5174676a`, insertions plus deletions, the custodian's run: 417 lines over 5 files, against at most 330 lines and 10 files, so over by 87 lines, class 8 at the count. §7's line is not edited.
+3. **The push runs at 5174676a** (ADV-2026-11-28-10 item 1). Governance CI, run 46114973221: success. Ported notices, run 46114973284: success. Product CI (shell) and Rust fmt made no run at 5174676a, since their workflows' paths are not touched by it. At 8ba765d9, whose product files are the same, they are green (runs 46109593858 and 46109593817).
+4. **A departure.** The worker opened one background task's output file, which its brief forbids, and reports that it was empty.
+5. **Next.** The two build gates' read parts (Amendment 8 item 4) are dispatched on 5174676a, both on Opus, with Amendment 8 item 5's questions. Their cargo runs wait as ADV-2026-11-28-08 item 2 has it.
+
+Read the last amendment first.
