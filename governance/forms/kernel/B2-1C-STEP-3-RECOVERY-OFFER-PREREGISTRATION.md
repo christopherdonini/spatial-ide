@@ -2994,3 +2994,17 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 24 — 2026-11-28 — the custodian's: Part 1's second phase at ffef5945, its runs green, its counts under the figures, and the shape of Part 1's build gates asked of the advisor
+
+*References only. Nothing above is edited.*
+
+1. **The report** is filed at `state/consults/gates/2026-11-28-b2-piece-1c-step-3-recovery-offer-part-1-second-phase-shell-and-src-tauri-worker-report.md` (its hand-back's sha256 dda6920617b22a210ab293d3a59bbae346d96697cd89896867542721c70ae035). The second phase is at ffef5945852de68bdaa9c8d90d725566823451b1 on `cut/b2-piece-1c-step-3-recovery-offer`, three commits over 96c3821a: 3533b972 (the tests red), b5aa2b47 (the code, with ADR-037's Amendment 1) and ffef5945 (E-RECOVER, written and not run). By the report, no stop was reached, no kernel line was written, each mutation failed its named test (its section 3), and the suites passed at ffef5945 (its section 8). The worker's account is the worker's.
+2. **The counts**, by the custodian's run of `git diff --numstat 96c3821a ffef5945`, insertions plus deletions: 1589 lines over 19 files, none of them a Cargo manifest or lock, `package-lock.json`, KNOWN-LIMITATIONS or MANUAL-WALKTHROUGH. src-tauri 428; the shell's product 388 over 6 files; its tests 452 over 7 files; e2e 298; ADR-037 23. Amendment 20 item 5's table gives src-tauri 430, the shell's product 520 and its tests 540; the report reads 528 and 550 for the last two from Amendment 21. Under either reading no group is passed, and the gates say which figures bind. Part 1, by `git diff --numstat 97e2156d...ffef5945`: 4884 lines over 46 files, against 5,200 and 47 (Amendment 21 item 2). Amendment 22 item 2's class 8 stands as recorded.
+3. **The runs at ffef5945** (ADV-2026-11-28-10 item 1). Push: Ported notices 46114138145 and Product CI (shell) 46114138237, success. PR 370's seven runs at the head, success: DCO sign-off 46114141698, Ported notices 46114141740, Exposure scan 46114141736, Rust fmt 46114141709, Governance CI 46114141719, Product CI (shell) 46114141716, Product CI (Rust workspace) 46114141701. At 3533b972, red on purpose, Product CI (shell) 46112143038 and Product CI (Rust workspace) 46112146654 failed, and Rust fmt failed (46112143012, push), which Amendment 23 item 3 named; Rust fmt is green at b5aa2b47 (46113973581, push). At b5aa2b47, Product CI (shell) 46113973575 was cancelled, by the push of ffef5945.
+4. **Departures and notes for the gates.** By the report: the brief's group figures differed from Amendments 20 and 21, and the worker took the later amendment's; the brief was the custodian's. The offer's listing at mount drops every error, so a failed list shows no offer. A project's Recover calls `admitRecovered` without the page gate, and a null dataset's runs through `runAdmitPath`. E-RECOVER has no npm script. A vitest run before the shell's build failed 5 notice tests (`duckdbAmalgamation`, `noticeByteIdentity`) on a notice not yet generated; they pass in `npm run verify` at ffef5945. That run is recorded in the ledger as a finding; the report names no revision or assertion for it.
+5. **Next.** Part 1's build gates are not yet dispatched. The form names no read part and run part for them, and E-RECOVER has no place in the port order. The advisor was asked at 2026-11-28T06:35:37Z (date -u) whether the two gates run in two parts, as the C1 and reload-keys gates did, or whole at the port.
+
+Read the last amendment first.
+
+Nothing above is edited.

@@ -499,3 +499,12 @@ Read the last amendment first.
 5. **Next.** The two build gates' read parts (Amendment 8 item 4) are dispatched on 5174676a, both on Opus, with Amendment 8 item 5's questions. Their cargo runs wait as ADV-2026-11-28-08 item 2 has it.
 
 Read the last amendment first.
+
+## Amendment 10 — 2026-11-28 — the custodian's: the architect's read part dispatched; the reviewer's waits for room on D:
+
+*References only. Nothing above is edited.*
+
+1. **The architect's read part** was dispatched at 2026-11-28T06:37:11Z (date -u) on 5174676a, on Opus, reading main at 9d513c97e8688ccc77efb76edf5311cf10848f45. It runs no cargo.
+2. **The reviewer's read part is not dispatched**, in place of Amendment 9 item 5's word that both are. Its cargo runs need keys-target rebuilt (ADV-2026-11-28-08 item 2). keys-target was 9126 MB when it was removed, and D: had 12236 MB free at 2026-11-28T06:25:57Z (date -u), so a rebuild leaves D: under the 8,000 MB margin. The advisor was asked at 2026-11-28T06:35:37Z (date -u) which way to take, as that ruling's last line has it.
+
+Read the last amendment first.
