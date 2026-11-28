@@ -607,6 +607,43 @@ pub fn run() {
                 );
             }
 
+            // The reload keys, Part A (`webview_chrome.rs`): once, here, the main window's WebView2
+            // settings are set for this build and read back, and one session-log line says what was
+            // read, or that the settings were not reached. The window exists already (tauri creates
+            // each window the config declares before `setup()` runs; the measure-build block above
+            // builds its own).
+            {
+                let chrome = webview_chrome::chrome_for(cfg!(debug_assertions));
+                let handle = app.handle().clone();
+                let note = move |outcome: &webview_chrome::Outcome| {
+                    if let Some(log) = handle.try_state::<SessionLog>() {
+                        let (level, line) = webview_chrome::log_entry(outcome);
+                        log.append(level, &line);
+                    }
+                };
+                match app.get_webview_window(&main_window_config.label) {
+                    None => note(&webview_chrome::Outcome::NotReached),
+                    Some(window) => {
+                        let in_closure = note.clone();
+                        // Called here, on the main thread, `with_webview` runs the closure inside
+                        // the call and returns `Ok` (tauri-runtime-wry 2.11.4, `src/lib.rs:239-248`,
+                        // as the form's architect gate read it). So the `Err` arm below cannot run
+                        // from `setup()` with tauri 2.11.5; it stays because the call returns a
+                        // `Result` and `setup()` must not fail on it. No test is claimed for it; the
+                        // line it writes is U-5's. If the runtime holds no such webview, the message
+                        // is dropped with no error and the closure does not run (`src/lib.rs`,
+                        // the `if let` at `:3751`): no line is written. Ordinary use does not reach
+                        // that case; the build's architect gate says whether this read still holds.
+                        let ran = window.with_webview(move |webview| {
+                            in_closure(&webview_chrome::reach(&webview, chrome));
+                        });
+                        if ran.is_err() {
+                            note(&webview_chrome::Outcome::NotReached);
+                        }
+                    }
+                }
+            }
+
             // `running` is intentionally leaked into a `Box` rather than dropped: dropping it would
             // shut the data plane down while the app is still starting. It lives for the process's
             // whole lifetime, exactly as `slice-host`'s own `running` does until its Ctrl-C.
