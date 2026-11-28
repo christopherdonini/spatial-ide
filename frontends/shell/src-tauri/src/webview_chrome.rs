@@ -159,8 +159,9 @@ pub(crate) fn reach(webview: &PlatformWebview, chrome: Chrome) -> Outcome {
     let Ok(settings) = settings else {
         return Outcome::NotReached;
     };
-    let set_menus =
-        |on: bool| unsafe { settings.SetAreDefaultContextMenusEnabled(on) }.map_err(|_| ChromeError);
+    let set_menus = |on: bool| {
+        unsafe { settings.SetAreDefaultContextMenusEnabled(on) }.map_err(|_| ChromeError)
+    };
     let get_menus = || {
         let mut value = Default::default();
         unsafe { settings.AreDefaultContextMenusEnabled(&mut value) }
@@ -306,7 +307,10 @@ mod tests {
         let readback = apply(&mut Fake::new(), chrome_for(false));
         let (level, line) = log_entry(&Outcome::Reached(readback));
         assert_eq!(level, "info");
-        assert_eq!(line, "webview-chrome context_menus=off accelerator_keys=off");
+        assert_eq!(
+            line,
+            "webview-chrome context_menus=off accelerator_keys=off"
+        );
     }
 
     #[test]
@@ -315,6 +319,9 @@ mod tests {
         fake.menu_read = Read::Fails;
         fake.key_read = Read::Is(true);
         let line = readback_line(&apply(&mut fake, chrome_for(false)));
-        assert_eq!(line, "webview-chrome context_menus=unread accelerator_keys=on");
+        assert_eq!(
+            line,
+            "webview-chrome context_menus=unread accelerator_keys=on"
+        );
     }
 }
