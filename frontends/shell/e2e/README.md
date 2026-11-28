@@ -933,3 +933,15 @@ node e2e/conditions-baseline.mjs [--fixture <path>]
 Each exits 0 when all checks pass, 1 when one fails (step 4's wait for the old conditions to go included), and 2 when the run is VOID (the arm, the fixture, or any other wait that timed out). Neither is in CI or in `npm run verify`.
 
 **What they prove not.** Any docs/08 figure, macOS or Linux, another file, a timing, or a viewport refusal that is not a session-ended refusal on the shipped arm (no step or hook produces one on demand; the real App unit tests C-A1 and C-A3 prove its raise).
+
+## Jobs spec (shell-migration-milestone-5, PR B)
+
+```
+node e2e/jobs.mjs [--slow <path>] [--fixture <path>]
+```
+
+<!-- Drafted by the build worker of PR B, not the advisor's or the human's words; the P6 sight of the sitting reads it. The suite was not run by the build that added it: the run is the tester's. -->
+
+`e2e/jobs.mjs` (J-E1, J-E2) runs on the shipped candidate arm: it reads `getResidencyArm()` back as `candidate` before the first open and never sets the arm. It reads the Jobs words by name from `src/jobs/jobs.ts`. J-E1 opens `slow-filter-scan.parquet`, waits for the first look to settle and applies the slow predicate through the Filter panel (as `filter-panel.mjs`'s FIND' does), then checks that the Jobs scan row and `button.filter-cancel` stand; it clicks Cancel in Jobs and checks that the row and `button.filter-cancel` are gone, that `.residency-status` is the owner's relinquished statement, and that `.scan-incomplete` stays absent over a bounded window. J-E2 opens `100k-happy-path.parquet`, starts a prepare through `publishPrepareWithDestination` without waiting for it, and checks that the export row stands; it clicks Cancel and checks that S-11 shows with Cancel offered again, and that the row leaves when the prepare ends. It exits 0 when all checks pass, 1 when one fails, and 2 when the run is VOID (the arm, a fixture, the export row never standing before the prepare ended, or a wait that timed out).
+
+**What it proves not.** Any docs/08 figure, macOS or Linux, another file, a timing, or a Cancel that reaches a running export (the prepare answers false: H4).
