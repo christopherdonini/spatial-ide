@@ -1293,18 +1293,16 @@ fn recovery_commands_round_trip_and_refuse_unknown_or_missing_members() {
                "last_step_at": "2026-11-28T10:00:00Z", "steps": 3, "data": data})
     };
     let cannot = |reason: &str| json!({"state": "cannot-be-offered", "reason": reason});
+    let mut refused_entry = entry(cannot("locations-refused"));
+    refused_entry["file_name"] = Value::Null;
+    refused_entry["last_step_at"] = Value::Null;
+    refused_entry["steps"] = json!(0);
     let listed = json!({"records": [
         entry(json!({"state": "found"})),
         entry(json!({"state": "not-found"})),
         entry(cannot("no-step")),
         entry(cannot("later-version")),
-        {
-            let mut e = entry(cannot("locations-refused"));
-            e["file_name"] = Value::Null;
-            e["last_step_at"] = Value::Null;
-            e["steps"] = json!(0);
-            e
-        },
+        refused_entry,
     ], "more": true});
     trips::<ListRecoverableResponse>("list_recoverable reply", listed);
     trips::<ListRecoverableResponse>("an empty list", json!({"records": [], "more": false}));
