@@ -3023,3 +3023,18 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 26 — 2026-11-28 — the custodian's: Part 1's architect read part filed; its findings held for the reviewer's read part; what goes to the advisor
+
+*References only. Nothing above is edited. Where this amendment summarises the report, its bytes govern.*
+
+1. **The architect's read part** at ffef5945 is filed at `state/consults/gates/2026-11-28-b2-piece-1c-step-3-recovery-offer-part-1-build-gate-architect-read-part.md` (its hand-back's sha256 7c7b182601be2f7009c0a2f08604d8289a23af0219f493e8f880dd61986e74e6). It gives no verdict. By it: no file is outside §2.11's Scope as amended; the wire, the classes and the page lifecycle are met; ADR-037's Amendment 1 is one hunk after the ADR's last line, and its hash against the fence is the reviewer's check; no page text can reach the session log through the new writer.
+2. **Its findings:** C-1 changes code (the guard's disarm order, against Amendment 17 item 5). C-2 and D-1 to D-4 are words, in SKP-V0.md, recovery.rs, page.rs, commands.rs and RecoveryOffer.tsx. D-5 is two message strings under P6, with no words proposed. D-6 is a rename of three identifiers under §8 item 4, with no change in behaviour. All are held until the reviewer's read part; where its words for a place differ, both go to the advisor first (ADV-2026-11-27-10 item 2).
+3. **K-C1 and K-C4** (Amendment 22 item 3): its report reads that each is replaced by its two-edit form in a post-result amendment. That amendment waits for the reviewer's runs of both forms.
+4. **For the advisor** (ADV-2026-11-28-12 item 5): its answer to (a), with the design question it raises; D-5's strings; and a clause in ruled text at SKP-V0's §10.3, reported with no words. Item 5 (b) and (c) are the reviewer's.
+5. **The group figures** (Amendment 24 item 2): by its reading Amendment 21's bind, and every count is under both tables. The reviewer reads them too.
+6. **The reviewer's read part** went out at 2026-11-28T07:31:58Z (date -u) on ffef5945, reading main at 8cc4fdd8; its runs are in `recov-target`, each in a hold after its own read of C:.
+
+Read the last amendment first.
+
+Nothing above is edited.
