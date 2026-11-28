@@ -31,6 +31,7 @@ mod publish;
 #[cfg(any(debug_assertions, feature = "measure-build"))]
 mod pool_poll;
 mod state;
+mod webview_chrome;
 
 use std::sync::{Arc, Mutex};
 
