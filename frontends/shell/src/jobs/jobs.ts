@@ -9,8 +9,8 @@
  * text (`scanLivenessText`, App.tsx), which the tab prints as the owner made it.
  *
  * **The scan predicate is handed in.** `jobsFrom`'s third parameter is App's own `isScanInFlight`, so a scan is listed exactly while FilterPanel's Cancel is. It is a parameter and
- * not an import because `contributions.ts` imports this module for `JOBS_LABEL` and `App.tsx` imports `contributions.ts`: a value import of `App.tsx` from here would make a cycle
- * whose first evaluation reads `JOBS_LABEL` before it exists.
+ * not an import because `contributions.ts` imports this module for `JOBS_LABEL` and `App.tsx` reaches `contributions.ts` through `StudioLayout.tsx`: a value import of `App.tsx` from here would make a cycle
+ * in which, when this module loads first, `contributions.ts` reads `JOBS_LABEL` before this module defines it.
  *
  * The words below are the advisor's (ADV-2026-11-23-30 S-2, S-7, S-8, S-9, S-11), each written into this file by script from the filed ruling and checked by bytes.
  */

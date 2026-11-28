@@ -5,7 +5,7 @@
  * SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 2.4 and section 4 (J-U1, J-U2), as Amendments 2, 4 and 15 leave them: the pure part of
  * Jobs. `jobsFrom` lists the scan while FilterPanel's own predicate says a scan is in flight, and one job for each export run; the export Cancel's
  * latch shows Cancelling until the run ends, and a Cancel that did not reach a running export clears the latch and shows S-11. The scan predicate is
- * App's own `isScanInFlight`, handed over as `jobsFrom`'s third argument (`jobs.ts` cannot import `App.tsx`: `contributions.ts` imports `jobs.ts`).
+ * App's own `isScanInFlight`, handed over as `jobsFrom`'s third argument (`jobs.ts` takes only a type from `App.tsx`, since `contributions.ts` imports `jobs.ts` and `App.tsx` reaches `contributions.ts` through `StudioLayout.tsx`).
  * Nothing here is mocked.
  */
 

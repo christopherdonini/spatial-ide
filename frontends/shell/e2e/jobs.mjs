@@ -13,7 +13,7 @@
 //         gone, `.residency-status` is the owner's relinquished statement (`residencyStatus.ts`), and `.scan-incomplete` stays absent over a bounded settle window. Any other status FAILS.
 //   J-E2  open the 100k fixture, start a prepare through `publishPrepareWithDestination` and do not wait for it (H4): the export row stands; click Cancel in Jobs; Cancel answers false,
 //         so S-11 shows and Cancel is offered again; the row leaves when the prepare ends. If the row is gone before the click, the run is VOID, never a PASS.
-// Exit 0 all PASS; 1 a check failed; 2 VOID (a precondition failed: the arm, a fixture, the row never standing, any wait that timed out).
+// Exit 0 all PASS; 1 a check failed, a wait after a Cancel click that timed out included; 2 VOID (a precondition failed: the arm, a fixture, a row never standing or gone before its click, any other wait that timed out).
 // What this does not prove: any docs/08 figure, macOS or Linux, the baseline arm, or a timing. Waits are harness bounds on readiness (ADR-018).
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -119,7 +119,7 @@ async function jE1(page, consoleHandle) {
   await page.click("#activity-panel-jobs .jobs-row-scan button.jobs-cancel", { timeout: 5_000 }).catch(() => {
     throw new Void("the scan row was gone before the click: the scan ended first");
   });
-  const after = await waitFor("the row and FilterPanel's Cancel to go", () => read(page), (r) => r.scanRow === null && !r.filterCancel);
+  const after = await waitFor("the row and FilterPanel's Cancel to go", () => read(page), (r) => r.scanRow === null && !r.filterCancel, 20_000).catch(() => read(page));
   record("J-E1: the row and button.filter-cancel are gone", after.scanRow === null && !after.filterCancel, `row ${JSON.stringify(after.scanRow)}, filter-cancel ${after.filterCancel}`);
   const status = await waitFor("the relinquished statement", () => read(page), (r) => RELINQUISHED.test(r.residency ?? ""), 20_000).catch((e) => e);
   record("J-E1: .residency-status is the owner's relinquished statement", !(status instanceof Error), status instanceof Error ? status.message : JSON.stringify(status.residency));
@@ -143,11 +143,10 @@ async function jE2(page, consoleHandle) {
   await page.click("#activity-panel-jobs .jobs-row-export button.jobs-cancel", { timeout: 5_000 }).catch(() => {
     throw new Void("the export row was gone before the click: the prepare ended first");
   });
-  const answered = await waitFor("S-11 on the row", () => read(page), (r) => r.notCancelled !== null || r.exportRow === null, 20_000).catch(() => null);
-  if (answered === null) throw new Void("neither S-11 nor the row's end followed Cancel");
+  const answered = await waitFor("S-11 on the row", () => read(page), (r) => r.notCancelled !== null || r.exportRow === null, 20_000).catch(() => read(page));
   record("J-E2: Cancel answers false: S-11 shows and Cancel is offered again (H4)", answered.notCancelled === jobsWord("NOT_CANCELLED_TEXT") && answered.exportCancel === "Cancel" && answered.exportCancelDisabled === false, JSON.stringify(answered));
   await settled;
-  const gone = await waitFor("the row to leave at the prepare's end", () => read(page), (r) => r.exportRow === null, 20_000);
+  const gone = await waitFor("the row to leave at the prepare's end", () => read(page), (r) => r.exportRow === null, 20_000).catch(() => read(page));
   record("J-E2: the row leaves when the prepare ends", gone.exportRow === null, `S-7 reads ${JSON.stringify(gone.empty)}`);
 }
 

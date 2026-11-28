@@ -242,7 +242,7 @@ describe("App: the Jobs tab, through the real App on the shipped candidate arm (
     await flush();
     const twin = q(".residency-status")?.textContent;
     expect(twin, "FilterPanel's Cancel changes the status").not.toBe(before);
-    expect(twin).toBeTruthy();
+    expect(twin, "the owner's relinquished statement (relinquishedText, residencyStatus.ts)").toMatch(/^Filling stopped — showing \d+ features already loaded; the rest of this view was not loaded\.$/);
     teardown();
 
     setup();

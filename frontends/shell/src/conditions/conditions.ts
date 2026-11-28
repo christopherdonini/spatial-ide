@@ -86,7 +86,7 @@ export interface Condition {
   readonly latest: ConditionDisplay;
   /** How many times this identity was raised, 1 or more. */
   readonly occurrences: number;
-  /** The order of the first raise, for the oldest-first order within an urgency. */
+  /** The order of the first raise: oldest first within urgency 1 and 2, and within each route of urgency 3 (see `ordered`). */
   readonly seq: number;
 }
 
