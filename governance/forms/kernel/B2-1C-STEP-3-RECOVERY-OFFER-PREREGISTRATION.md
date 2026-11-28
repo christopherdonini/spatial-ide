@@ -2981,3 +2981,16 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 23 — 2026-11-28 — the custodian's: ADV-2026-11-28-10 carried: the shell's run red at 96c3821a (a finding), the second phase's correction, and push runs read before Part 1's gates
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-10-a-piece-with-no-pull-request-has-its-ci-read-from-the-push-runs-the-recovery-offers-shell-run-at-96c3821a.md`.
+2. **A finding** (the human's rule of 2026-11-22, item 1; ADV-2026-11-28-10 item 2). At 96c3821a Product CI (shell) is red on the push (run 46105327277) and on PR 370 (run 46105330919), at the frontend's tests. Five assertions on the version literal fail, `skp/0.18` against `skp/0.17`, in `frontends/shell/src/skp/__tests__/fixtures.test.ts` and `frontends/shell/src/App.colour.test.tsx`. The steps after that one did not run. Amendment 22 and the first phase's report do not name it. The first phase's brief is not kept as a file, so it cannot be shown that the brief foresaw it, and it is recorded as a finding. Its cause is the state between the two phases: the first phase moved the wire to `skp/0.18`, and the shell's literal is the second phase's.
+3. **The second phase's correction.** The form allows existing tests to be edited for the version literal (§4's line on edited existing tests). The running second-phase worker was told by a message after 2026-11-28T05:09:23Z: the shell's literal and those tests' expected values move to agree with the wire, and nothing else in those files changes; each changed line is reported with its commit; Rust fmt, red at its first commit 3533b972 (run 46112143012), is corrected before its head; and it reports the push runs at its head.
+4. **Part 1's build gates** are dispatched on a head whose push runs are green (ADV-2026-11-28-10 item 1). A red run at that head is named in the record with its id and its failing step. A commit red on purpose, such as 3533b972 with its tests before their code, is evidence.
+
+Read the last amendment first.
+
+Nothing above is edited.
