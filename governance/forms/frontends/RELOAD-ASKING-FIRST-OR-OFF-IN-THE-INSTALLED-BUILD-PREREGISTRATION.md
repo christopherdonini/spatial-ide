@@ -367,3 +367,48 @@ Read the last amendment first.
 6. **Next:** after the advisor's ruling, the reviewer's form gate reads the form with this amendment. Part A's code waits for both gates.
 
 Read the last amendment first.
+
+## Amendment 3 — 2026-11-28 — the custodian's: ADV-2026-11-28-04 carried (the not-applied line, KNOWN-LIMITATIONS.md a ninth file, the pins read again)
+
+*References and hashes only. Nothing above is edited.*
+
+1. **The ruling** ADV-2026-11-28-04 is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-04-the-reload-keys-form-not-applied-whenever-the-settings-are-not-reached-a-ninth-file-the-pins-at-bs-head-withdrawn.md`. It answers Amendment 2 item 4. Where this amendment summarises it, the ruling's bytes govern.
+2. **D2's second change** (its item 1): the words are that item's fence, byte for byte, in place of the gate's New. `webview-chrome not-applied` is written whenever the settings were not reached, and the read-back line, with `unread` for each value whose read failed, when they were. The read-back line is at `info` and the not-applied line at `error`. The case where the runtime drops the closure writes no line and is named in the source comment; the build's architect gate says whether the gate's read of it still holds at the built head. This widens ADV-2026-11-27-44 item 7's second bullet (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-44-the-reload-keys-form-open-1-to-open-9-the-form-files-now-with-the-custodians-amendment-1-the-humans-line-a-draft-of-its-own.md`); its other bullets and the bytes of both lines stand.
+3. **D1** (its item 2): class 9 on ADV-2026-11-27-44 item 8, declared before the item's text lands. The Scope gains `KNOWN-LIMITATIONS.md`, for that one item, and the file ceiling is 9. §7's own line is not edited. The line ceiling stays 330; a count past it with the item is class 8 at the count. The item's number is taken by the custodian's script over every unmerged branch.
+4. **D4, the pins** (its item 3). Round 15 (e) is the human's and stands; ADV-2026-11-27-44 item 11's first bullet is withdrawn as far as it ordered a hash at a commit not on main. Amendment 1 item 10 is read so, the departure's cause being that ruling. 5ce0525a is not an ancestor of main at 01bb2de868f0835efcfb5e9bc6622dd9f73638a1, by `git merge-base --is-ancestor`.
+   - **(i) Pinned again at a commit on main.** The custodian's script read each of the 28 pins: each hash was reproduced at 5ce0525a over its lines with LF ends, and a changed text did not reproduce it. 11 are in a file whose blob is the same on main at 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 as at 5ce0525a, and each is pinned again there, each hash equal to its old one. These pins govern:
+     - `frontends/shell/src-tauri/tauri.conf.json:14-20 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:f2bc5843f85f7f4010a4d9cf1d91521d1ce8b36d1ddba2b300dee874baf23a2d`
+     - `frontends/shell/src-tauri/capabilities/default.json:1-11 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:2d3380b5f539ea2927767f2f4511c6f4c0c51d8583dbb9bdf305c7888bf750f0`
+     - `frontends/shell/src-tauri/Cargo.toml:58 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:6c1e8996a66a95a9d434f622c1eb9646bc20cde09800b1d47906dae5423dd18b`
+     - `frontends/shell/src-tauri/Cargo.lock:5586-5597 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:4ebd09a29625123353534d5e1cfb27fc08e29266d4a3223e02246516328b9165`
+     - `frontends/shell/src-tauri/Cargo.lock:5615-5619 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:2fd624db356812ed8619cd03e3a159bc3d89631d8ed588f3c4c89892ec960672`
+     - `frontends/shell/src-tauri/Cargo.lock:5690-5691 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:486d82462fc625befc775000b05eaac83093117b0a87826f518774b86f252586`
+     - `frontends/shell/src-tauri/Cargo.lock:5703-5704 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:98fe27ccd8c9d067de310a1d2df410d1c72f294bdc885afd84c84c0458818e3f`
+     - `frontends/shell/src/layout/StudioLayout.tsx:279-304 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:0a91d0771cdc4d24c463e3ac7c29de7fa779c390ee9fe01cc4f2ba94639d897a`
+     - `frontends/shell/e2e/pan-anchor.mjs:64 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:4aae8de406c31b3eb926b6adc2fca10e807804f43ca38b94ad7a380404ac3414`
+     - `frontends/shell/e2e/recentre-crossing.mjs:84 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:4aae8de406c31b3eb926b6adc2fca10e807804f43ca38b94ad7a380404ac3414`
+     - `frontends/shell/e2e/source-watch-idle.mjs:131-153 @ 01bb2de868f0835efcfb5e9bc6622dd9f73638a1 sha256:06d31ca2bd7bddef2b3bc1f6613a63ed53f9e24ce8102672757dd68e825a9a9a`
+   - **(ii) Read in the words form until B is on main,** with no hash: 17 spans, each in a file that differs between main and 5ce0525a. The hashes written beside them in Amendment 1 item 10 are not references of this record until then:
+     - line 10 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - line 130 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - line 144 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - lines 164 to 182 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - line 174 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - line 175 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - line 178 of `docs/adr/ADR-037-main-window-page-lifecycle-and-kernel-held-opens.md` at 5ce0525a
+     - lines 270 to 341 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - lines 391 to 392 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - lines 533 to 536 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - lines 577 to 584 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - lines 589 to 607 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - line 607 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - lines 607 to 612 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - line 612 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - lines 616 to 639 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a
+     - line 414 of `frontends/shell/e2e/project.mjs` at 5ce0525a
+   - **(iii)** Line 414 of `frontends/shell/e2e/project.mjs` is test text that exists only on B. It is named in words by the commit's id, with no hash, until the merge (round 25 item 2 (d)), as (ii) has it.
+   - **(iv)** Once B is on main, an appended class 3 row gives each span of (ii) its hash pin: at 5ce0525a if it is then reachable from main, and otherwise at a commit on main by script. That row is on main before this piece leaves draft.
+5. **From now on** (its item 3): a form built on a held base cites its base's text in the words form, with no hash, until that base is on main. The recovery form's pins stand as its gate's N-47 reads them.
+6. **Next:** the reviewer's form gate reads the form with Amendments 2 and 3. Part A's code waits for it.
+
+Read the last amendment first.

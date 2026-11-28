@@ -2157,3 +2157,14 @@ Read the last amendment first.
 11. **Next:** PR B's code on d6c2daf6, with C-U2b and C-A8 as item 5 declares them. Its build gates run in two parts, and its pull request stays a draft until PR A is on main.
 
 Read the last amendment first.
+
+## Amendment 18 — 2026-11-28 — the custodian's: ADV-2026-11-28-03 filed, item 83 in the advisor's words
+
+*References only. Nothing above is edited.*
+
+1. **The ruling** ADV-2026-11-28-03 is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-03-milestone-5-pr-b-known-limitations-item-83-in-the-advisors-words-notices-ordered-by-kind-item-1-stands.md`. It answers Amendment 17 item 10: the reviewer is right. Item 83's words are its item 2's fence, byte for byte, in place of the fenced text of ADV-2026-11-27-42 item 2 (`state/directives/2026-11-27-advisor-ruling-adv-2026-11-27-42-milestone-5-second-part-open-b1-b-in-pr-b-open-b2-b-in-the-advisors-words-open-b3-b-open-b4-a-amendment-15-appended-as-drafted.md`). ADV-2026-11-27-42 item 1 stands: notices are ordered by route.
+2. **The rest of ADV-2026-11-27-42 item 2 stands** (ADV-2026-11-28-03 item 3): the source comment is the worker's; the build's gates check each clause of item 83 against the landed code; a clause the code does not meet goes to the advisor before the words are committed. A later piece that adds a fourth kind of notice changes the item, and that goes to the advisor.
+3. **Amendment 17 item 9's first bullet** is read with ADV-2026-11-28-03 item 4: PR 368's place among the later pieces is the custodian's order, not a ruling. If PR 368 is not on main at PR B's turn, the second of the two to merge takes main in by a merge commit, with the reviewer's narrow read of each shared file.
+4. **Next:** PR B's code on d6c2daf6. Item 83 lands with ADV-2026-11-28-03's words, and the advisor compares it with that file at the merge check.
+
+Read the last amendment first.

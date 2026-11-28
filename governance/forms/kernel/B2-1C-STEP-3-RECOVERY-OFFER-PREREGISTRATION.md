@@ -2828,3 +2828,142 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 20 — 2026-11-28 — class 9 on ADV-2026-11-27-46 items 2 to 4: the three session-log lines, their tests and mutations
+
+*Lead-data drafted this before any code of Part 1. It was written after these had been seen: the form gate, attempt 8, PASS WITH NOTES (Amendment 19 item 1), and the ruling ADV-2026-11-27-46. No test outcome of this piece exists. Rulings are cited by id and item. Branch lines are cited at the base 97e2156d (Amendment 19 item 4). The drafter has no hashing tool, so the custodian pins each cited span at filing. No further form-gate attempt is asked (ADV-2026-11-27-46 item 5). Part 1's build gates read these rows, and the reviewer's report says where each line is written.*
+
+1. **Authority and scope.**
+   - ADV-2026-11-27-46 item 2 asks for the binding's discard line, item 3 for the two refusal lines, and item 4 for a test and a mutation for each, counted in Part 1.
+   - No kernel file, wire item, capability entry or dependency changes. No file is added to Part 1.
+   - Files: `frontends/shell/src-tauri/src/commands.rs`, `frontends/shell/src-tauri/src/lib.rs`, the tests of `frontends/shell/src-tauri/src/page.rs`, `frontends/shell/src/project/RecoveryOffer.tsx` and `frontends/shell/src/project/RecoveryOffer.test.tsx`. All are in Part 1 already (§2.11; Amendment 10 item 2; Amendment 17 items 2 and 3, with N-43).
+   - **Not touched:**
+     - `frontends/shell/src-tauri/src/state.rs`;
+     - `frontends/shell/src/project/openProject.ts` and `frontends/shell/src/admission/admitDataset.ts`;
+     - `admission/AdmissionPanel.tsx` (I8);
+     - every existing test, K-4 among them.
+   - Amendment 17 item 1's "Not touched" list names `discard_recoverable`. It is read as that amendment's own scope; this amendment adds item 2's line to that handler.
+
+2. **The discard's line, written by the binding** (ADV-2026-11-27-46 item 2).
+   - **How B's line reaches the session log.**
+     - B's page-end line is written by `run_end` through its `log` closure (`frontends/shell/src-tauri/src/page.rs`, lines 508-513 at 97e2156d).
+     - `lib.rs` builds that closure: `try_state::<SessionLog>()`, then `SessionLog::append` (`frontends/shell/src-tauri/src/lib.rs`, lines 224-228 at 97e2156d).
+     - `SessionLog` is always managed (`lib.rs`, line 529 at 97e2156d; without it the app refuses to start, lines 393-398).
+   - **Why the write is not in `commands.rs`.** K-4 (`frontends/shell/src-tauri/src/commands.rs`, lines 879-918 at 97e2156d) fails on any product line of `commands.rs` that contains `.append(`. Its doc puts the host's own lines in `lib.rs` and `pool_poll.rs`, outside its reach by design (lines 868-870). So the write is placed in `lib.rs`, next to the write behind B's line.
+   - **`lib.rs`** gains `pub(crate) fn write_host_line(app: &tauri::AppHandle, level: &str, message: &str)`. Its body is the page-end closure's two calls:
+     - `if let Some(session_log) = app.try_state::<SessionLog>() {`
+     - `session_log.append(level, message);`
+     - `}`
+   - **`commands.rs`** gains two functions.
+     - `pub(crate) fn discard_and_log(recorder: &StepRecorder, request: <Part 1's discard request type>, log: &dyn Fn(&str, &str))`. It returns the recorder entry point's own result unchanged. Its body, line for line:
+       - `let kind = discarded_kind(&request.record);` (the record member read as `&str`; an accessor is added only if the member's type needs one);
+       - `let reply = recorder.discard_recoverable(request);` (the recorder's entry point of §2.3, by its built name);
+       - `if reply.is_ok() {`
+       - `log("info", &format!("recovery-discarded kind={kind}"));`
+       - `}`
+       - `reply`
+     - `fn discarded_kind(record: &str) -> &'static str`. Its body:
+       - `if record.starts_with("unsaved-") {`
+       - `"unsaved"`
+       - `} else {`
+       - `"project"`
+       - `}`
+   - **The command.**
+     - Part 1's `#[tauri::command] discard_recoverable` takes `app: tauri::AppHandle`.
+     - It refuses a missing recorder before any call, as `record_step` does (`commands.rs`, lines 195-199 at 97e2156d).
+     - On `spawn_blocking` it runs `discard_and_log`, with a closure that calls `crate::write_host_line(&app, level, message)`.
+     - It makes no `Pages` call (§8 item 16).
+   - **The line.**
+     - The message is `recovery-discarded kind=unsaved` or `recovery-discarded kind=project`, at level `info`, as the page-end line's level is (`page.rs`, line 509 at 97e2156d). `SessionLog::append` writes it after its millisecond stamp.
+     - It carries no record name, no path and no project identity.
+     - It is written only on the kernel's `Ok`, which comes after the removals of the form's step 4 (Amendment 4 item 5's text for `discard_recoverable`). A refused discard writes none.
+   - **Doc comment.** The module's doc in `commands.rs` (lines 16-20 at 97e2156d, which Amendment 17 item 2 already edits) gains a clause: `discard_recoverable` also writes the binding's `recovery-discarded` line through `write_host_line`, in `lib.rs`.
+
+3. **The refusal lines, from where the shell calls each command** (ADV-2026-11-27-46 item 3). Both are in `RecoveryOffer.tsx` (§2.7). Each catch has, in order, the three lines of `admitProject` (`frontends/shell/src/project/openProject.ts`, lines 80-82 at 97e2156d), with its own level.
+   - **`export async function admitRecovered(record, cancelKey, dataset)`.**
+     - It is Recover's `admit`, run through `runAdmitPath`, as `admitProject` is (`frontends/shell/src/admission/AdmissionPanel.tsx`, line 487 at 97e2156d).
+     - Its catch:
+       - `if (!(e instanceof SkpCallError)) throw e;`
+       - `const refusal = shownRefusal(formatRefusal(e.skpError));`
+       - ``logSessionEvent("recover-refused", `${refusal.code}: ${refusal.message}`);``
+     - It then returns the refused outcome.
+   - **`export async function discardEntry(record)`.**
+     - The Discard click calls it.
+     - Its try calls the discard wrapper and returns `null`.
+     - Its catch is the same three lines with ``logSessionEvent("discard-refused", `${refusal.code}: ${refusal.message}`);``, and it returns the refusal.
+   - **What the lines carry.** Each carries the code and the bounded message, as `reopen-refused` does. A recover or a discard that succeeds writes no line of this kind.
+
+4. **Tests**, added after T-4's row in §4.
+   - **Red at the base:** the functions do not exist at 97e2156d, so T-6 and T-7 do not build, and S-9 and S-10 fail at their import.
+   - **Known pass cases:** none.
+   - Each mutation is applied, run, recorded by name with its commit, and reverted, at Part 1's head.
+
+| Id | Test | Mutation | Fails |
+|---|---|---|---|
+| T-6 | `a_discard_that_removed_a_record_writes_one_session_log_line_naming_only_its_kind` (`page.rs`'s `mod tests`). On the rig with its `recorder` (Amendment 17 item 3), a crashed `unsaved-` record is made as Amendment 17 item 3's common part makes it. Its name is the one `unsaved-` entry of the rig's sessions folder. `crate::commands::discard_and_log` is called with `&*rig.recording_log()` (`page.rs`, lines 757-765 at 97e2156d). It asserts: the reply is `Ok` and the folder is gone; `rig.seen.lines()` is exactly `["info recovery-discarded kind=unsaved"]`; that line contains neither the record name, nor its 32-hex part, nor the sessions folder's path; a second discard of the name is `Err`, and the lines are still one | in `discard_and_log`, Old `if reply.is_ok() {`, New `if reply.is_err() {` | T-6, at its line-equality assertion |
+| T-7 | `the_discarded_kind_is_unsaved_for_an_unsaved_name_and_project_for_any_other` (`commands.rs`'s `mod tests`). `super::discarded_kind` of `unsaved-` followed by 32 `0` is `unsaved`; of 32 `0` it is `project` | in `discarded_kind`, Old `if record.starts_with("unsaved-") {`, New `if !record.starts_with("unsaved-") {` | T-7, at its first assertion; T-6 |
+| S-9 | `a_refused_recover_logs_one_line_with_its_code_and_bounded_message_and_one_that_succeeds_logs_none` (`RecoveryOffer.test.tsx`). `../skp/client` and `../diagnostics/log` are mocked as `frontends/shell/src/project/openProject.test.ts` mocks them (lines 20-42 at 97e2156d); `formatRefusal` and `shownRefusal` are real. The recover wrapper throws `skp.recoverable_record_locked` with a message holding U+202E: the outcome is `refused`, and the logs are `[{level: "recover-refused", message: "skp.recoverable_record_locked: " + shownText(message)}]`. Then, reset, the wrapper resolves an `opened` reply and describe resolves: the outcome is not `refused`, and the logs are `[]` | Old ``logSessionEvent("recover-refused", `${refusal.code}: ${refusal.message}`);``, New ``logSessionEvent("recover-refused", `${e.skpError.code}: ${e.skpError.message}`);`` | S-9, at its logs equality |
+| S-10 | `a_refused_discard_logs_one_line_with_its_code_and_message_and_one_that_succeeds_logs_none` (`RecoveryOffer.test.tsx`, the same mocks). The discard wrapper throws `skp.recoverable_record_unknown` with message `m`: the refusal is returned, and the logs are `[{level: "discard-refused", message: "skp.recoverable_record_unknown: m"}]`. Then, reset, the wrapper resolves `{}`: `null` is returned, and the logs are `[]` | Old ``logSessionEvent("discard-refused", `${refusal.code}: ${refusal.message}`);``, New: the line removed | S-10, at its logs equality |
+
+   - Each Old text stands once in its file, in the function named. Leading whitespace is not part of an Old text.
+   - No test row asserts the `write_host_line` link to the real file. B's page-end closure has no such row either (`page.rs`'s tests capture through `recording_log`).
+   - E-RECOVER gains no step.
+
+5. **The budget** (ADV-2026-11-27-46 item 4; ADV-2026-11-27-38 item 2). These are the groups of Amendment 17 item 6, at place (a).
+
+| Group | Part 1 (Amendment 17) | Part 1 now | Together now |
+|---|---|---|---|
+| src-tauri (`commands.rs` about 42 with T-7, `lib.rs` about 9, `page.rs` tests about 38) | 340 | 430 | 430 |
+| shell product (`RecoveryOffer.tsx`) | 500 | 520 | 520 |
+| shell tests (`RecoveryOffer.test.tsx`) | 500 | 540 | 540 |
+| **Total** | **≤ 5,025, ≤ 47 files** | **≤ 5,175, ≤ 47 files** | **≤ 6,035; 50 files in the union** |
+
+   - The whole passes 6,000 by about 35 lines. By ADV-2026-11-27-46 item 4 this goes to the advisor before Part 1's code. Nothing is shrunk here.
+   - No file is added.
+
+6. **Additions to the form's sections** (read with the sections named):
+   - **§1, May claim:** a discard that removed a record leaves one session-log line naming only its kind (T-6, T-7); a refused recover or discard leaves one line with its code and bounded message, and a successful one leaves none (S-9, S-10).
+   - **§2.9, Seams:** the managed `SessionLog` → `write_host_line` → `discard_and_log` → `discard_recoverable`; `logSessionEvent` → `admitRecovered` and `discardEntry`.
+   - **§5, Declared unchanged:** K-4 and its text; `state.rs`; `openProject.ts`; `admitDataset.ts`.
+   - **§5, Invalidators:** **I12**, a stop: the discard line needs an edit of K-4 or of `state.rs`, a write through `append_redacted`, or a call of `append` in `commands.rs`'s product lines. This goes to the advisor (ADV-2026-11-27-46 item 2).
+   - **§8, item 18:** a `recovery-discarded` line that carries a record name, a path or a project identity, or that is written on a refused discard; or a `recover-refused` or `discard-refused` line written on a success.
+   - **Amendment 10 item 2:**
+     - Tests gain T-6, T-7, S-9 and S-10.
+     - Callers: `discard_recoverable`'s chain gains `discard_and_log` and `write_host_line`, each with its product caller in Part 1.
+   - **§2.12, after D23:** | D24 | rule | (none) | the binding's `recovery-discarded` line, and the `recover-refused` and `discard-refused` lines from `RecoveryOffer.tsx` (items 2 and 3); T-6, T-7, S-9 and S-10 | ADV-2026-11-27-46 items 2 to 4 |
+
+7. **Shared paths** (§2.11's table, as N-7 revises it; Amendment 17 item 7), named and not ruled:
+   - `commands.rs` (PR 356);
+   - `page.rs` (the reload piece).
+   - `lib.rs`, `RecoveryOffer.tsx` and `RecoveryOffer.test.tsx` are not named in that list.
+
+8. **Named, not changed:**
+   - **(a)** `admitRecovered`'s catch also covers the `describe` that follows an `opened` reply, as `admitProject`'s does. So a refused `describe` after a recover writes `recover-refused` with that refusal's code.
+   - **(b)** An `engine.cancelled` refusal (at the gate, or at a page end) writes `recover-refused`, as `reopen-refused` is written for one.
+   - **(c)** The two refusal lines carry the kernel's message, bounded. Whether the four new codes' messages name the record is §2.4's and the build's, and is not ruled here.
+   - **(d)** The `info` level of the discard line is the drafter's, after the page-end line.
+
+9. **For the custodian:**
+   - (i) The whole at about 6,035 lines (item 5), which goes to the advisor before code.
+   - (ii) Whether the writer in `lib.rs`, which K-4 makes necessary, is "as the page-end line of B does" in ADV-2026-11-27-46 item 2. If it is not, that item sends the case to the advisor before code.
+
+Read the last amendment first.
+
+Nothing above is edited.
+
+## Amendment 21 — 2026-11-28 — the custodian's: ADV-2026-11-28-01 carried (the figures, the writer by literals, `recover-describe-refused` with lead-data's row) and ADV-2026-11-28-02 filed
+
+*References only. Nothing above is edited.*
+
+1. **The rulings.** ADV-2026-11-28-01 is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-01-the-whole-at-most-6060-lines-the-discard-line-in-lib-rs-by-literals-only-a-refusal-after-opened-is-recover-describe-refused.md` and ADV-2026-11-28-02 at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-02-adr-037-amendment-1s-text-with-the-recovery-gates-three-additions-ruled-in-place-of-the-fence-of-adv-2026-11-27-41-item-1.md`. Amendment 20 above is the fenced text of lead-data's draft at `state/drafts/2026-11-28-b2-piece-1c-step-3-recovery-offer-amendment-20-lead-data-draft.md`, appended byte for byte with its date filled, as ADV-2026-11-28-01 item 5 asks. Its words are lead-data's, not the human's or the advisor's. Where this amendment summarises a ruling, the ruling's bytes govern.
+2. **The figures** (ADV-2026-11-28-01 item 1; class 9, declared before the code): Part 1 at most 5,200 lines, the whole at most 6,060, Part 2 at most 860; files at most 47 in Part 1 and 50 in the union. They replace ADV-2026-11-27-38 item 2's figure and the last sentence of ADV-2026-11-27-46 item 4. Where this form or the gate's N-45 row gives 6,000 for the merge check's count, the figure is 6,060. The added room is for the lines of ADV-2026-11-27-46 items 2 to 4 and ADV-2026-11-28-01 item 4 only.
+3. **The writer** (ADV-2026-11-28-01 item 2): Amendment 20's `write_host_line`, `discard_and_log`, `discarded_kind` and T-7 are read as that item rules them. In summary: the writer stays in `lib.rs`; its two parameters are `&'static str`, and `discard_and_log`'s `log` parameter is `&dyn Fn(&'static str, &'static str)`; `discarded_kind` becomes `discarded_line(record: &str) -> &'static str`, giving one of the two literal lines that item names, and no `format!` builds the line; T-7 calls `discarded_line`; `write_host_line`'s doc comment, in the worker's words, says what may reach it. I12 and §8 item 18 each gain that item's case of a text that is not a literal of the crate, a stop to the advisor. Both gates of Part 1 say, with the posture check, whether any text of the page can reach the session log through the new writer. If the `'static` types cannot be built as ruled, that goes to the advisor before any other way is taken.
+4. **Amendment 20's item 8:** (b), (c) and (d) stand, and the `info` level is accepted (ADV-2026-11-28-01 item 3). Its (a) is replaced by item 5 here.
+5. **`recover-describe-refused`** (ADV-2026-11-28-01 item 4; class 9 in Part 1): `admitRecovered` writes `recover-refused` only for a refusal of the recover call itself, and `recover-describe-refused`, with the code and the bounded message in the same form, for a refusal after an `opened` reply. The code is as lead-data's draft at `state/drafts/2026-11-28-b2-piece-1c-step-3-recovery-offer-s9-third-case-lead-data-draft.md` words it in its section 2, with its doc comment's sentence. S-9's row is that draft's section 1 row, in place of Amendment 20's: the test's new name, its three cases, M-S9 as drafted and M-S9-D. By that draft's section 3, Part 1 is at most 5,193 and the whole at most 6,053 before item 3's changes, which it does not count; the custodian's count before code shows them against item 2's figures.
+6. **For the gates** (ADV-2026-11-28-01 item 4, its last bullets): Part 1's architect gate says whether, after a refusal after an `opened` reply, the page closes the open, so that by ADR-037's Amendment 1 the record stays with this run and a normal end clears it. Part 2's gates say what the user is told then. If the changes the user asked to recover are cleared at the app's normal end with no word to the user, that goes to the advisor before Part 2's words are committed.
+7. **ADR-037's Amendment 1** (ADV-2026-11-28-02): its text is that ruling's fence, in place of ADV-2026-11-27-41 item 1's, appended after the ADR's last line in the part of this piece that lands `recover_session`'s handler. ADV-2026-11-27-41 items 2 to 8 stand, read with that text. The ruling's item 3, a listing that comes before an earlier page's recover has locked its record, is for the gates of both parts. Part 1's code does not wait for this filing.
+8. **No further form gate** (ADV-2026-11-28-01 item 5; ADV-2026-11-27-46 item 5). **Next:** Part 1's code, which waits only for room on D: (ADV-2026-11-27-40 item 4), with the margin named in the record before the build.
+
+Read the last amendment first.
+
+Nothing above is edited.
