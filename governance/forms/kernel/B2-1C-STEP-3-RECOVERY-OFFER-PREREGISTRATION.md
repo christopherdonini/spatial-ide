@@ -3038,3 +3038,19 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 27 — 2026-11-28 — the custodian's: ADV-2026-11-28-15 carried: a failed listing logged and an unreadable store refused (class 9, its rows to come by amendment before their code); four message strings; one byte in SKP-V0 §10.3
+
+*References only. Nothing above is edited. Where this amendment summarises the ruling, its bytes govern; its fenced texts are taken from its file alone.*
+
+1. **The ruling** is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-15-the-recovery-offers-part-1-a-failed-listing-logged-and-an-unreadable-store-refused-four-message-strings-one-byte-in-skp-v0-10-3.md`, in answer to the custodian's message sent at 2026-11-28T07:55:56Z (date -u).
+2. **Class 9** (its item 1): the shell's log line for a typed refusal of the listing, and the kernel's refusal of a store folder that is there and cannot be read. Its kernel row, its shell row, their mutations and SKP-V0's sentences are drafted by lead-data and recorded by a later amendment of this form before any of their code, read together with the architect's D-3 and D-4. Each new test is committed red before its code (§4). The kernel group's further lines are class 8, recorded in that amendment before the code; the whole stays inside 5,200 lines and 47 files. Lead-data's draft waits for a place (the cap of two Opus agents).
+3. **The reviewer's answer to item 5 (a):** where it names a refusal or a case its item 1 does not, or gives another view, it goes to the advisor before the correction is dispatched.
+4. **The strings** (its item 2): four message texts and one rule text, each under P6 and each the advisor's, in its five fences. A test that holds an old text changes with it. The reviewer's run part checks each against the code as corrected, clause by clause.
+5. **SKP-V0 §10.3** (its item 3): one byte, the semicolon before "Outside" becomes a full stop, by its Old and New.
+6. **Taken with nothing ruled** (its item 4): the architect's answers on ADV-2026-11-28-01 item 4 and ADV-2026-11-28-02 items 3 and 4; the too-early listing is recorded in the source comment; ADR-037's fence stands. The group figures that bind are Amendment 21's. K-C1 and K-C4 are replaced by their two-edit forms in a post-result amendment, after the reviewer's runs of both forms.
+7. **Held** (its item 5): C-1, C-2, D-1 to D-4 and D-6, for the reviewer's read part; one correction carries C-2, D-3 and D-4 with item 2's SKP-V0 sentences.
+
+Read the last amendment first.
+
+Nothing above is edited.
