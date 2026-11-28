@@ -51,7 +51,7 @@ const FOLDERS_LIMITS: Limits = Limits {
 
 /// The reader's bounds for `locations.json`, `folders.json`'s values (the form's Amendment 30,
 /// item 6 (a); outside §7).
-const LOCATIONS_LIMITS: Limits = Limits {
+pub(crate) const LOCATIONS_LIMITS: Limits = Limits {
     max_bytes: 2_097_152,
     max_depth: 4,
     max_string_bytes: 4_096,
