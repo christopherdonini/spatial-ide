@@ -1,6 +1,6 @@
 {
-  "generated_at": "2026-11-28T09:50:18.758Z",
-  "plan_hash": "aee847eab72093b26226d2a3ec9140a9aa2eedf2eb0ff03d6067c7fa02a8353f",
+  "generated_at": "2026-11-28T10:03:27.469Z",
+  "plan_hash": "04d2a36bf9eec7749dcefceca182f54c327a910a41b3cca75000c351f0566423",
   "priorities_approved": true,
   "lanes": [
     {
@@ -12977,6 +12977,31 @@
       "summary": "PROPOSED 2026-11-27 by ADV-2026-11-26-13 item 4 (state/directives/2026-11-26-advisor-ruling-adv-2026-11-26-13-adr-037-open-questions-no-skp-v0-edit-publish-cancelled-the-gate-waits-asking-first-a-piece-of-its-own.md), placed a day late by the custodian: one proposed node built on B's head; its form after B's S0 has shown what the release build does for Ctrl+R, F5 and the menu; its OPEN items go to the advisor; a new crate, a new Cargo feature or a lockfile change is the human's (that item). By ADV-2026-11-27-37 item 5, B's S0 (b), met by a read of the pinned sources (ADV-2026-11-26-17 item 3), counts for drafting the form, recorded as read from the source and not observed; the form is the architect's draft on B's head, place (d) of that ruling's item 6. No form yet.",
       "dates": {
         "opened": "2026-11-27",
+        "done": null
+      }
+    },
+    {
+      "id": "shell-failure-that-is-not-a-typed-refusal",
+      "title": "What the shell does with a failure that is not a typed refusal, for every panel: its first step says what each panel does today (the recovery offer's J at its reviewer read part)",
+      "kind": "task",
+      "lane": "shell",
+      "phase": "prototype",
+      "status": "proposed",
+      "order": null,
+      "depends_on": [],
+      "needs_human": {
+        "kind": "none",
+        "minutes": 0
+      },
+      "gate": "none",
+      "evidence": null,
+      "budget_minutes": 60,
+      "generation": 1,
+      "felt_verdict": false,
+      "entries": [],
+      "summary": "PROPOSED 2026-11-28 by ADV-2026-11-28-17 item 4 (state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-17-the-recovery-offers-part-1-the-architects-names-two-skp-v0-texts-r-s13-j-a-node-the-discard-line-in-the-log.md); the custodian opened and named it, and the advisor grades it. The recovery offer's reviewer read part at ffef5945 (its J) found that the offer's busy state is never cleared when its recover or discard call fails with something that is not a typed refusal, that is, when the page cannot reach the host. By the ruling, the offer's third path, through runAdmitPath in AdmissionPanel.tsx, awaits its admit with nothing around it, and the admission panel's own opens run through the same function, so the question is one for every panel. Its first step says what each panel does today with such a failure; its form says what changes. The recovery offer carries one source comment naming this node and is not corrected for it (J is closed for that piece). Not in v0.2 unless placed.",
+      "dates": {
+        "opened": "2026-11-28",
         "done": null
       }
     }

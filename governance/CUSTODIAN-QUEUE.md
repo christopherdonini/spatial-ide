@@ -1,6 +1,6 @@
 # CUSTODIAN-QUEUE
 
-Generated from `PLAN.yaml` (sha256 `aee847eab72093b26226d2a3ec9140a9aa2eedf2eb0ff03d6067c7fa02a8353f`) at `2026-11-28T09:50:18.332Z`.
+Generated from `PLAN.yaml` (sha256 `04d2a36bf9eec7749dcefceca182f54c327a910a41b3cca75000c351f0566423`) at `2026-11-28T10:03:27.040Z`.
 
 ## 1. Next
 
@@ -150,6 +150,7 @@ Generated from `PLAN.yaml` (sha256 `aee847eab72093b26226d2a3ec9140a9aa2eedf2eb0f
 - **app-log-folder-shared-with-test-runs** — The app session-log folder does not follow a suite LOCALAPPDATA, so the test runs logs and the human sitting logs share one folder, told apart by their stamps alone (phase `prototype`) — never queued until placed
 - **identity-unusable-fixture-detail-the-engine-writes** — The wire fixture v0-error-identity_unusable-with-candidates.json carries a message and a detail the engine does not write; bring them to a refusal the engine writes, or record the fixture as made by hand (phase `prototype`) — never queued until placed
 - **reload-asking-first-or-off-in-the-installed-build** — Asking first, or switching the reload off, in the installed build: the item ADR-037 does not decide, a piece of its own built on B's head (reload-ends-the-old-pages-opens) (phase `prototype`) — never queued until placed
+- **shell-failure-that-is-not-a-typed-refusal** — What the shell does with a failure that is not a typed refusal, for every panel: its first step says what each panel does today (the recovery offer's J at its reviewer read part) (phase `prototype`) — never queued until placed
 
 ### Unscheduled
 
