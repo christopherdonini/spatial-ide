@@ -521,7 +521,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
     let request =
         |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
             serde_json::json!({
-                "skp": "skp/0.17", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "skp": "skp/0.18", "dataset": "ds_00112233445566778899aabbccddeeff",
                 "folder": folder,
                 "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
             })
@@ -604,7 +604,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
 fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_constructors_build() {
     use serde_json::{json, Value};
     let request = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.17", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+        json!({"skp": "skp/0.18", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
                "answer": answer, "relink": relink, "set_aside_file_id": false})
     };
     for (what, wire) in [
@@ -813,7 +813,7 @@ fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_const
 fn the_open_project_closed_sets_refuse_any_other_value() {
     use serde_json::{json, Value};
     let call = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.17", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+        json!({"skp": "skp/0.18", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
                "answer": answer, "relink": relink, "set_aside_file_id": false})
     };
     let bad_request = |wire: Value, what: &str| {
@@ -1012,26 +1012,29 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.17` (`text-id-reopen-with-a-recorded-declaration`, ADR-016 Amendment 3, Decision 1; this test
-/// was `skp_version_is_skp_0_16` before that piece, `skp_version_is_skp_0_15` before
+/// `skp/0.18` (the recovery offer, B2 piece 1c step 3: `list_recoverable`, `recover_session` and
+/// `discard_recoverable`; this test was `skp_version_is_skp_0_17` before that piece,
+/// `skp_version_is_skp_0_16` before `text-id-reopen-with-a-recorded-declaration` (ADR-016
+/// Amendment 3, Decision 1), `skp_version_is_skp_0_15` before
 /// `text-id-opens-for-the-session-by-row-position`, `skp_version_is_skp_0_14` before
 /// `identity-declaration-route-for-session-tier`, `skp_version_is_skp_0_13` before `open_project`
 /// (B2 piece 1c), `skp_version_is_skp_0_12` before piece 1c, `skp_version_is_skp_0_11` before
 /// piece 1b and `skp_version_is_skp_0_10` before the lines cut, PL-5).
-/// Mutation: the literal back to `"skp/0.16"`. Expected failure: this test fails by name.
+/// Mutation: the literal back to `"skp/0.17"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_17() {
-    assert_eq!(SKP_VERSION, "skp/0.17");
+fn skp_version_is_skp_0_18() {
+    assert_eq!(SKP_VERSION, "skp/0.18");
 }
 
-/// **W-R1** (`skp/0.17`, `text-id-reopen-with-a-recorded-declaration`): both `engine.identity_unusable`
+/// **W-R1** (`skp/0.17`, `text-id-reopen-with-a-recorded-declaration`; its literals move with each
+/// version): both `engine.identity_unusable`
 /// fixtures deserialize and carry `identity_source` (`file:id` for the file's own `id`, `mapped:id` for a
-/// declared one, both naming the column `id`), the request fixtures are at `skp/0.17`, and the
-/// conformance fixture for a future version names `skp/0.18`, which this host refuses with `skp/0.17`
+/// declared one, both naming the column `id`), the request fixtures are at `skp/0.18`, and the
+/// conformance fixture for a future version names `skp/0.19`, which this host refuses with `skp/0.18`
 /// as the version it speaks.
 ///
-/// Mutation M-RD6: `mod.rs`'s literal stays `"skp/0.16"`. Expected failure: this test fails at the
-/// first request fixture, where its `skp` of `skp/0.17` is compared with the literal.
+/// Mutation M-RD6: `mod.rs`'s literal stays `"skp/0.17"`. Expected failure: this test fails at the
+/// first request fixture, where its `skp` of `skp/0.18` is compared with the literal.
 #[test]
 fn identity_unusable_fixtures_carry_identity_source_at_skp_0_17() {
     for (name, source) in [
@@ -1062,7 +1065,7 @@ fn identity_unusable_fixtures_carry_identity_source_at_skp_0_17() {
         "v0-cancel-request",
         "v0-close_dataset-request",
     ] {
-        assert_eq!(fixture(name)["skp"], "skp/0.17", "{name} is at skp/0.17");
+        assert_eq!(fixture(name)["skp"], "skp/0.18", "{name} is at skp/0.18");
         assert_eq!(
             fixture(name)["skp"],
             SKP_VERSION,
@@ -1080,15 +1083,15 @@ fn identity_unusable_fixtures_carry_identity_source_at_skp_0_17() {
         .as_array()
         .expect("an array of rows")
         .iter()
-        .find(|r| r["id"] == "any-version-skp_0_18")
-        .expect("the future-version row is named for skp/0.18");
-    assert_eq!(row["document"]["skp"], "skp/0.18");
+        .find(|r| r["id"] == "any-version-skp_0_19")
+        .expect("the future-version row is named for skp/0.19");
+    assert_eq!(row["document"]["skp"], "skp/0.19");
     assert_eq!(row["expected_refusal_code"], "skp.version_unsupported");
-    let refused = SkpError::version_unsupported("skp/0.18");
+    let refused = SkpError::version_unsupported("skp/0.19");
     assert_eq!(refused.code, "skp.version_unsupported");
     assert_eq!(
         refused.fields.get("supported").map(String::as_str),
-        Some("skp/0.17")
+        Some("skp/0.18")
     );
 }
 

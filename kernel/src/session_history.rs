@@ -2396,4 +2396,91 @@ mod tests {
         let at_ceiling = FILL_MATCH.replacen(cases, &format!("[{}]", full.join(",")), 1);
         assert_eq!(failure(&one(&at_ceiling)), None);
     }
+
+    /// A watch arm that arms none, as `crate::skp`'s own `NoWatchArm`, which is private to that
+    /// module, has it.
+    struct ChecksOnly;
+
+    impl spatial_engine::SourceWatchArm for ChecksOnly {
+        fn arm(&self, _: &Path, _: spatial_engine::WatchSink) -> spatial_engine::ArmOutcome {
+            spatial_engine::ArmOutcome::ChecksOnly {
+                reason: "test fixture: no watch armed".to_string(),
+            }
+        }
+    }
+
+    /// Removes a folder when dropped, so that a failed assertion leaves none behind.
+    struct Scratch(PathBuf);
+
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            drop(std::fs::remove_dir_all(&self.0));
+        }
+    }
+
+    /// **K-C8** (the recovery offer's form §2.5 and §4): the record's `locations.json` is written
+    /// by the store's writer, so a path the store's reader would refuse is never written as it was
+    /// given. The dataset is opened by a path relative to the test's working folder, which is what
+    /// the inline writer wrote as it was; the record's file must read back through
+    /// `store::read_locations` and name the absolute path.
+    ///
+    /// Mutation: the inline lossy writer restored, inside the writer's body. Expected failure:
+    /// this test, at the read of `locations.json`.
+    #[test]
+    fn the_records_locations_writer_refuses_a_path_the_store_cannot_hold() {
+        use spatial_skp::v0::{OpenDatasetRequest, SKP_VERSION};
+        let relative = PathBuf::from("spatial-ide-session-history-unit-k-c8");
+        let _ = std::fs::remove_dir_all(&relative);
+        std::fs::create_dir_all(&relative).expect("the data folder");
+        let _data = Scratch(relative.clone());
+        let store = std::env::temp_dir()
+            .join("spatial-ide-session-history-unit")
+            .join("k-c8");
+        let _ = std::fs::remove_dir_all(&store);
+        let _store = Scratch(store.clone());
+        let spec = spatial_engine::fixture::FixtureSpec {
+            features: 50,
+            avg_vertices: 8,
+            ..Default::default()
+        };
+        let at = relative.join("parcels.parquet");
+        spatial_engine::fixture::write_geoparquet(&at, &spec).expect("the fixture");
+
+        let host = Arc::new(SkpHost::new(
+            Arc::new(crate::Catalog::new()),
+            crate::skp::StreamRegistry::new(),
+            Arc::new(ChecksOnly),
+            crate::skp::session_end_channel().0,
+        ));
+        let recorder = StepRecorder::new(store.clone(), host.clone());
+        let open = OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: at.display().to_string(),
+            cancel_key: "k".to_string(),
+            crs_assertion: None,
+            identity: None,
+            set_aside_file_id: false,
+        };
+        let dataset = host.open_dataset(open).expect("open").dataset;
+        let intent = StepIntent::StyleSet(StyleSetParams::FillOpacity { value: 0.5 });
+        let req = RecordStepRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+            intent,
+        };
+        let recorded = recorder.record_step(req);
+        assert!(recorded.is_ok(), "the step is recorded: {recorded:?}");
+
+        let folders: Vec<PathBuf> = std::fs::read_dir(&store)
+            .expect("the store")
+            .map(|e| e.expect("entry").path())
+            .collect();
+        assert_eq!(folders.len(), 1, "one record");
+        let bytes = std::fs::read(folders[0].join(LOCATIONS)).expect("locations.json");
+        let read = crate::project::store::read_locations(&bytes);
+        let entries = read.unwrap_or_else(|e| panic!("the store's reader refuses it: {e:?}"));
+        assert_eq!(entries.len(), 1);
+        let absolute = std::path::absolute(&at).expect("an absolute path");
+        assert_eq!(entries[0].path, absolute);
+    }
 }
