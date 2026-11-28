@@ -2168,3 +2168,16 @@ Read the last amendment first.
 4. **Next:** PR B's code on d6c2daf6. Item 83 lands with ADV-2026-11-28-03's words, and the advisor compares it with that file at the merge check.
 
 Read the last amendment first.
+
+## Amendment 19 — 2026-11-28 — the custodian's: PR B's code at e958b913, the worker's report, the read part of the build gates
+
+*References only. Nothing above is edited.*
+
+1. **PR B's code** is pushed at e958b913240d296b7229cd976831b205fc8adbde on cut/shell-migration-milestone-5-pr-b, four commits over d6c2daf69eb500027197945f5a4302f0508e0f69: 0d38b74c (the tests, red), 12f326aa (the code), 9a10d12d (the mutations) and e958b913 (jobs.mjs, written and never run; KNOWN-LIMITATIONS items 81 to 83; Part AF's rows AF4 and AF5). The worker's report is filed at `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-code-worker-report.md` (its hand-back's sha256 1591f8a1403f532b8ef82a1b874ec340a32245a35a1dfdd2f358957bbfee0c24).
+2. **By that report,** `npm run verify` exited 0 at e958b913 inside a shared hold, and no app, dev server or e2e suite ran. CI at e958b913 on push: Product CI — shell and Ported notices passed. The numstat names no file under `src-tauri/` or `capabilities/`.
+3. **§7 at the count** (the report's table): App.tsx is 155 against 150. That is the overrun Amendment 15 item 8 predicts, and it is recorded as class 8 in PR B's closing amendment, as that item says. The report names no other row over its ceiling. The build gates count §7 by its command.
+4. **Named for the gates, not ruled here:** `jobsFrom`'s third parameter where §2.4 shows two; 12f326aa's edit of J-A2's second test after 0d38b74c, and C-A8's change after its first red; J-A1's check by the status and the row, not a spy; AF4 and AF5's words, which the report calls its draft for the human's sight.
+5. **The read part of the build gates** (ADV-2026-11-27-42 item 6) starts with the architect's, dispatched at e958b913 against main 51f5e1daf1c05dc39e0d3ac94e49657f83bbe47f; its report goes to `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-build-gate-architect.md`. The reviewer's read part follows when a place is free. The run part comes at the port, after E-SCALE.
+6. **No pull request yet:** PR A has none, and PR B's stays a draft until PR A is on main (Amendment 17 item 11).
+
+Read the last amendment first.
