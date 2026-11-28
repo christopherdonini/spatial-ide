@@ -13,7 +13,7 @@
 //         gone, `.residency-status` is the owner's relinquished statement (`residencyStatus.ts`), and `.scan-incomplete` stays absent over a bounded settle window. Any other status FAILS.
 //   J-E2  open the 100k fixture, start a prepare through `publishPrepareWithDestination` and do not wait for it (H4): the export row stands; click Cancel in Jobs; Cancel answers false,
 //         so S-11 shows and Cancel is offered again; the row leaves when the prepare ends. If the row is gone before the click, the run is VOID, never a PASS.
-// Exit 0 all PASS; 1 a check failed, a wait after a Cancel click that timed out included; 2 VOID (a precondition failed: the arm, a fixture, a row never standing or gone before its click, any other wait that timed out).
+// Exit 0 all PASS; 1 a check failed, a wait after a Cancel click that timed out and a check that failed before a VOID included; 2 VOID with no check failed (a precondition failed: the arm, a fixture, a row never standing or gone before its click, any other wait that timed out).
 // What this does not prove: any docs/08 figure, macOS or Linux, the baseline arm, or a timing. Waits are harness bounds on readiness (ADR-018).
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, realpathSync } from "node:fs";
 import { tmpdir } from "node:os";
@@ -182,7 +182,7 @@ async function main() {
     await session.stop().catch(() => {});
     console.log(`the scratch store, with the session log, is kept: ${SCRATCH}`);
   }
-  if (voided) { console.log(`\nVOID  ${voided} -- not a PASS (checks recorded before it: ${results.length})`); process.exit(2); }
+  if (voided) { console.log(`\nVOID  ${voided} -- not a PASS (checks recorded before it: ${results.length})`); if (results.every((r) => r.ok)) process.exit(2); }
   const failed = results.filter((r) => !r.ok);
   console.log(`\n==== ${results.length - failed.length}/${results.length} PASS ====`);
   if (failed.length) { console.log("FAILED:", failed.map((f) => f.name).join("; ")); process.exit(1); }
