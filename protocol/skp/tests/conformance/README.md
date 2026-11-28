@@ -102,3 +102,11 @@ fixture that named `skp/0.17` as an unsupported future version was renumbered to
 instead. The version adds one field to one error code, so no row is added: the one document of
 that code here, `resp-error-identity-candidates` in `responses-accept.json`, is unchanged. The
 existing rows' `spec` citations are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.18` literal of PLAN node
+`b2-piece-1c-step-3-recovery-offer` (its form's Part 1); the version-refusal fixture that named
+`skp/0.18` as an unsupported future version was renumbered to name `skp/0.19` instead. The version
+adds three commands and four codes. Their documents are held by `protocol/skp/tests/fixtures.rs`
+(`recovery_commands_round_trip_and_refuse_unknown_or_missing_members`), which round-trips every
+request and reply and refuses an unknown or a missing member of each. The existing rows' `spec`
+citations are not rewritten.

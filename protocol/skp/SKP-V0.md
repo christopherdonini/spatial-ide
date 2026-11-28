@@ -10,9 +10,9 @@ it is not a promise about v1.
 architect-first workflow rule. Three premises in the cut brief were corrected in that review and the
 corrections are recorded here rather than smoothed over (§2).
 
-## 1. The eight commands
+## 1. The eleven commands
 
-This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, the seventh, `save_project` (`skp/0.13`), is §11's, and the eighth, `open_project` (`skp/0.14`), is §12's.
+This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, the seventh, `save_project` (`skp/0.13`), is §11's, the eighth, `open_project` (`skp/0.14`), is §12's, and the ninth, the tenth and the eleventh, `list_recoverable`, `recover_session` and `discard_recoverable` (`skp/0.18`), are §13's, §14's and §15's.
 
 Every request carries the version literal stated in §4 item 3 (`skp/0` at v0). The host compares it with `==` and refuses anything else
 (`skp.version_unsupported`) — see §4 for why nothing richer exists yet. Every response is
@@ -233,8 +233,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
    **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
    projection parameter, on the same shape row-filter's own addition took.
-   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either. **`skp/0.14` (§12) adds an eighth command, `open_project`**: it reopens a saved project and opens the dataset it names.
-2. **Transport bindings** — one: Tauri invoke, for the eight commands. **`skp/0.5` adds exactly one
+   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either. **`skp/0.14` (§12) adds an eighth command, `open_project`**: it reopens a saved project and opens the dataset it names. **`skp/0.18` (§13 to §15) adds a ninth, a tenth and an eleventh command, `list_recoverable`, `recover_session` and `discard_recoverable`**: they offer a session history that a run left behind, take one into this run (the kernel applies none of its steps) and remove one.
+2. **Transport bindings** — one: Tauri invoke, for the eleven commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
    stdio, no MCP adapter. **`skp/0.6` (§9) adds no binding** — the projection rides the existing
@@ -248,12 +248,12 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.17` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.17`.
-4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eight
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.18` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.18`.
+4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eleven
    commands and cannot adapt to a future kernel.
-5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset` and for `open_project` (§2, C3; §12.3).
-   Progress: data-plane batches only. `open_dataset` and `open_project` are cancellable but not progress-reporting.
+5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset`, for `open_project` and for `recover_session` (§2, C3; §12.3; §14.3).
+   Progress: data-plane batches only. `open_dataset`, `open_project` and `recover_session` are cancellable but not progress-reporting.
    **v0.1 (§7) adds a named shortfall to this item, not a new gap**: for a filtered scan whose
    predicate matches late, "progress: data-plane batches only" can mean *zero* batches for a long
    time — see §7's own shortfall paragraph.
@@ -282,7 +282,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
    Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
    generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
-   turn it off, and no request or response on any of the eight commands mentions it. No other
+   turn it off, and no request or response on any of the eleven commands mentions it. No other
    server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §5. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
@@ -1223,6 +1223,17 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.16"` → `"skp/0.17"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it; `v0-error-identity_unusable-with-candidates.json` gains the field (`file:id`); one fixture is new (`v0-error-identity_unusable-declared.json`, `mapped:id`); and the version-refusal fixture that named `skp/0.17` as an unsupported future version is renumbered to name `skp/0.18`.
 
+### skp/0.18 — the recovery offer: `list_recoverable`, `recover_session` and `discard_recoverable` (B2 piece 1c, step 3, `kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md`, ADR-036 §9 and §12)
+
+**The version's FULL field set, as §8's own discipline requires:** three commands and their types, and four codes. The other eight commands keep their requests and replies; no message and no other code changes.
+
+- **A ninth, a tenth and an eleventh command.** `list_recoverable`: request `{skp, dataset}`, reply `{records, more}`; `recover_session`: request `{skp, record, cancel_key, dataset}`, reply `{dataset, opened, steps}`; `discard_recoverable`: request `{skp, record}`, reply `{}`. §13.2, §14.2 and §15.2 give every member. `dataset` is always present on the first two, `null` for none, and `opened` is always present on the reply of the second, `null` when the kernel did not open the data. `data` is `{state: "found"}`, `{state: "not-found"}` or `{state: "cannot-be-offered", reason}`, with `reason` one of `no-step`, `later-version` and `locations-refused`.
+- **Four new `skp.*` codes:** `skp.recoverable_record_locked` (`record`), `skp.recoverable_record_unknown` (`record`), `skp.recoverable_record_refused` (`record`, `file`, `rule`) and `skp.recoverable_record_not_for_this_open` (`record`). §14.4 lists them.
+- **One code is reached by a new path.** `skp.session_history_unwritable` is `recover_session`'s refusal when the history could not be cut to its kept steps; its `detail` names `set_len`, `seek` or `sync_all`. Its code and field are §10.4's.
+- **A clause of §10.3 changes** (`record_step`'s "Record only" bullet): outside §14, nothing in SKP restores a step.
+
+§1 and §4 are updated in place to count eleven commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.17"` → `"skp/0.18"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.18` as an unsupported future version is renumbered to name `skp/0.19`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1337,7 +1348,7 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 
 ### 10.1 Version
 
-`skp` is now compared against `"skp/0.17"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16` and `skp/0.17` entries).
+`skp` is now compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16`, `skp/0.17` and `skp/0.18` entries).
 
 ### 10.2 The wire shape
 
@@ -1359,7 +1370,7 @@ Match = { match: { column: <text>, cases: [ { when: <text>, then: "#rrggbb" }, �
 
 ### 10.3 The contract
 
-- **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; nothing in SKP restores, undoes or replays a step.
+- **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; Outside §14, nothing in SKP restores a step; nothing in SKP undoes or replays one.
 - **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it, and for a match also compiled against the open's own columns, whose type rule is the renderer's: the column must exist and be a text column; (7) the history's record for the open file, created at its first step; (8) the line's bounds, and its members against the rules the reader holds (ADR-036 §9); (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (6) writes nothing. At the first step for an open file, (7) creates the record: its folder, `locations.json` and the history's header line; a refusal at (8) leaves that record and writes no step. A failure at (7) removes what (7) wrote, as far as the operating system allows.
 - **A match records its column.** A `fillColor` step that sets a match carries the match in its `intent` as sent, and one `dependencies.fields` entry: the match column, with its type as the open's file schema spells it. A step that sets a colour names no column.
 - **The live check is the one ordering point.** A `close_dataset` or a session end that lands after it does not stop the write: the line is true of the open it names. `record_step` takes no lock a close waits on.
@@ -1392,7 +1403,7 @@ Five new codes, all minted by the host:
 
 ### 11.1 Version
 
-`skp` is compared against `"skp/0.17"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16` and `skp/0.17` entries).
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16`, `skp/0.17` and `skp/0.18` entries).
 
 ### 11.2 The wire shape
 
@@ -1450,7 +1461,7 @@ From `skp/0.14`, one code more, which a later save can give: `skp.project_file_n
 
 ### 12.1 Version
 
-`skp` is compared against `"skp/0.17"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14`, `skp/0.15`, `skp/0.16` and `skp/0.17` entries).
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14`, `skp/0.15`, `skp/0.16`, `skp/0.17` and `skp/0.18` entries).
 
 ### 12.2 The wire shape
 
@@ -1515,3 +1526,115 @@ An engine refusal at a reopen can say "the caller asserted" where the claim was 
 ### 12.5 Data plane
 
 **Unchanged, empty diff.** `open_project` opens no stream and mints no ticket.
+
+## 13. `list_recoverable`
+
+**B2 piece 1c, step 3** (`kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md` §2.3 and §2.4, as its amendments leave them), following ADR-036 §9 and §12. Laid out as §12 is. §14 and §15 are the other two commands of the offer.
+
+### 13.1 Version
+
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.18` entry).
+
+### 13.2 The wire shape
+
+```
+{ skp, dataset: DatasetHandle | null }  →  { records: [ record, … ], more: bool }
+
+record = { record: string, file_name: string | null, last_step_at: string | null, steps: n, data }
+data   = { state: "found" } | { state: "not-found" }
+       | { state: "cannot-be-offered", reason: "no-step" | "later-version" | "locations-refused" }
+```
+
+- **`dataset`** is always present: `null` for a start's list, or the handle of an open that `open_project` replied with for that open's project's record.
+- **`record`** is the name of the record's folder in the session store: `unsaved-` and 32 lowercase hex characters, or 32 lowercase hex characters. A name, never a path.
+- **`file_name`** is the last name of the data file that the record's `locations.json` holds for the record's dataset, `null` where none is read. Every control character in it is replaced by U+FFFD, and a name then over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes. **`last_step_at`** is the `at` of the last step the reader keeps, and **`steps`** the count of kept steps; both are `null` and `0` for a record that cannot be offered. No reply carries a path.
+- **`more`** is `true` when a record was left out of the list: the list is at its bound, or the kernel could not decide whether another record is its twin.
+
+### 13.3 The contract
+
+- **A start** (`dataset` `null`) lists the `unsaved-` records of runs that ended without `end_session`: a run that ended normally clears its own. It skips the records this run holds, a folder with no `history.jsonl` or an empty one, and a record whose history another run holds locked (never read, listed or counted). At most 64 records are taken, in name order; `<hex>` folders never count. An `unsaved-` record whose project's `<hex>` folder holds the same `locations.json` and the same first step is that project's record that a save moved, and is not listed: it is offered at the project's open. When that check cannot be made, the record is withheld and `more` is `true`.
+- **At an open** (`dataset` a handle) it lists the record of the project the open was reopened as, if the run does not hold it, and not the others. A project's record with no step after its last `saved-here` mark is not listed.
+- **Listing removes nothing and never opens the data.** `found` and `not-found` come from the file system's `metadata` of the place `locations.json` holds, taken after every lock is released. They are facts of the moment: the open at `recover_session` is the check.
+- **`cannot-be-offered`** is a record that is listed with Discard only: `no-step` (the reader keeps no step), `later-version` (the header's `actions` is over this kernel's, or the history holds a `restored` mark) or `locations-refused` (the record's `locations.json` is refused or holds no entry for its one dataset). It stays where it is until it is discarded.
+- **Not cancellable, no progress:** one pass over the store's folders.
+
+### 13.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has). The four `skp.recoverable_record_*` codes are §14.4's and §15's, and this command returns none of them.
+
+### 13.5 Data plane
+
+**Unchanged, empty diff.** `list_recoverable` opens no stream and mints no ticket.
+
+## 14. `recover_session`
+
+**B2 piece 1c, step 3**, laid out as §13 is.
+
+### 14.1 Version
+
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.18` entry).
+
+### 14.2 The wire shape
+
+```
+{ skp, record: string, cancel_key, dataset: DatasetHandle | null }
+    →  { dataset: DatasetHandle, opened: null | { session: SessionRef, check }, steps: [ StepIntent, … ] }
+
+check = { observed: [ "size" | "mtime" | "footer-length" | "footer-hash", … ], admission: [ "crs" | "identity", … ] }
+```
+
+- **`dataset`** is always present. `null` for an `unsaved-` record, where the kernel opens the data; a handle for a project's record, where the handle is the open `open_project` replied with.
+- **`opened`** is present exactly when the kernel opened the data; `session` and `check` are those of `open_project` (§12.2).
+- **`steps`** are the last step the record holds for each key of the filter, `fillColor`, `outlineColor`, `fillOpacity` and `outlineWidth`, in that order and for the keys a step set, each in the shape of §10.2's `intent`. The kernel applies none of them; the client does, and records nothing.
+
+### 14.3 The contract
+
+- **The order of checks:** (1) the version and the record's name, which must be one of the two shapes of §13.2, else `skp.recoverable_record_unknown`; (2) this run holds the record or is working on it: `skp.recoverable_record_unknown`; (3) the lock (held by another run: `skp.recoverable_record_locked`), the read of the history and the same judgement as the list's, refused as `skp.recoverable_record_refused` for a record that cannot be offered, and the record's one dataset; for an `unsaved-` record the twin check of §13.3 for this record alone (a twin: `…_unknown`; a twin a live run holds, `…_locked`); (4) the open, and its `check`; (5) the history cut to its kept steps; (6) the record joins this run's.
+- **A null `dataset`** opens the data as `open_dataset` does, with the claims the header holds, under `cancel_key`, which `cancel` reaches as it does for `open_dataset`. **A handle** must be an open of the record's project (reopened as that project), of the header's dataset, holding no record and bound to no project; otherwise `skp.recoverable_record_not_for_this_open`.
+- **The cut.** The history is cut to the steps the reader keeps and the handle is left at the new end, so that the next step chains from the last kept one. A failure of that cut is `skp.session_history_unwritable` with a `detail` naming `set_len`, `seek` or `sync_all`, and the open the call made is closed. Every refusal after the open closes it, and leaves the record as it was, with its lock released.
+- **Cancellable** as `open_dataset` is, and not progress-reporting. A cancel the call sees before the engine's open returned refuses it as `engine.cancelled`.
+- **No reply carries a path.** A refusal names the record's name as sent (control characters replaced and cut as §13.2's `file_name` is), a file by its fixed name, and an engine refusal keeps the engine's own message (§5).
+
+### 14.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.malformed_cancel_key`; `skp.cancel_key_in_use`; `skp.unknown_dataset`; `engine.cancelled`; the engine's refusals of the open, exactly as §5 gives them; `skp.session_history_unwritable`, as §10.4 gives it.
+
+Four new codes, all minted by the host; §15 also returns the first two:
+
+| Code | Fields | When |
+|---|---|---|
+| `skp.recoverable_record_locked` | `record` | another run holds the record's history, or a twin's |
+| `skp.recoverable_record_unknown` | `record` | the name is not one of the two shapes; there is no such record; this run holds it or is working on it; or it is a twin of a project's record |
+| `skp.recoverable_record_refused` | `record`, `file`, `rule` | the record cannot be offered: `file` is `history.jsonl` or `locations.json` and `rule` says which rule |
+| `skp.recoverable_record_not_for_this_open` | `record` | the handle is not an open of the record's project and dataset, or the open holds a record or a binding |
+
+### 14.5 Data plane
+
+**Unchanged, empty diff.** `recover_session` opens no stream and mints no ticket.
+
+## 15. `discard_recoverable`
+
+**B2 piece 1c, step 3**, laid out as §13 is.
+
+### 15.1 Version
+
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.18` entry).
+
+### 15.2 The wire shape
+
+```
+{ skp, record: string }  →  {}
+```
+
+### 15.3 The contract
+
+- The name is checked as §14.3's step (1) checks it, and a record this run holds or is working on is `skp.recoverable_record_unknown`. The kernel then takes the history's lock without waiting (another run holds it: `skp.recoverable_record_locked`), removes `history.jsonl` and `locations.json` under it, drops the handle and removes the folder. A folder whose removal fails stays and is not an error; a file whose removal fails is `skp.recoverable_record_refused`.
+- It removes the one record it is given, and no twin of it. Not cancellable, no progress, not idempotent: a second call finds no record.
+
+### 15.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`. `skp.recoverable_record_locked`, `skp.recoverable_record_unknown` and `skp.recoverable_record_refused` are §14.4's.
+
+### 15.5 Data plane
+
+**Unchanged, empty diff.** `discard_recoverable` opens no stream and mints no ticket.

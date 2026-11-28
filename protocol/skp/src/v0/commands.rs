@@ -978,6 +978,122 @@ pub struct ReopenNotFound {
     pub file_name: Option<String>,
 }
 
+// ---------------------------------------------------------------------------------------------
+// list_recoverable, recover_session, discard_recoverable
+// ---------------------------------------------------------------------------------------------
+
+/// **`skp/0.18`.** Lists the session histories that runs left behind (SKP-V0.md §13). With
+/// `dataset` `null`, a start's list: the records of runs that ended without `end_session`. With a
+/// handle, that open's project's record, when the open is a reopen. The key is always present.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ListRecoverableRequest {
+    pub skp: String,
+    #[serde(deserialize_with = "key_present")]
+    pub dataset: Option<DatasetHandle>,
+}
+
+/// One record a run left. `record` is its folder's name in the session store, which is a name and
+/// not a path. `file_name` is the last name of the data file the record's `locations.json` holds
+/// for the record's dataset, and `null` where none is read (a record that cannot be offered, or one
+/// whose place is refused); every control character in it is replaced by U+FFFD, and a name then
+/// over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, as
+/// [`ReopenNotFound::file_name`]'s is. `last_step_at` is the `at` of the last kept step and `steps`
+/// the count of kept steps; a record that cannot be offered has `null` and `0`. No reply carries a
+/// path.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoverableRecord {
+    pub record: String,
+    #[serde(deserialize_with = "key_present")]
+    pub file_name: Option<String>,
+    #[serde(deserialize_with = "key_present")]
+    pub last_step_at: Option<String>,
+    pub steps: u64,
+    pub data: RecoverableData,
+}
+
+/// What the kernel found when it looked at the data file's place by `metadata` alone (no byte of
+/// the file is read), or why the record cannot be recovered. `found` and `not-found` are facts at
+/// the moment of the list and not a promise: the open at `recover_session` is the check.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "state", rename_all = "kebab-case", deny_unknown_fields)]
+pub enum RecoverableData {
+    Found {},
+    NotFound {},
+    CannotBeOffered { reason: CannotBeOfferedReason },
+}
+
+/// Why a record is listed but cannot be recovered: it holds no step the reader keeps, it was
+/// written by a later version (an `actions` over this kernel's, or a mark this kernel reads as
+/// that), or its `locations.json` is refused or holds no entry for its dataset. Discard stays.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum CannotBeOfferedReason {
+    NoStep,
+    LaterVersion,
+    LocationsRefused,
+}
+
+/// The records of the list, in the store's name order, and `more`: `true` when a record was left
+/// out because the list is at its bound, or the kernel could not decide for it whether another
+/// record is its twin.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ListRecoverableResponse {
+    pub records: Vec<RecoverableRecord>,
+    pub more: bool,
+}
+
+/// **`skp/0.18`.** Takes a listed record into this run (SKP-V0.md §14). With `dataset` `null` the
+/// kernel opens the record's data, under `cancel_key` as `open_dataset`'s is, with the claims the
+/// record's header holds; with a handle, the record is a project's and the handle is the open that
+/// `open_project` replied with. The key is always present.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoverSessionRequest {
+    pub skp: String,
+    pub record: String,
+    pub cancel_key: String,
+    #[serde(deserialize_with = "key_present")]
+    pub dataset: Option<DatasetHandle>,
+}
+
+/// What `recover_session` opened, when it opened: the `session` and the check of the file against
+/// the reference the record held, in the words of [`ReopenCheck`].
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoveredOpen {
+    pub session: SessionRef,
+    pub check: ReopenCheck,
+}
+
+/// `dataset` is the open the record is now held by, the handle given or the one the kernel opened.
+/// `opened` is `null` for a handle given. `steps` is the last step the record holds for each of the
+/// five keys (the filter, `fillColor`, `outlineColor`, `fillOpacity`, `outlineWidth`), in that
+/// order and only for the keys a step set, as the intents the client applies.
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct RecoverSessionResponse {
+    pub dataset: DatasetHandle,
+    #[serde(deserialize_with = "key_present")]
+    pub opened: Option<RecoveredOpen>,
+    pub steps: Vec<StepIntent>,
+}
+
+/// **`skp/0.18`.** Removes a record that is not held (SKP-V0.md §15).
+#[derive(Clone, Debug, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DiscardRecoverableRequest {
+    pub skp: String,
+    pub record: String,
+}
+
+/// The reply carries no member.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct DiscardRecoverableResponse {}
+
 #[cfg(test)]
 mod tests {
     use super::*;

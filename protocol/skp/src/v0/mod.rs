@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
 
-//! SKP v0 — eight commands, no more. See `../../SKP-V0.md`.
+//! SKP v0 — eleven commands, no more. See `../../SKP-V0.md`.
 
 pub mod codec;
 pub mod commands;
@@ -154,4 +154,11 @@ pub use handles::{CancelKey, DatasetHandle, SessionRef, StreamHandle};
 /// code: no command, request member, reply member, code or message is added, removed or changed
 /// (`SKP-V0.md` §8's `skp/0.17` entry). `protocol/data-plane/` has an empty diff. Same discipline again:
 /// `deny_unknown_fields` both directions, `==` unchanged, the fixtures updated in the same commit as the literal bump.
-pub const SKP_VERSION: &str = "skp/0.17";
+///
+/// `skp/0.18` (B2 piece 1c, step 3, `kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md`): a ninth, a tenth and an
+/// eleventh command, `list_recoverable`, `recover_session` and `discard_recoverable` (`SKP-V0.md` §13 to §15), their
+/// requests and replies, and four new `skp.*` refusal codes: `recoverable_record_locked`, `recoverable_record_unknown`,
+/// `recoverable_record_refused` and `recoverable_record_not_for_this_open`. The other eight commands keep their requests
+/// and replies; `protocol/data-plane/` has an empty diff. Same discipline again: `deny_unknown_fields` both directions,
+/// `==` unchanged, the fixtures updated in the same commit as the literal bump (`SKP-V0.md` §8's `skp/0.18` entry).
+pub const SKP_VERSION: &str = "skp/0.18";
