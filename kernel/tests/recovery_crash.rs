@@ -256,11 +256,6 @@ fn accepting_truncates_to_the_kept_prefix_and_later_steps_chain() {
     let r = run(&dir);
     let reply = r.recover(&name, None);
     assert!(reply.opened.is_some(), "the kernel opened the data");
-    assert_eq!(
-        std::fs::read(history(&dir, &name)).unwrap(),
-        kept,
-        "cut to the kept steps"
-    );
     let intents = serde_json::to_value(&reply.steps).unwrap();
     let actions: Vec<_> = intents
         .as_array()
@@ -277,7 +272,14 @@ fn accepting_truncates_to_the_kept_prefix_and_later_steps_chain() {
         ]
     );
     r.step(&reply.dataset, opacity(0.77));
-    assert_eq!(last_line(&dir, &name)["step"]["parent"], last);
+    // The run ends without `end_session`, which frees the lock: on Windows a held lock stops a
+    // read through any other handle.
+    drop((reply, r));
+    let bytes = std::fs::read(history(&dir, &name)).unwrap();
+    assert!(bytes.starts_with(&kept), "the kept steps are as they were");
+    let tail = serde_json::from_slice::<Value>(&bytes[kept.len()..]);
+    let tail = tail.expect("one whole line follows the kept steps, so the torn one was cut");
+    assert_eq!(tail["step"]["parent"], last);
 }
 
 /// **K-C19.** A project's record at its open: the open is bound, and the next step continues the
@@ -316,5 +318,6 @@ fn recovering_at_a_projects_open_binds_the_open_and_its_next_step_continues_that
     );
     r.step(&handle, opacity(0.99));
     assert_eq!(names(&dir), [hex.as_str()], "no record of its own was made");
+    drop((reply, r)); // frees the lock: on Windows a held lock stops a read through another handle
     assert_eq!(last_line(&dir, &hex)["step"]["parent"], last);
 }

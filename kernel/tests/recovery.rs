@@ -612,6 +612,9 @@ fn a_step_after_recovery_carries_the_headers_dataset_identity() {
     let r = run(&s);
     let reply = r.recover(&name, None).expect("recovered");
     r.step(&reply.dataset, 0.77);
+    // The run ends without `end_session`, which frees the lock: on Windows a held lock stops a
+    // read through any other handle.
+    drop((reply, r));
     let last = lines(&s, &name).pop().expect("a last line");
     assert_eq!(dataset_of(&last), header);
 }
