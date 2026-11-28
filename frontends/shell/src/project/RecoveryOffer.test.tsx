@@ -196,4 +196,44 @@ describe("RecoveryOffer and its two admits (the recovery offer's Part 1)", () =>
     expect(await discardEntry(UNSAVED)).toBeNull();
     expect(mocks.logs).toEqual([]);
   });
+
+  // RECORDED MUTATION for M-S11: Old the `recover-list-refused` line, New: the line removed. Expected failure: S-11, at case 1's logs equality.
+  it("a_refused_listing_logs_one_line_with_its_code_and_bounded_message_and_shows_no_offer_and_any_other_listing_logs_none", async () => {
+    let n = 0;
+    const listAs = async (projectDataset: string | null): Promise<void> => {
+      Object.assign(mocks, { listed: [], logs: [] });
+      n += 1;
+      await act(async () => {
+        root.render(<RecoveryOffer key={n} projectDataset={projectDataset} confirmOpen={async () => true} onRecovered={() => undefined} />);
+      });
+      await settle();
+    };
+    const nothingShown = () => {
+      expect(container.textContent, "no text").toBe("");
+      expect(container.querySelector(".recovery-offer"), "no offer").toBeNull();
+    };
+
+    const message = `held ‮ ${"x".repeat(1100)}`;
+    mocks.list = async () => { throw refusal("skp.session_history_unwritable", message); };
+    await listAs(null);
+    expect(mocks.listed, "case 1 asks at mount").toEqual([null]);
+    expect(mocks.logs, "case 1's line").toEqual([{ level: "recover-list-refused", message: `skp.session_history_unwritable: ${shownText(message)}` }]);
+    nothingShown();
+
+    mocks.list = async () => { throw refusal("skp.unknown_dataset", "m"); };
+    await listAs("ds_1");
+    expect(mocks.listed, "case 2 asks at a project's open").toEqual(["ds_1"]);
+    expect(mocks.logs, "case 2's line").toEqual([{ level: "recover-list-refused", message: "skp.unknown_dataset: m" }]);
+    nothingShown();
+
+    mocks.list = listing([recordOf()]);
+    await listAs(null);
+    expect(container.querySelectorAll(".recovery-entry"), "case 3 shows its entry").toHaveLength(1);
+    expect(mocks.logs, "case 3 logs none").toEqual([]);
+
+    mocks.list = async () => { throw new Error("the page cannot reach the host"); };
+    await listAs(null);
+    expect(mocks.logs, "case 4 logs none").toEqual([]);
+    nothingShown();
+  });
 });

@@ -863,3 +863,114 @@ fn a_projects_folder_with_an_empty_history_is_left_unlocked_at_its_open() {
         (Vec::new(), locations)
     );
 }
+
+/// `dir` made unreadable to this process, or readable again, and whether the system said it was
+/// done. On Windows an entry denying Everyone (`S-1-1-0`) the list-folder right, added and then
+/// removed by `icacls`; on Linux and macOS the folder's mode.
+#[cfg(windows)]
+fn set_readable(dir: &Path, yes: bool) -> bool {
+    let deny = ["/deny", "*S-1-1-0:(RD)"];
+    let args = if yes { ["/remove:d", "*S-1-1-0"] } else { deny };
+    let done = std::process::Command::new("icacls")
+        .arg(dir)
+        .args(args)
+        .output();
+    done.is_ok_and(|o| o.status.success())
+}
+
+#[cfg(unix)]
+fn set_readable(dir: &Path, yes: bool) -> bool {
+    use std::os::unix::fs::PermissionsExt;
+    let mode = std::fs::Permissions::from_mode(if yes { 0o755 } else { 0o000 });
+    std::fs::set_permissions(dir, mode).is_ok()
+}
+
+/// A folder made unreadable by [`set_readable`]; it is readable again when this is dropped, so a
+/// test that panics leaves nothing a later run or a person cannot delete.
+struct Unreadable {
+    dir: PathBuf,
+    restored: bool,
+}
+
+impl Unreadable {
+    fn new(dir: &Path) -> Self {
+        assert!(set_readable(dir, false), "the folder was made unreadable");
+        Unreadable {
+            dir: dir.to_path_buf(),
+            restored: false,
+        }
+    }
+
+    fn restore(&mut self) {
+        assert!(
+            set_readable(&self.dir, true),
+            "the folder was made readable"
+        );
+        self.restored = true;
+    }
+}
+
+impl Drop for Unreadable {
+    fn drop(&mut self) {
+        if !self.restored && !set_readable(&self.dir, true) {
+            eprintln!("{} could not be made readable again", self.dir.display());
+        }
+    }
+}
+
+/// **K-C43** (Amendment 31 item 4). A start whose session store's folder is there and cannot be
+/// read is refused, and a start whose store folder is not there lists nothing. In order: (1) no
+/// store folder, an empty list with `more` false; (2) a crashed run's record is listed; (3) the
+/// folder unreadable, a refusal with the code, a `detail` that begins `read_dir: ` and no path;
+/// (4) access restored, the record's two files as they were and the record listed again.
+/// Mutation M-K43: in `walk`, Old `walked.unreadable = Some(e);`, New `drop(e);`. Expected
+/// failure: this test, at step (3)'s refusal assertion. Mutation M-K43-A: in `folder_names`, Old
+/// `Err(e) if e.kind() == ErrorKind::NotFound => return Ok(Vec::new()),`, New: the line removed.
+/// Expected failure: this test, at step (1)'s assertion.
+#[test]
+fn a_start_whose_session_store_cannot_be_read_is_refused_and_one_with_no_store_lists_nothing() {
+    let s = site("kc43");
+    let r = run(&s);
+    let start = || ListRecoverableRequest {
+        skp: SKP_VERSION.to_string(),
+        dataset: None,
+    };
+    assert!(!s.root.exists(), "the site has no store folder yet");
+    let none = r.recorder.list_recoverable(start());
+    let none = none.map(|l| (l.records.len(), l.more));
+    assert_eq!(none, Ok((0, false)), "(1) no store folder lists nothing");
+
+    let name = crashed(&s, 2);
+    let (history, locations) = (file(&s, &name, HISTORY), file(&s, &name, LOCATIONS));
+    assert!(!history.is_empty() && !locations.is_empty());
+    let l = r.list(None);
+    assert_eq!((listed(&l), l.more), (vec![name.as_str()], false), "(2)");
+
+    let mut denied = Unreadable::new(&s.root);
+    let reply = r.recorder.list_recoverable(start());
+    let refusal = match &reply {
+        Err(e) => e,
+        Ok(_) => panic!("(3) a store that cannot be read is refused; the start answered {reply:?}"),
+    };
+    assert_eq!(refusal.code, "skp.session_history_unwritable");
+    let keys: Vec<&str> = refusal.fields.keys().map(String::as_str).collect();
+    assert_eq!(keys, ["detail"]);
+    let detail = &refusal.fields["detail"];
+    assert!(detail.starts_with("read_dir: ") && detail.len() > "read_dir: ".len());
+    let root = s.root.display().to_string();
+    assert!(
+        !detail.contains(&root) && !detail.contains(&name),
+        "{detail}"
+    );
+    let said = "[P6 placeholder] the session store could not be read, so no record is listed:";
+    assert_eq!(refusal.message, format!("{said} {detail}"));
+
+    denied.restore();
+    assert_eq!(
+        (file(&s, &name, HISTORY), file(&s, &name, LOCATIONS)),
+        (history, locations),
+        "(4) the record's files are as they were"
+    );
+    let l = r.list(None);
+    assert_eq!((listed(&l), l.more), (vec![name.as_str()], false), "(4)");
+}
