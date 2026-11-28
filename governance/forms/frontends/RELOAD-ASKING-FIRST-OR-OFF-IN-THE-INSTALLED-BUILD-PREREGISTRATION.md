@@ -412,3 +412,16 @@ Read the last amendment first.
 6. **Next:** the reviewer's form gate reads the form with Amendments 2 and 3. Part A's code waits for it.
 
 Read the last amendment first.
+
+## Amendment 4 — 2026-11-28 — the custodian's: the reviewer's form gate (FAIL), its words applied but DOC-2, which waits with DOC-5 for the advisor
+
+*References only. Nothing above is edited.*
+
+1. **The reviewer's form gate** at main 51f5e1da, B's head 5ce0525a and the pins at 01bb2de8: FAIL, filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-form-gate-reviewer.md` (its hand-back's sha256 9fe21cd14b4527eef3e17340f0c86a632276ad6634f7b41f125aab997a6530c5). It has two Evidence findings (EV-1, EV-2) and five Documentation findings (DOC-1 to DOC-5). Its words are the reviewer's, not the human's or the advisor's.
+2. **Applied with no re-gate (§31), as that report writes them:** EV-1; EV-2's two pairs (U-5 and U-6 join §4 with the E-1 row as its New 1 has them, and the sentence of its New 2); DOC-1's two pairs; DOC-4. Each Old stands once in this form, by a node count, with a changed text as the control. EV-2 adds one module function to §2's plan. §7's line ceiling stays 330, and a count past it is class 8 at the count (Amendment 3 item 3).
+3. **DOC-3,** appended byte for byte from that report: Amendment 2's D3 words cite lines 418 and 454 of `frontends/shell/src-tauri/src/lib.rs` at 5ce0525a; they are read in the words form with Amendment 3 (ii)'s 17 spans, and Amendment 3 (iv)'s row pins them too.
+4. **To the advisor:** DOC-5, the meaning of `unread` for the key under Part A alone beside ADV-2026-11-28-04 item 1's third bullet, with that report's fact that the ruled case of `with_webview` returning `Err` cannot run from `setup()`; and DOC-2, whose words follow that answer. DOC-2 is not applied before it.
+5. **The order's source** (that report's outside check): Amendment 1 item 9's "before the log folder's E-1" rests on ADV-2026-11-27-47 item 7, which is later than ADV-2026-11-27-44 item 11 and sends the log folder's E-1 run to the end of the port order.
+6. **Next:** Part A's code waits for the advisor's answer on DOC-5. No further form gate is planned (§31), unless that answer asks for one.
+
+Read the last amendment first.

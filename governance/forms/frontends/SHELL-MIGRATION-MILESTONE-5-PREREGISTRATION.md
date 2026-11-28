@@ -2181,3 +2181,16 @@ Read the last amendment first.
 6. **No pull request yet:** PR A has none, and PR B's stays a draft until PR A is on main (Amendment 17 item 11).
 
 Read the last amendment first.
+
+## Amendment 20 — 2026-11-28 — the custodian's: the architect's build gate, the read part (FAIL), its words to the branch, D-1 to the closing amendment
+
+*References only. Nothing above is edited.*
+
+1. **The architect's build gate,** the read part, at e958b913 and main 51f5e1da: FAIL, filed at `state/consults/gates/2026-11-28-shell-migration-milestone-5-pr-b-build-gate-architect.md` (its hand-back's sha256 4c5e25df000cef3506fd2e57c60c1fa049d57112fc31d104fa5369afe2b230c5). It has two Evidence findings (E-1, E-2), both in test code, and seven Documentation findings (D-1 to D-7). It has no Architecture or Correctness finding. Its words are the architect's, not the human's or the advisor's.
+2. **To the branch, by a worker (Sonnet), each pair copied by script from that report:** E-1 (one line of `App.jobs.test.tsx`), E-2 (three changes of `e2e/jobs.mjs` and the two pairs that follow from it), and D-2 to D-7. J-A1's recorded mutation is observed again at the correction. The gate asks for the reviewer's narrow read of the corrected test lines; the reviewer's read part, at the corrected head, makes it.
+3. **D-1 goes to PR B's closing amendment,** by reference to that report: App 155 against 150, class 8; Amendment 15 item 5's two files, 7 lines against 0, class 8; `jobsFrom`'s third parameter; 12f326aa's edit of J-A2's second test; C-U2b's second mutation failing C-U3 and C-U7 as well; how §4's first text check is read; §2.2's `ordered` sentence read with Amendment 16 item 3.
+4. **For the advisor's sight** (that report's item 83 section): the cap of 63 notices, which item 83 cites only for Problems. No clause is found unmet, so nothing waits on it (ADV-2026-11-28-03 item 3).
+5. **Named, not this piece's:** the passage the moved block in `handleCancelScan` marks verbatim from entry 32. It moved byte for byte; the gate found no source for it under governance/ or state/.
+6. **Next:** the worker's corrected head, then the reviewer's read part there. The run part comes at the port, after E-SCALE.
+
+Read the last amendment first.
