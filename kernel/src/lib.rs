@@ -80,6 +80,7 @@ pub mod params;
 pub mod permission;
 pub mod project;
 pub mod publish;
+pub mod recovery;
 pub mod session_history;
 pub mod skp;
 
