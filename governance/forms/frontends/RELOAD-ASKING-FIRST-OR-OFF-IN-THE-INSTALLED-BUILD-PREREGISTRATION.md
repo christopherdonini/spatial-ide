@@ -455,3 +455,20 @@ Read the last amendment first.
 6. **Next:** both attempts 2 ended PASS WITH NOTES (ADV-2026-11-28-05 item 4), so Part A's code is dispatched on B's head once this amendment is on main. Part B stays behind the human's typed approval of ADV-2026-11-27-45.
 
 Read the last amendment first.
+
+## Amendment 7 — 2026-11-28 — the custodian's: Part A's code at 8ba765d9, §7's line ceiling passed (class 8 at the count), the build gates' notes, and a question to the advisor
+
+*References only. Nothing above is edited.*
+
+1. **The report** is filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-part-a-code-worker-report.md` (its hand-back's sha256 ea99ca3ad3a7c387dafe907036a42d7353c09e11696509a395d665edfac3a75c). Part A is at 8ba765d9eaaa5a0ceb79a0e3baa4c2f597996e5e on `cut/reload-asking-first-or-off-in-the-installed-build`, 4 commits over B's head 5ce0525a; `git diff --shortstat 5ce0525a...8ba765d9` gives: 4 files changed, 412 insertions(+). By the report, at 8ba765d9, `cargo test --locked`, `cargo clippy --locked --all-targets` and `cargo fmt --check` in `src-tauri` and the shell's `npm run verify` exited 0; U-1 to U-6 were red at 95b73447; M-U1 to M-U6 were observed at bffb4a223a9f458ca6e5735c1503e7b962d01074, each with the failing tests the report names; M-E1 and E-1 are written and not run. By the custodian's run, `git diff 5ce0525a 8ba765d9` over the shell's `Cargo.toml` and `Cargo.lock` is empty.
+2. **Class 8 at the count** (§7; Amendment 3 item 3; Amendment 4 item 2). By `git diff --numstat 5ce0525a...8ba765d9`, insertions plus deletions, the custodian's run: 412 lines over 4 files, against at most 330 lines and 9 files, so over by 82 lines. By file: `webview_chrome.rs` 327, `lib.rs` 38, `source-watch-idle.mjs` 41, the e2e `README.md` 6. §7's line is not edited. The KNOWN-LIMITATIONS item, still to come, adds to the count.
+3. **For the build gates, from the report** (the worker's account, not a ruling):
+   - the caller rule of §10: `chrome_for` and `log_entry` are called by `setup()`; `apply` is reached from `setup()` only through `reach`, and `readback_line` only through `log_entry`, the trait being kept private. The architect's build gate says whether this meets §10's caller rule;
+   - `reach` and `Live` sit behind `cfg(windows)`, with a `cfg(not(windows))` stub of `reach` that the form does not name: the worker's addition, inside a Scope file;
+   - no unit test reads the key stub's `unread` under Part A alone; E-1 alone does, and it has not run;
+   - one clippy warning, in `publish.rs` (`PrepareOutcome`), is on no line of this piece;
+   - Amendment 6 item 3's note on `session_log` stands for the build gate.
+4. **The KNOWN-LIMITATIONS item** (OPEN-7; Amendment 3 item 3). The worker's draft is in the report, with a source for each effect and what was not observed in the installed build. It names no Microsoft documentation, since the worker had no web access. Its words are the advisor's, given after the build; the draft goes to the advisor with item 5's question.
+5. **Next: a question to the advisor.** §10 puts E-1's suite at the base and at the head, by a tester's series, and the branch's CI before either build gate. E-1 runs at port 5180, which the human holds, near the end of the port order. Whether the build gates run in two parts, as ADV-2026-11-27-08 item 3 and ADV-2026-11-27-18 item 2 have it for other pieces, is the advisor's to rule. No build gate is dispatched before that ruling. ADR-037's amendment under OPEN-2 is the architect's draft at its build gate. Part B stays behind the human's typed approval of ADV-2026-11-27-45.
+
+Read the last amendment first.
