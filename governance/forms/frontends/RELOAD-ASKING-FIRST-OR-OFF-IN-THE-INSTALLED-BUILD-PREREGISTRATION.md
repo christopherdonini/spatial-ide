@@ -508,3 +508,15 @@ Read the last amendment first.
 2. **The reviewer's read part is not dispatched**, in place of Amendment 9 item 5's word that both are. Its cargo runs need keys-target rebuilt (ADV-2026-11-28-08 item 2). keys-target was 9126 MB when it was removed, and D: had 12236 MB free at 2026-11-28T06:25:57Z (date -u), so a rebuild leaves D: under the 8,000 MB margin. The advisor was asked at 2026-11-28T06:35:37Z (date -u) which way to take, as that ruling's last line has it.
 
 Read the last amendment first.
+
+## Amendment 11 — 2026-11-28 — the custodian's: the architect's read part filed, its findings, and room on D: for the reviewer's (ADV-2026-11-28-11)
+
+*References only. Nothing above is edited. Where this amendment summarises a ruling or a report, its bytes govern.*
+
+1. **The architect's read part** is filed at `state/consults/gates/2026-11-28-reload-asking-first-or-off-in-the-installed-build-build-gate-architect-read-part.md` (its hand-back's sha256 87e92268a04ce7a97960d9ea81633985d1676a95e330cbfbd27e71e22ae407fe). It gives no verdict. By it: no Architecture finding; §9 item 1's posture stop is not engaged; §2, docs/01, ADR-006, docs/02 and the caller rule are met.
+2. **Its findings, words only, no code behaviour:** C-1, D-1 and D-2 in two source files' comments, applied by a worker after the reviewer's read part, with that part's findings; D-3 in §10's caller-rule sentence, applied by a later amendment of this form. If the reviewer's words for a place differ, both go to the advisor first (ADV-2026-11-27-10 item 2).
+3. **For the advisor, before any words are committed:** its answers to ADV-2026-11-28-09 item 5 (a), (b) and (e); its draft of ADR-037's amendment (OPEN-2); R-1 and R-2, clauses in ruled texts; and one effect of the KNOWN-LIMITATIONS draft that the code contradicts.
+4. **Room on D:** ADV-2026-11-28-11 is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-11-c-comes-first-room-on-c-before-the-keys-rebuild-a-spare-target-on-d-goes-first.md`. The identity route's spare build, `D:/wt/idr/target/debug`, was removed at 2026-11-28T06:50:08Z (date -u); D: went from 12140 to 26859 MB. `D:/wt/idr-target` stays: its last build is the newer, by the file times of its `slice-host` binary (2026-11-27, against 2026-11-26 in the other). The route's port run's brief names it. `D:/wt/idr/target` keeps its `fixtures` and `slice-evidence`. A's `D:/wt/a2save/target` holds only test fixtures and `slice-evidence`, with no build; A's build is in `D:/wt/a2save-target`, which stays, so nothing of A's was removed.
+5. **Next.** The reviewer's read part goes out when C: allows (ADV-2026-11-28-11 items 1 and 3); its cargo runs rebuild keys-target once, in holds, each after its own read of C:.
+
+Read the last amendment first.

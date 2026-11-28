@@ -3008,3 +3008,18 @@ Nothing above is edited.
 Read the last amendment first.
 
 Nothing above is edited.
+
+## Amendment 25 — 2026-11-28 — the custodian's: ADV-2026-11-28-12 carried: Part 1's build gates in two parts, the runs at the port last, three questions to the read parts
+
+*References only. Nothing above is edited. Where this amendment summarises the ruling, its bytes govern.*
+
+1. **The ruling** is filed at `state/directives/2026-11-28-advisor-ruling-adv-2026-11-28-12-the-recovery-offers-part-1-build-gates-in-two-parts-its-port-runs-last-three-questions-to-the-read-parts.md`.
+2. **Two parts** (its item 1). Part 1's architect and reviewer build gates each run in a read part and a run part. The read parts go out on ffef5945. §9's suites and Amendment 10 item 5's "every suite of §9 is green" change in time only, and for the e2e suites alone; every other suite is green at ffef5945 (Amendment 24 item 3). No verdict and no gate-log row before the run part. A read part's finding is corrected before the series. Part 2's two build gates take the same shape.
+3. **The reviewer's runs** (its item 1; ADV-2026-11-28-11 items 1 and 3): the cargo and vitest suites and the mutations run in `recov-target`, each in a hold, each after its own read of C:. While C: is under its floor, the read part does what is a read, and it has not ended until the runs are made.
+4. **The place at the port: last** (its item 2), after the reload keys' E-1 and the log folder's E-1, not waiting for the log folder's if it is not ready. The series runs at the piece's newest pushed head when its place comes; one series at Part 2's head serves both parts' run parts if Part 2 stands by then (its item 3).
+5. **Part 2's build** (its item 4) does not wait for Part 1's gates, and no second target is made for this piece while D: is short.
+6. **The read parts' questions** are its item 5 (a) to (c), added to those already put (that item's list, and K-C1 and K-C4 of Amendment 22 item 3). Each answer goes to the advisor before the part's words are committed. Its item 6 is noted for the merge check.
+
+Read the last amendment first.
+
+Nothing above is edited.
