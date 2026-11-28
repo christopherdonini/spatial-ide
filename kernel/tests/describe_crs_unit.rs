@@ -53,6 +53,7 @@ fn open_and_describe(name: &str, spec: &FixtureSpec) -> spatial_skp::v0::Describ
             cancel_key: format!("open-{name}"),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .unwrap_or_else(|e| panic!("{name}: open must succeed: {e:?}"));
     host.describe(DescribeRequest {

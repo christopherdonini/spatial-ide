@@ -1,0 +1,130 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// Copyright (C) 2026 Christopher Donini and the Spatial IDE contributors
+
+/**
+ * SHELL-MIGRATION-MILESTONE-5-PREREGISTRATION.md section 2.3 and section 4 (C-R2): the Problems tab lists every visible condition once,
+ * in `ordered` order; the top row carries no outer owner class and no alert role and shows S-10; Dismiss dispatches `dismiss(id)`;
+ * S-4 shows when nothing is listed and S-6 when a raise was not kept. The conditions come out of the real reducer.
+ */
+
+import { act, useReducer } from "react";
+import { createRoot, Root } from "react-dom/client";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+
+import { attentionOf, conditionsReducer, initialConditionsState, ordered, visibleFor } from "./conditions";
+import type { Condition, ConditionsEvent, ConditionsState } from "./conditions";
+import { CONDITIONS_MAX, notKeptText, NO_PROBLEMS_TEXT, SHOWN_IN_STRIP_TEXT } from "./conditionsConstants";
+import ProblemsTab from "./ProblemsTab";
+
+(globalThis as { IS_REACT_ACT_ENVIRONMENT?: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
+
+const R = "ds_r";
+const VIEW = { kind: "view", view: "view-1" } as const;
+const RESOURCE = { kind: "resource" } as const;
+
+const raise = (route: "stream-terminal" | "reopen-notice" | "viewport-refusal" | "session-ended", code: string, text: string): ConditionsEvent => ({
+  type: "raise",
+  route,
+  code,
+  ordinal: route === "reopen-notice" ? 0 : null,
+  target: route === "reopen-notice" || route === "session-ended" ? RESOURCE : VIEW,
+  generation: R,
+  display: { kind: "text", text },
+});
+const stateOf = (events: readonly ConditionsEvent[]): ConditionsState => [{ type: "opened", resource: R } as ConditionsEvent, ...events].reduce(conditionsReducer, initialConditionsState);
+
+/** The store behind the tab, with the dispatch the strip's owners use: the tab's Dismiss reaches `dismiss(id)` through it. */
+function Harness({ initial }: { initial: ConditionsState }) {
+  const [state, dispatch] = useReducer(conditionsReducer, initial);
+  const list = visibleFor(state, { view: "view-1", resource: R });
+  // The list is handed over in reverse raise order: the tab orders it itself.
+  return <ProblemsTab conditions={[...list].reverse()} notKept={state.notKept} onDismiss={(condition: Condition) => dispatch({ type: "dismiss", id: condition.id })} />;
+}
+
+describe("ProblemsTab (C-R2)", () => {
+  let container: HTMLDivElement;
+  let root: Root;
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+    root = createRoot(container);
+  });
+  afterEach(() => {
+    act(() => root.unmount());
+    container.remove();
+  });
+  // A new key each time: the harness keeps its own reducer state, so a second render of one instance would not start from the state given.
+  let renders = 0;
+  const render = (initial: ConditionsState) => act(() => root.render(<Harness key={renders++} initial={initial} />));
+  const rows = () => [...container.querySelectorAll(".problem-row")];
+
+  // RECORDED MUTATION for C-R2: in `ProblemsTab.tsx` list only the top row. Expected failure: the rows after the top are absent.
+  // OBSERVED AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "C-R2: every visible condition once, in order; the top row has no owner class and no alert role and shows S-10": AssertionError: expected [ <div …(1)></div> ] to have a length of 4 but got 1. Also FAILED -- "C-R2: Dismiss on a row dispatches dismiss(id): the row goes and the others stand": AssertionError: expected [ <div …(1)></div> ] to have a length of 3 but got 1. Reverted after observing.
+  it("C-R2: every visible condition once, in order; the top row has no owner class and no alert role and shows S-10", () => {
+    const state = stateOf([raise("reopen-notice", "n", "a notice"), raise("stream-terminal", "a", "refusal a"), raise("stream-terminal", "b", "refusal b"), raise("session-ended", "engine.source_changed", "ended")]);
+    render(state);
+    const list = ordered(visibleFor(state, { view: "view-1", resource: R }));
+    expect(rows()).toHaveLength(list.length);
+    expect(rows()).toHaveLength(4);
+    expect(rows().map((row) => row.textContent)).toEqual([
+      SHOWN_IN_STRIP_TEXT,
+      expect.stringContaining("refusal a"),
+      expect.stringContaining("refusal b"),
+      expect.stringContaining("a notice"),
+    ]);
+    const top = container.querySelectorAll(".problem-row-top");
+    expect(top).toHaveLength(1);
+    expect(top[0]).toBe(rows()[0]);
+    expect(top[0].querySelector(".canvas-refusal, .canvas-session-ended, .record-notice, .save-notice, .reopen-notice")).toBeNull();
+    expect(top[0].matches(".canvas-refusal, .canvas-session-ended, .record-notice, .save-notice, .reopen-notice")).toBe(false);
+    expect(container.querySelector('[role="alert"]'), "no row of Problems carries the alert role").toBeNull();
+    expect(attentionOf(list)?.top.reason.route).toBe("session-ended");
+    expect(container.querySelector(".canvas-session-ended"), "the top's owner element is the strip's, not Problems'").toBeNull();
+    expect(container.querySelectorAll(".reopen-notice")).toHaveLength(1);
+  });
+
+  it("C-R2: Dismiss on a row dispatches dismiss(id): the row goes and the others stand", () => {
+    const state = stateOf([raise("stream-terminal", "a", "refusal a"), raise("stream-terminal", "b", "refusal b"), raise("stream-terminal", "c", "refusal c")]);
+    render(state);
+    expect(rows()).toHaveLength(3);
+    const second = rows()[1].querySelector("button")!;
+    expect(second.textContent).toBe("Dismiss");
+    act(() => second.click());
+    expect(rows().map((row) => row.textContent)).toEqual([SHOWN_IN_STRIP_TEXT, expect.stringContaining("refusal c")]);
+    expect(rows()[0].querySelector("button"), "the top row has no Dismiss of its own: the strip's element has it").toBeNull();
+  });
+
+  // RECORDED MUTATION for "C-R2: S-4 shows when nothing is listed, and not otherwise": in `ProblemsTab.tsx` show S-4 when exactly one condition is listed (`list.length === 1`) in place of none.
+  // Expected failure: S-4 is absent for an empty list and present for one row.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R2: S-4 shows when nothing is listed, and not otherwise": AssertionError: expected '' to contain 'No problems for the dataset on the ma…'. Reverted after observing.
+  it("C-R2: S-4 shows when nothing is listed, and not otherwise", () => {
+    render(stateOf([]));
+    expect(rows()).toHaveLength(0);
+    expect(container.textContent).toContain(NO_PROBLEMS_TEXT);
+    render(stateOf([raise("stream-terminal", "a", "refusal a")]));
+    expect(container.textContent).not.toContain(NO_PROBLEMS_TEXT);
+  });
+
+  // RECORDED MUTATION for "C-R2: S-6 shows the count of raises not kept, and only when it is above 0": in `ProblemsTab.tsx` show S-6 from `notKept >= 0`.
+  // Expected failure: S-6 shows with a count of 0.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R2: S-6 shows the count of raises not kept, and only when it is above 0": AssertionError: expected 'Problems raised and not kept: 0. The …' not to contain 'Problems raised and not kept: 0. The …'. Reverted after observing.
+  it("C-R2: S-6 shows the count of raises not kept, and only when it is above 0", () => {
+    const events: ConditionsEvent[] = Array.from({ length: CONDITIONS_MAX + 1 }, (_, index) => raise("stream-terminal", `code-${index}`, `refusal ${index}`));
+    const full = stateOf(events);
+    expect(full.notKept).toBe(2);
+    render(full);
+    expect(container.textContent).toContain(notKeptText(2));
+    render(stateOf([raise("stream-terminal", "a", "refusal a")]));
+    expect(container.textContent).not.toContain(notKeptText(0));
+    expect(container.querySelector(".problems-not-kept")).toBeNull();
+  });
+
+  // RECORDED MUTATION for "C-R2: S-6 shows with S-4 when nothing is listed for the view but raises were not kept": in `ProblemsTab.tsx` show S-6 only when something is listed (`notKept > 0 && list.length > 0`).
+  // Expected failure: S-6 is absent when nothing is listed.
+  // OBSERVED AT b9594a2f78b6dfdcdca4bf9345fee1c6acfb955e: FAILED -- "C-R2: S-6 shows with S-4 when nothing is listed for the view but raises were not kept": AssertionError: expected 'No problems for the dataset on the ma…' to contain 'Problems raised and not kept: 3. The …'. Reverted after observing.
+  it("C-R2: S-6 shows with S-4 when nothing is listed for the view but raises were not kept", () => {
+    render({ ...initialConditionsState, current: R, notKept: 3 });
+    expect(container.textContent).toContain(NO_PROBLEMS_TEXT);
+    expect(container.textContent).toContain(notKeptText(3));
+  });
+});

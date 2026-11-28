@@ -336,6 +336,7 @@ fn a_coverage_lost_pre_check_refusal_carries_its_typed_code_and_exact_text() {
             cancel_key: "coverage-lost-pre-check".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         })
         .expect("open");
 

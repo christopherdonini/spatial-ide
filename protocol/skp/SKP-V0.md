@@ -10,9 +10,9 @@ it is not a promise about v1.
 architect-first workflow rule. Three premises in the cut brief were corrected in that review and the
 corrections are recorded here rather than smoothed over (§2).
 
-## 1. The eight commands
+## 1. The eleven commands
 
-This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, the seventh, `save_project` (`skp/0.13`), is §11's, and the eighth, `open_project` (`skp/0.14`), is §12's.
+This section describes the original five; the sixth, `record_step` (`skp/0.12`), is §10's, the seventh, `save_project` (`skp/0.13`), is §11's, the eighth, `open_project` (`skp/0.14`), is §12's, and the ninth, the tenth and the eleventh, `list_recoverable`, `recover_session` and `discard_recoverable` (`skp/0.18`), are §13's, §14's and §15's.
 
 Every request carries the version literal stated in §4 item 3 (`skp/0` at v0). The host compares it with `==` and refuses anything else
 (`skp.version_unsupported`) — see §4 for why nothing richer exists yet. Every response is
@@ -24,9 +24,11 @@ directions, so schema evolution is impossible without a new version string.
 ```
 { skp, path: String, cancel_key: String,
   crs_assertion: Option<{ identifier: String, definition_json: String }>,
-  identity: Option<{ column: String }> }
+  identity: Option<{ column: String }>, set_aside_file_id: bool }
   →  { dataset: DatasetHandle, session: SessionRef }
 ```
+
+**`set_aside_file_id` (from `skp/0.16`).** The caller's choice to set aside a single file's own `id` column and open the file on the session tier, identified by row position for this session only (ADR-016, Amendment 3). It is always present, `false` for no choice, and has no default: a request that omits it is refused at deserialize. It is admitted only when the file has a column named `id` that cannot serve, by the checks `open_dataset` makes without a declaration. A column that serves, a declared `identity` beside the choice, and a file with no `id` column are each refused as `engine.identity_set_aside_refused`, and nothing opens. Nothing of the choice is recorded in a project file, a session history or a bundle.
 
 `path` is UTF-8, absolute, and comes from the OS file picker. The host passes it to the engine's
 open as received, without canonicalizing it. A directory, a path carrying `*` or `?`, or a path
@@ -85,7 +87,8 @@ geometry { column, encoding: "geoarrow.polygon"|"geoarrow.multipolygon"|"geoarro
 identity { source: "file:id"|"mapped:<col>"|"session-ordinal:file_row_number",
            uniqueness: "verified-at-open-full-file"|"declared-not-verified"|"by-construction-within-generation",
            verified_rows: Option<DecU64>, max_value: Option<DecU64>, js_exact: Option<bool>,
-           class: "native"|"mapped"|"session-ordinal", session_statement: Option<String> }
+           class: "native"|"mapped"|"session-ordinal", session_statement: Option<String>,
+           candidate_columns: Option<[String]>, set_aside_column: Option<String> }
 schema   [ { name, arrow_type, nullable, projectable } ]
 covering_bbox: bool
 row_count { basis, value: Option<DecU64> }
@@ -96,6 +99,10 @@ coverage { state: "watching"|"checks-only", reason: Option<String> }
 checks   { state: "full"|"degraded", components: ["mtime"|"footer-hash"] }
 session_end: "observed-change"|"coverage-lost"|null
 ```
+
+**`identity.candidate_columns` (from `skp/0.15`).** On the session tier alone (`class` `"session-ordinal"`) it is the engine's candidate list for a declaration: every column whose type `open_dataset` admits as an identity column, less the columns the engine leaves out of the list: a name that holds a comma and a name nothing can address (§8's skp/0.15 entry), in schema order, unranked and unpreselected, and it may be empty. On a native or a mapped identity it is `null`, and the key is always present. It is the same list, from the same engine function, that `engine.identity_unusable` carries in its `candidate_columns` field. It names what a caller may declare; it is never a declaration and never a recommendation (ADR-016, Amendment 2 and the Note 2026-11-26).
+
+**`identity.set_aside_column` (from `skp/0.16`).** `"id"` exactly when the dataset is on the session tier by the caller's choice (`open_dataset`'s `set_aside_file_id`, ADR-016 Amendment 3), and `null` on every other open, a file with no `id` column included. The key is always present. A client that shows the identity says beside the session statement that this member is set, so that the summary says the user chose row position. On such an open the candidate list is the list a file with no `id` column would carry, and the file's own `id` column is not projected.
 
 `duckdb_version()` is deliberately **not** in `describe`: it runs a query and can fail on connection
 pressure (`ConnectionsExhausted`), which would make a command described as pure able to fail on
@@ -226,8 +233,8 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    parameter; `sql` stays absent, named absent by ADR-021's own "what this ADR does not decide."
    **`skp/0.6` (§9) adds no command either** — `viewport_query` gains an optional attribute
    projection parameter, on the same shape row-filter's own addition took.
-   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either. **`skp/0.14` (§12) adds an eighth command, `open_project`**: it reopens a saved project and opens the dataset it names.
-2. **Transport bindings** — one: Tauri invoke, for the eight commands. **`skp/0.5` adds exactly one
+   **`skp/0.12` (§10) adds a sixth command, `record_step`**: it records, in the kernel's session history (ADR-036, Accepted 2026-10-22), a filter or style change that a client has committed, and applies nothing. A command that sets a style stays absent. **`skp/0.13` (§11) adds a seventh command, `save_project`**: it saves the workspace as the project of an open dataset (ADR-036; ADR-006 class 2) and applies nothing either. **`skp/0.14` (§12) adds an eighth command, `open_project`**: it reopens a saved project and opens the dataset it names. **`skp/0.18` (§13 to §15) adds a ninth, a tenth and an eleventh command, `list_recoverable`, `recover_session` and `discard_recoverable`**: they offer a session history that a run left behind, take one into this run (the kernel applies none of its steps) and remove one.
+2. **Transport bindings** — one: Tauri invoke, for the eleven commands. **`skp/0.5` adds exactly one
    more binding for exactly one payload**: a Tauri event, `dataset_session_ended`, is the sole
    server-to-client push this spec ever defines (item 7 below). Still no control-plane websocket, no
    stdio, no MCP adapter. **`skp/0.6` (§9) adds no binding** — the projection rides the existing
@@ -241,12 +248,12 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
    unchanged** — still no ranges, min/max, capability set, or handshake. A `skp/0.1` client and a
    `skp/0.2` host fail on the first call. **`skp/0.3` and `skp/0.4` each bumped the compared
    literal again**, and `==` is unchanged. **`skp/0.5` and `skp/0.6` (§9) each bumped the literal
-   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.14` each bumped the literal again in turn
-   (§8), `==` unchanged, and the literal the host compares today is `skp/0.14`.
-4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eight
+   again in turn, `==` still unchanged**. `skp/0.7` to `skp/0.18` each bumped the literal again in turn
+   (§8), `==` unchanged, and the literal the host compares today is `skp/0.18`.
+4. **Capability discovery** — none. No `capabilities` command. The client hardcodes v0's eleven
    commands and cannot adapt to a future kernel.
-5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset` and for `open_project` (§2, C3; §12.3).
-   Progress: data-plane batches only. `open_dataset` and `open_project` are cancellable but not progress-reporting.
+5. **Cancellation and progress** — cancellation: yes, for streams, for `open_dataset`, for `open_project` and for `recover_session` (§2, C3; §12.3; §14.3).
+   Progress: data-plane batches only. `open_dataset`, `open_project` and `recover_session` are cancellable but not progress-reporting.
    **v0.1 (§7) adds a named shortfall to this item, not a new gap**: for a filtered scan whose
    predicate matches late, "progress: data-plane batches only" can mean *zero* batches for a long
    time — see §7's own shortfall paragraph.
@@ -275,7 +282,7 @@ absent — a v0 that goes silent on an item is not a smaller spec, it is an unst
 7. **Subscriptions and events** — **one named exception, `skp/0.5`**: `dataset_session_ended`, a
    Tauri event carrying `{session, reason}`, emitted at most once per ended dataset-session
    generation (ADR-035 D4). It is not a subscription — there is no way to ask for it and no way to
-   turn it off, and no request or response on any of the eight commands mentions it. No other
+   turn it off, and no request or response on any of the eleven commands mentions it. No other
    server-to-client push exists on the control plane in any other form.
 8. **Error taxonomy** — §5. The existing `engine::EngineError` taxonomy, surfaced verbatim; no new
    error invented, none flattened to a string. **v0.1 (§7) adds eleven `skp.filter_*` codes** to this
@@ -516,7 +523,10 @@ means the wire identity or the file's column. Any client that declares an identi
 `open_dataset` for such a file reaches it; proven through the host by
 `kernel/tests/skp_admission_remediation.rs::a_declared_identity_beside_the_files_own_id_refuses_a_filter_naming_id_as_ambiguous`. *(Corrected 2026-10-10: this paragraph called the
 code unreachable from any product entry point. That stopped being true when the
-admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into the engine.)*
+admission-remediation cut (`skp/0.2`) threaded `open_dataset`'s `identity` into the engine.)* From
+`skp/0.16` it is also refused on a session-tier open made by `set_aside_file_id` (§1), whose identity
+is the row position and whose file carries its own `id` column: `source_column` is `file_row_number`
+and the message says the dataset is identified by row position for this session.
 
 > **Dated note, `skp/0.8` (2026-09-30; `engine/FILTER-BIND-COERCIONS-PREREGISTRATION.md`).** One
 > row, `skp.filter_type_not_admitted` | `construct`, `operand_types`, `reason`, followed by the
@@ -731,8 +741,9 @@ variant-name rule, unchanged), each carrying `detail` in `SkpError.fields`:
   boundary's own words: the check does not establish snapshot consistency, cannot detect every
   in-place modification, and may detect a change during a query only after that query has finished
   reading.
-- **`engine.identity_ordinal_partitioned_unsupported`** — a partitioned source reached the
-  session-ordinal path (boundary 7). No file-list or packing contract is introduced by it.
+- **`engine.identity_ordinal_partitioned_unsupported`** — the path is read as a folder or a
+  pattern, not as one file (boundary 7): refused before any identity is read, whether or not an
+  identity column is declared. No file-list or packing contract is introduced by it.
 - **`engine.internal_inconsistency`** — a retype, not a new failure: the provenance-arm
   contradiction in `dataset::open_inner` used to arrive as `engine.source`, telling a caller its
   file was unreadable when the contradiction is in this tree's own record.
@@ -1166,6 +1177,63 @@ comparison retained; `deny_unknown_fields` kept both directions. `skp/1` stays R
 
 §1 and §4 are updated in place to count eight commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.13"` → `"skp/0.14"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the three shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.14` as an unsupported future version is renumbered to name `skp/0.15`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
 
+### Note: a `relink` after a refused locator (2026-11-23; no literal change)
+
+**`skp/0.14` stands; no literal is bumped and no fixture changes.**
+
+- **The change.** §12.3's `relink` bullet names a second case in which a client sends one, after `skp.project_target_unresolvable` with a `locator`. The kernel already used a `relink` before any locator at `skp/0.14`, so its answers do not change.
+- **The machine.** §12.3 gains the bullet that says what "the machine" and "this machine" mean wherever §12 says them.
+- **What did not change.** No key, value, code, message or command is added or removed, and `protocol/data-plane/` has an empty diff.
+
+### skp/0.15 — the session tier's candidate list on `describe.identity` (identity-declaration-route-for-session-tier, ADR-016 Amendment 2 and the Note 2026-11-26)
+
+**The version's FULL field set, as §8's own discipline requires:** one member on one reply, and nothing else. No command, request member, code or message is added, removed or changed; the other reply members are as at `skp/0.14`; the partitioned refusal's fixture message is brought to the engine's Display; the engine message itself is unchanged.
+
+- **`describe`'s `identity` gains `candidate_columns: Option<[String]>`.** It is `Some` exactly when `class` is `"session-ordinal"`, and the list may be empty. It is `null` on a native or a mapped identity, and the key is always present (`deny_unknown_fields` stays on in both directions). The list is the engine's, from the same function and in the same order as the refusal's `candidate_columns` field; the kernel carries it as the engine gives it.
+- **`candidate_columns`, on `engine.identity_unusable` and on `describe.identity`, widens in this version** (ADR-016, Note 2026-11-26). It names every column whose type `open_dataset` admits as an identity column — `Int8`, `Int16`, `Int32`, `Int64`, `UInt8`, `UInt16`, `UInt32` or `UInt64` — in schema order across all widths, unranked and unpreselected. Two kinds of column stay out of it, as before: a name that holds a comma (the `skp/0.2` P3c addendum) and a name nothing can address. The `skp/0.2` entry's "`Int64` and `UInt64` only" records that version and is not edited. No fixture changes for this: each fixture's list holds names only.
+
+§1's `describe` block is brought current in place. `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.14"` → `"skp/0.15"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it, and the three `describe` fixtures gain the member. The version-refusal fixture that named `skp/0.15` as an unsupported future version is renumbered to name `skp/0.16`.
+
+### skp/0.16 — a file whose own `id` column cannot serve, opened by the user's choice (text-id-opens-for-the-session-by-row-position, ADR-016 Amendment 3)
+
+**The version's FULL field set, as §8's own discipline requires:** two request members, one reply member and one code. No command is added or removed; the other members are as at `skp/0.15`.
+
+- **`open_dataset` gains `set_aside_file_id: bool`, and `open_project` gains the same member.** It is always present, `false` for no choice, and has no default, so a request that omits it is refused at deserialize. It is a member of its own and never travels inside `identity`, which is also what a project records. §1 gives its contract; §12.3 gives `open_project`'s.
+- **`describe`'s `identity` gains `set_aside_column: Option<String>`.** `"id"` exactly on an open made by that choice and `null` on every other, and the key is always present.
+- **One code, `engine.identity_set_aside_refused`, with the field `detail`.** It is `EngineError::IdentitySetAsideRefused`, mapped as every `engine.*` code is (§5). Its message is the engine's own, and states one of three facts: the file's own `id` column serves as its identity, so it cannot be set aside; setting aside the file's `id` column cannot be combined with a declared identity column; or the file has no column named `id` to set aside.
+
+| Code | Fields |
+|---|---|
+| `engine.identity_set_aside_refused` | `detail` |
+
+- **Two messages change, with no field.** `engine.identity_unusable`'s message ends after its detail, where it carried a last sentence on synthesizing a row ordinal; and the detail of its type refusal ends "is not a mapping: it gives no stable identity". `skp.filter_identity_alias_ambiguous` has a second message, for a session-tier open made by the choice (§7.5).
+
+§1's `open_dataset` and `describe` blocks, §12.2 and §12.3 are brought current in place. `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.15"` → `"skp/0.16"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it; the request fixtures, the three `describe` fixtures and the conformance documents of the two commands gain the member; two fixtures are new (`v0-open_dataset-request-set-aside.json`, `v0-describe-response-session-ordinal-set-aside.json`); and the version-refusal fixture that named `skp/0.16` as an unsupported future version is renumbered to name `skp/0.17`.
+
+### skp/0.17 — the source the engine checked, on `engine.identity_unusable` (text-id-reopen-with-a-recorded-declaration, ADR-016 Amendment 3, Decision 1)
+
+**The version's FULL field set, as §8's own discipline requires:** one field on one code, and nothing else. No command, request member, reply member, code or message is added, removed or changed; every other member and field is as at `skp/0.16`.
+
+- **`engine.identity_unusable` gains the field `identity_source`.** It is the source the engine checked when it refused: `file:id` when it checked the file's own `id` column with no declaration, and `mapped:<column>` when it checked the column a declaration named. These are the values of `describe.identity.source` (§1). The engine builds the value at the site that refuses (`IdSource::as_envelope_value`), the kernel passes it through as it passes `column`, and it composes, renames and derives nothing. The message is the engine's own and does not change: the field rides only in `fields`, as `candidate_columns` does.
+- **At a reopen** (`open_project`, §12.3) the only declaration the engine can have been sent is the one the project file records, so `mapped:id` there means the project file's recorded declaration of `id` was refused. A client that offers the choice to open by row position (`set_aside_file_id`, §1) offers it only beside a refusal whose `identity_source` is `file:id`: a refusal with another value, or with no such field, is not offered it.
+
+| Code | Fields |
+|---|---|
+| `engine.identity_unusable` | `column`, `detail`, `candidate_columns`, `identity_source` |
+
+`protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.16"` → `"skp/0.17"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it; `v0-error-identity_unusable-with-candidates.json` gains the field (`file:id`); one fixture is new (`v0-error-identity_unusable-declared.json`, `mapped:id`); and the version-refusal fixture that named `skp/0.17` as an unsupported future version is renumbered to name `skp/0.18`.
+
+### skp/0.18 — the recovery offer: `list_recoverable`, `recover_session` and `discard_recoverable` (B2 piece 1c, step 3, `kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md`, ADR-036 §9 and §12)
+
+**The version's FULL field set, as §8's own discipline requires:** three commands and their types, and four codes. The other eight commands keep their requests and replies; no message and no other code changes.
+
+- **A ninth, a tenth and an eleventh command.** `list_recoverable`: request `{skp, dataset}`, reply `{records, more}`; `recover_session`: request `{skp, record, cancel_key, dataset}`, reply `{dataset, opened, steps}`; `discard_recoverable`: request `{skp, record}`, reply `{}`. §13.2, §14.2 and §15.2 give every member. `dataset` is always present on the first two, `null` for none, and `opened` is always present on the reply of the second, `null` when the kernel did not open the data. `data` is `{state: "found"}`, `{state: "not-found"}` or `{state: "cannot-be-offered", reason}`, with `reason` one of `no-step`, `later-version` and `locations-refused`.
+- **Four new `skp.*` codes:** `skp.recoverable_record_locked` (`record`), `skp.recoverable_record_unknown` (`record`), `skp.recoverable_record_refused` (`record`, `file`, `rule`) and `skp.recoverable_record_not_for_this_open` (`record`). §14.4 lists them.
+- **One code is reached by a new path.** `skp.session_history_unwritable` is `recover_session`'s refusal when the history could not be cut to its kept steps; its `detail` names `set_len`, `seek` or `sync_all`. Its code and field are §10.4's.
+- **A clause of §10.3 changes** (`record_step`'s "Record only" bullet): outside §14, nothing in SKP restores a step.
+
+§1 and §4 are updated in place to count eleven commands; §5 is unchanged; `protocol/data-plane/` has an empty diff. Mechanics: the literal `"skp/0.17"` → `"skp/0.18"` is bumped with its fixtures (`protocol/skp/tests/data/*.json`, the conformance fixtures, `protocol/skp/tests/fixtures.rs`), the shell's TypeScript literal and the shell tests that carry it, and the types above. The version-refusal fixture that named `skp/0.18` as an unsupported future version is renumbered to name `skp/0.19`. Plain `==` retained; `deny_unknown_fields` kept both directions; `skp/1` stays RESERVED.
+
 ## 9. Attribute projection on `viewport_query`
 
 **Brief B stage B1** (`engine/B1-PROJECTION-PREREGISTRATION.md`), following ADR-023 Decision §§1–5
@@ -1280,7 +1348,7 @@ Full design and consequences: `docs/adr/ADR-023-attribute-projection-on-viewport
 
 ### 10.1 Version
 
-`skp` is now compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13` and `skp/0.14` entries).
+`skp` is now compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.12`, `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16`, `skp/0.17` and `skp/0.18` entries).
 
 ### 10.2 The wire shape
 
@@ -1302,7 +1370,7 @@ Match = { match: { column: <text>, cases: [ { when: <text>, then: "#rrggbb" }, �
 
 ### 10.3 The contract
 
-- **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; nothing in SKP restores, undoes or replays a step.
+- **Record only.** The client commits the change in its own state first. The kernel validates the intent, mints the step's `id` and `at`, takes `actor` (`user`) and `effect`, appends one line to the session history, flushes it, and replies. It applies nothing and holds no workspace state; Outside §14, nothing in SKP restores a step; nothing in SKP undoes or replays one.
 - **The order of checks:** (1) the version; (2) the catalog entry of the handle; (3) the live check `viewport_query` uses, so a dataset whose session has ended is refused with the end's code; (4) the action; (5) for a `filter.apply` that carries a filter, admission as §7.6 admits it; (6) for `style.set`, the value as the style model admits it, and for a match also compiled against the open's own columns, whose type rule is the renderer's: the column must exist and be a text column; (7) the history's record for the open file, created at its first step; (8) the line's bounds, and its members against the rules the reader holds (ADR-036 §9); (9) one write of the whole line; (10) one flush; (11) the reply. A refusal at (1) to (6) writes nothing. At the first step for an open file, (7) creates the record: its folder, `locations.json` and the history's header line; a refusal at (8) leaves that record and writes no step. A failure at (7) removes what (7) wrote, as far as the operating system allows.
 - **A match records its column.** A `fillColor` step that sets a match carries the match in its `intent` as sent, and one `dependencies.fields` entry: the match column, with its type as the open's file schema spells it. A step that sets a colour names no column.
 - **The live check is the one ordering point.** A `close_dataset` or a session end that lands after it does not stop the write: the line is true of the open it names. `record_step` takes no lock a close waits on.
@@ -1335,7 +1403,7 @@ Five new codes, all minted by the host:
 
 ### 11.1 Version
 
-`skp` is compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13` and `skp/0.14` entries).
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.13`, `skp/0.14`, `skp/0.15`, `skp/0.16`, `skp/0.17` and `skp/0.18` entries).
 
 ### 11.2 The wire shape
 
@@ -1393,12 +1461,13 @@ From `skp/0.14`, one code more, which a later save can give: `skp.project_file_n
 
 ### 12.1 Version
 
-`skp` is compared against `"skp/0.14"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14` entry).
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.14`, `skp/0.15`, `skp/0.16`, `skp/0.17` and `skp/0.18` entries).
 
 ### 12.2 The wire shape
 
 ```
-{ skp, folder: string, cancel_key, answer: null | "copy" | "same", relink: null | string }
+{ skp, folder: string, cancel_key, answer: null | "copy" | "same", relink: null | string,
+  set_aside_file_id: bool }
     →  { opened } | { question } | { not_found }        (one member, externally tagged)
 
 opened    = { project, dataset: DatasetHandle, session: SessionRef, workspace, view, check, lineage }
@@ -1429,8 +1498,9 @@ refused   = { reason: "over-bound", line: n | null, limit } | { reason: "damaged
 - **Two calls, no state between them.** The kernel keeps nothing between the first call and the second. A `question` or a `not_found` is answered by calling again, with `answer` or with `relink`.
 - **`question`** means the folder is not one the machine remembers for the project, and the folder it remembers first still holds a project file of this identity, or one the reader refuses, or cannot be read, it or its project file. Nothing was written. The answer `copy` mints a new identity into this folder; the answer `same` is remembered for this folder.
 - **The data** is found by the project-relative locator the file carries, through the resolver's check, which refuses a locator it cannot resolve; otherwise by the location this machine's store holds for the dataset, and a location that is absent, or whose file is missing, is `not_found`.
-- **A `relink`** is an absolute UTF-8 path to a file the client chose after `not_found`. It replaces the dataset's entry in the machine store whatever the entry held. A client sends one after a `not_found`.
-- **The open** is `open_dataset`'s, with the claims the project file recorded and the request's `cancel_key`. A project is open once at a time within one user's machine store, where its lock is kept: a reopen of a project whose lock another open holds is refused as `skp.project_open_elsewhere`. The lock does not reach another user's store on the same machine.
+- **A `relink`** is an absolute UTF-8 path to a file the client chose after a `not_found`, or after a refusal as `skp.project_target_unresolvable` that names a `locator`. It is used in place of every locator the project file carries, and the resolver's check is not made on it. It replaces the dataset's entry in the machine store whatever the entry held. The project file keeps its locators until a later `save_project` judges them again (§11.3), so a call without a `relink` before that save is refused again while the file is not at the place the locator records.
+- **The open** is `open_dataset`'s, with the claims the project file recorded, the request's `cancel_key` and, from `skp/0.16`, the request's `set_aside_file_id`. That member is the caller's choice at this call alone: the project file records nothing of it, so a project saved after an open made by that choice refuses the file's own `id` column again at its reopen, and opens on the session tier only if the choice is made again. A project is open once at a time within one user's machine store, where its lock is kept: a reopen of a project whose lock another open holds is refused as `skp.project_open_elsewhere`. The lock does not reach another user's store on the same machine.
+- **The machine.** Wherever §12 says "the machine" or "this machine", it means one user's machine store: the `spatial-ide/projects` folder in the per-user data directory, with one folder for each project identity, holding that identity's `folders.json`, `locations.json`, `open.lock` and the lineage file kept on this machine. Another user of the same computer has a store of its own, which this user's calls neither read nor write.
 - **No reply carries a path.** A refusal may name the request's own `folder` or `relink` as sent, a locator's JSON path and its segment as the project file spells it, a machine-store file by its fixed name, and an identity. One exception: an engine refusal keeps the engine's own message, unedited (§5), and that message may name the path the engine was given.
 - **Cancellable**, through `cancel` and the request's `cancel_key`, as `open_dataset` is, and not progress-reporting. A key that a live `open_dataset` or `open_project` call holds is refused as `skp.cancel_key_in_use`. A cancel that the call sees before the engine's open returned refuses it as `engine.cancelled`. The call looks between its steps, so a `question`, a `not_found` or another refusal already decided can still be the reply. A cancel after the engine's open returned a dataset is not seen: the call goes on as it would with none.
 
@@ -1456,3 +1526,115 @@ An engine refusal at a reopen can say "the caller asserted" where the claim was 
 ### 12.5 Data plane
 
 **Unchanged, empty diff.** `open_project` opens no stream and mints no ticket.
+
+## 13. `list_recoverable`
+
+**B2 piece 1c, step 3** (`kernel/B2-1C-STEP-3-RECOVERY-OFFER-PREREGISTRATION.md` §2.3 and §2.4, as its amendments leave them), following ADR-036 §9 and §12. Laid out as §12 is. §14 and §15 are the other two commands of the offer.
+
+### 13.1 Version
+
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.18` entry).
+
+### 13.2 The wire shape
+
+```
+{ skp, dataset: DatasetHandle | null }  →  { records: [ record, … ], more: bool }
+
+record = { record: string, file_name: string | null, last_step_at: string | null, steps: n, data }
+data   = { state: "found" } | { state: "not-found" }
+       | { state: "cannot-be-offered", reason: "no-step" | "later-version" | "locations-refused" }
+```
+
+- **`dataset`** is always present: `null` for a start's list, or the handle of an open that `open_project` replied with for that open's project's record.
+- **`record`** is the name of the record's folder in the session store: `unsaved-` and 32 lowercase hex characters, or 32 lowercase hex characters. A name, never a path.
+- **`file_name`** is the last name of the data file that the record's `locations.json` holds for the record's dataset, `null` where none is read. Every control character in it is replaced by U+FFFD, and a name then over 256 bytes is cut on a character boundary within them and marked with ` [cut]`, so that it is at most 262 bytes. **`last_step_at`** is the `at` of the last step the reader keeps, and **`steps`** the count of kept steps; both are `null` and `0` for a record that cannot be offered. No reply carries a path.
+- **`more`** is `true` when a record was left out of the list: the list is at its bound, or the kernel could not decide whether another record is its twin.
+
+### 13.3 The contract
+
+- **A start** (`dataset` `null`) lists the `unsaved-` records of runs that ended without `end_session`: a run that ended normally clears its own. It skips the records this run holds, a folder with no `history.jsonl` or an empty one, and a record whose history another run holds locked (never read, listed or counted). At most 64 records are taken, in name order; `<hex>` folders never count. An `unsaved-` record whose project's `<hex>` folder holds the same `locations.json` and the same first step is that project's record that a save moved, and is not listed: it is offered at the project's open. When that check cannot be made, the record is withheld and `more` is `true`.
+- **At an open** (`dataset` a handle) it lists the record of the project the open was reopened as, if the run does not hold it, and not the others. A project's record with no step after its last `saved-here` mark is not listed.
+- **Listing removes nothing and never opens the data.** `found` and `not-found` come from the file system's `metadata` of the place `locations.json` holds, taken after every lock is released. They are facts of the moment: the open at `recover_session` is the check.
+- **`cannot-be-offered`** is a record that is listed with Discard only: `no-step` (the reader keeps no step), `later-version` (the header's `actions` is over this kernel's, or the history holds a `restored` mark) or `locations-refused` (the record's `locations.json` is refused or holds no entry for its one dataset). It stays where it is until it is discarded.
+- **Not cancellable, no progress:** one pass over the store's folders.
+
+### 13.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.unknown_dataset` (a handle given that no open dataset has). The four `skp.recoverable_record_*` codes are §14.4's and §15's, and this command returns none of them.
+
+### 13.5 Data plane
+
+**Unchanged, empty diff.** `list_recoverable` opens no stream and mints no ticket.
+
+## 14. `recover_session`
+
+**B2 piece 1c, step 3**, laid out as §13 is.
+
+### 14.1 Version
+
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.18` entry).
+
+### 14.2 The wire shape
+
+```
+{ skp, record: string, cancel_key, dataset: DatasetHandle | null }
+    →  { dataset: DatasetHandle, opened: null | { session: SessionRef, check }, steps: [ StepIntent, … ] }
+
+check = { observed: [ "size" | "mtime" | "footer-length" | "footer-hash", … ], admission: [ "crs" | "identity", … ] }
+```
+
+- **`dataset`** is always present. `null` for an `unsaved-` record, where the kernel opens the data; a handle for a project's record, where the handle is the open `open_project` replied with.
+- **`opened`** is present exactly when the kernel opened the data; `session` and `check` are those of `open_project` (§12.2).
+- **`steps`** are the last step the record holds for each key of the filter, `fillColor`, `outlineColor`, `fillOpacity` and `outlineWidth`, in that order and for the keys a step set, each in the shape of §10.2's `intent`. The kernel applies none of them; the client does, and records nothing.
+
+### 14.3 The contract
+
+- **The order of checks:** (1) the version and the record's name, which must be one of the two shapes of §13.2, else `skp.recoverable_record_unknown`; (2) this run holds the record or is working on it: `skp.recoverable_record_unknown`; (3) the lock (held by another run: `skp.recoverable_record_locked`), the read of the history and the same judgement as the list's, refused as `skp.recoverable_record_refused` for a record that cannot be offered, and the record's one dataset; for an `unsaved-` record the twin check of §13.3 for this record alone (a twin: `…_unknown`; a twin a live run holds, `…_locked`); (4) the open, and its `check`; (5) the history cut to its kept steps; (6) the record joins this run's.
+- **A null `dataset`** opens the data as `open_dataset` does, with the claims the header holds, under `cancel_key`, which `cancel` reaches as it does for `open_dataset`. **A handle** must be an open of the record's project (reopened as that project), of the header's dataset, holding no record and bound to no project; otherwise `skp.recoverable_record_not_for_this_open`.
+- **The cut.** The history is cut to the steps the reader keeps and the handle is left at the new end, so that the next step chains from the last kept one. A failure of that cut is `skp.session_history_unwritable` with a `detail` naming `set_len`, `seek` or `sync_all`, and the open the call made is closed. Every refusal after the open closes it, and leaves the record as it was, with its lock released.
+- **Cancellable** as `open_dataset` is, and not progress-reporting. A cancel the call sees before the engine's open returned refuses it as `engine.cancelled`.
+- **No reply carries a path.** A refusal names the record's name as sent (control characters replaced and cut as §13.2's `file_name` is), a file by its fixed name, and an engine refusal keeps the engine's own message (§5).
+
+### 14.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`; `skp.malformed_cancel_key`; `skp.cancel_key_in_use`; `skp.unknown_dataset`; `engine.cancelled`; the engine's refusals of the open, exactly as §5 gives them; `skp.session_history_unwritable`, as §10.4 gives it.
+
+Four new codes, all minted by the host; §15 also returns the first two:
+
+| Code | Fields | When |
+|---|---|---|
+| `skp.recoverable_record_locked` | `record` | another run holds the record's history, or a twin's |
+| `skp.recoverable_record_unknown` | `record` | the name is not one of the two shapes; there is no such record; this run holds it or is working on it; or it is a twin of a project's record |
+| `skp.recoverable_record_refused` | `record`, `file`, `rule` | the record cannot be offered: `file` is `history.jsonl` or `locations.json` and `rule` says which rule |
+| `skp.recoverable_record_not_for_this_open` | `record` | the handle is not an open of the record's project and dataset, or the open holds a record or a binding |
+
+### 14.5 Data plane
+
+**Unchanged, empty diff.** `recover_session` opens no stream and mints no ticket.
+
+## 15. `discard_recoverable`
+
+**B2 piece 1c, step 3**, laid out as §13 is.
+
+### 15.1 Version
+
+`skp` is compared against `"skp/0.18"`, still `==` (§4 item 3); `deny_unknown_fields` stays on every derived struct in both directions (§8's `skp/0.18` entry).
+
+### 15.2 The wire shape
+
+```
+{ skp, record: string }  →  {}
+```
+
+### 15.3 The contract
+
+- The name is checked as §14.3's step (1) checks it, and a record this run holds or is working on is `skp.recoverable_record_unknown`. The kernel then takes the history's lock without waiting (another run holds it: `skp.recoverable_record_locked`), removes `history.jsonl` and `locations.json` under it, drops the handle and removes the folder. A folder whose removal fails stays and is not an error; a file whose removal fails is `skp.recoverable_record_refused`.
+- It removes the one record it is given, and no twin of it. Not cancellable, no progress, not idempotent: a second call finds no record.
+
+### 15.4 Refusal taxonomy
+
+Reused: `skp.version_unsupported`. `skp.recoverable_record_locked`, `skp.recoverable_record_unknown` and `skp.recoverable_record_refused` are §14.4's.
+
+### 15.5 Data plane
+
+**Unchanged, empty diff.** `discard_recoverable` opens no stream and mints no ticket.

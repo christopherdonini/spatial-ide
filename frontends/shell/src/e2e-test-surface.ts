@@ -185,12 +185,12 @@ export interface E2eTestSurface {
    * - `"asked"`: the saver took the folder from the slot (the open's first save).
    * - `"not-asked"`: the slot was still full after the save, so the saver never asked for a folder
    *   (the open had a confirmed save, a save was in flight, the canvas had no view, or no dataset was drawn).
-   * Its only caller is `e2e/project.mjs`. **A run through this hook does not exercise the native
+   * Its callers are `e2e/colour.mjs`, `e2e/project.mjs`, `e2e/reopen.mjs` and `e2e/second-open.mjs`. **A run through this hook does not exercise the native
    * folder picker: only the operator's walkthrough does (the form's section 9, OP1).** */
   e2eSaveProjectToFolder?: (folder: string) => Promise<"asked" | "not-asked">;
   /** **DEV-ONLY E2E TEST SEAM** (B2 piece 1c, Amendment 54 item 7 (a)). Supplies `folder` once, in place of the folder picker, to the click's own
    * handler of the Open project control, and answers the run's end: `admitted`, `question`, `not_found`, a refusal's code, or `dropped`.
-   * Only caller: `e2e/reopen.mjs`. It does not exercise the native picker (the operator's Part). */
+   * Callers: `e2e/project.mjs` (`E-1`), `e2e/reopen.mjs` and `e2e/second-open.mjs`. It does not exercise the native picker (the operator's Part). */
   e2eOpenProjectFolder?: (folder: string) => Promise<string>;
   /** **DEV-ONLY E2E TEST SEAM** (same item). Supplies `file` once, in place of the file picker, to S11's choice while the panel stands at `not_found`;
    * answers as `e2eOpenProjectFolder` does, or `not-asked` when no `not_found` stands. Only caller: `e2e/reopen.mjs`. */

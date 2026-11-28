@@ -23,7 +23,9 @@ import type {
 } from "../types";
 import { DATASET_SESSION_ENDED_EVENT, FILTER_DIALECT_DUCKDB_EXPR_0, SKP_VERSION } from "../types";
 import { assertExactKeys } from "../../testUtils/assertExactKeys";
-import { crsProvenanceLine, displayConventionLine, sessionStatementLine } from "../../admission/describeSummaryText";
+import { crsProvenanceLine, displayConventionLine, sessionStatementLine, setAsideChoiceLine } from "../../admission/describeSummaryText";
+import { identityDeclarationOffer, rowPositionOffer, type State } from "../../admission/AdmissionPanel";
+import { formatRefusal } from "../../admission/formatRefusal";
 
 /**
  * One canonical request/response per command, read by **both** the Rust host
@@ -56,7 +58,7 @@ describe("SKP v0 shared fixtures", () => {
     const req = loadFixture<OpenDatasetRequest>("v0-open_dataset-request");
     assertExactKeys(
       req,
-      ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+      ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
       "open_dataset request"
     );
     expect(req.skp).toBe(SKP_VERSION);
@@ -64,6 +66,7 @@ describe("SKP v0 shared fixtures", () => {
     expect(typeof req.cancel_key).toBe("string");
     expect(req.crs_assertion).toBeNull(); // skp/0.2: absent assertion is `null`, never omitted
     expect(req.identity).toBeNull(); // skp/0.2: absent declaration is `null`, never omitted
+    expect(req.set_aside_file_id).toBe(false); // skp/0.16: no choice is `false`, never omitted
 
     const res = loadFixture<OpenDatasetResponse>("v0-open_dataset-response");
     assertExactKeys(res, ["dataset", "session"], "open_dataset response");
@@ -78,7 +81,7 @@ describe("SKP v0 shared fixtures", () => {
     );
     assertExactKeys(
       req,
-      ["skp", "path", "cancel_key", "crs_assertion", "identity"],
+      ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
       "open_dataset request (with crs_assertion and identity)"
     );
     expect(req.skp).toBe(SKP_VERSION);
@@ -92,6 +95,27 @@ describe("SKP v0 shared fixtures", () => {
     expect(req.identity).not.toBeNull();
     assertExactKeys(req.identity, ["column"], "open_dataset request .identity");
     expect(req.identity!.column).toBe("parcel_key");
+  });
+
+  it("the set-aside fixtures carry the choice and the column it set aside (skp/0.16)", () => {
+    const req = loadFixture<OpenDatasetRequest>("v0-open_dataset-request-set-aside");
+    assertExactKeys(
+      req,
+      ["skp", "path", "cancel_key", "crs_assertion", "identity", "set_aside_file_id"],
+      "open_dataset request (set aside)"
+    );
+    expect(req.set_aside_file_id).toBe(true);
+    expect(req.identity).toBeNull(); // the choice travels beside no declaration
+
+    const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal-set-aside");
+    expect(res.identity.class).toBe("session-ordinal");
+    expect(res.identity.set_aside_column).toBe("id");
+    expect(res.identity.candidate_columns).toEqual(["parcel_key"]);
+    expect(setAsideChoiceLine(res.identity)).not.toBeNull();
+    // the other session-tier fixture is a file with no `id` column: no choice, so no line.
+    const plain = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    expect(plain.identity.set_aside_column).toBeNull();
+    expect(setAsideChoiceLine(plain.identity)).toBeNull();
   });
 
   it("describe request/response, including the two brief corrections (extent, row_count)", () => {
@@ -140,7 +164,8 @@ describe("SKP v0 shared fixtures", () => {
     );
     assertExactKeys(
       res.identity,
-      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement"],
+      // skp/0.15, ADR-016 Amendment 2: `candidate_columns`, always present (null off the session tier); skp/0.16, Amendment 3: `set_aside_column`, always present (null unless the user's choice)
+      ["source", "uniqueness", "verified_rows", "max_value", "js_exact", "class", "session_statement", "candidate_columns", "set_aside_column"],
       "describe response .identity"
     );
     for (const [i, field] of res.schema.entries()) {
@@ -314,6 +339,24 @@ describe("SKP v0 shared fixtures", () => {
     expect(text.toLowerCase()).not.toContain("snapshot");
   });
 
+  // T-1 (identity-declaration-route-for-session-tier, skp/0.15), the shell half of the real-shape seam whose Rust half is K-1: the
+  // session-ordinal fixture carries `candidate_columns` with its Int64 column, the native and the mapped fixtures carry it null, and the offer
+  // over an admitted state built from the session fixture, with that state's own handle as the dataset on the map, gives that list.
+  // RECORDED MUTATION: the session-ordinal fixture's `candidate_columns` set to `null`. Expected failure: this test fails by name.
+  it("the session-ordinal describe fixture carries the candidate list and the offer over it gives that list (skp/0.15)", () => {
+    const res = loadFixture<DescribeResponse>("v0-describe-response-session-ordinal");
+    expect(Object.keys(res.identity)).toContain("candidate_columns");
+    expect(res.identity.candidate_columns).toEqual(["parcel_id"]);
+    for (const name of ["v0-describe-response", "v0-describe-response-caller-asserted"]) {
+      const other = loadFixture<DescribeResponse>(name);
+      expect(Object.keys(other.identity), `${name} .identity`).toContain("candidate_columns");
+      expect(other.identity.candidate_columns, `${name} .identity.candidate_columns`).toBeNull();
+    }
+    const dataset = "ds_00112233445566778899aabbccddeeff";
+    const state: State = { kind: "admitted", admitted: { dataset, describe: res, session: "sr_" + "a".repeat(32) }, path: "C:/data/parcels-nokey.parquet", options: {} };
+    expect(identityDeclarationOffer(state, dataset)?.candidateColumns).toEqual(["parcel_id"]);
+  });
+
   // Mutation: drop the `detail` field from the source_changed fixture. Expected failure:
   // "the three new typed refusals carry their code and detail (skp/0.3)" fails -- a client that
   // must clear residency on a specific component change would have only prose to read.
@@ -480,6 +523,20 @@ describe("SKP v0 shared fixtures", () => {
     // `SkpError.fields` is `Record<string, string>` -- no list shape on the wire
     // (`kernel/src/skp.rs::error_of`), so the candidate list is comma-joined.
     expect(err.fields.candidate_columns).toBe("parcel_key,tax_lot_number");
+  });
+
+  // S-R2 (text-id-reopen-with-a-recorded-declaration): the two `engine.identity_unusable` fixture files under `protocol/skp/tests/data/`, the one that carries `file:id` and the one that carries `mapped:id`, each through
+  // `formatRefusal` and `rowPositionOffer`. Both name the column `id`, so only `identity_source` tells them apart.
+  // The `file:id` file's message and detail are ones the engine does not write; the offer reads neither. K-R1 (ii) in `kernel/tests/text_id_reopen_recorded_declaration.rs` asserts the code, the column and `file:id` from the engine, through the kernel.
+  // Mutation M-RD7: `rowPositionOffer` reads the key `source` in place of `identity_source`. Expected failure: the `file:id` fixture below is not offered.
+  it("the_real_identity_unusable_fixtures_drive_the_offer", () => {
+    const offerFor = (name: string) => {
+      const refusal = formatRefusal(loadFixture<SkpError>(name));
+      const state: State = { kind: "refused", path: "C:/data/parcels.parquet", refusal, formFamily: null, options: {}, inFlight: false, cancelKey: null, pendingOptions: null };
+      return rowPositionOffer(state);
+    };
+    expect(offerFor("v0-error-identity_unusable-with-candidates"), "file:id").not.toBeNull();
+    expect(offerFor("v0-error-identity_unusable-declared"), "mapped:id").toBeNull();
   });
 
   // S-1's shell half (§10 Amendment 12, wave-2 A2-1): the eighth projection code's own fixture,

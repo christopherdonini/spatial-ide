@@ -6,12 +6,27 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": null,
    "identity": null,
-   "extra": 1
+   "extra": 1,
+   "set_aside_file_id": false
+  }
+ },
+ {
+  "id": "rej-open-missing-set-aside-file-id",
+  "spec": "\u00a71 open_dataset; \u00a78 skp/0.16 (set_aside_file_id is required, no default)",
+  "wire_type": "open_dataset.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.18",
+   "path": "/data/zurich.parquet",
+   "cancel_key": "open-1",
+   "crs_assertion": null,
+   "identity": null
   }
  },
  {
@@ -21,7 +36,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": {
@@ -29,7 +44,8 @@
     "definition_json": "{}",
     "by": "me"
    },
-   "identity": null
+   "identity": null,
+   "set_aside_file_id": false
   }
  },
  {
@@ -39,14 +55,15 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": null,
    "identity": {
     "column": "id",
     "at": "2026-01-01"
-   }
+   },
+   "set_aside_file_id": false
   }
  },
  {
@@ -59,7 +76,8 @@
    "path": "/data/zurich.parquet",
    "cancel_key": "open-1",
    "crs_assertion": null,
-   "identity": null
+   "identity": null,
+   "set_aside_file_id": false
   }
  },
  {
@@ -69,10 +87,11 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "path": "/data/zurich.parquet",
    "crs_assertion": null,
-   "identity": null
+   "identity": null,
+   "set_aside_file_id": false
   }
  },
  {
@@ -82,7 +101,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "verbose": true
   }
@@ -94,7 +113,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -110,7 +129,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": {
     "xmin": "4142f58400000000",
@@ -131,7 +150,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -150,7 +169,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -168,7 +187,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -186,7 +205,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -204,7 +223,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "bbox": null,
    "bbox_crs": null,
@@ -221,7 +240,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "handle": "sh_fedcba9876543210fedcba9876543210",
    "reason": "user"
   }
@@ -233,7 +252,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "force": true
   }
@@ -245,7 +264,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "traceparent": "00-0-0-00"
   }
@@ -338,7 +357,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "intent": {
     "action": "filter.apply",
@@ -358,7 +377,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "intent": {
     "action": "style.set",
@@ -376,7 +395,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "intent": {
     "action": "style.set",
@@ -406,7 +425,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "workspace": {
     "filter": null,
@@ -446,7 +465,7 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "dataset": "ds_0123456789abcdef0123456789abcdef",
    "folder": "C:/Projects/parcels",
    "workspace": {
@@ -490,10 +509,25 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "folder": "C:/Projects/parcels",
    "cancel_key": "reopen-1",
    "answer": "ask",
+   "relink": null,
+   "set_aside_file_id": false
+  }
+ },
+ {
+  "id": "rej-open-project-missing-set-aside-file-id",
+  "spec": "\u00a712.2; \u00a78 skp/0.16 (set_aside_file_id is required, no default)",
+  "wire_type": "open_project.request",
+  "expect": "reject_at_deserialize",
+  "roundtrip": false,
+  "document": {
+   "skp": "skp/0.18",
+   "folder": "C:/Projects/parcels",
+   "cancel_key": "reopen-1",
+   "answer": null,
    "relink": null
   }
  },
@@ -504,10 +538,11 @@
   "expect": "reject_at_deserialize",
   "roundtrip": false,
   "document": {
-   "skp": "skp/0.14",
+   "skp": "skp/0.18",
    "folder": "C:/Projects/parcels",
    "cancel_key": "reopen-1",
-   "answer": null
+   "answer": null,
+   "set_aside_file_id": false
   }
  },
  {

@@ -472,6 +472,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // Expected failure: A's late `{kind:"issued"}` then falls through to `setViewportRefusal(null)` unconditionally, wiping B's refusal.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line; the -Expected/+Received block, "engine.no_covering_bbox"/undefined, summarized):
   //   AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard alone removed: NOT FAILED -- the whole file passed (vitest exit 0; 22 passed). Probable reason, read in conditions.ts and not tested apart: `ownerClear` removes only the conditions of the generation it names (A's), so A's late clear reaches none of B's.
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard and the `c.generation === event.generation` clause of `ownerClear`'s filter (conditions.ts) both removed: FAILED -- "a late old-generation SUCCESS after a reopen does not clear the new generation's standing viewport refusal": AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality. Also failed, with the same assertion: both full ended -> reopen -> old SUCCESS sequence tests (baseline and candidate arm) and the candidate arm's reissueUnrestricted SUCCESS test.
+  // READ 2026-11-24 at 7c816dd4 (ADV-2026-11-24-07 item 5): after this guard the resolved arm writes only the condition store's `ownerClear` (it reads `sessionEndedRef` and the view's target, and writes nothing else), so the two-stops observation above, FAILED at 7c18e29f, is this guard's evidence.
   // Reverted after observing.
   it("a late old-generation SUCCESS after a reopen does not clear the new generation's standing viewport refusal", async () => {
     const handleA = await openPathAndCaptureHandle();
@@ -505,6 +508,10 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // the refusal-code assertion (not only `.canvas-session-ended`) is what is load-bearing here.
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line; the -Expected/+Received block, null/<div class="admission-refusal-code">engine.source_changed</div>, summarized):
   //   AssertionError: expected <div …(1)></div> to be null
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard alone removed: NOT FAILED -- the whole file passed (vitest exit 0; 22 passed). Probable reason, read in conditions.ts and not tested apart: the store drops a raise under a generation that is not the current one.
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard and the first line of `raise` (conditions.ts) both removed, `visibleFor`'s generation clause kept (`reportViewportOutcome`'s rejected arm, App.tsx): NOT FAILED -- the whole file passed (22 passed). Reason: `visibleFor`'s generation clause still kept A's late raise out of B's view, so the rendered page showed nothing of it.
+  // OBSERVED 2026-11-24 at 7c816dd4, the guard, the first line of `raise` and `visibleFor`'s generation clause (conditions.ts) all three removed: FAILED -- in the sibling test below, "a late old-generation REJECTION carrying a different refusal code after a reopen does not write the new generation's viewport refusal either": AssertionError: expected <div …(1)></div> to be null, at its first assertion after A's late rejection (the `.canvas-refusal .admission-refusal-code` element, engine.connections_exhausted). This test, the engine.source_changed one, still passed: a session-ended rejection raises no viewport-refusal and its `endSession` call has its own guard in `endSessionForDataset`.
+  // READ 2026-11-24 at 1b38e62c (ADV-2026-11-24-09 item 3): besides the store's `raise` of viewport-refusal, which the store drops for another generation, the one other write behind this guard is the `endSession` call for a session-ended rejection, and `endSessionForDataset` drops that call by the same test of the dataset; so no assertion can fail with this guard alone removed, and X-2 is recorded as found, with no assertion added.
   // Reverted after observing.
   it("a late old-generation REJECTION carrying engine.source_changed after a reopen neither ends the new generation nor writes its refusal", async () => {
     const handleA = await openPathAndCaptureHandle();
@@ -656,7 +663,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     expect(container.querySelector(".hover-readout-session-ended")).toBeNull();
   });
 
-  // N8 residual correction round 1, item 7 probe: the dev-gated baseline arm's own
+  // N8 residual correction, its first round's item 7 probe: the dev-gated baseline arm's own
   // `onStreamOpened`/`onDeliveryCompleted`/`onBatchRows` (App.tsx, the `ViewportStreamManager`
   // construction) write the SAME single App-level `scanState`/`residencyStatus` `onFailureTerminal`
   // already guards. This probe is a guard proof only, the same as this file's own full-sequence
@@ -764,11 +771,23 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // Expected failure: each of A's three late callbacks writes onto B in turn.
   // OBSERVED 2026-09-23: FAILED, `onFailureTerminal` -- vitest's printed bytes (first line):
   //   AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: NOT FAILED, `onFailureTerminal` -- the guard removed, the test passed (vitest exit 0; 1 passed). Probable reason, read in conditions.ts and not tested apart: the store drops a raise under a generation that is not the current one. Reverted after observing.
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard and the first line of `raise` (conditions.ts) both removed, `visibleFor`'s generation clause kept (`onFailureTerminal`'s guard, App.tsx): NOT FAILED -- the whole file passed (22 passed). Reason: `visibleFor`'s generation clause still kept A's late raise out of B's view, so the rendered page showed nothing of it.
+  // OBSERVED 2026-11-24 at 7c816dd4, the guard of `onFailureTerminal`, the first line of `raise` and `visibleFor`'s generation clause (conditions.ts) all three removed: FAILED -- "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)": AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null, at the assertion straight after A's late `onTerminalA("a-stream-failed", ...)` call (the page showed "stream ProducerFailed: A's own stream"). Reverted after observing.
   // OBSERVED 2026-09-23: FAILED, `onCanvasRefusal` -- vitest's printed bytes (first line):
   //   AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: NOT FAILED, `onCanvasRefusal` -- the guard removed, the test passed (vitest exit 0; 1 passed). Probable reason, read in conditions.ts and not tested apart: the store drops a raise under a generation that is not the current one. Reverted after observing.
+  // OBSERVED 2026-11-24 at 7c18e29f, the guard and the first line of `raise` (conditions.ts) both removed, `visibleFor`'s generation clause kept (`onCanvasRefusal`'s guard, App.tsx): NOT FAILED -- the whole file passed (22 passed). Reason: `visibleFor`'s generation clause still kept A's late raise out of B's view, so the rendered page showed nothing of it.
+  // OBSERVED 2026-11-24 at 7c816dd4, the guard of `onCanvasRefusal`, the first line of `raise` and `visibleFor`'s generation clause (conditions.ts) all three removed: FAILED -- "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)": AssertionError: expected <div class="canvas-refusal" …(1)>…(1)</div> to be null, at the assertion straight after A's late `canvasA.onCanvasRefusal("a-stream-ceiling", ...)` call (the page showed "A's own ceiling refusal"). Reverted after observing.
   // OBSERVED 2026-09-23: FAILED, `onResidentCeilingExceeded` -- vitest's printed bytes (first line):
   //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED, `onResidentCeilingExceeded` -- vitest's printed bytes (first line):
+  //   AssertionError: expected <div class="residency-status" …(1)></div> to be null
+  // Reverted after observing.
   // Each reverted after observing.
+  // RECORDED MUTATION for the replaced N8 assertion of "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)" (ADV-2026-11-23-37 item 3 (e)): in App.tsx's `onCanvasRefusal` adapter (`setCanvasRefusal`) return before the dispatch, so B's canvas-ceiling condition is never raised.
+  // Expected failure: B's ceiling refusal is not a row of Problems, so the exactly-once check of the replaced assertion fails.
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("A's ended -> reopen sequence: the late filter-Apply completion and the dev-gated baseline arm's canvas-refusal/failure-terminal/resident-ceiling callbacks do not contaminate B -- B's own equivalents still work (baseline arm)", async () => {
     const handleA = await openPathAndCaptureHandle();
     const canvasA = workingCanvasMockState.propsByDataset.get(handleA);
@@ -809,7 +828,7 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
 
     act(() => onTerminalA("a-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: A's own stream" }));
     expect(container.querySelector(".canvas-refusal")).toBeNull();
-    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal"));
+    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal", "vertex-ceiling"));
     expect(container.querySelector(".canvas-refusal")).toBeNull();
     act(() => canvasA.onResidentCeilingExceeded("a-stream-ceiling-2", 999999));
     expect(container.querySelector(".residency-status")).toBeNull();
@@ -839,8 +858,58 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     // Item 5 (positive-control extension): B's own `onCanvasRefusal` -- not only `onTerminal`/
     // `onResidentCeilingExceeded` above -- still shows on B (the negative-control pair above only
     // proves A's OWN late `onCanvasRefusal` does not).
-    act(() => canvasB.onCanvasRefusal("b-stream-ceiling-2", "B's own ceiling refusal"));
-    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("B's own ceiling refusal");
+    act(() => canvasB.onCanvasRefusal("b-stream-ceiling-2", "B's own ceiling refusal", "vertex-ceiling"));
+    // Milestone 5 (ADV-2026-11-23-37 item 3, replacing the assertion that read the first `.canvas-refusal`): a newer refusal never ends an older one and the oldest is first within an
+    // urgency, so B's ceiling refusal is a row of Problems, found by its text among the `.canvas-refusal` elements once Problems is opened through the strip's own button; it is there
+    // exactly once, and B's earlier ProducerFailed refusal still stands and is still the first.
+    act(() => container.querySelector<HTMLButtonElement>(".attention-strip button.attention-others")!.click());
+    const ceilingRows = [...container.querySelectorAll(".canvas-refusal")].filter((e) => e.textContent?.includes("B's own ceiling refusal"));
+    expect(ceilingRows).toHaveLength(1);
+    expect(container.querySelector("#activity-panel-problems")!.contains(ceilingRows[0])).toBe(true);
+    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
+  });
+
+  // N8-G (Amendment 12, item 6; ADV-2026-11-24-09 item 4): A's late failure terminal and A's late canvas refusal, after a reopen while B's OWN Apply (the real Filter panel button) is in flight with Cancel shown, leave B's Cancel shown.
+  // RECORDED MUTATION M12-2: G-1's guard alone removed (App.tsx, `onFailureTerminal`'s `if (admitted.dataset !== admittedDatasetRef.current) return;`). Expected failure: this test, at assertion T (the `.filter-cancel` check after A's late terminal).
+  // RECORDED MUTATION M12-3: G-2's guard alone removed (App.tsx, `onCanvasRefusal`'s `if (admitted.dataset !== admittedDatasetRef.current) return;`). Expected failure: this test, at assertion C (the `.filter-cancel` check after A's late canvas refusal).
+  // OBSERVED 2026-11-27 at deda98ff (M12-2, G-1's guard alone, App.tsx line 1932 removed): FAILED -- this test, at assertion T: AssertionError: assertion T: A's late failure terminal leaves B's Cancel shown: expected null not to be null. Reverted after observing.
+  // OBSERVED 2026-11-27 at deda98ff (M12-3, G-2's guard alone, App.tsx line 2471 removed): FAILED -- this test, at assertion C: AssertionError: assertion C: A's late canvas refusal leaves B's Cancel shown: expected null not to be null. Reverted after observing.
+  it("A's late failure terminal and canvas refusal, after a reopen while B's own Apply is in flight with Cancel shown, leave B's Cancel shown (baseline arm)", async () => {
+    function typeAndApply(predicate: string): void {
+      const input = container.querySelector(".filter-predicate") as HTMLInputElement;
+      const setter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value")!.set!;
+      act(() => {
+        setter.call(input, predicate);
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+      });
+      act(() => {
+        (container.querySelector(".filter-apply") as HTMLButtonElement).dispatchEvent(new MouseEvent("click", { bubbles: true }));
+      });
+    }
+
+    const handleA = await openPathAndCaptureHandle();
+    const canvasA = workingCanvasMockState.propsByDataset.get(handleA);
+    if (!canvasA) throw new Error(`no captured WorkingCanvas props for dataset ${handleA}`);
+    const onTerminalA = viewportMockState.onTerminalByDataset.get(handleA);
+    if (!onTerminalA) throw new Error(`no captured onTerminal for dataset ${handleA}`);
+
+    const handleB = await openPathAndCaptureHandle();
+    expect(handleB).not.toBe(handleA);
+
+    // B's own Apply through the Filter panel's button, its second request resolved issued: Cancel is shown.
+    typeAndApply("zone = 'commercial'");
+    const deferredB = viewportMockState.secondRequestDeferreds.get(handleB);
+    if (!deferredB) throw new Error(`no second-request deferred recorded for dataset ${handleB}`);
+    await act(async () => {
+      deferredB.resolve({ kind: "issued", streamHandle: "b-apply" });
+      await deferredB.promise;
+    });
+    expect(container.querySelector(".filter-cancel")).not.toBeNull();
+
+    act(() => onTerminalA("a-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: A's own stream" }));
+    expect(container.querySelector(".filter-cancel"), "assertion T: A's late failure terminal leaves B's Cancel shown").not.toBeNull();
+    act(() => canvasA.onCanvasRefusal("a-stream-ceiling", "A's own ceiling refusal", "vertex-ceiling"));
+    expect(container.querySelector(".filter-cancel"), "assertion C: A's late canvas refusal leaves B's Cancel shown").not.toBeNull();
   });
 
   // N8 residual correction: `handleApplyFilter` (App.tsx) is what `FilterPanel`'s own `onApply` prop
@@ -994,6 +1063,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
   //   AssertionError: expected undefined to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
+  // RECORDED MUTATION for the replaced N8 assertion of "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)" (ADV-2026-11-23-37 item 3 (e)): in App.tsx's baseline `onFailureTerminal` do not raise the stream-terminal condition (the guard `if (target !== null)` becomes `if (target === null)`).
+  // Expected failure: B's own stream failure is not a row of Problems, so the exactly-once check of the replaced assertion fails.
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("the human's full ended -> reopen -> old SUCCESS sequence through reportViewportOutcome does not clear B's standing refusal (baseline arm)", async () => {
     const deliver = (handle: string) => settleFirstRequest(handle, { kind: "issued", streamHandle: "a-post-end-late" });
 
@@ -1042,7 +1114,13 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     const onTerminalB = viewportMockState.onTerminalByDataset.get(handleB);
     if (!onTerminalB) throw new Error(`no captured onTerminal for dataset ${handleB}`);
     act(() => onTerminalB("b-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: B's own stream" }));
-    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
+    // Milestone 5 (ADV-2026-11-23-37 item 3, replacing the assertion that read the first `.canvas-refusal`): B's standing no_covering_bbox refusal is older and stays the first; B's own
+    // stream failure is a row of Problems, found by its text among the `.canvas-refusal` elements once Problems is opened through the strip's own button, and it is there exactly once.
+    act(() => container.querySelector<HTMLButtonElement>(".attention-strip button.attention-others")!.click());
+    const failureRows = [...container.querySelectorAll(".canvas-refusal")].filter((e) => e.textContent?.includes("ProducerFailed"));
+    expect(failureRows).toHaveLength(1);
+    expect(container.querySelector("#activity-panel-problems")!.contains(failureRows[0])).toBe(true);
+    expect(container.querySelector(".canvas-refusal .admission-refusal-code")?.textContent).toBe("engine.no_covering_bbox");
 
     const canvasB = workingCanvasMockState.propsByDataset.get(handleB);
     if (!canvasB) throw new Error(`no captured WorkingCanvas props for dataset ${handleB}`);
@@ -1055,6 +1133,9 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
   // OBSERVED 2026-09-23: FAILED -- vitest's printed bytes (first line):
   //   AssertionError: expected 'engine.source_changed' to be 'engine.no_covering_bbox' // Object.is equality
   // Reverted after observing.
+  // RECORDED MUTATION for the replaced N8 assertion of "the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)" (ADV-2026-11-23-37 item 3 (e)): in App.tsx's baseline `onFailureTerminal` raise B's stream-terminal condition under the generation "stale-generation", so the store drops it.
+  // Expected failure: B's own stream failure is not a row of Problems, so the exactly-once check of the replaced assertion fails.
+  // OBSERVED 2026-11-24 AT a17db128abecd0764977cf0ba5bfc44e48ae898f: FAILED -- "the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)": AssertionError: expected [] to have a length of 1 but got +0. Reverted after observing.
   it("the human's full ended -> reopen -> old engine.source_changed REJECTION sequence through reportViewportOutcome does not write or end B (baseline arm)", async () => {
     const deliver = (handle: string) =>
       rejectFirstRequest(handle, new SkpCallError({ code: "engine.source_changed", message: "the source file changed", fields: {} }));
@@ -1104,7 +1185,13 @@ describe("App: a late old-generation viewport outcome, after a reopen, through t
     const onTerminalB = viewportMockState.onTerminalByDataset.get(handleB);
     if (!onTerminalB) throw new Error(`no captured onTerminal for dataset ${handleB}`);
     act(() => onTerminalB("b-stream-failed", { kind: "ProducerFailed", detail: "engine.upstream_failed: B's own stream" }));
-    expect(container.querySelector(".canvas-refusal")?.textContent).toContain("ProducerFailed");
+    // Milestone 5 (ADV-2026-11-23-37 item 3, replacing the assertion that read the first `.canvas-refusal`): B's standing no_covering_bbox refusal is older and stays the first; B's own
+    // stream failure is a row of Problems, found by its text among the `.canvas-refusal` elements once Problems is opened through the strip's own button, and it is there exactly once.
+    act(() => container.querySelector<HTMLButtonElement>(".attention-strip button.attention-others")!.click());
+    const failureRows = [...container.querySelectorAll(".canvas-refusal")].filter((e) => e.textContent?.includes("ProducerFailed"));
+    expect(failureRows).toHaveLength(1);
+    expect(container.querySelector("#activity-panel-problems")!.contains(failureRows[0])).toBe(true);
+    expect(container.querySelector(".canvas-refusal .admission-refusal-code")?.textContent).toBe("engine.no_covering_bbox");
 
     const canvasB = workingCanvasMockState.propsByDataset.get(handleB);
     if (!canvasB) throw new Error(`no captured WorkingCanvas props for dataset ${handleB}`);

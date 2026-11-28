@@ -1,1 +1,12 @@
-{"$doc": "Shortened-target list for node verify-cites-shortened-target-list (the advisor ruling state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md, item 2): an unpinned cite in a filed record into a file a later commit shortened, read at the entry commit.", "entries": []}
+{"$doc": "Shortened-target list for node verify-cites-shortened-target-list (the advisor ruling state/directives/2026-11-22-advisor-ruling-adv-2026-11-22-10-the-cancel-builds-stop-a-scripts-node-reads-listed-cites-at-a-commit-the-two-code-gates-now.md, item 2): an unpinned cite in a filed record into a file a later commit shortened, read at the entry commit.", "entries": [
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_admission.rs:927","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_filter_cancellation.rs:270","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_admission.rs:935-940","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_filter_cancellation.rs:275-280","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_admission.rs:943-948","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_admission.rs:926-931","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"governance/forms/engine/CANCEL-REQUESTED-STAMP-ORDER-PREREGISTRATION.md","cite":"kernel/tests/skp_filter_cancellation.rs:269-274","commit":"16c896558ac9073f132336f4c9cbcff5b31d8514"},
+{"path":"state/consults/2026-10-04-timing-tests-assert-property-not-budget-architect-draft.md","cite":"kernel/tests/skp_admission.rs:941-948","commit":"b3beb0f77395e16d7ae70d5cdef485354f7e7f51"},
+{"path":"state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md","cite":"kernel/tests/skp_admission.rs:923","commit":"1c13810fa11280050473505437af1bac67f334db"},
+{"path":"state/consults/2026-10-10-flake-hunt-run-1-custodian-check.md","cite":"kernel/tests/skp_filter_cancellation.rs:266","commit":"1c13810fa11280050473505437af1bac67f334db"}
+]}

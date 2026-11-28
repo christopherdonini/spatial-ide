@@ -282,6 +282,52 @@ impl SkpError {
         )
     }
 
+    /// `recover_session`, `discard_recoverable`: another run holds the record's history (or, at
+    /// `recover_session`, a twin's), so it was neither read nor changed.
+    pub fn recoverable_record_locked(record: &str) -> Self {
+        Self::protocol_with_fields(
+            "recoverable_record_locked",
+            format!("[P6 placeholder] {record} is held by a run of the application that is still going, so it was not read or changed"),
+            [("record", record.to_string())],
+        )
+    }
+
+    /// `recover_session`, `discard_recoverable`: the name is not one a record has, there is no such
+    /// record, this run holds it or is working on it, or it is a twin of a project's record.
+    pub fn recoverable_record_unknown(record: &str) -> Self {
+        Self::protocol_with_fields(
+            "recoverable_record_unknown",
+            format!(
+                "[P6 placeholder] {record} is not a record that can be recovered or discarded here"
+            ),
+            [("record", record.to_string())],
+        )
+    }
+
+    /// `recover_session`, `discard_recoverable`: the record cannot be offered, or a file of it could
+    /// not be removed. `file` is its fixed name and `rule` says which rule.
+    pub fn recoverable_record_refused(record: &str, file: &str, rule: &str) -> Self {
+        Self::protocol_with_fields(
+            "recoverable_record_refused",
+            format!("[P6 placeholder] {record} cannot be recovered: {file}: {rule}"),
+            [
+                ("record", record.to_string()),
+                ("file", file.to_string()),
+                ("rule", rule.to_string()),
+            ],
+        )
+    }
+
+    /// `recover_session`: the open given is not the record's project's reopen of its dataset, or it
+    /// already holds a record or a binding.
+    pub fn recoverable_record_not_for_this_open(record: &str) -> Self {
+        Self::protocol_with_fields(
+            "recoverable_record_not_for_this_open",
+            format!("[P6 placeholder] {record} is not the record for this open"),
+            [("record", record.to_string())],
+        )
+    }
+
     /// `open_project`: this machine's store for the project (its folder, its lock or one of its
     /// two files) could not be used. `detail` is the file's fixed name, a colon and the error's
     /// text. The shell's binding also returns this when no per-user data directory resolves.

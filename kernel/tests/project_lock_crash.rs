@@ -141,7 +141,7 @@ fn run(dir: &Path, sessions: &str) -> (Arc<SkpHost>, Projects) {
 fn the_second_open_refusal_never_outlives_a_crash() {
     if let Ok(dir) = std::env::var(KO5_ENV) {
         let (_host, projects) = run(Path::new(&dir), "child");
-        let got = projects.open_project(&Path::new(&dir).join("project"), "k", None, None);
+        let got = projects.open_project(&Path::new(&dir).join("project"), "k", None, None, false);
         assert!(matches!(got, Ok(Reopen::Opened(_))), "{got:?}");
         println!("{KO5_OPENED}");
         drop(std::io::stdin().read_line(&mut String::new()));
@@ -176,6 +176,7 @@ fn the_second_open_refusal_never_outlives_a_crash() {
         cancel_key,
         crs_assertion,
         identity,
+        set_aside_file_id: false,
     };
     let handle = host.open_dataset(req).expect("open").dataset;
     let ds = host.catalog().get(handle.as_str()).expect("catalog");
@@ -230,7 +231,7 @@ fn the_second_open_refusal_never_outlives_a_crash() {
         panic!("the child did not report its reopen within 60 s: {reported:?}");
     }
     let (_host, projects) = run(&dir, "second");
-    let got = projects.open_project(&folder, "k", None, None);
+    let got = projects.open_project(&folder, "k", None, None, false);
     assert!(
         matches!(got, Err(OpenFailure::OpenElsewhere(_))),
         "while the child lives: {got:?}"
@@ -245,7 +246,7 @@ fn the_second_open_refusal_never_outlives_a_crash() {
         }
         std::thread::sleep(Duration::from_millis(50));
     }
-    let got = projects.open_project(&folder, "k", None, None);
+    let got = projects.open_project(&folder, "k", None, None, false);
     assert!(
         matches!(got, Ok(Reopen::Opened(_))),
         "after the child's crash: {got:?}"

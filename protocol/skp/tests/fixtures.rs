@@ -66,6 +66,37 @@ fn open_dataset_request_with_crs_assertion_and_identity_round_trips() {
     );
 }
 
+/// **W-1** (`skp/0.16`, `text-id-opens-for-the-session-by-row-position`): the set-aside fixtures
+/// round-trip, and an `open_dataset` request without `set_aside_file_id` is refused at deserialize,
+/// because the member is required and carries no `#[serde(default)]`.
+///
+/// **A guard**, declared as such: the members and both fixtures land with the skeleton, so this
+/// test is green there, and its proof is its mutation.
+/// Mutation M-17: `#[serde(default)]` on `OpenDatasetRequest::set_aside_file_id`. Expected failure:
+/// this test fails by name, at the request that lacks the member.
+#[test]
+fn an_open_dataset_request_without_set_aside_file_id_is_refused_and_the_set_aside_fixtures_round_trip(
+) {
+    round_trip::<OpenDatasetRequest>("v0-open_dataset-request-set-aside");
+    round_trip::<DescribeResponse>("v0-describe-response-session-ordinal-set-aside");
+    let request: OpenDatasetRequest =
+        serde_json::from_value(fixture("v0-open_dataset-request-set-aside")).unwrap();
+    assert!(
+        request.set_aside_file_id,
+        "this fixture's point is the choice, made"
+    );
+    let described: DescribeResponse =
+        serde_json::from_value(fixture("v0-describe-response-session-ordinal-set-aside")).unwrap();
+    assert_eq!(described.identity.set_aside_column.as_deref(), Some("id"));
+
+    let mut without = fixture("v0-open_dataset-request-set-aside");
+    without.as_object_mut().unwrap().remove("set_aside_file_id");
+    assert!(
+        serde_json::from_value::<OpenDatasetRequest>(without).is_err(),
+        "a request that lacks `set_aside_file_id` must be refused at deserialize"
+    );
+}
+
 /// **Known gap, not introduced by this piece.** `SKP-V0.md` §7.2 describes `bbox_crs`/`filter`'s
 /// discipline as "the field carries no `#[serde(default)]`, so a request that omits the key
 /// entirely is a deserialize failure" — but plain `Option<T>` struct fields are deserialized by
@@ -85,6 +116,7 @@ fn omitting_crs_assertion_or_identity_key_is_currently_tolerated_not_refused() {
         "path": "C:/data/parcels.parquet",
         "cancel_key": "open-1",
         "identity": null,
+        "set_aside_file_id": false,
         // crs_assertion key omitted entirely
     });
     let parsed: OpenDatasetRequest = serde_json::from_value(v).expect(
@@ -489,7 +521,7 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
     let request =
         |folder: serde_json::Value, filter: serde_json::Value, clauses: serde_json::Value| {
             serde_json::json!({
-                "skp": "skp/0.14", "dataset": "ds_00112233445566778899aabbccddeeff",
+                "skp": "skp/0.18", "dataset": "ds_00112233445566778899aabbccddeeff",
                 "folder": folder,
                 "workspace": {"filter": filter, "clauses": clauses, "style": style, "view": view}
             })
@@ -572,8 +604,8 @@ fn save_project_requests_and_response_round_trip_and_its_codes_are_what_the_cons
 fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_constructors_build() {
     use serde_json::{json, Value};
     let request = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.14", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
-               "answer": answer, "relink": relink})
+        json!({"skp": "skp/0.18", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+               "answer": answer, "relink": relink, "set_aside_file_id": false})
     };
     for (what, wire) in [
         ("a first call", request(Value::Null, Value::Null)),
@@ -781,8 +813,8 @@ fn open_project_requests_and_replies_round_trip_and_its_codes_are_what_the_const
 fn the_open_project_closed_sets_refuse_any_other_value() {
     use serde_json::{json, Value};
     let call = |answer: Value, relink: Value| {
-        json!({"skp": "skp/0.14", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
-               "answer": answer, "relink": relink})
+        json!({"skp": "skp/0.18", "folder": "C:/Projects/parcels", "cancel_key": "reopen-1",
+               "answer": answer, "relink": relink, "set_aside_file_id": false})
     };
     let bad_request = |wire: Value, what: &str| {
         assert!(
@@ -797,7 +829,13 @@ fn the_open_project_closed_sets_refuse_any_other_value() {
         );
     }
     bad_request(call(Value::Null, json!(1)), "a relink that is not text");
-    for key in ["answer", "relink", "folder", "cancel_key"] {
+    for key in [
+        "answer",
+        "relink",
+        "folder",
+        "cancel_key",
+        "set_aside_file_id",
+    ] {
         let mut wire = call(Value::Null, Value::Null);
         wire.as_object_mut().unwrap().remove(key);
         bad_request(wire, &format!("a request without `{key}`"));
@@ -900,7 +938,9 @@ fn the_open_project_closed_sets_refuse_any_other_value() {
 /// `skp/0.2`: `engine.identity_unusable` gains a `candidate_columns` field (NEXT-CUT.md P0) — the
 /// file's 64-bit integer columns, schema order, comma-joined (`SkpError::fields` has no list shape
 /// on the wire — `kernel/src/skp.rs::error_of`). `message` stays whatever `EngineError::Display`
-/// already produced; the candidate list rides only in `fields`.
+/// already produced; the candidate list rides only in `fields`. From `skp/0.15` the list holds
+/// every integer width admission takes (ADR-016, Note 2026-11-26); this fixture's list names one
+/// column and is unchanged.
 #[test]
 fn identity_unusable_error_fixture_carries_candidate_columns() {
     let v = fixture("v0-error-identity_unusable-with-candidates");
@@ -972,14 +1012,87 @@ fn crs_unit_serializes_to_its_four_declared_strings_and_refuses_any_other() {
     }
 }
 
-/// `skp/0.14` (`open_project`, B2 piece 1c, `kernel/B2-1C-SAVE-AND-REOPEN-PREREGISTRATION.md`; this
-/// test was `skp_version_is_skp_0_13` before that part, `skp_version_is_skp_0_12` before piece 1c,
-/// `skp_version_is_skp_0_11` before piece 1b and `skp_version_is_skp_0_10` before the lines cut,
-/// PL-5).
-/// Mutation: the literal back to `"skp/0.13"`. Expected failure: this test fails by name.
+/// `skp/0.18` (the recovery offer, B2 piece 1c step 3: `list_recoverable`, `recover_session` and
+/// `discard_recoverable`; this test was `skp_version_is_skp_0_17` before that piece,
+/// `skp_version_is_skp_0_16` before `text-id-reopen-with-a-recorded-declaration` (ADR-016
+/// Amendment 3, Decision 1), `skp_version_is_skp_0_15` before
+/// `text-id-opens-for-the-session-by-row-position`, `skp_version_is_skp_0_14` before
+/// `identity-declaration-route-for-session-tier`, `skp_version_is_skp_0_13` before `open_project`
+/// (B2 piece 1c), `skp_version_is_skp_0_12` before piece 1c, `skp_version_is_skp_0_11` before
+/// piece 1b and `skp_version_is_skp_0_10` before the lines cut, PL-5).
+/// Mutation: the literal back to `"skp/0.17"`. Expected failure: this test fails by name.
 #[test]
-fn skp_version_is_skp_0_14() {
-    assert_eq!(SKP_VERSION, "skp/0.14");
+fn skp_version_is_skp_0_18() {
+    assert_eq!(SKP_VERSION, "skp/0.18");
+}
+
+/// **W-R1** (`skp/0.17`, `text-id-reopen-with-a-recorded-declaration`; its literals move with each
+/// version): both `engine.identity_unusable`
+/// fixtures deserialize and carry `identity_source` (`file:id` for the file's own `id`, `mapped:id` for a
+/// declared one, both naming the column `id`), the request fixtures are at `skp/0.18`, and the
+/// conformance fixture for a future version names `skp/0.19`, which this host refuses with `skp/0.18`
+/// as the version it speaks.
+///
+/// Mutation M-RD6: `mod.rs`'s literal stays `"skp/0.17"`. Expected failure: this test fails at the
+/// first request fixture, where its `skp` of `skp/0.18` is compared with the literal.
+#[test]
+fn identity_unusable_fixtures_carry_identity_source_at_skp_0_17() {
+    for (name, source) in [
+        ("v0-error-identity_unusable-with-candidates", "file:id"),
+        ("v0-error-identity_unusable-declared", "mapped:id"),
+    ] {
+        let v = fixture(name);
+        let parsed: SkpError = serde_json::from_value(v.clone())
+            .unwrap_or_else(|e| panic!("{name}: does not deserialize as SkpError: {e}"));
+        assert_eq!(parsed.code, "engine.identity_unusable", "{name}");
+        assert_eq!(parsed.fields.get("column").map(String::as_str), Some("id"));
+        assert_eq!(
+            parsed.fields.get("identity_source").map(String::as_str),
+            Some(source),
+            "{name}"
+        );
+        assert_eq!(
+            serde_json::to_value(&parsed).unwrap(),
+            v,
+            "{name}: round trip changed the JSON shape"
+        );
+    }
+
+    for name in [
+        "v0-open_dataset-request",
+        "v0-describe-request",
+        "v0-viewport_query-request",
+        "v0-cancel-request",
+        "v0-close_dataset-request",
+    ] {
+        assert_eq!(fixture(name)["skp"], "skp/0.18", "{name} is at skp/0.18");
+        assert_eq!(
+            fixture(name)["skp"],
+            SKP_VERSION,
+            "{name} is at the literal"
+        );
+    }
+
+    let path = format!(
+        "{}/tests/conformance/fixtures/refusals-any-layer.json",
+        env!("CARGO_MANIFEST_DIR")
+    );
+    let raw = std::fs::read_to_string(&path).unwrap_or_else(|e| panic!("{path}: {e}"));
+    let rows: serde_json::Value = serde_json::from_str(&raw).expect("valid JSON");
+    let row = rows
+        .as_array()
+        .expect("an array of rows")
+        .iter()
+        .find(|r| r["id"] == "any-version-skp_0_19")
+        .expect("the future-version row is named for skp/0.19");
+    assert_eq!(row["document"]["skp"], "skp/0.19");
+    assert_eq!(row["expected_refusal_code"], "skp.version_unsupported");
+    let refused = SkpError::version_unsupported("skp/0.19");
+    assert_eq!(refused.code, "skp.version_unsupported");
+    assert_eq!(
+        refused.fields.get("supported").map(String::as_str),
+        Some("skp/0.18")
+    );
 }
 
 /// **MP-1, `skp/0.9`, ADR-034 Decision 3 (`engine/MULTIPOLYGON-MP1-PREREGISTRATION.md` §4, row
@@ -1135,4 +1248,171 @@ fn the_session_ended_event_fixture_decodes_with_exactly_two_members() {
         serde_json::from_value::<DatasetSessionEnded>(mutated).is_err(),
         "a third member on the event payload must be refused, not tolerated"
     );
+}
+
+/// **P-1** (`skp/0.18`, B2 piece 1c step 3, the recovery offer: SKP-V0 §13 to §15). The three
+/// commands' requests and replies round-trip with every null member present, `cannot-be-offered`
+/// carries its three reasons, a missing or an unknown member is refused at deserialize on each
+/// type, and the four new codes are what their constructors build.
+///
+/// Mutation: `deny_unknown_fields` dropped on `RecoverSessionRequest`. Expected failure: this test
+/// fails by name, at `recover_session request with an unknown member`.
+#[test]
+fn recovery_commands_round_trip_and_refuse_unknown_or_missing_members() {
+    use serde_json::{json, Value};
+    fn trips<T: serde::Serialize + serde::de::DeserializeOwned>(what: &str, wire: Value) {
+        let parsed: T = serde_json::from_value(wire.clone())
+            .unwrap_or_else(|e| panic!("{what}: does not deserialize: {e}"));
+        assert_eq!(serde_json::to_value(&parsed).unwrap(), wire, "{what}");
+    }
+    fn refused<T: serde::de::DeserializeOwned>(what: &str, wire: Value) {
+        let parsed = serde_json::from_value::<T>(wire);
+        assert!(parsed.is_err(), "{what}: was accepted");
+    }
+    let (ds, sr) = (
+        "ds_00112233445566778899aabbccddeeff",
+        "sr_00112233445566778899aabbccddeeff",
+    );
+    let record = "unsaved-00112233445566778899aabbccddeeff";
+    let skp = SKP_VERSION;
+
+    for dataset in [Value::Null, json!(ds)] {
+        let wire = json!({"skp": skp, "dataset": dataset});
+        trips::<ListRecoverableRequest>("list_recoverable request", wire);
+        let wire = json!({"skp": skp, "record": record, "cancel_key": "k", "dataset": dataset});
+        trips::<RecoverSessionRequest>("recover_session request", wire);
+    }
+    trips::<DiscardRecoverableRequest>(
+        "discard_recoverable request",
+        json!({"skp": skp, "record": record}),
+    );
+    trips::<DiscardRecoverableResponse>("discard_recoverable reply", json!({}));
+
+    let entry = |data: Value| {
+        json!({"record": record, "file_name": "parcels.parquet",
+               "last_step_at": "2026-11-28T10:00:00Z", "steps": 3, "data": data})
+    };
+    let cannot = |reason: &str| json!({"state": "cannot-be-offered", "reason": reason});
+    let mut refused_entry = entry(cannot("locations-refused"));
+    refused_entry["file_name"] = Value::Null;
+    refused_entry["last_step_at"] = Value::Null;
+    refused_entry["steps"] = json!(0);
+    let listed = json!({"records": [
+        entry(json!({"state": "found"})),
+        entry(json!({"state": "not-found"})),
+        entry(cannot("no-step")),
+        entry(cannot("later-version")),
+        refused_entry,
+    ], "more": true});
+    trips::<ListRecoverableResponse>("list_recoverable reply", listed);
+    trips::<ListRecoverableResponse>("an empty list", json!({"records": [], "more": false}));
+    let check = json!({"observed": ["size", "footer-hash"], "admission": ["crs"]});
+    let steps = json!([
+        {"action": "filter.apply", "params": {"filter": null}},
+        {"action": "style.set", "params": {"property": "fillOpacity", "value": 0.5}}
+    ]);
+    trips::<RecoverSessionResponse>(
+        "recover_session reply, opened",
+        json!({"dataset": ds, "opened": {"session": sr, "check": check}, "steps": steps}),
+    );
+    trips::<RecoverSessionResponse>(
+        "recover_session reply, not opened",
+        json!({"dataset": ds, "opened": null, "steps": []}),
+    );
+
+    let bad = |wire: Value, key: &str, value: Value| {
+        let mut wire = wire;
+        wire[key] = value;
+        wire
+    };
+    let list = json!({"skp": skp, "dataset": null});
+    let recover = json!({"skp": skp, "record": record, "cancel_key": "k", "dataset": null});
+    let discard = json!({"skp": skp, "record": record});
+    refused::<ListRecoverableRequest>(
+        "list_recoverable request with an unknown member",
+        bad(list.clone(), "x", json!(1)),
+    );
+    refused::<ListRecoverableRequest>(
+        "list_recoverable request without dataset",
+        json!({"skp": skp}),
+    );
+    refused::<RecoverSessionRequest>(
+        "recover_session request with an unknown member",
+        bad(recover.clone(), "x", json!(1)),
+    );
+    refused::<RecoverSessionRequest>(
+        "recover_session request without dataset",
+        json!({"skp": skp, "record": record, "cancel_key": "k"}),
+    );
+    refused::<RecoverSessionRequest>(
+        "recover_session request without cancel_key",
+        json!({"skp": skp, "record": record, "dataset": null}),
+    );
+    refused::<DiscardRecoverableRequest>(
+        "discard_recoverable request with an unknown member",
+        bad(discard, "x", json!(1)),
+    );
+    refused::<DiscardRecoverableResponse>(
+        "discard_recoverable reply with a member",
+        json!({"x": 1}),
+    );
+    let reply = |data: Value| json!({"records": [entry(data)], "more": false});
+    refused::<ListRecoverableResponse>("an unknown data state", reply(json!({"state": "changed"})));
+    refused::<ListRecoverableResponse>(
+        "cannot-be-offered without a reason",
+        reply(json!({"state": "cannot-be-offered"})),
+    );
+    refused::<ListRecoverableResponse>("an unknown reason", reply(cannot("damaged")));
+    refused::<ListRecoverableResponse>(
+        "found with a member",
+        reply(json!({"state": "found", "reason": "x"})),
+    );
+    refused::<ListRecoverableResponse>("a list without more", json!({"records": []}));
+    let mut no_time = entry(json!({"state": "found"}));
+    no_time.as_object_mut().unwrap().remove("last_step_at");
+    refused::<ListRecoverableResponse>(
+        "an entry without last_step_at",
+        json!({"records": [no_time], "more": false}),
+    );
+    let opened = json!({"dataset": ds, "opened": {"session": sr, "check": check}, "steps": []});
+    refused::<RecoverSessionResponse>(
+        "a reply with an unknown member",
+        bad(opened.clone(), "x", json!(1)),
+    );
+    refused::<RecoverSessionResponse>(
+        "a reply without opened",
+        json!({"dataset": ds, "steps": []}),
+    );
+    let mut inner = opened.clone();
+    inner["opened"]["x"] = json!(1);
+    refused::<RecoverSessionResponse>("opened with an unknown member", inner);
+
+    let (locked, unknown) = (
+        SkpError::recoverable_record_locked(record),
+        SkpError::recoverable_record_unknown(record),
+    );
+    let refused_by = SkpError::recoverable_record_refused(record, "locations.json", "a rule");
+    let elsewhere = SkpError::recoverable_record_not_for_this_open(record);
+    for (built, code, fields) in [
+        (locked, "skp.recoverable_record_locked", vec!["record"]),
+        (unknown, "skp.recoverable_record_unknown", vec!["record"]),
+        (
+            refused_by,
+            "skp.recoverable_record_refused",
+            vec!["file", "record", "rule"],
+        ),
+        (
+            elsewhere,
+            "skp.recoverable_record_not_for_this_open",
+            vec!["record"],
+        ),
+    ] {
+        assert_eq!(built.code, code);
+        let named: Vec<&str> = built.fields.keys().map(String::as_str).collect();
+        assert_eq!(named, fields, "{code}");
+        assert_eq!(built.fields["record"], record, "{code}");
+        let wire = serde_json::to_value(&built).unwrap();
+        let again: SkpError = serde_json::from_value(wire.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&again).unwrap(), wire, "{code}");
+    }
 }

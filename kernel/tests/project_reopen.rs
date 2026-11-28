@@ -582,6 +582,7 @@ impl Run {
             cancel_key,
             crs_assertion,
             identity,
+            set_aside_file_id: false,
         };
         let handle = self.host.open_dataset(req).expect("open").dataset;
         (handle.clone(), self.dataset(&handle))
@@ -745,7 +746,9 @@ fn reopen_at(
     relink: Option<&Path>,
 ) -> Result<Reopen, OpenFailure> {
     let before = run.names();
-    let got = run.projects().open_project(folder, "k", answer, relink);
+    let got = run
+        .projects()
+        .open_project(folder, "k", answer, relink, false);
     if !matches!(got, Ok(Reopen::Opened(_))) {
         assert_eq!(run.names(), before, "nothing is opened: {got:?}");
         lock_free(rig, project);
@@ -1052,7 +1055,7 @@ fn a_second_open_of_an_open_identity_is_refused_in_this_process_and_another() {
         );
         let got = run
             .projects()
-            .open_project(&dir.join("project"), "k", None, None);
+            .open_project(&dir.join("project"), "k", None, None, false);
         println!("ko4: {}", matches!(got, Err(OpenFailure::OpenElsewhere(_))));
         return;
     }
@@ -1066,10 +1069,12 @@ fn a_second_open_of_an_open_identity_is_refused_in_this_process_and_another() {
         .clone()
         .map(|f| std::fs::read(f).expect("a machine file"));
     let holder = run.projects();
-    opened(holder.open_project(&rig.folder, "k", None, None));
+    opened(holder.open_project(&rig.folder, "k", None, None, false));
     let names = run.names();
     for (folder, answer) in [(&rig.folder, None), (&copy, Some(Answer::Same))] {
-        let got = run.projects().open_project(folder, "k", answer, None);
+        let got = run
+            .projects()
+            .open_project(folder, "k", answer, None, false);
         let elsewhere = matches!(got, Err(OpenFailure::OpenElsewhere(ref p)) if *p == project);
         assert!(elsewhere, "{got:?}");
     }
@@ -1476,7 +1481,7 @@ fn a_cancel_before_the_engine_open_ends_the_reopen_with_nothing_opened_and_no_lo
     let before = run.names();
     let got = run
         .projects()
-        .open_project(&rig.folder, "k-o13", None, None);
+        .open_project(&rig.folder, "k-o13", None, None, false);
     stop.store(true, Ordering::SeqCst);
     assert!(
         canceller.join().expect("the thread"),
@@ -1612,7 +1617,7 @@ fn a_save_after_a_reopen_whose_project_record_another_run_left_replaces_neither_
     let (project, history, earlier) = left_by_another_run(&rig);
     let run = rig.run();
     let projects = run.projects();
-    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    let o = opened(projects.open_project(&rig.folder, "k", None, None, false));
     run.opacity_step(&o.dataset, 0.25);
     let ds = run.dataset(&o.dataset);
     let saved = projects.save(o.dataset.as_str(), &ds, None, o.workspace);
@@ -1647,7 +1652,7 @@ fn a_save_after_a_reopen_with_no_step_whose_project_record_another_run_left_leav
     let (_, history, earlier) = left_by_another_run(&rig);
     let run = rig.run();
     let projects = run.projects();
-    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    let o = opened(projects.open_project(&rig.folder, "k", None, None, false));
     let ds = run.dataset(&o.dataset);
     for _ in 0..2 {
         let saved = projects.save(o.dataset.as_str(), &ds, None, o.workspace.clone());
@@ -1676,7 +1681,7 @@ fn the_first_step_after_that_save_meets_no_leftover_folder_and_has_a_record_of_i
     let (_, history, earlier) = left_by_another_run(&rig);
     let run = rig.run();
     let projects = run.projects();
-    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    let o = opened(projects.open_project(&rig.folder, "k", None, None, false));
     let ds = run.dataset(&o.dataset);
     let saved = projects.save(o.dataset.as_str(), &ds, None, o.workspace);
     assert!(withheld_unwritable(&saved.expect("saved").history_mark));
@@ -1704,7 +1709,7 @@ fn a_later_save_of_a_reopened_project_whose_member_records_a_lineage_is_refused_
     lineage_at(&rig, &lines);
     let before = std::fs::read(rig.file()).expect("the file");
     let projects = run.projects();
-    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    let o = opened(projects.open_project(&rig.folder, "k", None, None, false));
     assert_eq!(o.project, project);
     let ds = run.dataset(&o.dataset);
     let got = projects.save(o.dataset.as_str(), &ds, None, o.workspace);
@@ -1728,7 +1733,7 @@ fn a_save_after_a_reopen_keeps_the_project_and_dataset_identities_and_the_folder
     let first = read_project(&std::fs::read(rig.file()).expect("the file")).expect("read");
     let run = rig.run();
     let projects = run.projects();
-    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    let o = opened(projects.open_project(&rig.folder, "k", None, None, false));
     run.opacity_step(&o.dataset, 0.25);
     let ds = run.dataset(&o.dataset);
     let saved = projects.save(o.dataset.as_str(), &ds, None, o.workspace);
@@ -1834,7 +1839,7 @@ fn a_relink_the_writer_refuses_writes_nothing_at_a_first_reopen_or_a_copy() {
     let store_before = folders_in_store();
     let got = run
         .projects()
-        .open_project(&copy, "k", Some(Answer::Copy), Some(relative));
+        .open_project(&copy, "k", Some(Answer::Copy), Some(relative), false);
     assert!(named(&got), "copy: {got:?}");
     if std::fs::read(&copy_file).expect("the copy's") != file_before {
         written.push("copy: the copy's project.spatial");
@@ -1847,7 +1852,7 @@ fn a_relink_the_writer_refuses_writes_nothing_at_a_first_reopen_or_a_copy() {
     std::fs::remove_dir_all(&identity_dir).expect("the identity's machine folder removed");
     let got = run
         .projects()
-        .open_project(&rig.folder, "k", None, Some(relative));
+        .open_project(&rig.folder, "k", None, Some(relative), false);
     assert!(named(&got), "first reopen: {got:?}");
     if identity_dir.exists() {
         written.push("first reopen: the identity's machine folder");
@@ -1896,11 +1901,11 @@ fn a_reopen_after_a_session_end_in_the_same_process_takes_the_lock() {
     let ws = workspace(&ds, None);
     let saved = projects.save(handle.as_str(), &ds, Some(&rig.folder), ws);
     let project = saved.expect("saved").project;
-    let got = projects.open_project(&rig.folder, "k", None, None);
+    let got = projects.open_project(&rig.folder, "k", None, None, false);
     let held = matches!(got, Err(OpenFailure::OpenElsewhere(ref p)) if *p == project);
     assert!(held, "the control: {got:?}");
     run.host.end_generation(handle.as_str());
-    let o = opened(projects.open_project(&rig.folder, "k", None, None));
+    let o = opened(projects.open_project(&rig.folder, "k", None, None, false));
     assert_eq!(o.project, project);
 
     let empty = rig.dir.join("empty");

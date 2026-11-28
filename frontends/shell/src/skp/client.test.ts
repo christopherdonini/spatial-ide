@@ -9,7 +9,7 @@ const invokeMock = vi.hoisted(() => vi.fn());
 vi.mock("@tauri-apps/api/core", () => ({ invoke: invokeMock }));
 
 import { consoleRecorder, isSkpRequestEntry } from "../console/recorder";
-import { recordStep, SkpCallError, viewportQuery } from "./client";
+import { openDataset, recordStep, SkpCallError, viewportQuery } from "./client";
 import { openProject } from "./client";
 import { FILTER_DIALECT_DUCKDB_EXPR_0, type SkpError } from "./types";
 
@@ -29,7 +29,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.14",
+        skp: "skp/0.18",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
@@ -70,7 +70,7 @@ describe("viewportQuery request shape", () => {
 
     expect(invokeMock).toHaveBeenCalledWith("viewport_query", {
       request: {
-        skp: "skp/0.14",
+        skp: "skp/0.18",
         dataset: "ds_x",
         bbox: null,
         bbox_crs: null,
@@ -97,12 +97,12 @@ describe("recordStep request shape", () => {
     await recordStep("ds_x", { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } });
 
     expect(invokeMock.mock.calls).toEqual([
-      ["record_step", { request: { skp: "skp/0.14", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
+      ["record_step", { request: { skp: "skp/0.18", dataset: "ds_x", intent: { action: "filter.apply", params: { filter: null } } } }],
       [
         "record_step",
         {
           request: {
-            skp: "skp/0.14",
+            skp: "skp/0.18",
             dataset: "ds_x",
             intent: { action: "style.set", params: { property: "outlineWidth", value: { value: 2, unit: "px" } } },
           },
@@ -201,7 +201,7 @@ describe("openProject (Amendment 54 T-1)", () => {
 
     expect(reply).toEqual({ question: { kind: "copy-or-same" } });
     expect(invokeMock).toHaveBeenCalledWith("open_project", {
-      request: { skp: "skp/0.14", folder: "C:/projects/parcels", cancel_key: "k_1", answer: null, relink: null },
+      request: { skp: "skp/0.18", folder: "C:/projects/parcels", cancel_key: "k_1", answer: null, relink: null, set_aside_file_id: false },
     });
     const entry = consoleRecorder.entries()[before]!;
     if (!isSkpRequestEntry(entry)) throw new Error("expected skp-request entry");
@@ -216,5 +216,31 @@ describe("openProject (Amendment 54 T-1)", () => {
     const request = invokeMock.mock.calls[0]![1].request as Record<string, unknown>;
     expect(request.answer).toBe("copy");
     expect(request.relink).toBe("C:/data/a.parquet");
+  });
+});
+
+/**
+ * `text-id-opens-for-the-session-by-row-position`, T-1: the user's choice to open a file by row position (`skp/0.16`). `openDataset` and `openProject` send the member
+ * `set_aside_file_id`, always present, `false` unless the caller asks, `true` when it does.
+ * RECORDED MUTATION for T-1 (M-24): the parameter's default is `true`. Expected failure: the default call sends `true`.
+ */
+describe("the set_aside_file_id member (T-1)", () => {
+  it("openDataset sends set_aside_file_id false by default and true when asked", async () => {
+    invokeMock.mockReset().mockResolvedValue({ dataset: "ds_x", session: "s_x" });
+    await openDataset("C:/data/a.parquet", "k_1");
+    await openDataset("C:/data/a.parquet", "k_2", null, null, true);
+    const sent = invokeMock.mock.calls.map((c) => (c[1] as { request: Record<string, unknown> }).request);
+    expect(sent[0]).toHaveProperty("set_aside_file_id", false);
+    expect(sent[1]).toHaveProperty("set_aside_file_id", true);
+    expect(sent[1]!.identity).toBeNull();
+  });
+
+  it("openProject sends set_aside_file_id false by default and true when asked", async () => {
+    invokeMock.mockReset().mockResolvedValue({ not_found: { file_name: null } });
+    await openProject("C:/projects/parcels", "k_3", null, null);
+    await openProject("C:/projects/parcels", "k_4", null, null, true);
+    const sent = invokeMock.mock.calls.map((c) => (c[1] as { request: Record<string, unknown> }).request);
+    expect(sent[0]).toHaveProperty("set_aside_file_id", false);
+    expect(sent[1]).toHaveProperty("set_aside_file_id", true);
   });
 });

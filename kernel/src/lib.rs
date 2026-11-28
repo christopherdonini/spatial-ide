@@ -80,6 +80,7 @@ pub mod params;
 pub mod permission;
 pub mod project;
 pub mod publish;
+pub mod recovery;
 pub mod session_history;
 pub mod skp;
 
@@ -225,6 +226,29 @@ impl Catalog {
         cancel: &CancelToken,
     ) -> spatial_engine::Result<()> {
         let ds = Dataset::open_cancellable(
+            path,
+            assertion,
+            declared_identity,
+            cancel,
+            self.connections,
+        )?;
+        self.lock_write().insert(name.into(), Arc::new(ds));
+        Ok(())
+    }
+
+    /// As [`Self::open_cancellable`], with the caller's choice to set aside the file's own `id`
+    /// column (ADR-016 Amendment 3), through [`Dataset::open_cancellable_setting_aside_file_id`].
+    /// Its one product caller is `SkpHost::open_under`, when the request carries
+    /// `set_aside_file_id: true`.
+    pub fn open_cancellable_setting_aside_file_id(
+        &self,
+        name: impl Into<String>,
+        path: impl AsRef<Path>,
+        assertion: Option<CrsAssertion>,
+        declared_identity: Option<IdentityDeclaration>,
+        cancel: &CancelToken,
+    ) -> spatial_engine::Result<()> {
+        let ds = Dataset::open_cancellable_setting_aside_file_id(
             path,
             assertion,
             declared_identity,

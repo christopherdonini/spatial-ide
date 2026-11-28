@@ -75,6 +75,12 @@ static IDENTITY_VERIFICATION_SCANS: AtomicU64 = AtomicU64::new(0);
 /// `open_inner`'s call graph, provable by inspection, and this counter is what makes the other half
 /// — "the verification scan runs" for native and mapped identity — checkable the same way.
 ///
+/// **One session-ordinal open does scan: the set-aside open** (ADR-016 Amendment 3). It runs the
+/// native path first, so the file's own `id` column is checked as a plain open checks it, and an
+/// integer `id` refused for its values is scanned again before the dataset opens on the session
+/// tier. A set-aside open of a file with no `id` column, or beside a declaration, is refused before
+/// any scan.
+///
 /// **Its only callers are the test suite, named so the caller-grep can verify this exemption instead
 /// of trusting the words "test-only"** (the human's ruling of 2026-09-16, round 5 item 4, the same
 /// discipline `liveTicketSet.ts`'s `size` getter states for itself):
@@ -83,7 +89,10 @@ static IDENTITY_VERIFICATION_SCANS: AtomicU64 = AtomicU64::new(0);
 /// `b1_nul_native_id_scan_once.rs`'s
 /// `the_native_id_is_the_column_duckdb_binds_when_a_nul_named_id_precedes_it` (N-10); and
 /// `b1_nul_declared_identity_no_scan.rs`'s
-/// `a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan` (N-11).
+/// `a_declared_identity_naming_a_nul_named_column_is_refused_before_any_scan` (N-11);
+/// `text_id_set_aside_scan_counts.rs`'s `the_set_aside_scan_counts_are_exact` (N-S), the one test
+/// of its file, which proves that a set-aside open of a refused integer `id` scans again exactly
+/// once and that the two refusals by name scan nothing.
 pub fn identity_verification_scans() -> u64 {
     IDENTITY_VERIFICATION_SCANS.load(Ordering::SeqCst)
 }
@@ -224,6 +233,7 @@ impl Dataset {
             path.as_ref(),
             None,
             None,
+            false,
             &CancelToken::new(),
             PoolConfig::default(),
         )
@@ -238,6 +248,7 @@ impl Dataset {
             path.as_ref(),
             Some(assertion),
             None,
+            false,
             &CancelToken::new(),
             PoolConfig::default(),
         )
@@ -259,6 +270,7 @@ impl Dataset {
             path.as_ref(),
             None,
             Some(identity),
+            false,
             cancel,
             PoolConfig::default(),
         )
@@ -280,6 +292,7 @@ impl Dataset {
             path.as_ref(),
             assertion,
             None,
+            false,
             &CancelToken::new(),
             connections,
         )
@@ -304,6 +317,34 @@ impl Dataset {
             path.as_ref(),
             assertion,
             declared_identity,
+            false,
+            cancel,
+            connections,
+        )
+    }
+
+    /// As [`Self::open_cancellable`], with the caller's **choice to set aside the file's own `id`
+    /// column** (ADR-016 Amendment 3): a single file whose own `id` column cannot serve as identity
+    /// opens on the session tier, identified by row position for this session only.
+    ///
+    /// **The choice is the caller's alone and is never inferred.** It is admitted only when the
+    /// file carries a column named `id` and the checks [`Self::open_cancellable`] runs on that
+    /// column refuse it; a column that serves, a declared identity beside the choice, and a file
+    /// with no `id` column are each refused by name ([`EngineError::IdentitySetAsideRefused`]) and
+    /// nothing opens. Its one product caller is `Catalog::open_cancellable_setting_aside_file_id`
+    /// in the kernel.
+    pub fn open_cancellable_setting_aside_file_id(
+        path: impl AsRef<Path>,
+        assertion: Option<CrsAssertion>,
+        declared_identity: Option<IdentityDeclaration>,
+        cancel: &CancelToken,
+        connections: PoolConfig,
+    ) -> Result<Self> {
+        Self::open_inner(
+            path.as_ref(),
+            assertion,
+            declared_identity,
+            true,
             cancel,
             connections,
         )
@@ -313,6 +354,7 @@ impl Dataset {
         path: &Path,
         assertion: Option<CrsAssertion>,
         declared_identity: Option<IdentityDeclaration>,
+        set_aside_file_id: bool,
         cancel: &CancelToken,
         connections: PoolConfig,
     ) -> Result<Self> {
@@ -562,7 +604,14 @@ impl Dataset {
 
         // Identity admission (ADR-016). Native `id` unless the caller declared a mapping; the
         // uniqueness scan runs either way, so a native column is no longer trusted without it.
-        let identity = admit_identity(conn, &path_str, &file_schema, declared_identity, cancel)?;
+        let identity = admit_identity(
+            conn,
+            &path_str,
+            &file_schema,
+            declared_identity,
+            set_aside_file_id,
+            cancel,
+        )?;
 
         // **R-D1, at open, after admission and before the dataset exists.** A file that never
         // admitted has no descriptor and can never produce `SourceChanged` — the M-2 truncated
@@ -1958,13 +2007,42 @@ pub(crate) fn duckdb_literal_path(path: &str) -> String {
 /// **Since Brief A P3 it has a third outcome**: where neither a native `id` column nor a
 /// declaration yields an admissible identity on a single file, it admits on the **session tier**
 /// (R-I3) instead of refusing — see that arm's own comment.
+///
+/// **`set_aside_file_id`** is the caller's choice (ADR-016 Amendment 3) to have a file whose own
+/// `id` column cannot serve opened on the session tier. When it is set, and only then, this
+/// function first refuses by name what the choice cannot be combined with (a declaration, then a
+/// file with no `id` column), then runs the native path below unchanged, and admits on the session
+/// tier only a refusal of the `id` column itself ([`set_aside_outcome`]).
 fn admit_identity(
     conn: &Connection,
     path: &str,
     schema: &SchemaRef,
     declared: Option<IdentityDeclaration>,
+    set_aside_file_id: bool,
     cancel: &CancelToken,
 ) -> Result<DatasetIdentity> {
+    if set_aside_file_id {
+        // (a) Before any lookup or scan: a declared column beside the choice is two answers to
+        // one question, and the engine picks neither.
+        if declared.is_some() {
+            return Err(EngineError::IdentitySetAsideRefused {
+                detail: "setting aside the file's `id` column cannot be combined with a declared \
+                         identity column"
+                    .to_string(),
+            });
+        }
+        // (b) The set-aside answers a refusal of the file's own `id`; a file with none has no
+        // such refusal, and it opens on the session tier already when the choice is not made.
+        if !schema.fields().iter().any(|f| f.name() == ID_COLUMN) {
+            return Err(EngineError::IdentitySetAsideRefused {
+                detail: "the file has no column named `id` to set aside".to_string(),
+            });
+        }
+        // (c) The native path, unchanged: the type check, then for an admitted type the
+        // whole-column scan, cancellable.
+        let native = admit_identity(conn, path, schema, None, false, cancel);
+        return set_aside_outcome(schema, native);
+    }
     let (source, column, skip) = match declared {
         Some(d) => {
             let col = d.column.clone();
@@ -2000,6 +2078,7 @@ fn admit_identity(
                 column: column.clone(),
                 detail: "the file has no such column".to_string(),
                 candidate_columns: identity::candidate_identity_columns(schema),
+                identity_source: source.as_envelope_value(),
             });
         }
         // The ADR-016 candidate list is still *reported* — on the envelope's record rather than in
@@ -2021,11 +2100,12 @@ fn admit_identity(
             column: column.clone(),
             detail: fact.render(),
             candidate_columns: identity::candidate_identity_columns(schema),
+            identity_source: source.as_envelope_value(),
         });
     }
 
     // §4's value-preserving test. A type needing a transform to reach u64 is refused outright.
-    identity::admit_column_type(&column, field.data_type(), schema)?;
+    identity::admit_column_type(&column, field.data_type(), schema, &source)?;
 
     if skip {
         // Recorded, not hidden. A caller may take responsibility for uniqueness; it may not make
@@ -2082,6 +2162,7 @@ fn admit_identity(
                      source value cannot widen into it without changing the value"
                 ),
                 candidate_columns: identity::candidate_identity_columns(schema),
+                identity_source: source.as_envelope_value(),
             });
         }
     }
@@ -2094,6 +2175,7 @@ fn admit_identity(
                  returns a wrong-but-plausible feature with nothing raised"
             ),
             candidate_columns: identity::candidate_identity_columns(schema),
+            identity_source: source.as_envelope_value(),
         });
     }
 
@@ -2103,6 +2185,37 @@ fn admit_identity(
         Some(rows),
         max.and_then(|m| u64::try_from(m).ok()),
     ))
+}
+
+/// What a set-aside open does with the native path's answer — arms (d) and (e) of
+/// [`admit_identity`]'s `set_aside_file_id` branch, and **its one product caller**.
+///
+/// - **(d)** A refusal of the `id` column itself ([`EngineError::IdentityUnusable`]) is the
+///   case the choice exists for: the dataset opens on the session tier. Its candidate list is the
+///   one a file with no `id` column carries, so the column just set aside is not among them: an
+///   integer `id` refused for its values would otherwise be offered back (`candidate_identity_columns`
+///   keeps every integer column).
+/// - **(e)** A native identity means the column serves. The choice is refused by name and nothing
+///   opens.
+/// - Any other error passes through unchanged: `Cancelled` and `Query` say nothing about the column.
+fn set_aside_outcome(
+    schema: &SchemaRef,
+    native: Result<DatasetIdentity>,
+) -> Result<DatasetIdentity> {
+    match native {
+        Err(EngineError::IdentityUnusable { .. }) => {
+            let candidates = identity::candidate_identity_columns(schema)
+                .into_iter()
+                .filter(|c| c != ID_COLUMN)
+                .collect();
+            Ok(DatasetIdentity::new_session_ordinal_set_aside(candidates))
+        }
+        Ok(_) => Err(EngineError::IdentitySetAsideRefused {
+            detail: "the file's own `id` column serves as its identity, so it cannot be set aside"
+                .to_string(),
+        }),
+        Err(other) => Err(other),
+    }
 }
 
 fn run_identity_scan(
@@ -2279,7 +2392,7 @@ mod tests {
         let cancel = CancelToken::new();
         let done = Arc::new(AtomicBool::new(false));
         let canceller = cancel_when_executing(&cancel, &done);
-        let admitted = admit_identity(&conn, path, &schema, None, &cancel);
+        let admitted = admit_identity(&conn, path, &schema, None, false, &cancel);
         done.store(true, Ordering::SeqCst);
         let saw_window = canceller.join().unwrap();
         let _ = std::fs::remove_file(&file);
@@ -2434,5 +2547,28 @@ mod tests {
                 assert_eq!(got, expected, "{row}: the error is DuckDB's no-match error");
             }
         }
+    }
+
+    /// **A guard**: `set_aside_outcome`'s arm (d) admits a refusal of the `id` column and nothing
+    /// else. `Cancelled` and `Query` say nothing about the column, so a cancelled re-scan ends
+    /// `Cancelled` and an engine failure stays a failure; neither opens a dataset. It is green
+    /// before the arm's guard exists as much as after, and its proof is its mutation: an arm (d)
+    /// that admits on any `Err` turns it red. This is N-9 of the form's §4; its recorded mutation is M-9.
+    #[test]
+    fn a_set_aside_passes_cancelled_and_query_through_unchanged() {
+        let schema: SchemaRef =
+            std::sync::Arc::new(Schema::new(vec![Field::new("id", DataType::Utf8, false)]));
+
+        let cancelled = set_aside_outcome(&schema, Err(EngineError::Cancelled));
+        assert!(
+            matches!(cancelled, Err(EngineError::Cancelled)),
+            "a cancel is not a refusal of the column: {cancelled:?}"
+        );
+
+        let failed = set_aside_outcome(&schema, Err(EngineError::Query("scan failed".into())));
+        assert!(
+            matches!(&failed, Err(EngineError::Query(m)) if m == "scan failed"),
+            "an engine failure is not a refusal of the column: {failed:?}"
+        );
     }
 }

@@ -1756,10 +1756,22 @@ mod tests {
     fn workspace(name: &str) -> PathBuf {
         let d = std::env::temp_dir()
             .join("spatial-ide-shell-publish-tests")
+            .join(std::process::id().to_string())
             .join(name);
         let _ = std::fs::remove_dir_all(&d);
         std::fs::create_dir_all(&d).unwrap();
         std::fs::canonicalize(&d).unwrap()
+    }
+
+    #[test]
+    fn a_publish_workspace_is_the_test_runs_own() {
+        let dir = workspace("own");
+        let temp = std::fs::canonicalize(std::env::temp_dir()).unwrap();
+        assert!(dir.starts_with(&temp), "{dir:?} is not under {temp:?}");
+        let own = Path::new("spatial-ide-shell-publish-tests")
+            .join(std::process::id().to_string())
+            .join("own");
+        assert!(dir.ends_with(&own), "{dir:?} does not end with {own:?}");
     }
 
     fn fixture(dir: &Path, features: usize) -> Arc<Dataset> {

@@ -247,8 +247,10 @@ impl Projects {
     /// Drop the entry, and with it the identity's open lock, of every open this [`Projects`] saved
     /// first or reopened that the catalog no longer holds or whose session has ended
     /// (`require_live`). The shell's `close_dataset` starts it on another thread after the host
-    /// has closed the dataset and does not wait for it, and [`Projects::open_project`] calls it
-    /// before it takes a lock. It takes the `saved` mutex before the catalog and the generations,
+    /// has closed the dataset and does not wait for it, [`Projects::open_project`] calls it
+    /// before it takes a lock, and [`Projects::reply_of`]'s guard calls it after its own close of
+    /// the dataset, when a panic unwinds out of building the `opened` reply. It takes the `saved`
+    /// mutex before the catalog and the generations,
     /// as [`Projects::save`] does, so a save in progress ends before its entry is dropped. After
     /// `close_dataset` has replied, the lock can therefore still be held until a call of this
     /// function that began after the host's close has run: the one `close_dataset` started, or
@@ -704,6 +706,7 @@ impl Projects {
         cancel_key: &str,
         answer: Option<Answer>,
         relink: Option<&Path>,
+        set_aside_file_id: bool,
     ) -> Result<Reopen, OpenFailure> {
         let host = self.recorder.host();
         let (_end_open_on_drop, cancel) = host.begin_open(cancel_key).map_err(OpenFailure::Open)?;
@@ -822,6 +825,9 @@ impl Projects {
             cancel_key: cancel_key.to_string(),
             crs_assertion: admission.crs_assertion,
             identity: admission.identity,
+            // The caller's choice at this reopen (ADR-016 Amendment 3), never the project file's:
+            // the file records nothing of it.
+            set_aside_file_id,
         };
         let opened = host.open_under(req, &cancel).map_err(|e| {
             if cancel.is_cancelled() {
@@ -891,6 +897,8 @@ impl Projects {
     /// [`open_error_of`], and the reply built from what the reopen returned. No reply carries a
     /// path; `not_found`'s `file_name` passes through [`bounded`]. It can wait on the `saved` mutex
     /// ([`Projects::release_ended`] and the entry it keeps), so a host calls it off its main thread.
+    /// A panic while the `opened` reply is built closes the reopened dataset and frees its lock
+    /// before the panic leaves the call ([`Projects::reply_of`]).
     pub fn open_project_command(
         &self,
         req: OpenProjectRequest,
@@ -902,7 +910,13 @@ impl Projects {
         });
         let relink = req.relink.as_deref().map(Path::new);
         let folder = Path::new(&req.folder);
-        let reopened = self.open_project(folder, &req.cancel_key, answer, relink);
+        let reopened = self.open_project(
+            folder,
+            &req.cancel_key,
+            answer,
+            relink,
+            req.set_aside_file_id,
+        );
         Ok(match reopened.map_err(|e| open_error_of(e, &req.folder))? {
             Reopen::Question => OpenProjectResponse::Question(ReopenQuestion {
                 kind: ReopenQuestionKind::CopyOrSame,
@@ -910,8 +924,42 @@ impl Projects {
             Reopen::NotFound { file_name } => OpenProjectResponse::NotFound(ReopenNotFound {
                 file_name: file_name.map(|n| bounded(&n)),
             }),
-            Reopen::Opened(o) => OpenProjectResponse::Opened(Box::new(opened_of(*o))),
+            Reopen::Opened(o) => OpenProjectResponse::Opened(Box::new(self.reply_of(*o))),
         })
+    }
+
+    /// The `opened` reply of a reopen, built by [`opened_of`]. Its one product caller is
+    /// [`Projects::open_project_command`]'s `Reopen::Opened` arm; K-D1 and K-D2 in this module's
+    /// tests call it directly. If [`opened_of`] panics, its guard runs during the unwind, holding
+    /// no lock: it closes the dataset through the host, as [`Projects::open_project`] closes it
+    /// after a refused write, and then calls [`Projects::release_ended`], which drops the entry and
+    /// with it the identity's open lock.
+    // Fails a non-test build of the lib if the opened arm, its only caller outside tests, drops it.
+    #[deny(dead_code)]
+    fn reply_of(&self, o: Opened) -> OpenedProject {
+        let dataset = o.dataset.clone();
+        let _guard = ReplyGuard {
+            projects: self,
+            dataset,
+        };
+        opened_of(o)
+    }
+}
+
+/// [`Projects::reply_of`]'s guard: only on an unwind, it closes `dataset` and frees its lock.
+struct ReplyGuard<'a> {
+    projects: &'a Projects,
+    dataset: DatasetHandle,
+}
+
+impl Drop for ReplyGuard<'_> {
+    fn drop(&mut self) {
+        if std::thread::panicking() {
+            let (skp, dataset) = (SKP_VERSION.to_string(), self.dataset.clone());
+            let host = self.projects.recorder.host();
+            drop(host.close_dataset(CloseDatasetRequest { skp, dataset }));
+            self.projects.release_ended();
+        }
     }
 }
 
@@ -963,7 +1011,11 @@ fn open_error_of(e: OpenFailure, folder: &str) -> SkpError {
 }
 
 /// The `opened` reply: the workspace in its wire form, whole, as the reader accepted it; the
-/// view's state; the check's names; and the two lineage facts, with no line and no rule text.
+/// view's state; the check's names; and the two lineage facts, with no text of a lineage file's
+/// lines, no rule text and no error text: a refusal carries a line number where it has one. It
+/// panics if the style does not write again as canonical JSON, if that JSON does not read back, or
+/// if the check names a word the wire has none for. No file the reader accepts reaches any of
+/// these, and [`Projects::reply_of`] closes the dataset and frees the lock if one fires.
 fn opened_of(o: Opened) -> OpenedProject {
     let w = o.workspace;
     // The reader accepted the style only in ADR-017 §5a's canonical form, so it is written again
@@ -1451,5 +1503,185 @@ mod tests {
             SaveFailure::FolderRequired.to_string(),
             "no folder was given, and this open of the dataset has no project to save to"
         );
+    }
+
+    /// K-D1's and K-D2's watch arm: none is armed, as `crate::skp`'s own `NoWatchArm`, which is
+    /// private to that module, has it.
+    struct ChecksOnly;
+
+    impl spatial_engine::SourceWatchArm for ChecksOnly {
+        fn arm(&self, _: &Path, _: spatial_engine::WatchSink) -> spatial_engine::ArmOutcome {
+            spatial_engine::ArmOutcome::ChecksOnly {
+                reason: "test fixture: no watch armed".to_string(),
+            }
+        }
+    }
+
+    /// A real host, recorder and [`Projects`], with F1 saved into `folder` and closed, and the
+    /// save's lock released, as `kernel/tests/project_reopen_skp.rs`'s `Rig::saved` has it.
+    struct Rig {
+        folder: PathBuf,
+        machine: PathBuf,
+        host: Arc<crate::skp::SkpHost>,
+        projects: Projects,
+    }
+
+    /// The rig, under a temp folder named for `test` alone and removed first. F1 (500 polygons,
+    /// declared LV95, a `zone` column) is written per run and not hash-verified.
+    fn rig(test: &str) -> Rig {
+        let dir = std::env::temp_dir()
+            .join("spatial-ide-project-mod-tests")
+            .join(test);
+        let _ = std::fs::remove_dir_all(&dir);
+        let (folder, machine) = (dir.join("project"), dir.join("machine"));
+        std::fs::create_dir_all(&folder).expect("the project folder");
+        let host = Arc::new(crate::skp::SkpHost::new(
+            Arc::new(crate::Catalog::new()),
+            crate::skp::StreamRegistry::new(),
+            Arc::new(ChecksOnly),
+            crate::skp::session_end_channel().0,
+        ));
+        let recorder = Arc::new(StepRecorder::new(dir.join("sessions"), host.clone()));
+        let projects = Projects::new(machine.clone(), recorder);
+
+        let data = dir.join("outside").join("parcels.parquet");
+        std::fs::create_dir_all(dir.join("outside")).expect("the data folder");
+        let spec = spatial_engine::fixture::FixtureSpec {
+            features: 500,
+            avg_vertices: 12,
+            seed: 1,
+            attributes: spatial_engine::fixture::AttributeMode::CategoricalZone,
+            ..Default::default()
+        };
+        spatial_engine::fixture::write_geoparquet(&data, &spec).expect("F1");
+        let open = OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: data.display().to_string(),
+            cancel_key: "k".to_string(),
+            crs_assertion: None,
+            identity: None,
+            set_aside_file_id: false,
+        };
+        let handle = host.open_dataset(open).expect("open").dataset;
+        let style = r##"{"style_version":1,"layer":{"geometry":"polygon","fill_color":{"literal":"#4285f4"},"fill_opacity":{"literal":0.35},"outline_color":{"literal":"#000000"},"outline_width":{"literal":1.5}}}"##;
+        let wire = serde_json::json!({
+            "skp": SKP_VERSION, "dataset": handle.as_str(),
+            "folder": folder.display().to_string(),
+            "workspace": {
+                "filter": null, "clauses": [],
+                "style": serde_json::from_str::<serde_json::Value>(style).expect("JSON"),
+                "view": {
+                    "centre": [HexF64(2_600_000.5).to_hex(), HexF64(1_200_000.25).to_hex()],
+                    "zoom": HexF64(-4.5).to_hex()
+                }
+            }
+        });
+        let req: SaveProjectRequest = serde_json::from_value(wire).expect("the save's request");
+        projects.save_project(req).expect("saved");
+        let (skp, dataset) = (SKP_VERSION.to_string(), handle);
+        host.close_dataset(CloseDatasetRequest { skp, dataset })
+            .expect("closed");
+        projects.release_ended();
+        Rig {
+            folder,
+            machine,
+            host,
+            projects,
+        }
+    }
+
+    impl Rig {
+        /// One reopen of the project folder: what `open_project_command`'s `Reopen::Opened` arm
+        /// receives.
+        fn reopened(&self) -> Opened {
+            match self
+                .projects
+                .open_project(&self.folder, "k", None, None, false)
+            {
+                Ok(Reopen::Opened(o)) => *o,
+                other => panic!("the reopen did not open: {other:?}"),
+            }
+        }
+
+        /// Whether `saved` holds an entry for `handle`.
+        fn kept(&self, handle: &DatasetHandle) -> bool {
+            let saved = self.projects.saved.lock();
+            let saved = saved.unwrap_or_else(|e| e.into_inner());
+            saved.iter().any(|s| s.dataset == handle.as_str())
+        }
+    }
+
+    /// K-D1 (`governance/forms/kernel/OPENED-OF-PANIC-SITES-FREE-THE-LOCK-PREREGISTRATION.md`
+    /// §4, S1 to S3 of §3, in order on one rig): a panic at sites 3, 4 and 1 of `opened_of`,
+    /// caught as it leaves [`Projects::reply_of`], has closed the dataset, dropped its entry and
+    /// freed its lock. Each case reopens; since `open_project` runs `release_ended` before it takes
+    /// the lock, that reopen shows only that the previous case closed the dataset, and (iv) is what
+    /// shows the lock free.
+    ///
+    /// RECORDED MUTATION M1: the guard's `Drop` body emptied. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at S1's (ii), "S1: (ii) the catalog holds the dataset".
+    /// RECORDED MUTATION M3: the guard calls only `release_ended`, without the close. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at S1's (ii), "S1: (ii) the catalog holds the dataset".
+    /// RECORDED MUTATION M4: the guard closes only, without `release_ended`. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at S1's (iii), "S1: (iii) `saved` holds its entry".
+    /// RECORDED MUTATION M5, an observation and not a failing test: the `Reopen::Opened` arm calls `opened_of(*o)` in place of `self.reply_of(*o)`. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: no test fails, since this test and K-D2 call `reply_of` directly; `cargo build --locked -p spatial-kernel --lib` warns "method `reply_of` is never used", which the unmutated build does not warn, and every test of `cargo test --locked -p spatial-kernel` passed under the mutation.
+    #[test]
+    fn a_panic_while_the_opened_reply_is_built_frees_the_lock_and_closes_the_dataset() {
+        let rig = rig("k-d1");
+        let differs = |observed, admission| {
+            Some(RefCheck::Differs {
+                observed,
+                admission,
+            })
+        };
+        let (word, none) = (vec!["not-a-wire-word"], Vec::new);
+        let cases = [
+            (
+                "S1",
+                differs(word.clone(), none()),
+                "an observation component the wire has no word for",
+            ),
+            (
+                "S2",
+                differs(none(), word),
+                "an admission claim the wire has no word for",
+            ),
+            ("S3", None, "a style the reader accepted is canonical"),
+        ];
+        for (case, check, message) in cases {
+            let mut o = rig.reopened();
+            match check {
+                Some(check) => o.check = check,
+                None => o.workspace.style.fill_opacity = Value::Literal(f64::NAN),
+            }
+            let (project, handle) = (o.project.clone(), o.dataset.clone());
+            let reply = || rig.projects.reply_of(o);
+            let Err(payload) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(reply)) else {
+                panic!("{case}: (i) the reply was built without a panic");
+            };
+            let text = payload.downcast_ref::<String>().map_or("", String::as_str);
+            assert!(text.contains(message), "{case}: (i) the payload: {text}");
+            let in_catalog = rig.host.catalog().get(handle.as_str()).is_some();
+            assert!(!in_catalog, "{case}: (ii) the catalog holds the dataset");
+            assert!(!rig.kept(&handle), "{case}: (iii) `saved` holds its entry");
+            let probe = store::ProjectLock::try_lock(&rig.machine, &project);
+            assert!(probe.is_ok(), "{case}: (iv) the lock is held: {probe:?}");
+            drop(probe);
+        }
+    }
+
+    /// K-D2 (the same form's §4, S4 of §3): a reply built without a panic keeps the dataset in
+    /// the catalog and the lock held.
+    ///
+    /// RECORDED MUTATION M2: the guard's `thread::panicking()` condition dropped. OBSERVED at 378c6cfcd42b21691fe40a438d3fc54f0a4cbb4c: this test fails by name at its catalog assertion, "the catalog does not hold the dataset".
+    #[test]
+    fn a_reply_built_without_a_panic_keeps_the_entry_and_the_lock() {
+        let rig = rig("k-d2");
+        let o = rig.reopened();
+        let (project, handle) = (o.project.clone(), o.dataset.clone());
+        let reply = rig.projects.reply_of(o);
+        assert_eq!(reply.dataset, handle, "the reply's dataset");
+        let in_catalog = rig.host.catalog().get(handle.as_str()).is_some();
+        assert!(in_catalog, "the catalog does not hold the dataset");
+        let probe = store::ProjectLock::try_lock(&rig.machine, &project);
+        let held = matches!(probe, Err(LockRefused::Held));
+        assert!(held, "the lock is not held: {probe:?}");
     }
 }

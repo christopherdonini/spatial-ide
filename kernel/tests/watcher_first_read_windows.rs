@@ -76,6 +76,7 @@ fn the_opener_threads_exit_does_not_end_a_healthy_session() {
         cancel_key: "c1".to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     };
     let opener_host = host.clone();
     // The opening thread arms the watch through `open_dataset`, then exits immediately — the

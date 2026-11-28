@@ -71,6 +71,7 @@ fn rig(name: &str) -> Rig {
         cancel_key: "k".to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     };
     let handle = host.open_dataset(req).expect("open").dataset;
     Rig {
@@ -307,6 +308,7 @@ impl Rig {
             cancel_key: "k".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         let handle = self.host.open_dataset(req).expect("open").dataset;
         let mut wire = self.wire(Some(folder), [1.0, 2.0], 0.0);
@@ -383,6 +385,7 @@ impl Rig {
             cancel_key: "k2".to_string(),
             crs_assertion: None,
             identity: None,
+            set_aside_file_id: false,
         };
         self.host
             .open_dataset(reopen)
@@ -582,6 +585,7 @@ fn a_later_save_into_a_folder_whose_project_file_names_another_project_is_refuse
         cancel_key: "k".to_string(),
         crs_assertion: None,
         identity: None,
+        set_aside_file_id: false,
     };
     let second = rig.host.open_dataset(req).expect("open").dataset;
     let mut wire = rig.wire(Some(&other), [1.0, 2.0], 0.0);

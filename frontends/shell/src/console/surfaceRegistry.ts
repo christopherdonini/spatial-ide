@@ -9,7 +9,7 @@
  * display classes it falls into and, for classes B/C, the fixed prose that accounts for it.
  *
  * NEXT-CUT.md's three-class table:
- *   A -- one of the eight SKP commands: exact serialized request, copyable. Display text is never
+ *   A -- one of the eleven SKP commands: exact serialized request, copyable. Display text is never
  *        owned here (I3: "the console owns no command shapes").
  *   B -- a binding-local Tauri command: prose + the command NAME only, never the argument object
  *        (ADR-024's fence), never a copy affordance, never the string "SKP" (I6).
@@ -25,13 +25,15 @@
 
 export type SurfaceClass = "A" | "B" | "C";
 
-/** A class-A row names one of the eight SKP commands. No display field: `console/recorder.ts` +
+/** A class-A row names one of the eleven SKP commands. No display field: `console/recorder.ts` +
  * `console/render.ts` own the actual rendered text, sourced from the captured request itself. */
 export interface ClassARow {
   readonly class: "A";
   /** One of the eight SKP command names, e.g. `"open_dataset"` -- the same string
    * `skp/client.ts`'s `call()` passes to `invoke` as its first argument. */
   readonly command: string;
+  /** `"stream"` marks the rows whose entries the Console keeps in the ring of its own (known limitation 67): a data request or a cancel. Absent on every other row. `isStreamLaneName` below reads the marks. */
+  readonly lane?: "stream";
 }
 
 /** A class-B row names one binding-local Tauri command. Every field is `string`; there is no
@@ -47,6 +49,8 @@ export interface ClassBRow {
    * conformance suite -- every class-B row's citation must contain "ADR-024" or "SKP-V0"
    * (`surfaceCompleteness.test.ts` asserts this for every row in this table). */
   readonly citation: string;
+  /** `"stream"` marks the row whose entries the Console keeps in the ring of its own (known limitation 67): the app's line to the session log. Absent on every other row. */
+  readonly lane?: "stream";
 }
 
 /** A class-C row names a GUI action with no command at all -- style edits, panel toggles, banner
@@ -72,21 +76,24 @@ const BINDING_LOCAL_CITATION =
   "host-local, not part of the API; excluded from the SKP catalog (SKP-V0 §4 items 1/3/11/13; " +
   "ADR-024); not callable by a script, plugin, notebook, CLI, or AI client.";
 
-/** The eight SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
- * class-A half of the registry. A ninth command changes `skp/client.ts`, this list, and
+/** The eleven SKP commands (`skp/client.ts`'s own `call("...", ...)` sites) -- kept here as the
+ * class-A half of the registry. A twelfth command changes `skp/client.ts`, this list, and
  * `surfaceCompleteness.test.ts`'s derived-set assertion together, or the completeness scan fails
  * the build (NEXT-CUT.md P2's own anti-debt-accrual mechanism). `record_step` (`skp/0.12`) is the
  * sixth, and it is what every committed filter and style edit shows here (B2 piece 1b); `save_project`
- * (`skp/0.13`) is the seventh, and it is what a save shows (B2 piece 1c); `open_project` (`skp/0.14`) is the eighth, and it is what a reopen shows (B2 piece 1c, Amendment 54). */
+ * (`skp/0.13`) is the seventh, and it is what a save shows (B2 piece 1c); `open_project` (`skp/0.14`) is the eighth, and it is what a reopen shows (B2 piece 1c, Amendment 54); `list_recoverable`, `recover_session` and `discard_recoverable` (`skp/0.18`) are the ninth to the eleventh, and they are what the recovery offer shows. */
 const CLASS_A_ROWS: readonly ClassARow[] = [
   { class: "A", command: "open_dataset" },
   { class: "A", command: "describe" },
-  { class: "A", command: "viewport_query" },
-  { class: "A", command: "cancel" },
+  { class: "A", command: "viewport_query", lane: "stream" },
+  { class: "A", command: "cancel", lane: "stream" },
   { class: "A", command: "close_dataset" },
   { class: "A", command: "record_step" },
   { class: "A", command: "save_project" },
   { class: "A", command: "open_project" },
+  { class: "A", command: "list_recoverable" },
+  { class: "A", command: "recover_session" },
+  { class: "A", command: "discard_recoverable" },
 ];
 
 /** The eight binding-local commands plus the dev-only E2E destination seam (NEXT-CUT.md's
@@ -112,6 +119,7 @@ const CLASS_B_ROWS = [
       "writes one diagnostic log line to a host-side log that outlives the session (ADR-010 " +
       "rule 7); the shell never blocks on it, never surfaces its result, and never retries it.",
     citation: BINDING_LOCAL_CITATION,
+    lane: "stream",
   },
   {
     class: "B",
@@ -121,6 +129,7 @@ const CLASS_B_ROWS = [
       "host-compiled data; no dataset, path, or query leaves the shell for this action.",
     citation: BINDING_LOCAL_CITATION,
   },
+  // In an instrumented build only (isInstrumentedBuild), a file that the e2eRelinkFile test hook (src/e2e-test-surface.ts) puts in AdmissionPanel's one-shot slot e2eFileRef is taken once, through takeSlot, in place of this picker's answer for a re-link; the picker is then not opened and no entry of this row is recorded. Open's own pick (handlePick) has no slot. In a plain build the slot is always null, so the picker's own answer supplies the path (ADV-2026-11-21-08 item 3; ADV-2026-11-22-30 item 4).
   {
     class: "B",
     command: "binding_pick_file",
@@ -129,6 +138,7 @@ const CLASS_B_ROWS = [
       "open_dataset is called; the picker's own answer supplies the path, never a script's.",
     citation: BINDING_LOCAL_CITATION,
   },
+  // In an instrumented build only (isInstrumentedBuild), a folder that a test hook of src/e2e-test-surface.ts puts in a one-shot slot is taken once in place of this picker's answer: e2eFolderRef in AdmissionPanel (through takeSlot, for a reopen) and e2eSaveFolderRef in App (for a save). In a plain build both slots are always null, so the picker's own answer supplies the folder (ADV-2026-11-21-08 item 3; ADV-2026-11-21-15 item 5).
   {
     class: "B",
     command: "binding_pick_project_folder",
@@ -232,7 +242,7 @@ const CLASS_C_ROWS = [
     action: "canvas.dismissCanvasRefusal",
     statement:
       "no API equivalent exists -- the Dismiss button on the .canvas-refusal banner only clears local " +
-      "App state (setCanvasRefusal(null)); it never reaches the kernel and never touches the status " +
+      "App state (the condition store's dismiss(id)); it never reaches the kernel and never touches the status " +
       "indicator beside it (rider 1).",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
@@ -241,7 +251,7 @@ const CLASS_C_ROWS = [
     action: "canvas.dismissViewportRefusal",
     statement:
       "no API equivalent exists -- the Dismiss button on the viewport-refusal banner only clears local " +
-      "App state (setViewportRefusal(null)); it never reaches the kernel.",
+      "App state (the condition store's dismiss(id)); it never reaches the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
@@ -319,7 +329,7 @@ const CLASS_C_ROWS = [
     class: "C",
     action: "layout.selectActivityTab",
     statement:
-      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices and Table tabs is pure view state for this session, never sent to the kernel.",
+      "[P6 placeholder] no API equivalent exists -- switching the Activity region between its Console, Notices, Table and Problems tabs is pure view state for this session, never sent to the kernel.",
     owner: 'docs/03 §"The action console" (pure view state)',
   },
   {
@@ -432,4 +442,10 @@ export function classBRows(): readonly ClassBRow[] {
 
 export function classCRows(): readonly ClassCRow[] {
   return SURFACE_REGISTRY.filter((row): row is ClassCRow => row.class === "C");
+}
+
+/** Whether an entry of this kind and name is held in the Console's stream ring (known limitation 67): a class-A (`"skp-request"`) or class-B (`"binding-command"`) row the registry marks `lane: "stream"` -- `viewport_query`, `cancel` and `binding_log_session_event`, and no other. Derived from the marked rows, so the recorder keeps no list of names. Its one product caller is `ConsoleRecorder.push`'s lane choice (`recorder.ts`). */
+export function isStreamLaneName(kind: "skp-request" | "binding-command", name: string): boolean {
+  const rows: readonly (ClassARow | ClassBRow)[] = kind === "skp-request" ? classARows() : classBRows();
+  return rows.some((row) => row.command === name && row.lane === "stream");
 }

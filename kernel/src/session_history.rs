@@ -38,17 +38,18 @@ use crate::dataset_ref::{
 };
 use crate::permission::audit::{log::data_dir, rfc3339_utc_now};
 use crate::project::file::Lineage;
+use crate::project::store;
 use crate::project::strict_json::{self, Layout, Limits, StrictError};
 use crate::project::ProjectUri;
 use crate::skp::{check_version, predicate_admit_error_of, require_live, SkpHost};
 
 /// Declared ceilings (ADR-010 rule 6; ADR-036 §9), checked before any write: a step's line, the
 /// header's line, and the whole history.
-const MAX_STEP_LINE_BYTES: usize = 262_144;
-const MAX_HEADER_LINE_BYTES: usize = 1_048_576;
-const MAX_SESSION_HISTORY_BYTES: u64 = 33_554_432;
+pub(crate) const MAX_STEP_LINE_BYTES: usize = 262_144;
+pub(crate) const MAX_HEADER_LINE_BYTES: usize = 1_048_576;
+pub(crate) const MAX_SESSION_HISTORY_BYTES: u64 = 33_554_432;
 /// The action vocabulary this kernel registers (ADR-036 §3, §6): a header's `actions`.
-const ACTIONS: u64 = 2;
+pub(crate) const ACTIONS: u64 = 2;
 /// What the strict reader bounds in one line (ADR-036 §2). The line's own ceiling is checked by
 /// the caller, before the reader sees it.
 const LINE_LIMITS: Limits = Limits {
@@ -56,8 +57,8 @@ const LINE_LIMITS: Limits = Limits {
     max_depth: 32,
     max_string_bytes: MAX_CRS_DEFINITION_BYTES,
 };
-const HISTORY: &str = "history.jsonl";
-const LOCATIONS: &str = "locations.json";
+pub(crate) const HISTORY: &str = "history.jsonl";
+pub(crate) const LOCATIONS: &str = "locations.json";
 
 // ---------------------------------------------------------------------------------------------
 // The writer
@@ -65,17 +66,17 @@ const LOCATIONS: &str = "locations.json";
 
 /// One history's append path, generic over where the bytes go and how they are flushed. After a
 /// write or a flush fails it takes no later line.
-struct History<W: Write> {
-    out: W,
+pub(crate) struct History<W: Write> {
+    pub(crate) out: W,
     sync: fn(&mut W) -> std::io::Result<()>,
-    bytes: u64,
+    pub(crate) bytes: u64,
     stopped: bool,
     /// A step's line, the header's line, the whole history.
     ceilings: [u64; 3],
 }
 
 impl<W: Write> History<W> {
-    fn new(out: W, sync: fn(&mut W) -> std::io::Result<()>) -> Self {
+    pub(crate) fn new(out: W, sync: fn(&mut W) -> std::io::Result<()>) -> Self {
         let ceilings = [
             MAX_STEP_LINE_BYTES as u64,
             MAX_HEADER_LINE_BYTES as u64,
@@ -124,22 +125,25 @@ impl<W: Write> History<W> {
 /// holds the project's record, binds that open to a project, then that project. The name is held
 /// in memory only and is never written to disk.
 #[derive(Clone, Debug, PartialEq, Eq)]
-enum Holder {
+pub(crate) enum Holder {
     Open(String),
     Project(ProjectUri),
 }
 
 /// One open dataset as the recorder knows it, from the first time the recorder is asked about it.
-struct Open {
+pub(crate) struct Open {
     /// The catalog name the commands carry. Memory only.
-    name: String,
+    pub(crate) name: String,
     /// The open's one dataset identity: minted at its first mention, or for a reopened open the
     /// project file's ([`StepRecorder::reopened`]), and carried by the history's header, by every
     /// step's `data.dataset` and by the project file's dataset entry.
-    uri: DatasetUri,
+    pub(crate) uri: DatasetUri,
     /// The project this open is bound to: by a save ([`StepRecorder::adopt_project`]), or by a
     /// reopen in the run that holds the project's record ([`StepRecorder::reopened`]).
-    bound: Option<ProjectUri>,
+    pub(crate) bound: Option<ProjectUri>,
+    /// The project this open was reopened as ([`StepRecorder::reopened`]), whether or not this run
+    /// holds its record: what `list_recoverable` and `recover_session` read at an open.
+    pub(crate) reopened_as: Option<ProjectUri>,
 }
 
 impl Open {
@@ -157,23 +161,26 @@ impl Open {
 /// project's record. A reopen in the run that holds the project's record is bound at the
 /// reopen and makes no record of its own; any other open of the same file is another open and
 /// has its own record.
-struct Record {
-    dir: PathBuf,
-    holder: Holder,
-    history: History<File>,
-    last_step: Option<String>,
-    reached: Reached,
+pub(crate) struct Record {
+    pub(crate) dir: PathBuf,
+    pub(crate) holder: Holder,
+    pub(crate) history: History<File>,
+    pub(crate) last_step: Option<String>,
+    pub(crate) reached: Reached,
 }
 
 /// What the recorder holds in memory: the opens it has been asked about and the records it made.
-struct State {
-    opens: Vec<Open>,
-    records: Vec<Record>,
+pub(crate) struct State {
+    pub(crate) opens: Vec<Open>,
+    pub(crate) records: Vec<Record>,
+    /// The record names a `recover_session` or `discard_recoverable` of this run is working on,
+    /// from its step 2 to its end (`recovery.rs`).
+    pub(crate) reserved: Vec<String>,
 }
 
 impl State {
     /// The open named `name`; the first mention adds it, with a dataset identity minted then.
-    fn open(&mut self, name: &str) -> &mut Open {
+    pub(crate) fn open(&mut self, name: &str) -> &mut Open {
         let at = match self.opens.iter().position(|o| o.name == name) {
             Some(at) => at,
             None => {
@@ -181,6 +188,7 @@ impl State {
                     name: name.to_string(),
                     uri: DatasetUri::mint(),
                     bound: None,
+                    reopened_as: None,
                 });
                 self.opens.len() - 1
             }
@@ -206,7 +214,7 @@ pub struct Reached {
 impl Reached {
     /// `fill_color` is what `prepare` read from a `fillColor` step, and is not looked at for any
     /// other intent.
-    fn note(&mut self, intent: &StepIntent, fill_color: Option<style::Value<Rgb>>) {
+    pub(crate) fn note(&mut self, intent: &StepIntent, fill_color: Option<style::Value<Rgb>>) {
         match intent {
             StepIntent::FilterApply(p) => {
                 self.filter = Some(p.filter.as_ref().map(|f| f.predicate.clone()));
@@ -244,9 +252,9 @@ pub enum SavedHere {
 /// Records committed steps. Built once by the shell's binding with the store root and the host it
 /// reads the catalog and the generations from; `SkpHost::new` is unchanged.
 pub struct StepRecorder {
-    host: Arc<SkpHost>,
-    root: PathBuf,
-    state: Mutex<State>,
+    pub(crate) host: Arc<SkpHost>,
+    pub(crate) root: PathBuf,
+    pub(crate) state: Mutex<State>,
 }
 
 /// The default store root, `<per-user data directory>/spatial-ide/sessions`, from the one resolver
@@ -263,6 +271,7 @@ impl StepRecorder {
             state: Mutex::new(State {
                 opens: Vec::new(),
                 records: Vec::new(),
+                reserved: Vec::new(),
             }),
         }
     }
@@ -395,6 +404,7 @@ impl StepRecorder {
         let holds = state.records.iter().any(|r| r.holder == held);
         let open = state.open(open);
         open.uri = uri;
+        open.reopened_as = Some(project.clone());
         if holds {
             open.bound = Some(project.clone());
         }
@@ -500,17 +510,8 @@ impl StepRecorder {
         header: &str,
         holder: Holder,
     ) -> Result<Record, SkpError> {
-        let entry = Json::obj([
-            ("dataset", Json::str(reference.uri().as_str())),
-            ("path", Json::str(ds.path().to_string_lossy())),
-        ]);
-        let locations = Json::obj([
-            ("format", Json::str("spatial-locations")),
-            ("version", Json::Int(1)),
-            ("entries", Json::Arr(vec![entry])),
-        ]);
-        std::fs::write(dir.join(LOCATIONS), canonical(&locations)? + "\n")
-            .map_err(|e| unwritable(LOCATIONS, &e))?;
+        let locations = locations_file(reference.uri(), ds.path())?;
+        std::fs::write(dir.join(LOCATIONS), locations).map_err(|e| unwritable(LOCATIONS, &e))?;
         // Read and write, not append: Windows refuses to lock an append-only handle. Nothing else
         // writes the file while it is locked, so each `write_all` lands at its end.
         let mut options = OpenOptions::new();
@@ -532,6 +533,15 @@ impl StepRecorder {
         rec.history.append(header, true)?;
         Ok(rec)
     }
+}
+
+/// The bytes of a record's `locations.json`: the store's writer ([`store::locations_to_bytes`]),
+/// given the dataset's absolute path. A path that writer refuses (not valid Unicode, or over the
+/// reader's string bound) is refused as `skp.session_history_unwritable` naming `locations.json`,
+/// and never written altered.
+fn locations_file(uri: &DatasetUri, path: &Path) -> Result<Vec<u8>, SkpError> {
+    let absolute = std::path::absolute(path).map_err(|e| unwritable(LOCATIONS, &e))?;
+    store::locations_to_bytes(uri, &absolute).map_err(|e| unwritable(LOCATIONS, &e.rule))
 }
 
 /// The record `rec` holds, copied into `dir` (a new folder) under a header whose `project` is
@@ -786,7 +796,7 @@ fn style_params(ds: &Dataset, p: &StyleSetParams) -> Result<Prepared, SkpError> 
 }
 
 /// A match as the style document spells it: the value of `fill_color` in a layer.
-fn match_wire(m: &ColourMatch) -> Value {
+pub(crate) fn match_wire(m: &ColourMatch) -> Value {
     let spec = &m.spec;
     let case =
         |c: &spatial_skp::v0::ColourCase| serde_json::json!({"when": c.when, "then": c.then});
@@ -1251,6 +1261,29 @@ pub fn recover(dir: &Path) -> Recovered {
     }
 }
 
+/// Up to `limit` bytes of `file` from its start, read through the handle itself (on Windows a held
+/// lock makes a read through any other handle fail), with the handle's position left at its end.
+pub(crate) fn read_through(file: &File, limit: u64) -> std::io::Result<Vec<u8>> {
+    let mut file = file;
+    file.seek(SeekFrom::Start(0))?;
+    let mut bytes = Vec::new();
+    Read::take(&mut file, limit).read_to_end(&mut bytes)?;
+    file.seek(SeekFrom::End(0))?;
+    Ok(bytes)
+}
+
+/// What [`recover_bytes`] keeps of the first two lines of `file`: the header and the first step.
+/// The read is bounded by the two lines' own ceilings and cut after the second LF.
+pub(crate) fn recover_head(file: &File) -> std::io::Result<Recovered> {
+    let bytes = read_through(
+        file,
+        (MAX_HEADER_LINE_BYTES + MAX_STEP_LINE_BYTES + 2) as u64,
+    )?;
+    let mut lfs = bytes.iter().enumerate().filter(|(_, b)| **b == b'\n');
+    let end = lfs.nth(1).map_or(bytes.len(), |(i, _)| i + 1);
+    Ok(recover_bytes(&bytes[..end]))
+}
+
 /// Where a line chains: the header's `actions`, the step ids seen, the last step, and the id the
 /// next step's `parent` must be (the last step, or after a restored mark the mark's `to`).
 #[derive(Default)]
@@ -1261,7 +1294,7 @@ struct Chain {
     parent: Option<String>,
 }
 
-fn recover_bytes(bytes: &[u8]) -> Recovered {
+pub(crate) fn recover_bytes(bytes: &[u8]) -> Recovered {
     let mut out = Recovered {
         header: None,
         lines: Vec::new(),
@@ -2395,5 +2428,92 @@ mod tests {
         let full: Vec<String> = many[..MAX_MATCH_CASES].to_vec();
         let at_ceiling = FILL_MATCH.replacen(cases, &format!("[{}]", full.join(",")), 1);
         assert_eq!(failure(&one(&at_ceiling)), None);
+    }
+
+    /// A watch arm that arms none, as `crate::skp`'s own `NoWatchArm`, which is private to that
+    /// module, has it.
+    struct ChecksOnly;
+
+    impl spatial_engine::SourceWatchArm for ChecksOnly {
+        fn arm(&self, _: &Path, _: spatial_engine::WatchSink) -> spatial_engine::ArmOutcome {
+            spatial_engine::ArmOutcome::ChecksOnly {
+                reason: "test fixture: no watch armed".to_string(),
+            }
+        }
+    }
+
+    /// Removes a folder when dropped, so that a failed assertion leaves none behind.
+    struct Scratch(PathBuf);
+
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            drop(std::fs::remove_dir_all(&self.0));
+        }
+    }
+
+    /// **K-C8** (the recovery offer's form §2.5 and §4): the record's `locations.json` is written
+    /// by the store's writer, so a path the store's reader would refuse is never written as it was
+    /// given. The dataset is opened by a path relative to the test's working folder, which is what
+    /// the inline writer wrote as it was; the record's file must read back through
+    /// `store::read_locations` and name the absolute path.
+    ///
+    /// Mutation: the inline lossy writer restored, inside the writer's body. Expected failure:
+    /// this test, at the read of `locations.json`.
+    #[test]
+    fn the_records_locations_writer_refuses_a_path_the_store_cannot_hold() {
+        use spatial_skp::v0::{OpenDatasetRequest, SKP_VERSION};
+        let relative = PathBuf::from("spatial-ide-session-history-unit-k-c8");
+        let _ = std::fs::remove_dir_all(&relative);
+        std::fs::create_dir_all(&relative).expect("the data folder");
+        let _data = Scratch(relative.clone());
+        let store = std::env::temp_dir()
+            .join("spatial-ide-session-history-unit")
+            .join("k-c8");
+        let _ = std::fs::remove_dir_all(&store);
+        let _store = Scratch(store.clone());
+        let spec = spatial_engine::fixture::FixtureSpec {
+            features: 50,
+            avg_vertices: 8,
+            ..Default::default()
+        };
+        let at = relative.join("parcels.parquet");
+        spatial_engine::fixture::write_geoparquet(&at, &spec).expect("the fixture");
+
+        let host = Arc::new(SkpHost::new(
+            Arc::new(crate::Catalog::new()),
+            crate::skp::StreamRegistry::new(),
+            Arc::new(ChecksOnly),
+            crate::skp::session_end_channel().0,
+        ));
+        let recorder = StepRecorder::new(store.clone(), host.clone());
+        let open = OpenDatasetRequest {
+            skp: SKP_VERSION.to_string(),
+            path: at.display().to_string(),
+            cancel_key: "k".to_string(),
+            crs_assertion: None,
+            identity: None,
+            set_aside_file_id: false,
+        };
+        let dataset = host.open_dataset(open).expect("open").dataset;
+        let intent = StepIntent::StyleSet(StyleSetParams::FillOpacity { value: 0.5 });
+        let req = RecordStepRequest {
+            skp: SKP_VERSION.to_string(),
+            dataset,
+            intent,
+        };
+        let recorded = recorder.record_step(req);
+        assert!(recorded.is_ok(), "the step is recorded: {recorded:?}");
+
+        let folders: Vec<PathBuf> = std::fs::read_dir(&store)
+            .expect("the store")
+            .map(|e| e.expect("entry").path())
+            .collect();
+        assert_eq!(folders.len(), 1, "one record");
+        let bytes = std::fs::read(folders[0].join(LOCATIONS)).expect("locations.json");
+        let read = crate::project::store::read_locations(&bytes);
+        let entries = read.unwrap_or_else(|e| panic!("the store's reader refuses it: {e:?}"));
+        assert_eq!(entries.len(), 1);
+        let absolute = std::path::absolute(&at).expect("an absolute path");
+        assert_eq!(entries[0].path, absolute);
     }
 }

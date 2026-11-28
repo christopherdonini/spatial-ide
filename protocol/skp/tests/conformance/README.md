@@ -81,3 +81,32 @@ the version-refusal fixture that named `skp/0.14` as an unsupported future versi
 name `skp/0.15` instead. The same update adds `open_project`'s accept and refuse rows, and `main.rs`
 maps its two wire types. The existing rows' `spec` citations name the literal they were written
 under and are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.15` literal of PLAN node
+`identity-declaration-route-for-session-tier` (its form's Amendment 2 item 1); the version-refusal
+fixture that named `skp/0.15` as an unsupported future version was renumbered to name `skp/0.16`
+instead. No row is added: the version adds one member to `describe`'s `identity`, and this directory
+holds no `describe` response. The existing rows' `spec` citations are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.16` literal of PLAN node
+`text-id-opens-for-the-session-by-row-position` (its form's Amendment 2 item 2); the version-refusal
+fixture that named `skp/0.16` as an unsupported future version was renumbered to name `skp/0.17`
+instead. The version adds the required request member `set_aside_file_id` to `open_dataset` and
+`open_project`, so every document of those two wire types carries it, and three rows are added: an
+accepted `open_dataset` request that makes the choice, and the two requests that lack the member,
+each refused at deserialize. The existing rows' `spec` citations are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.17` literal of PLAN node
+`text-id-reopen-with-a-recorded-declaration` (its form's Amendment 1 item 6); the version-refusal
+fixture that named `skp/0.17` as an unsupported future version was renumbered to name `skp/0.18`
+instead. The version adds one field to one error code, so no row is added: the one document of
+that code here, `resp-error-identity-candidates` in `responses-accept.json`, is unchanged. The
+existing rows' `spec` citations are not rewritten.
+
+This directory's fixtures were updated again in place, to the `skp/0.18` literal of PLAN node
+`b2-piece-1c-step-3-recovery-offer` (its form's Part 1); the version-refusal fixture that named
+`skp/0.18` as an unsupported future version was renumbered to name `skp/0.19` instead. The version
+adds three commands and four codes. Their documents are held by `protocol/skp/tests/fixtures.rs`
+(`recovery_commands_round_trip_and_refuse_unknown_or_missing_members`), which round-trips every
+request and reply and refuses an unknown or a missing member of each. The existing rows' `spec`
+citations are not rewritten.

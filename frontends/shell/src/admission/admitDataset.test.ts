@@ -82,15 +82,16 @@ describe("admitDataset", () => {
     // The real product-truth check: the same request shape open_dataset's own fixture declares.
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.14",
+        skp: "skp/0.18",
         path: "C:/data/parcels.parquet",
         cancel_key: "open-1",
         crs_assertion: null,
         identity: null,
+        set_aside_file_id: false,
       },
     });
     expect(invokeMock).toHaveBeenNthCalledWith(2, "describe", {
-      request: { skp: "skp/0.14", dataset: "ds_00000000000000000000000000000000" },
+      request: { skp: "skp/0.18", dataset: "ds_00000000000000000000000000000000" },
     });
   });
 
@@ -142,11 +143,12 @@ describe("admitDataset", () => {
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.14",
+        skp: "skp/0.18",
         path: "C:/data/no-crs.parquet",
         cancel_key: "open-crs",
         crs_assertion: { identifier: "EPSG:2056", definition_json: "{\"type\":\"ProjectedCRS\"}" },
         identity: null,
+        set_aside_file_id: false,
       },
     });
   });
@@ -164,12 +166,63 @@ describe("admitDataset", () => {
 
     expect(invokeMock).toHaveBeenNthCalledWith(1, "open_dataset", {
       request: {
-        skp: "skp/0.14",
+        skp: "skp/0.18",
         path: "C:/data/missing-identity.parquet",
         cancel_key: "open-identity",
         crs_assertion: null,
         identity: { column: "parcel_key" },
+        set_aside_file_id: false,
       },
     });
+  });
+
+  // RECORDED MUTATION beside T-1 (M-24b, not a row of the form's §4): `admitDataset` passes `true` to `openDataset` whatever the option. Expected failure: the plain open below sends `set_aside_file_id: true`.
+  it("the setAsideFileId option is forwarded as set_aside_file_id, and its absence is false", async () => {
+    invokeMock.mockImplementation(async (cmd: string) => {
+      if (cmd === "open_dataset") return { dataset: "ds_1" };
+      if (cmd === "describe") return describeFixture();
+      throw new Error(`unexpected command ${cmd}`);
+    });
+    await admitDataset("C:/data/a.parquet", "open-plain");
+    await admitDataset("C:/data/a.parquet", "open-chosen", { setAsideFileId: true });
+    const sent = (n: number) => (invokeMock.mock.calls[n][1] as { request: Record<string, unknown> }).request;
+    expect(sent(0).set_aside_file_id).toBe(false);
+    expect(sent(0).identity).toBeNull();
+    expect(sent(2).set_aside_file_id).toBe(true);
+    expect(sent(2).identity).toBeNull();
+  });
+
+  /** `open_dataset` opens `dataset` and `describe` fails with `failure`; `close_dataset` and the log binding answer. */
+  function describeFailsWith(dataset: string, failure: unknown) {
+    invokeMock.mockImplementation(async (cmd: string) => {
+      if (cmd === "open_dataset") return { dataset, session: `session_${dataset}` };
+      if (cmd === "describe") throw failure;
+      if (cmd === "close_dataset") return { cancelled_streams: 0 };
+      if (cmd === "binding_log_session_event") return undefined;
+      throw new Error(`unexpected command ${cmd}`);
+    });
+  }
+  /** The SKP commands sent, in order: `logSessionEvent`'s binding-local command is not one. */
+  const skpCommands = () => invokeMock.mock.calls.map(([cmd]) => cmd).filter((cmd) => cmd !== "binding_log_session_event");
+
+  it("a describe refused after open_dataset sends close_dataset for the opened handle and returns the refusal", async () => {
+    describeFailsWith("ds_a1", {
+      code: "skp.unknown_dataset",
+      message: "no open dataset with handle `ds_a1` (closed, or never opened this session)",
+      fields: { handle: "ds_a1" },
+    });
+    const outcome = await admitDataset("C:/data/parcels.parquet", "open-a1");
+    expect(outcome.kind).toBe("refused");
+    if (outcome.kind === "refused") expect(outcome.refusal.code).toBe("skp.unknown_dataset");
+    expect(skpCommands()).toEqual(["open_dataset", "describe", "close_dataset"]);
+    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.18", dataset: "ds_a1" } });
+  });
+
+  it("a describe that fails untyped after open_dataset sends close_dataset and rethrows the same error", async () => {
+    const err = new TypeError("the transport failed");
+    describeFailsWith("ds_a2", err);
+    await expect(admitDataset("C:/data/parcels.parquet", "open-a2")).rejects.toBe(err);
+    expect(skpCommands()).toEqual(["open_dataset", "describe", "close_dataset"]);
+    expect(invokeMock).toHaveBeenNthCalledWith(3, "close_dataset", { request: { skp: "skp/0.18", dataset: "ds_a2" } });
   });
 });
